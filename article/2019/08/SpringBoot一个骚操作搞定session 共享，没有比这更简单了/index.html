@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="原文链接 有的人可能会觉得题目有点夸张，其实不夸张，题目没有使用任何修辞手法！认真读完本文，你就知道我说的是对的了！">
+<meta name="keywords" content="Spring Boot">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SpringBoot一个骚操作搞定session 共享，没有比这更简单了">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session 共享，没有比这更简单了/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="原文链接 有的人可能会觉得题目有点夸张，其实不夸张，题目没有使用任何修辞手法！认真读完本文，你就知道我说的是对的了！">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session%20共享，没有比这更简单了/1564815439281.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session%20共享，没有比这更简单了/1564815475145.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session%20共享，没有比这更简单了/1564815503165.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session%20共享，没有比这更简单了/1564815598198.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session%20共享，没有比这更简单了/1564815621126.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session%20共享，没有比这更简单了/1564815669155.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session%20共享，没有比这更简单了/1564815690415.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session%20共享，没有比这更简单了/1564815723345.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session%20共享，没有比这更简单了/1564815772676.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session%20共享，没有比这更简单了/1564815800242.png">
+<meta property="og:updated_time" content="2019-08-06T01:21:05.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SpringBoot一个骚操作搞定session 共享，没有比这更简单了">
+<meta name="twitter:description" content="原文链接 有的人可能会觉得题目有点夸张，其实不夸张，题目没有使用任何修辞手法！认真读完本文，你就知道我说的是对的了！">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session%20共享，没有比这更简单了/1564815439281.png">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session 共享，没有比这更简单了/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>SpringBoot一个骚操作搞定session 共享，没有比这更简单了 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/08/SpringBoot一个骚操作搞定session 共享，没有比这更简单了/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SpringBoot一个骚操作搞定session 共享，没有比这更简单了
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-06 09:21:05" itemprop="dateCreated datePublished" datetime="2019-08-06T09:21:05+08:00">2019-08-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><a href="https://mp.weixin.qq.com/s?__biz=MzI5NTYwNDQxNA==&mid=2247485029&idx=1&sn=63a3e3ef2ec2f16fe0deede0f3a2db08&chksm=ec505fb4db27d6a205bd063a45c28f24e7cf8cb7387ec25115cc67324d17bb9c53940cca3798&mpshare=1&scene=1&srcid=&sharer_sharetime=1564805547109&sharer_shareid=1dc3253a32b7591bee3ccf80eaba17ed&key=456b675bfe7f72ee7902ad8b2145a85c492bc2a68d0eb127ba09b404148785062155b879d8723fca2d83a5a95e8b8f7d09ea735925bade1107a2e4f6a018464a4928234a894d909d1b5e9b091f2633df&ascene=1&uin=OTkwMzQxNjQy&devicetype=Windows+10&version=62060833&lang=zh_CN&pass_ticket=ZSLYZhFJlHy0UhVE0j9YJdhvgknUWFw5JKQ30J21rsk2PtiyVxJIHAINnwI2sLHm" target="_blank" rel="noopener">原文链接</a></p>
+<p>有的人可能会觉得题目有点夸张，其实不夸张，题目没有使用任何修辞手法！认真读完本文，你就知道我说的是对的了！</p>
+<a id="more"></a>
+
+<p>在传统的单服务架构中，一般来说，只有一个服务器，那么不存在 Session 共享问题，但是在分布式/集群项目中，Session 共享则是一个必须面对的问题，先看一个简单的架构图：</p>
+<p><img src="/article/2019/08/SpringBoot一个骚操作搞定session 共享，没有比这更简单了/1564815439281.png" alt="1564815439281"></p>
+<p>在这样的架构中，会出现一些单服务中不存在的问题，例如客户端发起一个请求，这个请求到达 Nginx 上之后，被 Nginx 转发到 Tomcat A 上，然后在 Tomcat A 上往 session 中保存了一份数据，下次又来一个请求，这个请求被转发到 Tomcat B 上，此时再去 Session 中获取数据，发现没有之前的数据。对于这一类问题的解决，思路很简单，就是将各个服务之间需要共享的数据，保存到一个公共的地方（主流方案就是 Redis）：</p>
+<p><img src="/article/2019/08/SpringBoot一个骚操作搞定session 共享，没有比这更简单了/1564815475145.png" alt="1564815475145"></p>
+<p>当所有 Tomcat 需要往 Session 中写数据时，都往 Redis 中写，当所有 Tomcat 需要读数据时，都从 Redis 中读。这样，不同的服务就可以使用相同的 Session 数据了。</p>
+<p>这样的方案，可以由开发者手动实现，即手动往 Redis 中存储数据，手动从 Redis 中读取数据，相当于使用一些 Redis 客户端工具来实现这样的功能，毫无疑问，手动实现工作量还是蛮大的。</p>
+<p>一个简化的方案就是使用 Spring Session 来实现这一功能，Spring Session 就是使用 Spring 中的代理过滤器，将所有的 Session 操作拦截下来，自动的将数据 同步到 Redis 中，或者自动的从 Redis 中读取数据。</p>
+<p>对于开发者来说，所有关于 Session 同步的操作都是透明的，开发者使用 Spring Session，一旦配置完成后，具体的用法就像使用一个普通的 Session 一样。</p>
+<h1 id="1-实战"><a href="#1-实战" class="headerlink" title="1 实战"></a>1 实战</h1><h2 id="1-1-创建工程"><a href="#1-1-创建工程" class="headerlink" title="1.1 创建工程"></a>1.1 创建工程</h2><p>首先 创建一个 Spring Boot 工程，引入 Web、Spring Session 以及 Redis:</p>
+<p><img src="/article/2019/08/SpringBoot一个骚操作搞定session 共享，没有比这更简单了/1564815503165.png" alt="1564815503165"></p>
+<p>创建成功之后，pom.xml 文件如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependencies&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter-data-redis&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.session&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-session-data-redis&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意：</strong></p>
+<p>这里我使用的 Spring Boot 版本是 2.1.4 ，如果使用当前最新版 Spring Boot2.1.5 的话，除了上面这些依赖之外，需要额外添加 Spring Security 依赖（其他操作不受影响，仅仅只是多了一个依赖，当然也多了 Spring Security 的一些默认认证流程）。</p>
+<h2 id="1-2-配置-Redis"><a href="#1-2-配置-Redis" class="headerlink" title="1.2 配置 Redis"></a>1.2 配置 Redis</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">spring.redis.host=192.168.66.128</span><br><span class="line">spring.redis.port=6379</span><br><span class="line">spring.redis.password=123</span><br><span class="line">spring.redis.database=0</span><br></pre></td></tr></table></figure>
+
+<p>这里的 Redis ，我虽然配置了四行，但是考虑到端口默认就是 6379 ，database 默认就是 0，所以真正要配置的，其实就是两行。</p>
+<h2 id="1-3-使用"><a href="#1-3-使用" class="headerlink" title="1.3 使用"></a>1.3 使用</h2><p>配置完成后 ，就可以使用 Spring Session 了，其实就是使用普通的 HttpSession ，其他的 Session 同步到 Redis 等操作，框架已经自动帮你完成了：</p>
+<p><img src="/article/2019/08/SpringBoot一个骚操作搞定session 共享，没有比这更简单了/1564815598198.png" alt="1564815598198"></p>
+<p>考虑到一会 Spring Boot 将以集群的方式启动 ，为了获取每一个请求到底是哪一个 Spring Boot 提供的服务，需要在每次请求时返回当前服务的端口号，因此这里我注入了 server.port 。</p>
+<p>接下来 ，项目打包：</p>
+<p><img src="/article/2019/08/SpringBoot一个骚操作搞定session 共享，没有比这更简单了/1564815621126.png" alt="1564815621126"></p>
+<p>打包之后，启动项目的两个实例：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">java -jar sessionshare-0.0.1-SNAPSHOT.jar --server.port=8080</span><br><span class="line">java -jar sessionshare-0.0.1-SNAPSHOT.jar --server.port=8081</span><br></pre></td></tr></table></figure>
+
+<p>然后先访问 <code>localhost:8080/set</code> 向 <code>8080</code> 这个服务的 <code>Session</code> 中保存一个变量，访问完成后，数据就已经自动同步到 <code>Redis</code> 中 了 ：</p>
+<p><img src="/article/2019/08/SpringBoot一个骚操作搞定session 共享，没有比这更简单了/1564815669155.png" alt="1564815669155"></p>
+<p>然后，再调用 <code>localhost:8081/get</code> 接口，就可以获取到 <code>8080</code> 服务的 <code>session</code> 中的数据：</p>
+<p><img src="/article/2019/08/SpringBoot一个骚操作搞定session 共享，没有比这更简单了/1564815690415.png" alt="1564815690415"></p>
+<p>此时关于 session 共享的配置就已经全部完成了，session 共享的效果我们已经看到了，但是每次访问都是我自己手动切换服务实例，因此，接下来我们来引入 Nginx ，实现服务实例自动切换。</p>
+<h2 id="1-4-引入-Nginx"><a href="#1-4-引入-Nginx" class="headerlink" title="1.4 引入 Nginx"></a>1.4 引入 Nginx</h2><p>很简单，进入 Nginx 的安装目录的 conf 目录下（默认是在 <code>/usr/local/nginx/conf</code>），编辑 nginx.conf 文件:</p>
+<p><img src="/article/2019/08/SpringBoot一个骚操作搞定session 共享，没有比这更简单了/1564815723345.png" alt="1564815723345"></p>
+<p>在这段配置中：</p>
+<ol>
+<li>upstream 表示配置上游服务器</li>
+<li>javaboy.org 表示服务器集群的名字，这个可以随意取名字</li>
+<li>upstream 里边配置的是一个个的单独服务</li>
+<li>weight 表示服务的权重，意味者将有多少比例的请求从 Nginx 上转发到该服务上</li>
+<li>location 中的 proxy_pass 表示请求转发的地址， <code>/</code> 表示拦截到所有的请求，转发转发到刚刚配置好的服务集群中</li>
+<li>proxy_redirect 表示设置当发生重定向请求时，nginx 自动修正响应头数据（默认是 Tomcat 返回重定向，此时重定向的地址是 Tomcat 的地址，我们需要将之修改使之成为 Nginx 的地址）。</li>
+</ol>
+<p>配置完成后，将本地的 Spring Boot 打包好的 jar 上传到 Linux ，然后在 Linux 上分别启动两个 Spring Boot 实例：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nohup java -jar sessionshare-0.0.1-SNAPSHOT.jar --server.port=8080 &amp;</span><br><span class="line">nohup java -jar sessionshare-0.0.1-SNAPSHOT.jar --server.port=8081 &amp;</span><br></pre></td></tr></table></figure>
+
+<p>其中</p>
+<ul>
+<li>nohup 表示当终端关闭时，Spring Boot 不要停止运行</li>
+<li>&amp; 表示让 Spring Boot 在后台启动</li>
+</ul>
+<p>配置完成后，重启 Nginx：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/usr/local/nginx/sbin/nginx -s reload</span><br></pre></td></tr></table></figure>
+
+<p>Nginx 启动成功后，我们首先手动清除 Redis 上的数据，然后访问 <code>192.168.66.128/set</code> 表示向 <code>session</code>中保存数据，这个请求首先会到达 <code>Nginx</code> 上，再由 <code>Nginx</code> 转发给某一个 <code>SpringBoot</code> 实例：</p>
+<p><img src="/article/2019/08/SpringBoot一个骚操作搞定session 共享，没有比这更简单了/1564815772676.png" alt="1564815772676"></p>
+<p>如上，表示端口为 <code>8081</code> 的 <code>SpringBoot</code> 处理了这个 <code>/set</code> 请求，再访问 <code>/get</code> 请求：</p>
+<p><img src="/article/2019/08/SpringBoot一个骚操作搞定session 共享，没有比这更简单了/1564815800242.png" alt="1564815800242"></p>
+<p>可以看到， <code>/get</code> 请求是被端口为 8080 的服务所处理的。</p>
+<h1 id="2-总结"><a href="#2-总结" class="headerlink" title="2 总结"></a>2 总结</h1><p>本文主要向大家介绍了 Spring Session 的使用，另外也涉及到一些 Nginx 的使用 ，虽然本文较长，但是实际上 Spring Session 的配置没啥。</p>
+<p>我们写了一些代码，也做了一些配置，但是全都和 Spring Session 无关，配置是配置 Redis，代码就是普通的 HttpSession，和 Spring Session 没有任何关系！</p>
+<p>唯一和 Spring Session 相关的，可能就是我在一开始引入了 Spring Session 的依赖吧！</p>
+<p>如果大家没有在 SSM 架构中用过 Spring Session ，可能不太好理解我们在 Spring Boot 中使用 Spring Session 有多么方便，因为在 SSM 架构中，Spring Session 的使用要配置三个地方 ，一个是 web.xml 配置代理过滤器，然后在 Spring 容器中配置 Redis，最后再配置 Spring Session，步骤还是有些繁琐的，而 Spring Boot 中直接帮我们省去了这些繁琐的步骤！不用再去配置 Spring Session。</p>
+<p>好了 ，本文就说到这里，有问题欢迎留言讨论 ，本文相关案例我已经上传到 GitHub ，大家可以自行下载:<a href="https://github.com/lenve/javaboy-code-samples" target="_blank" rel="noopener">https://github.com/lenve/javaboy-code-samples</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring-Boot/" rel="tag"># Spring Boot</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2019/07/Oracle SQL 基础/" rel="prev" title="Oracle SQL 基础">
+      <i class="fa fa-chevron-left"></i> Oracle SQL 基础
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2019/08/PO/ENTITY/VO/DTO/POJO/BO以及JavaBean介绍/" rel="next" title="PO/ENTITY/VO/DTO/POJO/BO以及JavaBean介绍">
+      PO/ENTITY/VO/DTO/POJO/BO以及JavaBean介绍 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-实战"><span class="nav-number">1.</span> <span class="nav-text">1 实战</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-创建工程"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 创建工程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-配置-Redis"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 配置 Redis</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-使用"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-引入-Nginx"><span class="nav-number">1.4.</span> <span class="nav-text">1.4 引入 Nginx</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-总结"><span class="nav-number">2.</span> <span class="nav-text">2 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">117</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">28</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '9cb5458b224bf32c0a03a0f397588cc5',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

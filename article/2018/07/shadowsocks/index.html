@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="If you want to keep a secret, you must also hide it from yourself. Project V，一个工具集合，官网： https://www.v2ray.com/ ，它可以帮助你打造专属的基础通信网络。Project V 的核心工具称为V2Ray，其主要负责网络协议和功能的实现，与其它 Project V 通信。V2Ray 可以单独运行，也">
+<meta property="og:type" content="article">
+<meta property="og:title" content="shadowsocks">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2018/07/shadowsocks/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="If you want to keep a secret, you must also hide it from yourself. Project V，一个工具集合，官网： https://www.v2ray.com/ ，它可以帮助你打造专属的基础通信网络。Project V 的核心工具称为V2Ray，其主要负责网络协议和功能的实现，与其它 Project V 通信。V2Ray 可以单独运行，也">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2018/07/shadowsocks/1118380-20181228192607286-1558047392.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2018/07/shadowsocks/1118380-20181228192347066-807911654.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2018/07/shadowsocks/1118380-20181228195826364-1551871663.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2018/07/shadowsocks/1118380-20190102120157898-411555577.png">
+<meta property="og:updated_time" content="2018-07-01T01:56:56.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="shadowsocks">
+<meta name="twitter:description" content="If you want to keep a secret, you must also hide it from yourself. Project V，一个工具集合，官网： https://www.v2ray.com/ ，它可以帮助你打造专属的基础通信网络。Project V 的核心工具称为V2Ray，其主要负责网络协议和功能的实现，与其它 Project V 通信。V2Ray 可以单独运行，也">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2018/07/shadowsocks/1118380-20181228192607286-1558047392.png">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2018/07/shadowsocks/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>shadowsocks | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2018/07/shadowsocks/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          shadowsocks
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-07-01 09:56:56" itemprop="dateCreated datePublished" datetime="2018-07-01T09:56:56+08:00">2018-07-01</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>If you want to keep a secret, you must also hide it from yourself.</p>
+<p><strong>Project V</strong>，一个工具集合，官网： <a href="https://www.v2ray.com/" target="_blank" rel="noopener">https://www.v2ray.com/</a> ，它可以帮助你打造专属的基础通信网络。Project V 的核心工具称为V2Ray，其主要负责网络协议和功能的实现，与其它 Project V 通信。V2Ray 可以单独运行，也可以和其它工具配合，以提供简便的操作流程。</p>
+<p>Project V 工具比较复杂，本文仅针对 <strong>Shadowsocks</strong> 。</p>
+<p>官网：<a href="https://shadowsocks.org/" target="_blank" rel="noopener">https://shadowsocks.org/</a> </p>
+<a id="more"></a>
+
+<h1 id="Servers"><a href="#Servers" class="headerlink" title="Servers"></a>Servers</h1><p>GitHub： <a href="https://github.com/shadowsocks" target="_blank" rel="noopener">https://github.com/shadowsocks</a> </p>
+<p>Shadowsocks 有利用多个语言开发的多个版本，之间的区别见官网 <a href="https://shadowsocks.org/en/spec/Implementations.html" target="_blank" rel="noopener">https://shadowsocks.org/en/spec/Implementations.html</a> 。</p>
+<p>以下内容是关于 shadowsocks-libev 版本，操作指南来自 GitHub： <a href="https://github.com/shadowsocks/shadowsocks-libev" target="_blank" rel="noopener">https://github.com/shadowsocks/shadowsocks-libev</a> 。</p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>从仓库安装</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install software-properties-common -y</span><br><span class="line">sudo add-apt-repository ppa:max-c-lv/shadowsocks-libev -y</span><br><span class="line">sudo apt-get update</span><br><span class="line">sudo apt install shadowsocks-libev</span><br></pre></td></tr></table></figure>
+
+<p>若安装失败，应该是缺少依赖，请阅读： <a href="https://github.com/shadowsocks/shadowsocks-libev#linux" target="_blank" rel="noopener">https://github.com/shadowsocks/shadowsocks-libev#linux</a> </p>
+<h2 id="编辑配置文件"><a href="#编辑配置文件" class="headerlink" title="编辑配置文件"></a>编辑配置文件</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> Edit the configuration file</span><br><span class="line">sudo vim /etc/shadowsocks-libev/config.json</span><br></pre></td></tr></table></figure>
+
+<p>配置：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    "server":"156.56.98.300",			# 您的主机或服务器IP (IPv4 / IPv6)</span><br><span class="line">    "server_port":8005,					# 服务器对外端口号</span><br><span class="line">    "local_port":1080,					# 本地端口号</span><br><span class="line">    "password":"123456",				# 用于加密传输的密码</span><br><span class="line">    "timeout":60,						# 连接超时，单位：秒</span><br><span class="line">    "method":"chacha20-ietf-poly1305"	# 加密方式</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> Start the service</span><br><span class="line">sudo /etc/init.d/shadowsocks-libev start    # for sysvinit, or</span><br><span class="line">sudo systemctl start shadowsocks-libev      # for systemd</span><br></pre></td></tr></table></figure>
+
+<p><img src="/article/2018/07/shadowsocks/1118380-20181228192607286-1558047392.png" alt="img"></p>
+<h2 id="查看进程运行状态"><a href="#查看进程运行状态" class="headerlink" title="查看进程运行状态"></a>查看进程运行状态</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ps aux</span><br><span class="line">ps aux | grep shadowsocks</span><br></pre></td></tr></table></figure>
+
+<p><img src="/article/2018/07/shadowsocks/1118380-20181228192347066-807911654.png" alt="img"></p>
+<p>​        pid == 6842 是刚刚执行的查看进程语句的进程。6518 才是shadowsocks的进程。</p>
+<h2 id="杀死进程"><a href="#杀死进程" class="headerlink" title="杀死进程"></a>杀死进程</h2><p>​        kill 6518</p>
+<h1 id="Client"><a href="#Client" class="headerlink" title="Client"></a>Client</h1><h2 id="Shadowsocks："><a href="#Shadowsocks：" class="headerlink" title="Shadowsocks："></a>Shadowsocks：</h2><p>Windows： <a href="https://github.com/shadowsocks/shadowsocks-windows/releases" target="_blank" rel="noopener">https://github.com/shadowsocks/shadowsocks-windows/releases</a> </p>
+<p>Android ： <a href="https://github.com/shadowsocks/shadowsocks-android/releases" target="_blank" rel="noopener">https://github.com/shadowsocks/shadowsocks-android/releases</a> </p>
+<p>IOS： App Store</p>
+<h2 id="Outline："><a href="#Outline：" class="headerlink" title="Outline："></a>Outline：</h2><p>Windows： <a href="https://github.com/Jigsaw-Code/outline-client/releases" target="_blank" rel="noopener">https://github.com/Jigsaw-Code/outline-client/releases</a> </p>
+<p>Android： <a href="https://github.com/Jigsaw-Code/outline-releases/blob/master/client/Outline.apk?raw=true" target="_blank" rel="noopener">https://github.com/Jigsaw-Code/outline-releases/blob/master/client/Outline.apk?raw=true</a> </p>
+<p>IOS： App Store</p>
+<p><strong>Outline 客户端生成 access-key</strong> ： <code>ss://base64(method:password)@IP:port</code> </p>
+<h1 id="Proxy-SwitchyOmega"><a href="#Proxy-SwitchyOmega" class="headerlink" title="Proxy SwitchyOmega"></a>Proxy SwitchyOmega</h1><p>官网： <a href="https://proxy-switchyomega.com/" target="_blank" rel="noopener">https://proxy-switchyomega.com/</a> </p>
+<h2 id="安装-1"><a href="#安装-1" class="headerlink" title="安装"></a>安装</h2><p>官方文档： <a href="https://proxy-switchyomega.com/download/" target="_blank" rel="noopener">https://proxy-switchyomega.com/download/</a> </p>
+<p><font color="blue" size="4"><strong><code>.crx</code> 文件无法使用问题：</strong></font> </p>
+<p>1、准备好下载的扩展程序文件（.crx后缀文件），更改后缀为 <code>.rar</code> 并解压。<br>2、打开 Chrome 浏览器 <code>扩展程序</code> ，开启 <code>开发者模式</code> 。<br>3、点击【加载已解压的扩展程序】 选项，选择刚解压的文件夹，即可安装成功。</p>
+<h2 id="proxy模式"><a href="#proxy模式" class="headerlink" title="proxy模式"></a>proxy模式</h2><p><img src="/article/2018/07/shadowsocks/1118380-20181228195826364-1551871663.png" alt="img"></p>
+<h2 id="auto-switch模式"><a href="#auto-switch模式" class="headerlink" title="auto switch模式"></a>auto switch模式</h2><p><strong>GFWList：</strong> <a href="https://github.com/FelisCatus/SwitchyOmega/wiki/GFWList" target="_blank" rel="noopener">https://github.com/FelisCatus/SwitchyOmega/wiki/GFWList</a> </p>
+<p><img src="/article/2018/07/shadowsocks/1118380-20190102120157898-411555577.png" alt="img"></p>
+<h2 id="常见问题"><a href="#常见问题" class="headerlink" title="常见问题"></a>常见问题</h2><p> <a href="https://proxy-switchyomega.com/faq/" target="_blank" rel="noopener">https://proxy-switchyomega.com/faq/</a> </p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2017/09/Properties类、加载properties文件、加载动态库、classpath/" rel="prev" title="Properties类、加载properties文件、加载动态库、classpath">
+      <i class="fa fa-chevron-left"></i> Properties类、加载properties文件、加载动态库、classpath
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2018/07/ssmgr/" rel="next" title="ssmgr">
+      ssmgr <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Servers"><span class="nav-number">1.</span> <span class="nav-text">Servers</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#安装"><span class="nav-number">1.1.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编辑配置文件"><span class="nav-number">1.2.</span> <span class="nav-text">编辑配置文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#启动"><span class="nav-number">1.3.</span> <span class="nav-text">启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#查看进程运行状态"><span class="nav-number">1.4.</span> <span class="nav-text">查看进程运行状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#杀死进程"><span class="nav-number">1.5.</span> <span class="nav-text">杀死进程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Client"><span class="nav-number">2.</span> <span class="nav-text">Client</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Shadowsocks："><span class="nav-number">2.1.</span> <span class="nav-text">Shadowsocks：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Outline："><span class="nav-number">2.2.</span> <span class="nav-text">Outline：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Proxy-SwitchyOmega"><span class="nav-number">3.</span> <span class="nav-text">Proxy SwitchyOmega</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#安装-1"><span class="nav-number">3.1.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#proxy模式"><span class="nav-number">3.2.</span> <span class="nav-text">proxy模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#auto-switch模式"><span class="nav-number">3.3.</span> <span class="nav-text">auto switch模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常见问题"><span class="nav-number">3.4.</span> <span class="nav-text">常见问题</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">117</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">28</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '53829397676de5f6efb8a1bb593424e1',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
