@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="垃圾回收介绍  jvm内存管理 什么是垃圾回收(Garbage Collection)  把不用的内存回收掉 java采用自动内存管理技术，内存分配后由虚拟机自动管理  优缺点：  优点：程序员不需要自己释放内存，只管new对象即可 缺点：GC本身有开销，会挤占业务执行资源。  什么是垃圾：  不会被访问到的对象是垃圾   引用计数法 原理  记录每个对象被引用的数量，当被引用的数量为0时，则标">
+<meta name="keywords" content="Java高级">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java高级特性之垃圾回收-粗糙版">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2015/10/Java高级特性之垃圾回收-粗糙版/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="垃圾回收介绍  jvm内存管理 什么是垃圾回收(Garbage Collection)  把不用的内存回收掉 java采用自动内存管理技术，内存分配后由虚拟机自动管理  优缺点：  优点：程序员不需要自己释放内存，只管new对象即可 缺点：GC本身有开销，会挤占业务执行资源。  什么是垃圾：  不会被访问到的对象是垃圾   引用计数法 原理  记录每个对象被引用的数量，当被引用的数量为0时，则标">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2015-10-17T01:00:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java高级特性之垃圾回收-粗糙版">
+<meta name="twitter:description" content="垃圾回收介绍  jvm内存管理 什么是垃圾回收(Garbage Collection)  把不用的内存回收掉 java采用自动内存管理技术，内存分配后由虚拟机自动管理  优缺点：  优点：程序员不需要自己释放内存，只管new对象即可 缺点：GC本身有开销，会挤占业务执行资源。  什么是垃圾：  不会被访问到的对象是垃圾   引用计数法 原理  记录每个对象被引用的数量，当被引用的数量为0时，则标">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2015/10/Java高级特性之垃圾回收-粗糙版/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Java高级特性之垃圾回收-粗糙版 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2015/10/Java高级特性之垃圾回收-粗糙版/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java高级特性之垃圾回收-粗糙版
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2015-10-17 09:00:00" itemprop="dateCreated datePublished" datetime="2015-10-17T09:00:00+08:00">2015-10-17</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="垃圾回收介绍"><a class="markdownIt-Anchor" href="#垃圾回收介绍"></a> 垃圾回收介绍</h1>
+<h2 id="jvm内存管理"><a class="markdownIt-Anchor" href="#jvm内存管理"></a> jvm内存管理</h2>
+<p>什么是垃圾回收(Garbage Collection)</p>
+<ul>
+<li>把不用的内存回收掉</li>
+<li>java采用自动内存管理技术，内存分配后由虚拟机自动管理</li>
+</ul>
+<p>优缺点：</p>
+<ul>
+<li>优点：程序员不需要自己释放内存，只管new对象即可</li>
+<li>缺点：GC本身有开销，会挤占业务执行资源。</li>
+</ul>
+<p>什么是垃圾：</p>
+<ul>
+<li>不会被访问到的对象是垃圾</li>
+</ul>
+<h2 id="引用计数法"><a class="markdownIt-Anchor" href="#引用计数法"></a> 引用计数法</h2>
+<p>原理</p>
+<ul>
+<li>记录每个对象被引用的数量，当被引用的数量为0时，则标记为垃圾</li>
+<li>缺点：无法处理循环引用的问题</li>
+</ul>
+<h2 id="可达性分析"><a class="markdownIt-Anchor" href="#可达性分析"></a> 可达性分析</h2>
+<p>原理</p>
+<ul>
+<li>从GC Roots开始遍历对象，没有被遍历到的对象为垃圾</li>
+</ul>
+<p>GC Roots：</p>
+<ul>
+<li>方法栈使用到的参数、局部变量、临时变量等</li>
+<li>方法区中类静态属性引用的变量</li>
+<li>方法区中常量引用的对象</li>
+<li>本地方法栈中JNI引用的对象</li>
+</ul>
+<h1 id="垃圾回收算法"><a class="markdownIt-Anchor" href="#垃圾回收算法"></a> 垃圾回收算法</h1>
+<h2 id="清除sweep"><a class="markdownIt-Anchor" href="#清除sweep"></a> 清除(sweep)</h2>
+<p>原理</p>
+<ul>
+<li>将垃圾对象所占据的内存标记为空闲内存，然后存在一个空闲列表(free list)中。当需要创建对象时，从空闲列表中寻找空闲内存，分配给新创建的对象</li>
+</ul>
+<p>优缺点：</p>
+<ul>
+<li>优点：速度快</li>
+<li>缺点：容易造成内存碎片，分配效率低</li>
+</ul>
+<h2 id="整理compact"><a class="markdownIt-Anchor" href="#整理compact"></a> 整理(compact)</h2>
+<p>原理</p>
+<ul>
+<li>把存活的对象搬到内存的起始位置，然后在连续的空间内顺序分配</li>
+</ul>
+<p>优缺点：</p>
+<ul>
+<li>优点：分配速度快，局部性好</li>
+<li>缺点：搬运对象麻烦，性能开销大</li>
+</ul>
+<h2 id="复制copy"><a class="markdownIt-Anchor" href="#复制copy"></a> 复制(copy)</h2>
+<p>原理</p>
+<ul>
+<li>将内存分为两个部分，并分别用from和to指针来维护。每次只在from指向的内存中分配内存，当发生垃圾回收时，将from指向区域中存活的对象复制到to指向的内存区域，然后将from指针和to指针互换位置。</li>
+</ul>
+<p>优缺点：</p>
+<ul>
+<li>优点：同压缩算法，没有内存碎片。分配速度快，局部性好</li>
+<li>缺点：可用内存变少，堆空间使用效率低</li>
+</ul>
+<h1 id="垃圾收集器"><a class="markdownIt-Anchor" href="#垃圾收集器"></a> 垃圾收集器</h1>
+<h2 id="jvm堆划分"><a class="markdownIt-Anchor" href="#jvm堆划分"></a> jvm堆划分</h2>
+<p>jvm将堆划分为新生代和老年代。新生代存放新创建的对象，当对象生存超过一定时间时，会被移动至老年代。新生代采用的 GC 称为minor GC，老年代发生的 GC 称为 full GC 或 major GC,发生full GC会伴随至少一次minor GC</p>
+<h2 id="minor-gc"><a class="markdownIt-Anchor" href="#minor-gc"></a> Minor GC</h2>
+<p>特点：发生次数多，采用时间短，回收掉大量对象</p>
+<p>收集器:serial, Parallel Scavenge, Parallel New.均采用复制算法. Serial是单线程,Parallel New可以看成Serial多线程版本. Parallel Scanvenge和Parallel New类似，但更注重吞吐率，且不能与CMS一起使用</p>
+<h2 id="full-gc"><a class="markdownIt-Anchor" href="#full-gc"></a> Full GC</h2>
+<p>特点：发生次数少，耗时长</p>
+<p>收集器：Serial Old(整理), Parallel Old(整理), CMS(清除). Serial Old是单线程的，Parallel Old可以看成Serial Old的多线程版本. CMS是并发收集器，除了初始标记和重新标记操作需要Stop the world，其它时间可以与应用程序一起并发执行</p>
+<h1 id="垃圾回收触发条件"><a class="markdownIt-Anchor" href="#垃圾回收触发条件"></a> 垃圾回收触发条件</h1>
+<h2 id="minor-gc-2"><a class="markdownIt-Anchor" href="#minor-gc-2"></a> Minor GC</h2>
+<ul>
+<li>Eden区空间不足</li>
+</ul>
+<h2 id="full-gc-2"><a class="markdownIt-Anchor" href="#full-gc-2"></a> Full GC</h2>
+<ul>
+<li>老年代空间不足</li>
+<li>方法区(Metaspace)空间不足</li>
+<li>通过minor GC进入老年代的平均大小大于老年代的可用内存</li>
+<li>老年代被写满</li>
+<li>调用System.GC，系统建议执行full GC，但不一定执行。 《华为Java语言通用编程规范》规则8.7.5：禁止使用主动GC（除非在密码、RMI等方面），尤其是在频繁/周期性的逻辑中</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Java高级/" rel="tag"># Java高级</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2015/10/Java安全管理器SecurityManager/" rel="prev" title="Java安全管理器SecurityManager">
+      <i class="fa fa-chevron-left"></i> Java安全管理器SecurityManager
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2015/10/Java高级特性之疑难问题定位-粗糙版/" rel="next" title="Java高级特性之疑难问题定位-粗糙版">
+      Java高级特性之疑难问题定位-粗糙版 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#垃圾回收介绍"><span class="nav-number">1.</span> <span class="nav-text"> 垃圾回收介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#jvm内存管理"><span class="nav-number">1.1.</span> <span class="nav-text"> jvm内存管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#引用计数法"><span class="nav-number">1.2.</span> <span class="nav-text"> 引用计数法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可达性分析"><span class="nav-number">1.3.</span> <span class="nav-text"> 可达性分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#垃圾回收算法"><span class="nav-number">2.</span> <span class="nav-text"> 垃圾回收算法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#清除sweep"><span class="nav-number">2.1.</span> <span class="nav-text"> 清除(sweep)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#整理compact"><span class="nav-number">2.2.</span> <span class="nav-text"> 整理(compact)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#复制copy"><span class="nav-number">2.3.</span> <span class="nav-text"> 复制(copy)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#垃圾收集器"><span class="nav-number">3.</span> <span class="nav-text"> 垃圾收集器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#jvm堆划分"><span class="nav-number">3.1.</span> <span class="nav-text"> jvm堆划分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#minor-gc"><span class="nav-number">3.2.</span> <span class="nav-text"> Minor GC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#full-gc"><span class="nav-number">3.3.</span> <span class="nav-text"> Full GC</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#垃圾回收触发条件"><span class="nav-number">4.</span> <span class="nav-text"> 垃圾回收触发条件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#minor-gc-2"><span class="nav-number">4.1.</span> <span class="nav-text"> Minor GC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#full-gc-2"><span class="nav-number">4.2.</span> <span class="nav-text"> Full GC</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">457</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">31</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '532e662320b7ce46a74c402be89cb926',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

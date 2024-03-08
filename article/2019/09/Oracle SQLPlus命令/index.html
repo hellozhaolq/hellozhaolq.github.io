@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="SQLPlus是一个被DBA和开发人员广泛使用的功能强大的Oracle工具，可以在各个平台上拥有操作的一致性。SQLPlus可以执行输入的SQL语句和SQL文件，通过SQLPlus可以和数据库进行对话。以下例子基于Oracle 11g。">
+<meta name="keywords" content="Oracle">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Oracle SQLPlus命令">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/09/Oracle SQLPlus命令/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="SQLPlus是一个被DBA和开发人员广泛使用的功能强大的Oracle工具，可以在各个平台上拥有操作的一致性。SQLPlus可以执行输入的SQL语句和SQL文件，通过SQLPlus可以和数据库进行对话。以下例子基于Oracle 11g。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/09/Oracle%20SQLPlus命令/mrbird_photo_20171105144257.png">
+<meta property="og:updated_time" content="2019-09-06T07:28:02.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Oracle SQLPlus命令">
+<meta name="twitter:description" content="SQLPlus是一个被DBA和开发人员广泛使用的功能强大的Oracle工具，可以在各个平台上拥有操作的一致性。SQLPlus可以执行输入的SQL语句和SQL文件，通过SQLPlus可以和数据库进行对话。以下例子基于Oracle 11g。">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2019/09/Oracle%20SQLPlus命令/mrbird_photo_20171105144257.png">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/09/Oracle SQLPlus命令/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Oracle SQLPlus命令 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/09/Oracle SQLPlus命令/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Oracle SQLPlus命令
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-09-06 15:28:02" itemprop="dateCreated datePublished" datetime="2019-09-06T15:28:02+08:00">2019-09-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>SQLPlus是一个被DBA和开发人员广泛使用的功能强大的Oracle工具，可以在各个平台上拥有操作的一致性。SQLPlus可以执行输入的SQL语句和SQL文件，通过SQLPlus可以和数据库进行对话。以下例子基于Oracle 11g。</p>
+<a id="more"></a>
+<p><font color="blue">推荐：</font></p>
+<p><a href="https://www.huaweicloud.com/articles/0c6a5c7fae5af4a5b5d43e6f8073e056.html" target="_blank" rel="noopener">Oracle sqlplus 设置</a></p>
+<p><a href="https://www.cnblogs.com/pompeii2008/p/5343997.html" target="_blank" rel="noopener">oracle spool 用法</a></p>
+<p><a href="https://kknews.cc/code/p9p4b2j.html" target="_blank" rel="noopener">Oracle Spool——&gt;动态组合生成sql脚本或数据</a></p>
+<p><a href="https://www.cnblogs.com/xqzt/p/4458061.html" target="_blank" rel="noopener">sqlplus中设定行大小、页大小、字符列格式、数字列格式、清屏</a></p>
+<h1 id="set命令设置运行环境"><a class="markdownIt-Anchor" href="#set命令设置运行环境"></a> set命令设置运行环境</h1>
+<p>在Oracle 11g中，可以使用set命令来设置SQLPlus的运行环境。set命令语法如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span> <span class="keyword">variable</span> <span class="keyword">value</span></span><br></pre></td></tr></table></figure>
+<p><code>variable</code>为变量名，<code>value</code>为变量值。下面介绍几个常用的set变量。</p>
+<h2 id="pagesize变量"><a class="markdownIt-Anchor" href="#pagesize变量"></a> pagesize变量</h2>
+<p>pagesize变量用来设置从顶部标题到页结束行（包含页首的空行）之间的行数。pagesize的默认值为14：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; show pagesize</span><br><span class="line">pagesize 14</span><br></pre></td></tr></table></figure>
+<p>使用<code>set pagesize</code>命令修改一页的行数为18：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; set pagesize 18;</span><br><span class="line">SQL&gt; select user_id,username,account_status from dba_users;</span><br><span class="line"></span><br><span class="line">   USER_ID USERNAME                       ACCOUNT_STATUS</span><br><span class="line"><span class="comment">---------- ------------------------------ --------------------------------</span></span><br><span class="line">        74 MGMT_VIEW                      OPEN</span><br><span class="line">         0 SYS                            OPEN</span><br><span class="line">         5 SYSTEM                         OPEN</span><br><span class="line">        30 DBSNMP                         OPEN</span><br><span class="line">        72 SYSMAN                         OPEN</span><br><span class="line">        84 SCOTT                          OPEN</span><br><span class="line">         9 OUTLN                          EXPIRED &amp; LOCKED</span><br><span class="line">        75 FLOWS_FILES                    EXPIRED &amp; LOCKED</span><br><span class="line">        57 MDSYS                          EXPIRED &amp; LOCKED</span><br><span class="line">        53 ORDSYS                         EXPIRED &amp; LOCKED</span><br><span class="line">        42 EXFSYS                         EXPIRED &amp; LOCKED</span><br><span class="line">        32 WMSYS                          EXPIRED &amp; LOCKED</span><br><span class="line">        31 APPQOSSYS                      EXPIRED &amp; LOCKED</span><br><span class="line">        78 APEX_030200                    EXPIRED &amp; LOCKED</span><br><span class="line">        83 OWBSYS_AUDIT                   EXPIRED &amp; LOCKED</span><br></pre></td></tr></table></figure>
+<p>可手动数一下是不是18行(lll￢ω￢)。</p>
+<h2 id="newpage变量"><a class="markdownIt-Anchor" href="#newpage变量"></a> newpage变量</h2>
+<p>该变量用于设置一页中空行的数量，默认值为1，可以使用<code>set newpage</code>命令改变该值：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; show newpage</span><br><span class="line">newpage 1</span><br><span class="line">SQL&gt; set newpage 5</span><br><span class="line">SQL&gt; select user_id,username,account_status from dba_users;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   USER_ID USERNAME                       ACCOUNT_STATUS</span><br><span class="line"><span class="comment">---------- ------------------------------ --------------------------------</span></span><br><span class="line">        74 MGMT_VIEW                      OPEN</span><br><span class="line">         0 SYS                            OPEN</span><br><span class="line">         5 SYSTEM                         OPEN</span><br><span class="line">        30 DBSNMP                         OPEN</span><br><span class="line">        72 SYSMAN                         OPEN</span><br><span class="line">        84 SCOTT                          OPEN</span><br><span class="line">         9 OUTLN                          EXPIRED &amp; LOCKED</span><br><span class="line">        75 FLOWS_FILES                    EXPIRED &amp; LOCKED</span><br><span class="line">        57 MDSYS                          EXPIRED &amp; LOCKED</span><br><span class="line">        53 ORDSYS                         EXPIRED &amp; LOCKED</span><br><span class="line">        42 EXFSYS                         EXPIRED &amp; LOCKED</span><br></pre></td></tr></table></figure>
+<h2 id="linesize变量"><a class="markdownIt-Anchor" href="#linesize变量"></a> linesize变量</h2>
+<p>该变量用于设置SQLPlus环境中一行所显示的最多字符总数，默认值为80，当pagesize过小时，数据就会出现折行显示的情况。可以使用<code>set linesize</code>命令来调整linesize的值：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; show linesize</span><br><span class="line">linesize 80</span><br><span class="line">SQL&gt; set linesize 120</span><br></pre></td></tr></table></figure>
+<h2 id="pause变量"><a class="markdownIt-Anchor" href="#pause变量"></a> pause变量</h2>
+<p>用于设置输出结果翻页时，是否暂停，基本语法如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span> pause <span class="keyword">value</span></span><br></pre></td></tr></table></figure>
+<p>value可取的值有：</p>
+<ul>
+<li><code>off</code>，默认值，返回结果一次性输出完毕，中间翻页不会暂停；</li>
+<li><code>on</code>，表示输出结果的每一页都暂停，用户按ENTER继续；</li>
+<li><code>text</code>，在设置为on之后，继续设置text的值，用于暂停时显示；</li>
+</ul>
+<p>比如：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; set pause on</span><br><span class="line">SQL&gt; set pause '按&lt;enter&gt;键继续'</span><br><span class="line">SQL&gt; select user_id,username,account_status from dba_users;</span><br><span class="line">按&lt;enter&gt;键继续</span><br><span class="line"></span><br><span class="line">   USER_ID USERNAME                       ACCOUNT_STATUS</span><br><span class="line"><span class="comment">---------- ------------------------------ --------------------------------</span></span><br><span class="line">        74 MGMT_VIEW                      OPEN</span><br><span class="line">         0 SYS                            OPEN</span><br><span class="line">         5 SYSTEM                         OPEN</span><br><span class="line">        30 DBSNMP                         OPEN</span><br><span class="line">        72 SYSMAN                         OPEN</span><br><span class="line">        84 SCOTT                          OPEN</span><br><span class="line">         9 OUTLN                          EXPIRED &amp; LOCKED</span><br><span class="line">        75 FLOWS_FILES                    EXPIRED &amp; LOCKED</span><br><span class="line">        57 MDSYS                          EXPIRED &amp; LOCKED</span><br><span class="line">        53 ORDSYS                         EXPIRED &amp; LOCKED</span><br><span class="line">        42 EXFSYS                         EXPIRED &amp; LOCKED</span><br><span class="line">        32 WMSYS                          EXPIRED &amp; LOCKED</span><br><span class="line">        31 APPQOSSYS                      EXPIRED &amp; LOCKED</span><br><span class="line">        78 APEX_030200                    EXPIRED &amp; LOCKED</span><br><span class="line">        83 OWBSYS_AUDIT                   EXPIRED &amp; LOCKED</span><br><span class="line">按&lt;enter&gt;键继续</span><br></pre></td></tr></table></figure>
+<h2 id="numformat变量"><a class="markdownIt-Anchor" href="#numformat变量"></a> numformat变量</h2>
+<p>该变量值用于设置显示数值的默认格式，基本语法如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span> numformat <span class="keyword">format</span></span><br></pre></td></tr></table></figure>
+<p>format为数值掩码，常用值及其说明如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">掩码</th>
+<th style="text-align:left">说明</th>
+<th style="text-align:left">举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">9</td>
+<td style="text-align:left">查询结果中数字替换格式的掩码</td>
+<td style="text-align:left">999</td>
+</tr>
+<tr>
+<td style="text-align:left">0</td>
+<td style="text-align:left">格式中的掩码屏蔽掉查询结果中的数字</td>
+<td style="text-align:left">999.00</td>
+</tr>
+<tr>
+<td style="text-align:left">$</td>
+<td style="text-align:left">在查询结果中的数字前添加美元前缀</td>
+<td style="text-align:left">$999</td>
+</tr>
+<tr>
+<td style="text-align:left">S</td>
+<td style="text-align:left">为数字显示符号类型，通常用于显示查询结果中的正负数字</td>
+<td style="text-align:left">S999</td>
+</tr>
+<tr>
+<td style="text-align:left">,</td>
+<td style="text-align:left">在字符<code>,</code>位置上放置都逗号/td&gt;</td>
+<td style="text-align:left">999,99</td>
+</tr>
+</tbody>
+</table>
+<p>查看scott.emp表中的SAL字段值，然后使用”$999,999,999.00”格式显示:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; select ename,job,sal from scott.emp;</span><br><span class="line"></span><br><span class="line">ENAME      JOB              SAL</span><br><span class="line"><span class="comment">---------- --------- ----------</span></span><br><span class="line">SMITH      CLERK            800</span><br><span class="line">ALLEN      SALESMAN        1600</span><br><span class="line">WARD       SALESMAN        1250</span><br><span class="line">JONES      MANAGER         2975</span><br><span class="line">MARTIN     SALESMAN        1250</span><br><span class="line">BLAKE      MANAGER         2850</span><br><span class="line">CLARK      MANAGER         2450</span><br><span class="line">SCOTT      ANALYST         3000</span><br><span class="line">KING       PRESIDENT       5000</span><br><span class="line">TURNER     SALESMAN        1500</span><br><span class="line">ADAMS      CLERK           1100</span><br><span class="line">SQL&gt; set numformat $999,999,999.00</span><br><span class="line">SQL&gt; select ename,job,sal from scott.emp;</span><br><span class="line"></span><br><span class="line">ENAME      JOB                    SAL</span><br><span class="line"><span class="comment">---------- --------- ----------------</span></span><br><span class="line">SMITH      CLERK              $800.00</span><br><span class="line">ALLEN      SALESMAN         $1,600.00</span><br><span class="line">WARD       SALESMAN         $1,250.00</span><br><span class="line">JONES      MANAGER          $2,975.00</span><br><span class="line">MARTIN     SALESMAN         $1,250.00</span><br><span class="line">BLAKE      MANAGER          $2,850.00</span><br><span class="line">CLARK      MANAGER          $2,450.00</span><br><span class="line">SCOTT      ANALYST          $3,000.00</span><br><span class="line">KING       PRESIDENT        $5,000.00</span><br><span class="line">TURNER     SALESMAN         $1,500.00</span><br><span class="line">ADAMS      CLERK            $1,100.00</span><br></pre></td></tr></table></figure>
+<h2 id="timing变量"><a class="markdownIt-Anchor" href="#timing变量"></a> timing变量</h2>
+<p>该变量用于显示执行SQL语句所花的时间，默认值为off：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; set timing on</span><br><span class="line">SQL&gt; select ename,job,sal from scott.emp;</span><br><span class="line"></span><br><span class="line">ENAME      JOB                    SAL</span><br><span class="line"><span class="comment">---------- --------- ----------------</span></span><br><span class="line">SMITH      CLERK              $800.00</span><br><span class="line">ALLEN      SALESMAN         $1,600.00</span><br><span class="line">WARD       SALESMAN         $1,250.00</span><br><span class="line">JONES      MANAGER          $2,975.00</span><br><span class="line">MARTIN     SALESMAN         $1,250.00</span><br><span class="line">BLAKE      MANAGER          $2,850.00</span><br><span class="line">CLARK      MANAGER          $2,450.00</span><br><span class="line">SCOTT      ANALYST          $3,000.00</span><br><span class="line">KING       PRESIDENT        $5,000.00</span><br><span class="line">TURNER     SALESMAN         $1,500.00</span><br><span class="line">ADAMS      CLERK            $1,100.00</span><br><span class="line"></span><br><span class="line">ENAME      JOB                    SAL</span><br><span class="line"><span class="comment">---------- --------- ----------------</span></span><br><span class="line">JAMES      CLERK              $950.00</span><br><span class="line">FORD       ANALYST          $3,000.00</span><br><span class="line">MILLER     CLERK            $1,300.00</span><br><span class="line"></span><br><span class="line">已选择14行。</span><br><span class="line"></span><br><span class="line">已用时间:  00: 00: 00.04</span><br></pre></td></tr></table></figure>
+<p>set命令还有很多变量可用，可使用<code>help set</code>命令来查看。</p>
+<h1 id="常用sqlplus命令"><a class="markdownIt-Anchor" href="#常用sqlplus命令"></a> 常用SQLPlus命令</h1>
+<h2 id="help命令"><a class="markdownIt-Anchor" href="#help命令"></a> help命令</h2>
+<p>help命令用来帮助用户查询指定命令详细介绍，类似于Linux的man，其的语法如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">help</span>|? [topic]</span><br></pre></td></tr></table></figure>
+<p><code>?</code>表示一个命令的部分字符，用于模糊查询；topic参数表示要查询的命令的完整名称。如果直接输入help，则显示的是命令本身的详细信息：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; help</span><br><span class="line"></span><br><span class="line"> <span class="keyword">HELP</span></span><br><span class="line"> <span class="comment">----</span></span><br><span class="line"></span><br><span class="line"> Accesses this command line <span class="keyword">help</span> system. Enter <span class="keyword">HELP</span> <span class="keyword">INDEX</span> <span class="keyword">or</span> ? <span class="keyword">INDEX</span></span><br><span class="line"> <span class="keyword">for</span> a <span class="keyword">list</span> <span class="keyword">of</span> topics.</span><br><span class="line"></span><br><span class="line"> You can <span class="keyword">view</span> <span class="keyword">SQL</span>*Plus resources <span class="keyword">at</span></span><br><span class="line">     <span class="keyword">http</span>://www.oracle.com/technology/tech/sql_plus/</span><br><span class="line"> <span class="keyword">and</span> the <span class="keyword">Oracle</span> <span class="keyword">Database</span> <span class="keyword">Library</span> <span class="keyword">at</span></span><br><span class="line">     <span class="keyword">http</span>://www.oracle.com/technology/documentation/</span><br><span class="line"></span><br><span class="line"> <span class="keyword">HELP</span>|? [topic]</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">SQL</span>&gt; <span class="keyword">help</span> <span class="keyword">set</span></span><br><span class="line"></span><br><span class="line"> <span class="keyword">SET</span></span><br><span class="line"> <span class="comment">---</span></span><br><span class="line"></span><br><span class="line"> <span class="keyword">Sets</span> a <span class="keyword">system</span> <span class="keyword">variable</span> <span class="keyword">to</span> <span class="keyword">alter</span> the <span class="keyword">SQL</span>*Plus environment <span class="keyword">settings</span></span><br><span class="line"> <span class="keyword">for</span> your <span class="keyword">current</span> session. <span class="keyword">For</span> example, <span class="keyword">to</span>:</span><br><span class="line">     -   <span class="keyword">set</span> the display width <span class="keyword">for</span> <span class="keyword">data</span></span><br><span class="line">     -   customize HTML formatting</span><br><span class="line">     -   <span class="keyword">enable</span> <span class="keyword">or</span> <span class="keyword">disable</span> printing <span class="keyword">of</span> <span class="keyword">column</span> headings</span><br><span class="line">     -   <span class="keyword">set</span> the <span class="built_in">number</span> <span class="keyword">of</span> <span class="keyword">lines</span> per page</span><br><span class="line"></span><br><span class="line"> <span class="keyword">SET</span> system_variable <span class="keyword">value</span></span><br><span class="line"></span><br><span class="line"> <span class="keyword">where</span> system_variable <span class="keyword">and</span> <span class="keyword">value</span> represent one <span class="keyword">of</span> the <span class="keyword">following</span> clauses:</span><br><span class="line"></span><br><span class="line">   APPI[NFO]&#123;<span class="keyword">OFF</span>|<span class="keyword">ON</span>|<span class="built_in">text</span>&#125;                   NEWP[AGE] &#123;<span class="number">1</span>|n|<span class="keyword">NONE</span>&#125;</span><br><span class="line">   <span class="built_in">ARRAY</span>[<span class="keyword">SIZE</span>] &#123;<span class="number">15</span>|n&#125;                       <span class="literal">NULL</span> <span class="built_in">text</span></span><br><span class="line">   <span class="keyword">AUTO</span>[<span class="keyword">COMMIT</span>] &#123;<span class="keyword">OFF</span>|<span class="keyword">ON</span>|IMM[EDIATE]|n&#125;      NUMF[ORMAT] <span class="keyword">format</span></span><br><span class="line">   AUTOP[RINT] &#123;<span class="keyword">OFF</span>|<span class="keyword">ON</span>&#125;                     <span class="keyword">NUM</span>[WIDTH] &#123;<span class="number">10</span>|n&#125;</span><br><span class="line">   AUTORECOVERY &#123;<span class="keyword">OFF</span>|<span class="keyword">ON</span>&#125;                    PAGES[IZE] &#123;<span class="number">14</span>|n&#125;</span><br><span class="line">   AUTOT[RACE] &#123;<span class="keyword">OFF</span>|<span class="keyword">ON</span>|<span class="keyword">TRACE</span>[<span class="keyword">ONLY</span>]&#125;         PAU[SE] &#123;<span class="keyword">OFF</span>|<span class="keyword">ON</span>|<span class="built_in">text</span>&#125;</span><br><span class="line">     [<span class="keyword">EXP</span>[LAIN]] [STAT[ISTICS]]             RECSEP &#123;WR[APPED]|EA[CH]|<span class="keyword">OFF</span>&#125;</span><br><span class="line">   BLO[CKTERMINATOR] &#123;.|c|<span class="keyword">ON</span>|<span class="keyword">OFF</span>&#125;           RECSEPCHAR &#123;_|c&#125;</span><br><span class="line">   CMDS[EP] &#123;;|c|OFF|ON&#125;                    SERVEROUT[PUT] &#123;ON|OFF&#125;</span><br><span class="line">   COLSEP &#123;_|text&#125;                            [SIZE &#123;n | UNLIMITED&#125;]</span><br><span class="line">   CON[CAT] &#123;.|c|ON|OFF&#125;                      [FOR[MAT]  &#123;WRA[PPED] |</span><br><span class="line">   COPYC[OMMIT] &#123;0|n&#125;                          WOR[D_WRAPPED] |</span><br><span class="line">   COPYTYPECHECK &#123;ON|OFF&#125;                      TRU[NCATED]&#125;]</span><br><span class="line">   DEF[INE] &#123;&amp;|c|ON|OFF&#125;                    SHIFT[INOUT] &#123;VIS[IBLE] |</span><br><span class="line">   <span class="keyword">DESCRIBE</span> [<span class="keyword">DEPTH</span> &#123;<span class="number">1</span>|n|<span class="keyword">ALL</span>&#125;]                 INV[ISIBLE]&#125;</span><br><span class="line">     [LINENUM &#123;<span class="keyword">OFF</span>|<span class="keyword">ON</span>&#125;] [INDENT &#123;<span class="keyword">OFF</span>|<span class="keyword">ON</span>&#125;]   <span class="keyword">SHOW</span>[<span class="keyword">MODE</span>] &#123;<span class="keyword">OFF</span>|<span class="keyword">ON</span>&#125;</span><br><span class="line">   ECHO &#123;<span class="keyword">OFF</span>|<span class="keyword">ON</span>&#125;                            SQLBL[ANKLINES] &#123;<span class="keyword">OFF</span>|<span class="keyword">ON</span>&#125;</span><br><span class="line">   EDITF[ILE] file_name[.ext]               SQLC[ASE] &#123;MIX[ED] |</span><br><span class="line">   EMB[EDDED] &#123;<span class="keyword">OFF</span>|<span class="keyword">ON</span>&#125;                        LO[WER] | UP[PER]&#125;</span><br><span class="line">   ERRORL[OGGING] &#123;<span class="keyword">ON</span>|<span class="keyword">OFF</span>&#125;                  SQLCO[NTINUE] &#123;&gt; | <span class="built_in">text</span>&#125;</span><br><span class="line">     [<span class="keyword">TABLE</span> [schema.]tablename]             SQLN[UMBER] &#123;<span class="keyword">ON</span>|<span class="keyword">OFF</span>&#125;</span><br><span class="line">     [<span class="keyword">TRUNCATE</span>] [IDENTIFIER identifier]     SQLPLUSCOMPAT[IBILITY] &#123;x.y[.z]&#125;</span><br><span class="line">   ESC[APE] &#123;\|c|<span class="keyword">OFF</span>|<span class="keyword">ON</span>&#125;                    SQLPRE[FIX] &#123;<span class="comment">#|c&#125;</span></span><br><span class="line">   ESCCHAR &#123;@|?|%|$|<span class="keyword">OFF</span>&#125;                    SQLP[ROMPT] &#123;<span class="keyword">SQL</span>&gt;|<span class="built_in">text</span>&#125;</span><br><span class="line">   EXITC[OMMIT] &#123;ON|OFF&#125;                    SQLT[ERMINATOR] &#123;;|c|ON|OFF&#125;</span><br><span class="line">   FEED[BACK] &#123;6|n|ON|OFF&#125;                  SUF[FIX] &#123;SQL|text&#125;</span><br><span class="line">   FLAGGER &#123;OFF|ENTRY|INTERMED[IATE]|FULL&#125;  TAB &#123;ON|OFF&#125;</span><br><span class="line">   FLU[SH] &#123;ON|OFF&#125;                         TERM[OUT] &#123;ON|OFF&#125;</span><br><span class="line">   HEA[DING] &#123;ON|OFF&#125;                       TI[ME] &#123;OFF|ON&#125;</span><br><span class="line">   HEADS[EP] &#123;||c|ON|OFF&#125;                   TIMI[NG] &#123;OFF|ON&#125;</span><br><span class="line">   INSTANCE [instance_path|LOCAL]           TRIM[OUT] &#123;ON|OFF&#125;</span><br><span class="line">   LIN[ESIZE] &#123;80|n&#125;                        TRIMS[POOL] &#123;OFF|ON&#125;</span><br><span class="line">   LOBOF[FSET] &#123;1|n&#125;                        UND[ERLINE] &#123;-|c|ON|OFF&#125;</span><br><span class="line">   LOGSOURCE [pathname]                     VER[IFY] &#123;ON|OFF&#125;</span><br><span class="line">   LONG &#123;80|n&#125;                              WRA[P] &#123;ON|OFF&#125;</span><br><span class="line">   LONGC[HUNKSIZE] &#123;80|n&#125;                   XQUERY &#123;BASEURI text|</span><br><span class="line">   MARK[UP] HTML [OFF|ON]                     ORDERING&#123;UNORDERED|</span><br><span class="line">     [HEAD text] [BODY text] [TABLE text]              ORDERED|DEFAULT&#125;|</span><br><span class="line">     [ENTMAP &#123;ON|OFF&#125;]                        NODE&#123;BYVALUE|BYREFERENCE|</span><br><span class="line">     [SPOOL &#123;OFF|ON&#125;]                              DEFAULT&#125;|</span><br><span class="line">     [PRE[FORMAT] &#123;OFF|ON&#125;]                   CONTEXT text&#125;</span><br></pre></td></tr></table></figure>
+<p>也可以使用<code>help index</code>命令查看SQLPlus命令清单：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; help index</span><br><span class="line"></span><br><span class="line">Enter <span class="keyword">Help</span> [topic] <span class="keyword">for</span> help.</span><br><span class="line"></span><br><span class="line"> @             COPY         PAUSE                    <span class="keyword">SHUTDOWN</span></span><br><span class="line"> @@            <span class="keyword">DEFINE</span>       PRINT                    SPOOL</span><br><span class="line"> /             DEL          <span class="keyword">PROMPT</span>                   SQLPLUS</span><br><span class="line"> <span class="keyword">ACCEPT</span>        <span class="keyword">DESCRIBE</span>     QUIT                     <span class="keyword">START</span></span><br><span class="line"> APPEND        <span class="keyword">DISCONNECT</span>   <span class="keyword">RECOVER</span>                  <span class="keyword">STARTUP</span></span><br><span class="line"> <span class="keyword">ARCHIVE</span> <span class="keyword">LOG</span>   EDIT         REMARK                   <span class="keyword">STORE</span></span><br><span class="line"> <span class="keyword">ATTRIBUTE</span>     <span class="keyword">EXECUTE</span>      REPFOOTER                TIMING</span><br><span class="line"> BREAK         <span class="keyword">EXIT</span>         REPHEADER                TTITLE</span><br><span class="line"> BTITLE        <span class="keyword">GET</span>          RESERVED WORDS (<span class="keyword">SQL</span>)     UNDEFINE</span><br><span class="line"> <span class="keyword">CHANGE</span>        <span class="keyword">HELP</span>         RESERVED WORDS (PL/<span class="keyword">SQL</span>)  <span class="keyword">VARIABLE</span></span><br><span class="line"> <span class="keyword">CLEAR</span>         HOST         RUN                      <span class="keyword">WHENEVER</span> OSERROR</span><br><span class="line"> <span class="keyword">COLUMN</span>        <span class="keyword">INPUT</span>        <span class="keyword">SAVE</span>                     <span class="keyword">WHENEVER</span> <span class="keyword">SQLERROR</span></span><br><span class="line"> <span class="keyword">COMPUTE</span>       <span class="keyword">LIST</span>         <span class="keyword">SET</span>                      XQUERY</span><br><span class="line"> <span class="keyword">CONNECT</span>       <span class="keyword">PASSWORD</span>     <span class="keyword">SHOW</span></span><br></pre></td></tr></table></figure>
+<h2 id="describe命令"><a class="markdownIt-Anchor" href="#describe命令"></a> describe命令</h2>
+<p>该命令用于查询指定数据表的组成结构，语法如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">desc[ribe] object_name</span><br></pre></td></tr></table></figure>
+<p>describe可缩写为desc。</p>
+<p>比如查询scott.emp表中SALESMAN的编号，姓名和工资，过程中，使用<code>#desc scott.emp</code>命令查询scott.emp表中工资字段的名称：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; select empno,ename,</span><br><span class="line">  2  <span class="comment">#desc scott.emp</span></span><br><span class="line"> 名称                                      是否为空? 类型</span><br><span class="line"> <span class="comment">----------------------------------------- -------- ----------------------------</span></span><br><span class="line"> EMPNO                                     NOT NULL NUMBER(4)</span><br><span class="line"> ENAME                                              VARCHAR2(10)</span><br><span class="line"> JOB                                                VARCHAR2(9)</span><br><span class="line"> MGR                                                NUMBER(4)</span><br><span class="line"> HIREDATE                                           DATE</span><br><span class="line"> SAL                                                NUMBER(7,2)</span><br><span class="line"> COMM                                               NUMBER(7,2)</span><br><span class="line"> DEPTNO                                             NUMBER(2)</span><br><span class="line"></span><br><span class="line">  2  sal from scott.emp where job = 'SALESMAN';</span><br><span class="line"></span><br><span class="line">     EMPNO ENAME             SAL</span><br><span class="line"><span class="comment">---------- ---------- ----------</span></span><br><span class="line">      7499 ALLEN            1600</span><br><span class="line">      7521 WARD             1250</span><br><span class="line">      7654 MARTIN           1250</span><br><span class="line">      7844 TURNER           1500</span><br></pre></td></tr></table></figure>
+<h2 id="spool命令"><a class="markdownIt-Anchor" href="#spool命令"></a> spool命令</h2>
+<p>该命令可以将查询结果输出到指定文件中，spool的语法格式如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">spo[ol] [file_name[.ext] [CRE[ATE] | REP[LACE] | APP[<span class="keyword">END</span>]] | <span class="keyword">OFF</span> | <span class="keyword">OUT</span>]</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>cre[ate]</code>，表示创建一个新的文件，默认值；</li>
+<li><code>rep[lace]</code>，表示覆盖已存在的文件；</li>
+<li><code>app[end]</code>，表示追加到一个已存在的文件中；</li>
+<li><code>off|out</code>，表示关闭spool输出。</li>
+</ul>
+<p>比如：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; spool d:\emp.txt</span><br><span class="line">SQL&gt; select empno,ename,job,sal from scott.emp;</span><br><span class="line"></span><br><span class="line">     EMPNO ENAME      JOB              SAL</span><br><span class="line"><span class="comment">---------- ---------- --------- ----------</span></span><br><span class="line">      7369 SMITH      CLERK            800</span><br><span class="line">      7499 ALLEN      SALESMAN        1600</span><br><span class="line">      7521 WARD       SALESMAN        1250</span><br><span class="line">      7566 JONES      MANAGER         2975</span><br><span class="line">      7654 MARTIN     SALESMAN        1250</span><br><span class="line">      7698 BLAKE      MANAGER         2850</span><br><span class="line">      7782 CLARK      MANAGER         2450</span><br><span class="line">      7788 SCOTT      ANALYST         3000</span><br><span class="line">      7839 KING       PRESIDENT       5000</span><br><span class="line">      7844 TURNER     SALESMAN        1500</span><br><span class="line">      7876 ADAMS      CLERK           1100</span><br><span class="line"></span><br><span class="line">     EMPNO ENAME      JOB              SAL</span><br><span class="line"><span class="comment">---------- ---------- --------- ----------</span></span><br><span class="line">      7900 JAMES      CLERK            950</span><br><span class="line">      7902 FORD       ANALYST         3000</span><br><span class="line">      7934 MILLER     CLERK           1300</span><br><span class="line"></span><br><span class="line">已选择14行。</span><br><span class="line"></span><br><span class="line">SQL&gt; spool off</span><br></pre></td></tr></table></figure>
+<p>到D盘打开emp.txt如下：</p>
+<p><img src="/article/2019/09/Oracle SQLPlus命令/mrbird_photo_20171105144257.png" alt="mrbird_photo_20171105144257.png"></p>
+<h2 id="define命令"><a class="markdownIt-Anchor" href="#define命令"></a> define命令</h2>
+<p>该命令用来定义一个变量并赋值，基本语法如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">def[ine] [variable] | [variable = text]</span><br></pre></td></tr></table></figure>
+<p>比如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; define vjob='SALESMAN'</span><br><span class="line">SQL&gt; define vjob</span><br><span class="line">DEFINE VJOB            = "SALESMAN" (CHAR)</span><br></pre></td></tr></table></figure>
+<h2 id="show命令"><a class="markdownIt-Anchor" href="#show命令"></a> show命令</h2>
+<p>show命令用来显示SQLPlus系统变量的值，语法如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sho[w] option</span><br></pre></td></tr></table></figure>
+<p>option表示要显示的系统选项，常用的值有：all，parameters [parameter_name]，sga，spool和user等。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; show parameters db_block_size</span><br><span class="line"></span><br><span class="line">NAME                                 TYPE        VALUE</span><br><span class="line"><span class="comment">------------------------------------ ----------- ------------------------------</span></span><br><span class="line">db_block_size                        integer     8192</span><br><span class="line">SQL&gt; show sga</span><br><span class="line"></span><br><span class="line">Total System Global Area 3373858816 bytes</span><br><span class="line">Fixed Size                  2180424 bytes</span><br><span class="line">Variable Size            1862273720 bytes</span><br><span class="line">Database Buffers         1493172224 bytes</span><br><span class="line">Redo Buffers               16232448 bytes</span><br><span class="line">SQL&gt; show user</span><br><span class="line">USER 为 "SYSTEM"</span><br></pre></td></tr></table></figure>
+<h2 id="save命令"><a class="markdownIt-Anchor" href="#save命令"></a> save命令</h2>
+<p>该命令将SQL缓冲区的最近一条SQL或PL/SQL块保存到指定的文件中，语法如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sav[e] [FILE] file_name[.ext] [CRE[ATE] | REP[LACE] | APP[<span class="keyword">END</span>]]</span><br></pre></td></tr></table></figure>
+<p>比如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; select * from scott.dept;</span><br><span class="line"></span><br><span class="line">    DEPTNO DNAME          LOC</span><br><span class="line"><span class="comment">---------- -------------- -------------</span></span><br><span class="line">        10 ACCOUNTING     NEW YORK</span><br><span class="line">        20 RESEARCH       DALLAS</span><br><span class="line">        30 SALES          CHICAGO</span><br><span class="line">        40 OPERATIONS     BOSTON</span><br><span class="line"></span><br><span class="line">SQL&gt; save d:\dept.sql</span><br><span class="line">已创建 file d:\dept.sql</span><br></pre></td></tr></table></figure>
+<p>如果不指定文件扩展名，默认为.sql。</p>
+<h2 id="get命令"><a class="markdownIt-Anchor" href="#get命令"></a> get命令</h2>
+<p>该命令将一个SQL脚本文件的内容放进SQL的缓冲区，语法格式如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">get [FILE] file_name[.ext] [LIST | NOLIST]</span><br></pre></td></tr></table></figure>
+<p>其中list表示加载到缓冲区的时候显示文件的内容，nolist则表示不显示。</p>
+<p>比如加载d:\dept.sql到SQL缓冲区，并运行命令<code>/</code>执行该语句：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; get d:\dept.sql list</span><br><span class="line">  1* select * from scott.dept</span><br><span class="line">SQL&gt; /</span><br><span class="line"></span><br><span class="line">    DEPTNO DNAME          LOC</span><br><span class="line"><span class="comment">---------- -------------- -------------</span></span><br><span class="line">        10 ACCOUNTING     NEW YORK</span><br><span class="line">        20 RESEARCH       DALLAS</span><br><span class="line">        30 SALES          CHICAGO</span><br><span class="line">        40 OPERATIONS     BOSTON</span><br></pre></td></tr></table></figure>
+<h2 id="start和"><a class="markdownIt-Anchor" href="#start和"></a> start和@</h2>
+<p>两个命令都是用于执行一个sql脚本文件，比如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; start d:\dept.sql</span><br><span class="line"></span><br><span class="line">    DEPTNO DNAME          LOC</span><br><span class="line"><span class="comment">---------- -------------- -------------</span></span><br><span class="line">        10 ACCOUNTING     NEW YORK</span><br><span class="line">        20 RESEARCH       DALLAS</span><br><span class="line">        30 SALES          CHICAGO</span><br><span class="line">        40 OPERATIONS     BOSTON</span><br><span class="line"></span><br><span class="line">SQL&gt; @ d:\dept.sql</span><br><span class="line"></span><br><span class="line">    DEPTNO DNAME          LOC</span><br><span class="line"><span class="comment">---------- -------------- -------------</span></span><br><span class="line">        10 ACCOUNTING     NEW YORK</span><br><span class="line">        20 RESEARCH       DALLAS</span><br><span class="line">        30 SALES          CHICAGO</span><br><span class="line">        40 OPERATIONS     BOSTON</span><br></pre></td></tr></table></figure>
+<h1 id="格式化查询结果"><a class="markdownIt-Anchor" href="#格式化查询结果"></a> 格式化查询结果</h1>
+<h2 id="column"><a class="markdownIt-Anchor" href="#column"></a> column</h2>
+<p>该命令可以实现格式化查询结果，设置列宽，设置列标题等。语法如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">col[umn] [column_name|alias|option]</span><br></pre></td></tr></table></figure>
+<p><code>column_name</code>用于指定要设置的列的名称，<code>alias</code>用于指定列的别名，<code>option</code>用于指定列的显示格式，其值和说明如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">option选项的值</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">clear</td>
+<td style="text-align:left">清除指定列所设置的格式，恢复默认值</td>
+</tr>
+<tr>
+<td style="text-align:left">format</td>
+<td style="text-align:left">格式化指定列</td>
+</tr>
+<tr>
+<td style="text-align:left">heading</td>
+<td style="text-align:left">指定列标题</td>
+</tr>
+<tr>
+<td style="text-align:left">justify</td>
+<td style="text-align:left">调整列标题的对齐方式，默认情况下：数值类型的右对齐，其他类型的左对齐</td>
+</tr>
+<tr>
+<td style="text-align:left">null</td>
+<td style="text-align:left">替换null值</td>
+</tr>
+<tr>
+<td style="text-align:left">print/noprint</td>
+<td style="text-align:left">显示列标题或隐藏列标题，默认为print</td>
+</tr>
+<tr>
+<td style="text-align:left">on/off</td>
+<td style="text-align:left">控制定义的显示属性状态，off表示定义的所有显示属性都不起作用</td>
+</tr>
+<tr>
+<td style="text-align:left">wrapped</td>
+<td style="text-align:left">当字符串的长度超过显示宽度时，将字符串的超出部分折叠到下一行显示</td>
+</tr>
+<tr>
+<td style="text-align:left">word_wrapped</td>
+<td style="text-align:left">表示从一个完整的字符处折叠</td>
+</tr>
+<tr>
+<td style="text-align:left">truncated</td>
+<td style="text-align:left">表示截取字符串尾部</td>
+</tr>
+</tbody>
+</table>
+<p><strong>format</strong>选项</p>
+<p>使用format选项格式化scott.emp表中的sal列，格式为$999,999.00：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; column sal format $999,999.00</span><br><span class="line">SQL&gt; select empno,ename,sal from scott.emp;</span><br><span class="line"></span><br><span class="line">     EMPNO ENAME               SAL</span><br><span class="line"><span class="comment">---------- ---------- ------------</span></span><br><span class="line">      7369 SMITH           $800.00</span><br><span class="line">      7499 ALLEN         $1,600.00</span><br><span class="line">      7521 WARD          $1,250.00</span><br><span class="line">      7566 JONES         $2,975.00</span><br><span class="line">      7654 MARTIN        $1,250.00</span><br><span class="line">      7698 BLAKE         $2,850.00</span><br><span class="line">      7782 CLARK         $2,450.00</span><br><span class="line">      7788 SCOTT         $3,000.00</span><br><span class="line">      7839 KING          $5,000.00</span><br><span class="line">      7844 TURNER        $1,500.00</span><br><span class="line">      7876 ADAMS         $1,100.00</span><br><span class="line"></span><br><span class="line">     EMPNO ENAME               SAL</span><br><span class="line"><span class="comment">---------- ---------- ------------</span></span><br><span class="line">      7900 JAMES           $950.00</span><br><span class="line">      7902 FORD          $3,000.00</span><br><span class="line">      7934 MILLER        $1,300.00</span><br><span class="line"></span><br><span class="line">已选择14行。</span><br></pre></td></tr></table></figure>
+<p><strong>heading</strong>选项</p>
+<p>使用heading选项将scott.emp表的empno，ename和sal三个列名转换为中文：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; column empno heading 员工编号</span><br><span class="line">SQL&gt; column ename heading 员工姓名</span><br><span class="line">SQL&gt; column sal heading 工资</span><br><span class="line">SQL&gt; select empno,ename,sal from scott.emp;</span><br><span class="line"></span><br><span class="line">  员工编号 员工姓名           工资</span><br><span class="line"><span class="comment">---------- ---------- ------------</span></span><br><span class="line">      7369 SMITH           $800.00</span><br><span class="line">      7499 ALLEN         $1,600.00</span><br><span class="line">      7521 WARD          $1,250.00</span><br><span class="line">      7566 JONES         $2,975.00</span><br><span class="line">      7654 MARTIN        $1,250.00</span><br><span class="line">      7698 BLAKE         $2,850.00</span><br><span class="line">      7782 CLARK         $2,450.00</span><br><span class="line">      7788 SCOTT         $3,000.00</span><br><span class="line">      7839 KING          $5,000.00</span><br><span class="line">      7844 TURNER        $1,500.00</span><br><span class="line">      7876 ADAMS         $1,100.00</span><br><span class="line"></span><br><span class="line">  员工编号 员工姓名           工资</span><br><span class="line"><span class="comment">---------- ---------- ------------</span></span><br><span class="line">      7900 JAMES           $950.00</span><br><span class="line">      7902 FORD          $3,000.00</span><br><span class="line">      7934 MILLER        $1,300.00</span><br><span class="line"></span><br><span class="line">已选择14行。</span><br></pre></td></tr></table></figure>
+<p><strong>null</strong>选项</p>
+<p>使用null选项将scott.emp表中comm列值为null显示成“空值”：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; column comm null '空值'</span><br><span class="line">SQL&gt; select empno,ename,comm from scott.emp where comm is null;</span><br><span class="line"></span><br><span class="line">  员工编号 员工姓名         COMM</span><br><span class="line"><span class="comment">---------- ---------- ----------</span></span><br><span class="line">      7369 SMITH      空值</span><br><span class="line">      7566 JONES      空值</span><br><span class="line">      7698 BLAKE      空值</span><br><span class="line">      7782 CLARK      空值</span><br><span class="line">      7788 SCOTT      空值</span><br><span class="line">      7839 KING       空值</span><br><span class="line">      7876 ADAMS      空值</span><br><span class="line">      7900 JAMES      空值</span><br><span class="line">      7902 FORD       空值</span><br><span class="line">      7934 MILLER     空值</span><br><span class="line"></span><br><span class="line">已选择10行。</span><br></pre></td></tr></table></figure>
+<p><strong>wrapped/word_wrapped</strong>选项</p>
+<p>使用<strong>wrapped</strong>选项实现按照指定长度折行：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; create table test(</span><br><span class="line">  2  col1 varchar2(100)</span><br><span class="line">  3  );</span><br><span class="line"></span><br><span class="line">表已创建。</span><br><span class="line"></span><br><span class="line">SQL&gt; insert into test(col1) values ('HOW ARE YOU?');</span><br><span class="line"></span><br><span class="line">已创建 1 行。</span><br><span class="line"></span><br><span class="line">SQL&gt; select col1 from test;</span><br><span class="line"></span><br><span class="line">COL1</span><br><span class="line"><span class="comment">--------------------------------------------------------------------------------</span></span><br><span class="line">HOW ARE YOU?</span><br><span class="line"></span><br><span class="line">SQL&gt; column col1 format a5</span><br><span class="line">SQL&gt; column col1 wrapped</span><br><span class="line">SQL&gt; select col1 from test;</span><br><span class="line"></span><br><span class="line">COL1</span><br><span class="line"><span class="comment">-----</span></span><br><span class="line">HOW A</span><br><span class="line">RE YO</span><br><span class="line">U?</span><br></pre></td></tr></table></figure>
+<p>使用<strong>word_wrapped</strong>选项按照完整字符串折行</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; column col1 word_wrapped</span><br><span class="line">SQL&gt; select col1 from test;</span><br><span class="line"></span><br><span class="line">COL1</span><br><span class="line"><span class="comment">-----</span></span><br><span class="line">HOW</span><br><span class="line">ARE</span><br><span class="line">YOU?</span><br></pre></td></tr></table></figure>
+<h2 id="ttitle和btitle命令"><a class="markdownIt-Anchor" href="#ttitle和btitle命令"></a> ttitle和btitle命令</h2>
+<p>这两个命令分别用来设置打印时每页的页首和页脚标题，其中ttitle语法如下（btitle语法类似）：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tti[tle] [printspec [text|variable] ...] | [OFF|ON]</span><br></pre></td></tr></table></figure>
+<p><code>printspec</code>作为头标题的修饰性选项，其值和说明如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">printspec选项的值</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">col</td>
+<td style="text-align:left">指定当前行的第几列打印头标题</td>
+</tr>
+<tr>
+<td style="text-align:left">skip</td>
+<td style="text-align:left">跳到从下一行开始的第几行，默认为1</td>
+</tr>
+<tr>
+<td style="text-align:left">left</td>
+<td style="text-align:left">在当前行中左对齐打印数据</td>
+</tr>
+<tr>
+<td style="text-align:left">center</td>
+<td style="text-align:left">在当前行中间打印数据</td>
+</tr>
+<tr>
+<td style="text-align:left">right</td>
+<td style="text-align:left">在当前行中右对齐打印数据</td>
+</tr>
+<tr>
+<td style="text-align:left">bold</td>
+<td style="text-align:left">以黑体打印数据</td>
+</tr>
+</tbody>
+</table>
+<p>比如：打印输出scott.salgrade数据表中的记录，并设置标题：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; set pagesize 8</span><br><span class="line">SQL&gt; ttitle left '销售情况排行表'</span><br><span class="line">SQL&gt; btitle left '打印日期2017年11月5日 打印人 MrBird'</span><br><span class="line">SQL&gt; select * from scott.salgrade;</span><br><span class="line"></span><br><span class="line">销售情况排行表</span><br><span class="line">     GRADE      LOSAL      HISAL</span><br><span class="line"><span class="comment">---------- ---------- ----------</span></span><br><span class="line">         1        700       1200</span><br><span class="line">         2       1201       1400</span><br><span class="line">         3       1401       2000</span><br><span class="line">打印日期2017年11月5日 打印人 MrBird</span><br><span class="line"></span><br><span class="line">销售情况排行表</span><br><span class="line">     GRADE      LOSAL      HISAL</span><br><span class="line"><span class="comment">---------- ---------- ----------</span></span><br><span class="line">         4       2001       3000</span><br><span class="line">         5       3001       9999</span><br><span class="line"></span><br><span class="line">打印日期2017年11月5日 打印人 MrBird</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Oracle/" rel="tag"># Oracle</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2019/09/Oracle 批量操作 SQL/" rel="prev" title="Oracle 批量操作 SQL">
+      <i class="fa fa-chevron-left"></i> Oracle 批量操作 SQL
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2019/09/多个邮箱统一管理/" rel="next" title="多个邮箱统一管理">
+      多个邮箱统一管理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#set命令设置运行环境"><span class="nav-number">1.</span> <span class="nav-text"> set命令设置运行环境</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#pagesize变量"><span class="nav-number">1.1.</span> <span class="nav-text"> pagesize变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#newpage变量"><span class="nav-number">1.2.</span> <span class="nav-text"> newpage变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#linesize变量"><span class="nav-number">1.3.</span> <span class="nav-text"> linesize变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pause变量"><span class="nav-number">1.4.</span> <span class="nav-text"> pause变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#numformat变量"><span class="nav-number">1.5.</span> <span class="nav-text"> numformat变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#timing变量"><span class="nav-number">1.6.</span> <span class="nav-text"> timing变量</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#常用sqlplus命令"><span class="nav-number">2.</span> <span class="nav-text"> 常用SQLPlus命令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#help命令"><span class="nav-number">2.1.</span> <span class="nav-text"> help命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#describe命令"><span class="nav-number">2.2.</span> <span class="nav-text"> describe命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#spool命令"><span class="nav-number">2.3.</span> <span class="nav-text"> spool命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#define命令"><span class="nav-number">2.4.</span> <span class="nav-text"> define命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#show命令"><span class="nav-number">2.5.</span> <span class="nav-text"> show命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#save命令"><span class="nav-number">2.6.</span> <span class="nav-text"> save命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get命令"><span class="nav-number">2.7.</span> <span class="nav-text"> get命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#start和"><span class="nav-number">2.8.</span> <span class="nav-text"> start和@</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#格式化查询结果"><span class="nav-number">3.</span> <span class="nav-text"> 格式化查询结果</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#column"><span class="nav-number">3.1.</span> <span class="nav-text"> column</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ttitle和btitle命令"><span class="nav-number">3.2.</span> <span class="nav-text"> ttitle和btitle命令</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">457</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">31</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : 'dd7edf3e8049d8caef4380f3db4dea9d',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

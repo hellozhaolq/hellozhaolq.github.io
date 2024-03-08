@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Java中锁的分类有：  公平锁/非公平锁 可重入锁 独占锁/共享锁 互斥锁/读写锁 乐观锁/悲观锁 分段锁 偏向锁/轻量级锁/重量级锁 自旋锁  上面是很多锁的名词，这些分类并不是全是指锁的状态，有的指锁的特性，有的指锁的设计，下面总结的内容是对每个锁的名词进行一定的解释。  独占锁/共享锁 排他锁 - 维基百科 共享锁 - 百度百科 独占锁是指该锁一次只能被一个线程所持有。 共享锁是指该锁可被">
+<meta name="keywords" content="多线程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java多线程5之线程安全与同步4-锁的分类">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2015/10/Java多线程5之线程安全与同步4-锁的分类/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="Java中锁的分类有：  公平锁/非公平锁 可重入锁 独占锁/共享锁 互斥锁/读写锁 乐观锁/悲观锁 分段锁 偏向锁/轻量级锁/重量级锁 自旋锁  上面是很多锁的名词，这些分类并不是全是指锁的状态，有的指锁的特性，有的指锁的设计，下面总结的内容是对每个锁的名词进行一定的解释。  独占锁/共享锁 排他锁 - 维基百科 共享锁 - 百度百科 独占锁是指该锁一次只能被一个线程所持有。 共享锁是指该锁可被">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2015/10/Java多线程5之线程安全与同步4-锁的分类/image-20210714213220146.png">
+<meta property="og:updated_time" content="2015-10-11T04:00:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java多线程5之线程安全与同步4-锁的分类">
+<meta name="twitter:description" content="Java中锁的分类有：  公平锁/非公平锁 可重入锁 独占锁/共享锁 互斥锁/读写锁 乐观锁/悲观锁 分段锁 偏向锁/轻量级锁/重量级锁 自旋锁  上面是很多锁的名词，这些分类并不是全是指锁的状态，有的指锁的特性，有的指锁的设计，下面总结的内容是对每个锁的名词进行一定的解释。  独占锁/共享锁 排他锁 - 维基百科 共享锁 - 百度百科 独占锁是指该锁一次只能被一个线程所持有。 共享锁是指该锁可被">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2015/10/Java多线程5之线程安全与同步4-锁的分类/image-20210714213220146.png">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2015/10/Java多线程5之线程安全与同步4-锁的分类/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Java多线程5之线程安全与同步4-锁的分类 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2015/10/Java多线程5之线程安全与同步4-锁的分类/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java多线程5之线程安全与同步4-锁的分类
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2015-10-11 12:00:00" itemprop="dateCreated datePublished" datetime="2015-10-11T12:00:00+08:00">2015-10-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Java中锁的分类有：</p>
+<ul>
+<li>公平锁/非公平锁</li>
+<li>可重入锁</li>
+<li>独占锁/共享锁</li>
+<li>互斥锁/读写锁</li>
+<li>乐观锁/悲观锁</li>
+<li>分段锁</li>
+<li>偏向锁/轻量级锁/重量级锁</li>
+<li>自旋锁</li>
+</ul>
+<p>上面是很多锁的名词，这些分类并不是全是指<strong>锁的状态</strong>，有的指<strong>锁的特性</strong>，有的指<strong>锁的设计</strong>，下面总结的内容是对每个锁的名词进行一定的解释。</p>
+<h1 id="独占锁共享锁"><a class="markdownIt-Anchor" href="#独占锁共享锁"></a> 独占锁/共享锁</h1>
+<p><a href="https://zh.wikipedia.org/wiki/%E6%8E%92%E4%BB%96%E9%94%81" target="_blank" rel="noopener">排他锁 - 维基百科</a></p>
+<p><a href="https://baike.baidu.com/item/%E5%85%B1%E4%BA%AB%E9%94%81/11032319" target="_blank" rel="noopener">共享锁 - 百度百科</a></p>
+<p>独占锁是指该锁一次只能被一个线程所持有。</p>
+<p>共享锁是指该锁可被多个线程所持有。</p>
+<p>对于 <code>ReentrantLock</code> 而言，其是<strong>独占锁</strong>。</p>
+<p>对于 Lock 的另一个实现类 <code>ReadWriteLock</code>，其写锁是独占锁，其读锁是共享锁。读锁的共享锁可保证并发读是非常高效的，读写，写读 ，写写的过程是互斥的。独占锁与共享锁也是通过 AQS 来实现的，通过实现不同的方法，来实现独占或者共享。</p>
+<p>对于 <code>synchronized</code> 而言，当然是<strong>独占锁</strong>。</p>
+<h1 id="互斥锁读写锁"><a class="markdownIt-Anchor" href="#互斥锁读写锁"></a> 互斥锁/读写锁</h1>
+<p><a href="https://zh.wikipedia.org/wiki/%E4%BA%92%E6%96%A5%E9%94%81" target="_blank" rel="noopener">互斥锁 - 维基百科</a></p>
+<p><a href="https://zh.wikipedia.org/wiki/%E8%AF%BB%E5%86%99%E9%94%81" target="_blank" rel="noopener">读写锁 - 维基百科</a></p>
+<p>上面讲的独占锁/共享锁就是一种广义的说法，互斥锁/读写锁就是具体的实现。</p>
+<p>互斥锁在 Java 中的具体实现就是 <code>ReentrantLock</code>。</p>
+<p>读写锁在 Java 中的具体实现就是 <code>ReadWriteLock</code>，它是一个接口，ReentrantReadWriteLock 是实现类。</p>
+<p>读写锁将对一个资源（比如文件）的访问分成了2个锁，一个读锁和一个写锁。正因为有了读写锁，才使得多个线程之间的读操作不会发生冲突。</p>
+<h1 id="可重入锁递归锁特性"><a class="markdownIt-Anchor" href="#可重入锁递归锁特性"></a> 可重入锁(递归锁)（特性）</h1>
+<p><a href="https://zh.wikipedia.org/wiki/%E5%8F%AF%E9%87%8D%E5%85%A5%E4%BA%92%E6%96%A5%E9%94%81" target="_blank" rel="noopener">可重入互斥锁 - 维基百科</a></p>
+<p><a href="https://fanyi.baidu.com/?aldtype=85#en/zh/reentrant" target="_blank" rel="noopener">reentrant</a> ：可重入; 可重入的; 重入; 可再入的; 重进入;</p>
+<p>可重入锁又名递归锁，是指同一个线程的外层方法获取锁时，进入内层方法会自动获取锁。说的有点抽象，下面有代码示例。</p>
+<p>可重入锁的特点：</p>
+<ul>
+<li>可重新反复进入的锁，但仅限于当前线程。</li>
+<li>在一个线程中可以多次获取同一把锁，但也需要释放同样加锁次数的锁，即重入了多少次，就要释放多少次，不然也会导致锁不被释放。</li>
+</ul>
+<p>对于 <code>ReentrantLock</code> 而言，它的名字就可以看出是一个<strong>可重入锁</strong>，其名字是 <code>Re entrant Lock</code> 重新进入锁。</p>
+<p>对于 <code>synchronized</code> 而言，也是一个<strong>可重入锁</strong>。可重入锁的一个好处是可一定程度避免死锁。</p>
+<p>如果不设计成可重入锁，如果反复给自己加锁，那就会产生死锁。</p>
+<p>示例：一个线程在执行一个带锁的方法A，方法A中又调用了另一个需要相同锁的方法B，则方法A可以直接调用方法B【即可重入】，无需重新获得锁；</p>
+<p>对于不同线程则相当于普通的互斥锁。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">// 反复进入</span><br><span class="line">class MyClass &#123;</span><br><span class="line">    public synchronized void A() &#123;</span><br><span class="line">        B();</span><br><span class="line">    &#125;</span><br><span class="line">    public synchronized void B() &#123;</span><br><span class="line">         </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 多次获取</span><br><span class="line">public void m() &#123;</span><br><span class="line">    lock.lock();</span><br><span class="line">    lock.lock();</span><br><span class="line">    try &#123;</span><br><span class="line">      // ... method body</span><br><span class="line">    &#125; finally &#123;</span><br><span class="line">      lock.unlock()</span><br><span class="line">      lock.unlock()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="乐观锁悲观锁"><a class="markdownIt-Anchor" href="#乐观锁悲观锁"></a> 乐观锁/悲观锁</h1>
+<p>乐观锁与悲观锁不是指具体的什么类型的锁，而是指看待并发同步的角度。</p>
+<p><a href="https://zh.wikipedia.org/wiki/%E4%B9%90%E8%A7%82%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6" target="_blank" rel="noopener">乐观并发控制 - 维基百科</a></p>
+<p><a href="https://zh.wikipedia.org/wiki/%E6%82%B2%E8%A7%82%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6" target="_blank" rel="noopener">悲观并发控制 - 维基百科</a></p>
+<p>悲观锁在 Java 中的使用，就是<strong>利用各种锁</strong>。</p>
+<p>乐观锁在 Java 中的使用，是<strong>无锁编程</strong>，常常采用的是 CAS 算法，典型的例子就是原子类，通过 CAS 自旋实现原子操作的更新。</p>
+<h1 id="公平锁非公平锁"><a class="markdownIt-Anchor" href="#公平锁非公平锁"></a> 公平锁/非公平锁</h1>
+<p>公平锁是指多个线程按照申请锁的顺序来获取锁。比如同是有多个线程在等待一个锁，当这个锁被释放时，等待时间最久的线程（最先请求的线程）会获得该所，这种就是公平锁。</p>
+<p>非公平锁是指多个线程获取锁的顺序并不是按照申请锁的顺序，有可能后申请的线程比先申请的线程优先获取锁。有可能，会造成优先级反转或者饥饿现象（导致某个或者一些线程永远获取不到锁）。</p>
+<p>对于 <code>ReentrantLock</code> 和 <code>ReentrantReadWriteLock</code> 而言，通过构造函数指定该锁是否是公平锁，<strong>默认是非公平锁</strong>。非公平锁的优点在于吞吐量比公平锁大。</p>
+<p>对于 <code>synchronized</code> 而言，也是一种<strong>非公平锁</strong>。由于其并不像 <code>ReentrantLock</code> 是通过 AQS（AbstractQueuedSynchronizer） 的来实现线程调度，所以并没有任何办法使其变成公平锁。</p>
+<p>在 ReentrantLock 中定义了两个静态内部类，分别用来实现非公平锁和公平锁。可以在创建 ReentrantLock 对象时，通过构造函数指定<strong>指定锁的公平性</strong>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ReentrantLock lock = new ReentrantLock(true);</span><br></pre></td></tr></table></figure>
+<p><img src="/article/2015/10/Java多线程5之线程安全与同步4-锁的分类/image-20210714213220146.png" alt="image-20210714213220146"></p>
+<p>在 ReentrantReadWriteLock 中也有类似的方法，同样也可以设置为公平锁和非公平锁。不过要注意，ReentrantReadWriteLock 并未实现 Lock 接口，它实现的是 ReadWriteLock 接口。</p>
+<h1 id="分段锁设计"><a class="markdownIt-Anchor" href="#分段锁设计"></a> 分段锁（设计）</h1>
+<p>分段锁其实是一种锁的设计，并不是具体的一种锁，对于 <code>ConcurrentHashMap</code> 而言，其并发的实现就是通过分段锁的形式来实现高效的并发操作。</p>
+<p>我们以 <code>ConcurrentHashMap</code> 来说一下分段锁的含义以及设计思想，<code>ConcurrentHashMap</code> 中的分段锁称为 Segment，它即类似于 HashMap（JDK7与JDK8中HashMap的实现）的结构，即内部拥有一个 Entry 数组，数组中的每个元素又是一个链表；同时又是一个 ReentrantLock（Segment 继承了 ReentrantLock）。</p>
+<p>当需要 put 元素的时候，并不是对整个 HashMap 进行加锁，而是先通过 hashcode 来知道他要放在哪一个分段中，然后对这个分段进行加锁，所以当多线程 put 的时候，只要不是放在一个分段中，就实现了真正的并行的插入。</p>
+<p>但是，在统计 size 的时候，可就是获取 HashMap 全局信息的时候，就需要获取所有的分段锁才能统计。</p>
+<p>分段锁的设计目的是细化锁的粒度，当操作不需要更新整个数组的时候，就仅仅针对数组中的一项进行加锁操作。</p>
+<h1 id="偏向锁轻量级锁重量级锁状态"><a class="markdownIt-Anchor" href="#偏向锁轻量级锁重量级锁状态"></a> 偏向锁/轻量级锁/重量级锁（状态）</h1>
+<p>这三种锁是指锁的状态，并且是针对 <code>synchronized</code>。在 Java 5 通过引入锁升级的机制来实现高效 <code>synchronized</code>。这三种锁的状态是通过对象监视器在对象头中的字段来表明的。</p>
+<p>偏向锁是指一段同步代码一直被一个线程所访问，那么该线程会自动获取锁。降低获取锁的代价。</p>
+<p>轻量级锁是指当锁是偏向锁的时候，被另一个线程所访问，偏向锁就会升级为轻量级锁，其他线程会通过自旋的形式尝试获取锁，不会阻塞，提高性能。</p>
+<p>重量级锁是指当锁为轻量级锁的时候，另一个线程虽然是自旋，但自旋不会一直持续下去，当自旋一定次数的时候，还没有获取到锁，就会进入阻塞，该锁膨胀为重量级锁。重量级锁会让其他申请的线程进入阻塞，性能降低。</p>
+<h1 id="自旋锁"><a class="markdownIt-Anchor" href="#自旋锁"></a> 自旋锁</h1>
+<p><a href="https://zh.wikipedia.org/wiki/%E8%87%AA%E6%97%8B%E9%94%81" target="_blank" rel="noopener">自旋锁 - 维基百科</a></p>
+<p>在 Java 中，自旋锁是指尝试获取锁的线程不会立即阻塞，而是采用循环的方式去尝试获取锁，这样的好处是减少线程上下文切换的消耗，缺点是循环会消耗CPU。<br>
+典型的自旋锁实现的例子，可以参考 <a href="http://ifeve.com/java_lock_see1/" target="_blank" rel="noopener">自旋锁的实现</a> 。</p>
+<h1 id="可中断锁"><a class="markdownIt-Anchor" href="#可中断锁"></a> 可中断锁</h1>
+<p>中断锁指的是可中断获取锁的等待状态，也就是在获取锁时可以接收 interrupt 的通知，从而中断获取锁。</p>
+<p>如果某一线程A正在执行锁中的代码，另一线程B正在等待获取该锁，可能由于等待时间过长，线程B不想等待了，想先处理其他事情，我们可以让它中断自己或者在别的线程中中断它，这种就是可中断锁。</p>
+<p>在 Java 中，synchronized 是<strong>不可中断锁</strong>，Lock 是<strong>可中断锁</strong>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        Lock lock = <span class="keyword">new</span> ReentrantLock();</span><br><span class="line"></span><br><span class="line">        Thread t1 = <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                lock.lock();</span><br><span class="line">                System.out.println(<span class="string">"线程 1:获取锁成功"</span>);</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                <span class="comment">// if (lock.tryLock()) &#123;</span></span><br><span class="line">                <span class="comment">//     lock.unlock();</span></span><br><span class="line">                <span class="comment">//     lock.unlock();</span></span><br><span class="line">                <span class="comment">//     System.out.println("线程 1:释放锁");</span></span><br><span class="line">                <span class="comment">// &#125;</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        t1.start();</span><br><span class="line"></span><br><span class="line">        Thread t2 = <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// 休眠0.5s，让线程1先获取锁</span></span><br><span class="line">                Thread.sleep(<span class="number">500</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                System.out.println(<span class="string">"线程 2:尝试获取锁."</span>);</span><br><span class="line">                lock.lockInterruptibly(); <span class="comment">// 可中断锁</span></span><br><span class="line">                System.out.println(<span class="string">"线程 2:获取锁成功."</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">"线程 2:执行已被中断."</span>);</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (lock.tryLock()) &#123;</span><br><span class="line">                    lock.unlock();</span><br><span class="line">                    lock.unlock();</span><br><span class="line">                    System.out.println(<span class="string">"线程 2:释放锁"</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        t2.start();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 2s后中断线程2获取锁的等待状态</span></span><br><span class="line">        Thread.sleep(<span class="number">2000</span>);</span><br><span class="line">        <span class="keyword">if</span> (t2.isAlive()) &#123;</span><br><span class="line">            System.out.println(<span class="string">"线程 2:中断"</span>);</span><br><span class="line">            t2.interrupt();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            System.out.println(<span class="string">"线程 2:执行完成."</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/多线程/" rel="tag"># 多线程</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2015/10/Java多线程5之线程安全与同步3-线程安全类/" rel="prev" title="Java多线程5之线程安全与同步3-线程安全类">
+      <i class="fa fa-chevron-left"></i> Java多线程5之线程安全与同步3-线程安全类
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2015/10/Java多线程5之线程安全与同步5-死锁/" rel="next" title="Java多线程5之线程安全与同步5-死锁">
+      Java多线程5之线程安全与同步5-死锁 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#独占锁共享锁"><span class="nav-number">1.</span> <span class="nav-text"> 独占锁/共享锁</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#互斥锁读写锁"><span class="nav-number">2.</span> <span class="nav-text"> 互斥锁/读写锁</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#可重入锁递归锁特性"><span class="nav-number">3.</span> <span class="nav-text"> 可重入锁(递归锁)（特性）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#乐观锁悲观锁"><span class="nav-number">4.</span> <span class="nav-text"> 乐观锁/悲观锁</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#公平锁非公平锁"><span class="nav-number">5.</span> <span class="nav-text"> 公平锁/非公平锁</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#分段锁设计"><span class="nav-number">6.</span> <span class="nav-text"> 分段锁（设计）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#偏向锁轻量级锁重量级锁状态"><span class="nav-number">7.</span> <span class="nav-text"> 偏向锁/轻量级锁/重量级锁（状态）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#自旋锁"><span class="nav-number">8.</span> <span class="nav-text"> 自旋锁</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#可中断锁"><span class="nav-number">9.</span> <span class="nav-text"> 可中断锁</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">457</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">31</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : 'd3678da9cb1e9b478981aebec97af55f',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

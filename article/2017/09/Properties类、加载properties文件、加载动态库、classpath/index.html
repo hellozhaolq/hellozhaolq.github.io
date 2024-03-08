@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="百科： .properties - 维基百科，自由的百科全书">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Properties类、加载properties文件、加载动态库、classpath">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2017/09/Properties类、加载properties文件、加载动态库、classpath/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="百科： .properties - 维基百科，自由的百科全书">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2017-09-01T00:38:10.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Properties类、加载properties文件、加载动态库、classpath">
+<meta name="twitter:description" content="百科： .properties - 维基百科，自由的百科全书">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2017/09/Properties类、加载properties文件、加载动态库、classpath/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Properties类、加载properties文件、加载动态库、classpath | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2017/09/Properties类、加载properties文件、加载动态库、classpath/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Properties类、加载properties文件、加载动态库、classpath
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-09-01 08:38:10" itemprop="dateCreated datePublished" datetime="2017-09-01T08:38:10+08:00">2017-09-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>百科：</p>
+<p><a href="https://zh.wikipedia.org/wiki/.properties" target="_blank" rel="noopener">.properties - 维基百科，自由的百科全书</a></p>
+<a id="more"></a>
+<h1 id="properties类"><a class="markdownIt-Anchor" href="#properties类"></a> Properties类</h1>
+<p>Properties 类表示一组持久的属性。 属性可以保存到流或从流加载。属性列表中的每个键及其对应的值都是一个字符串。继承 Hashtable 。线程安全。更多解释请查看源码注释。</p>
+<p><a href="https://www.runoob.com/java/java-properties-class.html" target="_blank" rel="noopener">Java Properties 类 - 菜鸟</a></p>
+<p><a href="https://www.liaoxuefeng.com/wiki/1252599548343744/1265119084411136" target="_blank" rel="noopener">使用Properties - 廖雪峰</a></p>
+<p><a href="https://blog.csdn.net/wanwanjava/article/details/14215825" target="_blank" rel="noopener">Properties的load方法</a></p>
+<p>部分方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">System.getProperties().getProperty(String key)</span><br><span class="line">System.getProperties().setProperty(String key, String value) <span class="comment">// 相当于一个静态变量</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 加载配置文件，设置或更新键值</span></span><br><span class="line">System.getProperties().load(InputStream inStream)</span><br><span class="line">System.getProperties().load(Reader reader)</span><br></pre></td></tr></table></figure>
+<h1 id="system类"><a class="markdownIt-Anchor" href="#system类"></a> System类</h1>
+<p><a href="http://www.51gjie.com/java/617.html" target="_blank" rel="noopener">Java System类</a></p>
+<p>功能</p>
+<ul>
+<li>获取标准输入、标准输出、错误输出流；</li>
+<li>访问系统环境变量、JVM属性、其他额外设置的属性；</li>
+<li>加载动态库的方法；</li>
+<li>快速复制数组的一部分的实用方法。 <a href="https://blog.csdn.net/u011669700/article/details/79323251" target="_blank" rel="noopener">Java - 数组拷贝的几种方式</a></li>
+</ul>
+<p>部分方法：</p>
+<p><a href="https://blog.csdn.net/ring0hx/article/details/3242245" target="_blank" rel="noopener">System.load 和 System.loadLibrary详解</a></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">System.getProperties()</span><br><span class="line">System.setProperties(Properties propes)</span><br><span class="line"></span><br><span class="line">System.getProperty(String key)</span><br><span class="line">System.setProperty(String key, String value) <span class="comment">// 相当于一个静态变量</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 加载动态库</span></span><br><span class="line">System.load(String filename)</span><br><span class="line">System.loadLibrary(String libname)</span><br></pre></td></tr></table></figure>
+<h1 id="示例"><a class="markdownIt-Anchor" href="#示例"></a> 示例</h1>
+<p>datasource.properties 文件内容如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">db.driverClassName=oracle.jdbc.driver.OracleDriver</span><br><span class="line">db.url=jdbc:oracle:thin:@192.168.0.3:1521:orcl</span><br><span class="line">db.username=earth</span><br><span class="line">db.password=123456</span><br></pre></td></tr></table></figure>
+<p>代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line"></span><br><span class="line">        Properties properties = System.getProperties();</span><br><span class="line">        printProp01(properties);</span><br><span class="line">        System.out.println(<span class="string">"-------------------------------------------------"</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置 Properties 为空。使用新的 Properties 需重新获取。</span></span><br><span class="line">        System.setProperties(<span class="keyword">new</span> Properties());</span><br><span class="line">        properties = System.getProperties();</span><br><span class="line">        printProp01(properties);</span><br><span class="line">        System.out.println(<span class="string">"-------------------------------------------------"</span>);</span><br><span class="line"></span><br><span class="line">        System.setProperty(<span class="string">"country"</span>, <span class="string">"中国"</span>);</span><br><span class="line">        System.out.println(properties.getProperty(<span class="string">"country"</span>));</span><br><span class="line">        properties.setProperty(<span class="string">"nation"</span>, <span class="string">"汉族"</span>);</span><br><span class="line">        System.out.println(System.getProperty(<span class="string">"nation"</span>));</span><br><span class="line">        printProp01(properties);</span><br><span class="line">        System.out.println(<span class="string">"-------------------------------------------------"</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 加载配置文件，设置或更新键值</span></span><br><span class="line">        properties.load(<span class="keyword">new</span> InputStreamReader(<span class="keyword">new</span> FileInputStream(<span class="string">"D:\\datasource.properties"</span>), <span class="string">"UTF-8"</span>));</span><br><span class="line">        properties.load(<span class="keyword">new</span> FileInputStream(<span class="string">"D:\\datasource.properties"</span>));</span><br><span class="line">        printProp01(properties);</span><br><span class="line">        System.out.println(<span class="string">"-------------------------------------------------"</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 加载动态库 略...</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 输出properties的key和value</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printProp01</span><span class="params">(Properties properties)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (String key : properties.stringPropertyNames()) &#123;</span><br><span class="line">            System.out.println(key + <span class="string">"="</span> + properties.getProperty(key));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printProp02</span><span class="params">(Properties properties)</span> </span>&#123;</span><br><span class="line">        Set&lt;Object&gt; keys = properties.keySet();</span><br><span class="line">        <span class="keyword">for</span> (Object key : keys) &#123;</span><br><span class="line">            System.out.println(key.toString() + <span class="string">"="</span> + properties.get(key));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printProp03</span><span class="params">(Properties properties)</span> </span>&#123;</span><br><span class="line">        Set&lt;Map.Entry&lt;Object, Object&gt;&gt; entrySet = properties.entrySet();</span><br><span class="line">        <span class="keyword">for</span> (Map.Entry&lt;Object, Object&gt; entry : entrySet) &#123;</span><br><span class="line">            System.out.println(entry.getKey() + <span class="string">"="</span> + entry.getValue());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printProp04</span><span class="params">(Properties properties)</span> </span>&#123;</span><br><span class="line">        Enumeration&lt;?&gt; e = properties.propertyNames();</span><br><span class="line">        <span class="keyword">while</span> (e.hasMoreElements()) &#123;</span><br><span class="line">            String key = (String) e.nextElement();</span><br><span class="line">            String value = properties.getProperty(key);</span><br><span class="line">            System.out.println(key + <span class="string">"="</span> + value);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="用户当前工作路径"><a class="markdownIt-Anchor" href="#用户当前工作路径"></a> 用户当前工作路径</h1>
+<p><code>System.getProperty(&quot;user.dir&quot;)</code> : 用户当前工作路径</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    </span><br><span class="line">        System.out.println(System.getProperty(<span class="string">"os.name"</span>)); <span class="comment">// Windows 10</span></span><br><span class="line">        System.out.println(System.getProperty(<span class="string">"os.arch"</span>)); <span class="comment">// amd64</span></span><br><span class="line">        System.out.println(System.getProperty(<span class="string">"os.version"</span>)); <span class="comment">// 10.0</span></span><br><span class="line">        System.out.println(System.getProperty(<span class="string">"file.separator"</span>)); <span class="comment">// \</span></span><br><span class="line">        System.out.println(System.getProperty(<span class="string">"path.separator"</span>)); <span class="comment">// ;</span></span><br><span class="line">        System.out.println(System.getProperty(<span class="string">"line.separator"</span>)); <span class="comment">// 换行符号(能看到换行效果)</span></span><br><span class="line">        System.out.println(System.getProperty(<span class="string">"user.name"</span>)); <span class="comment">// Administrator</span></span><br><span class="line">        System.out.println(System.getProperty(<span class="string">"user.home"</span>)); <span class="comment">// C:\Users\Administrator</span></span><br><span class="line">        System.out.println(System.getProperty(<span class="string">"user.dir"</span>)); <span class="comment">// E:\workspaces\idea\earth</span></span><br><span class="line"></span><br><span class="line">        File directory = <span class="keyword">new</span> File(<span class="string">"../moon"</span>);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 返回此抽象路径名的 '规范路径名' 字符串。'.'表示当前文件夹，'..'表示当前文件夹的上一级文件夹</span></span><br><span class="line">            System.out.println(directory.getCanonicalPath()); <span class="comment">// 结果：E:\workspaces\idea\moon</span></span><br><span class="line">            <span class="comment">// 返回此抽象路径名的 '绝对路径名' 字符串。不管'.'、'..'，返回当前的路径加上在new File()时设定的路径</span></span><br><span class="line">            System.out.println(directory.getAbsolutePath()); <span class="comment">// 结果：E:\workspaces\idea\earth\..\moon</span></span><br><span class="line">            <span class="comment">// 返回此抽象路径名的 '字符串格式'，即new File()时设定的路径</span></span><br><span class="line">            System.out.println(directory.getPath()); <span class="comment">// 结果：..\moon</span></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="classpath路径"><a class="markdownIt-Anchor" href="#classpath路径"></a> classpath路径</h1>
+<p><a href="https://en.wikipedia.org/wiki/Classpath" target="_blank" rel="noopener">Classpath - 维基百科</a></p>
+<p><a href="https://baike.baidu.com/item/Classpath" target="_blank" rel="noopener">CLASSPATH - 百度百科</a></p>
+<p><a href="https://zh.wikipedia.org/wiki/Java%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8" target="_blank" rel="noopener">Java Classloader - 维基百科</a></p>
+<p><a href="https://www.liaoxuefeng.com/wiki/1252599548343744/1260466914339296" target="_blank" rel="noopener">classpath和jar - 廖雪峰</a></p>
+<p>Classpath 是 <strong>.java 文件</strong> 和 <strong>resource文件</strong> <font color="blue"><strong>编译</strong></font> 后的 <strong>输出目录</strong> 。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 获取当前类的路径(classpath根路径 + 包名)。如：/E:/earth/earth-demo/demo-a/target/classes/com/zhaolq/demo/a/</span></span><br><span class="line">        System.out.println("classpath current=" + Test.class.getResource("").getPath());</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 获取classpath根路径。如：/E:/earth/earth-demo/demo-a/target/classes/</span></span><br><span class="line">        System.out.println("classpath Root=" + Test.class.getResource("/").getPath());</span><br><span class="line">        System.out.println("classpath Root=" + Test.class.getClassLoader().getResource("").getPath());</span><br><span class="line">        System.out.println(<span class="string">"classpath Root="</span> + ClassLoader.getSystemClassLoader().getResource(<span class="string">""</span>).getPath());</span><br><span class="line">        System.out.println(<span class="string">"classpath Root="</span> + ClassLoader.getSystemResource(<span class="string">""</span>).getPath());</span><br><span class="line">	System.out.println(<span class="string">"classpath Root="</span> + Thread.currentThread().getContextClassLoader().getResource(<span class="string">""</span>).getPath());</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="加载classpath下的资源文件"><a class="markdownIt-Anchor" href="#加载classpath下的资源文件"></a> 加载classpath下的资源文件</h1>
+<p>编译后输出到项目 classpath 路径下的所有文件都叫资源文件 (resource文件)，和 resources 文件夹不同。</p>
+<p>编译后的 .classs 文件也是资源文件。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 获取依赖模块或jar包下的资源文件</span></span><br><span class="line">        System.out.println(<span class="string">"依赖模块resources文件夹下的资源路径="</span> + ClassLoader.getSystemClassLoader().getResource(<span class="string">"log4j2.component.properties"</span>).getPath());</span><br><span class="line">        System.out.println(<span class="string">"项目编译后的.class文件路径："</span> + ClassLoader.getSystemClassLoader().getResource(<span class="string">"com/zhaolq/demo/a/Test.class"</span>).getPath());</span><br><span class="line">        System.out.println(<span class="string">"依赖jar中的.class文件路径："</span> + ClassLoader.getSystemClassLoader().getResource(<span class="string">"org/apache/commons/lang3/StringUtils.class"</span>).getPath());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 加载配置文件，设置或更新键值，用做系统属性。</span></span><br><span class="line">        System.getProperties().load(ClassLoader.getSystemResourceAsStream(<span class="string">"datasource.properties"</span>));</span><br><span class="line">        System.getProperties().load(ClassLoader.getSystemClassLoader().getResourceAsStream(<span class="string">"datasource.properties"</span>));</span><br><span class="line">        <span class="comment">// System.getProperties().load(Test.class.getResourceAsStream("datasource.properties")); // 这个方法报空指针</span></span><br><span class="line">        System.getProperties().load(Test.class.getClassLoader().getResourceAsStream("datasource.properties"));</span><br><span class="line">        System.getProperties().load(Test.class.getClassLoader().getSystemResourceAsStream("datasource.properties"));</span><br><span class="line">        System.getProperties().load(Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"datasource.properties"</span>));</span><br><span class="line">        System.getProperties().load(Thread.currentThread().getContextClassLoader().getSystemResourceAsStream(<span class="string">"datasource.properties"</span>)); <span class="comment">// 这是个static方法</span></span><br><span class="line">        System.out.println(System.getProperty(<span class="string">"db.url"</span>));</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 加载配置文件，设置或更新键值，不用做系统属性</span></span><br><span class="line">        Properties properties = <span class="keyword">new</span> Properties();</span><br><span class="line">	properties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream(<span class="string">"datasource.properties"</span>));</span><br><span class="line">	System.out.println(properties.getProperty(<span class="string">"db.url"</span>));</span><br><span class="line">	</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/******************* 通过 URL 类的 openStream() 方法获取 InputStream *******************/</span></span><br><span class="line">	properties.load(Thread.currentThread().getContextClassLoader().getResource(<span class="string">"datasource.properties"</span>).openStream());</span><br><span class="line">	</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="加载与类同目录下的资源文件"><a class="markdownIt-Anchor" href="#加载与类同目录下的资源文件"></a> 加载与类同目录下的资源文件</h1>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            String resourceFile = StringUtils.replace(<span class="keyword">new</span> Object() &#123;&#125;.getClass().getPackage().getName(), <span class="string">"."</span>, <span class="string">"/"</span>);</span><br><span class="line">            System.getProperties().load(Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceFile + <span class="string">"/demo.properties"</span>));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            System.out.println(<span class="string">"Properties file failed to load"</span>);</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="classpath和classpath区别"><a class="markdownIt-Anchor" href="#classpath和classpath区别"></a> classpath和classpath*区别</h1>
+<p>推荐：<a href="https://blog.51cto.com/u_15127669/4081246" target="_blank" rel="noopener">https://blog.51cto.com/u_15127669/4081246</a></p>
+<p><font color="red"><strong>classpath</strong></font>   ：只会从当前ClassLoader路径中查找文件，同名资源文件只会加载第一个。</p>
+<p><font color="red"><strong>classpath*</strong></font> ：不仅在当前ClassLoader路径查找文件，还会在依赖jar中ClassLoader路径查找，查找顺序取决于jar包的加载顺序，同名资源文件都会加载，出现的相同属性前后哪个生效呢？</p>
+<p>当项目中有多个classpath路径，并同时加载多个classpath路径下（此种情况多数不会遇到）的文件，*就发挥了作用，如果不加*，则表示仅仅加载第一个classpath路径。</p>
+<h1 id="通配符"><a class="markdownIt-Anchor" href="#通配符"></a> 通配符*</h1>
+<p><code>**/</code> 表示任意目录；<code>**/applicationContext-*.xml</code> 表示任意目录下的以 <code>applicationContext-</code> 开头的XML文件。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2016/01/oracle查缺补漏/" rel="prev" title="oracle查缺补漏">
+      <i class="fa fa-chevron-left"></i> oracle查缺补漏
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2017/09/H5和HTML5区别/" rel="next" title="H5和HTML5区别">
+      H5和HTML5区别 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#properties类"><span class="nav-number">1.</span> <span class="nav-text"> Properties类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#system类"><span class="nav-number">2.</span> <span class="nav-text"> System类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#示例"><span class="nav-number">3.</span> <span class="nav-text"> 示例</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#用户当前工作路径"><span class="nav-number">4.</span> <span class="nav-text"> 用户当前工作路径</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#classpath路径"><span class="nav-number">5.</span> <span class="nav-text"> classpath路径</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#加载classpath下的资源文件"><span class="nav-number">6.</span> <span class="nav-text"> 加载classpath下的资源文件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#加载与类同目录下的资源文件"><span class="nav-number">7.</span> <span class="nav-text"> 加载与类同目录下的资源文件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#classpath和classpath区别"><span class="nav-number">8.</span> <span class="nav-text"> classpath和classpath*区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#通配符"><span class="nav-number">9.</span> <span class="nav-text"> 通配符*</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">457</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">31</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '06e4053f26ad26727cfa01d78fb16f9c',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

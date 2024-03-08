@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="从今天开始，我们就进入案例分析模块了。 这个模块我们将分析四个经典的开源框架，看看它们是如何处理并发问题的，通过这四个案例的学习，相信你会对如何解决并发问题有个更深入的认识。">
+<meta name="keywords" content="Java并发编程实战">
+<meta property="og:type" content="article">
+<meta property="og:title" content="38案例分析-案例分析（一）：高性能限流器Guava RateLimiter">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava RateLimiter/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="从今天开始，我们就进入案例分析模块了。 这个模块我们将分析四个经典的开源框架，看看它们是如何处理并发问题的，通过这四个案例的学习，相信你会对如何解决并发问题有个更深入的认识。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava%20RateLimiter/20200719183305221.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava%20RateLimiter/20200719183317163.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava%20RateLimiter/20200719183350272.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava%20RateLimiter/20200719183412189.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava%20RateLimiter/20200719183434676.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava%20RateLimiter/20200719183456879.png">
+<meta property="og:updated_time" content="2023-08-08T00:00:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="38案例分析-案例分析（一）：高性能限流器Guava RateLimiter">
+<meta name="twitter:description" content="从今天开始，我们就进入案例分析模块了。 这个模块我们将分析四个经典的开源框架，看看它们是如何处理并发问题的，通过这四个案例的学习，相信你会对如何解决并发问题有个更深入的认识。">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava%20RateLimiter/20200719183305221.png">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava RateLimiter/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>38案例分析-案例分析（一）：高性能限流器Guava RateLimiter | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava RateLimiter/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          38案例分析-案例分析（一）：高性能限流器Guava RateLimiter
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-08-08 08:00:00" itemprop="dateCreated datePublished" datetime="2023-08-08T08:00:00+08:00">2023-08-08</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java并发编程实战/" itemprop="url" rel="index"><span itemprop="name">Java并发编程实战</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>从今天开始，我们就进入案例分析模块了。 这个模块我们将分析四个经典的开源框架，看看它们是如何处理并发问题的，通过这四个案例的学习，相信你会对如何解决并发问题有个更深入的认识。</p>
+<a id="more"></a>
+<p>首先我们来看看<strong>Guava RateLimiter是如何解决高并发场景下的限流问题的</strong>。Guava是Google开源的Java类库，提供了一个工具类RateLimiter。我们先来看看RateLimiter的使用，让你对限流有个感官的印象。假设我们有一个线程池，它每秒只能处理两个任务，如果提交的任务过快，可能导致系统不稳定，这个时候就需要用到限流。</p>
+<p>在下面的示例代码中，我们创建了一个流速为2个请求/秒的限流器，这里的流速该怎么理解呢？直观地看，2个请求/秒指的是每秒最多允许2个请求通过限流器，其实在Guava中，流速还有更深一层的意思：是一种匀速的概念，2个请求/秒等价于1个请求/500毫秒。</p>
+<p>在向线程池提交任务之前，调用 <code>acquire()</code> 方法就能起到限流的作用。通过示例代码的执行结果，任务提交到线程池的时间间隔基本上稳定在500毫秒。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//限流器流速：2个请求/秒</span></span><br><span class="line">RateLimiter limiter = RateLimiter.create(<span class="number">2.0</span>);</span><br><span class="line"><span class="comment">//执行任务的线程池</span></span><br><span class="line">ExecutorService es = Executors.newFixedThreadPool(<span class="number">1</span>);</span><br><span class="line"><span class="comment">//记录上一次执行时间</span></span><br><span class="line">prev = System.nanoTime();</span><br><span class="line"><span class="comment">//测试执行20次</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;<span class="number">20</span>; i++)&#123;</span><br><span class="line">  <span class="comment">//限流器限流</span></span><br><span class="line">  limiter.acquire();</span><br><span class="line">  <span class="comment">//提交任务异步执行</span></span><br><span class="line">  es.execute(()-&gt;&#123;</span><br><span class="line">    <span class="keyword">long</span> cur=System.nanoTime();</span><br><span class="line">    <span class="comment">//打印时间间隔：毫秒</span></span><br><span class="line">    System.out.println(</span><br><span class="line">      (cur-prev)/<span class="number">1000_000</span>);</span><br><span class="line">    prev = cur;</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">输出结果：</span><br><span class="line">...</span><br><span class="line"><span class="number">500</span></span><br><span class="line"><span class="number">499</span></span><br><span class="line"><span class="number">499</span></span><br><span class="line"><span class="number">500</span></span><br><span class="line"><span class="number">499</span></span><br></pre></td></tr></table></figure>
+<h1 id="经典限流算法令牌桶算法"><a class="markdownIt-Anchor" href="#经典限流算法令牌桶算法"></a> 经典限流算法：令牌桶算法</h1>
+<p>Guava的限流器使用上还是很简单的，那它是如何实现的呢？Guava采用的是<strong>令牌桶算法</strong>，其<strong>核心是要想通过限流器，必须拿到令牌</strong>。也就是说，只要我们能够限制发放令牌的速率，那么就能控制流速了。令牌桶算法的详细描述如下：</p>
+<ol>
+<li>令牌以固定的速率添加到令牌桶中，假设限流的速率是 r/秒，则令牌每 1/r 秒会添加一个；</li>
+<li>假设令牌桶的容量是 b ，如果令牌桶已满，则新的令牌会被丢弃；</li>
+<li>请求能够通过限流器的前提是令牌桶中有令牌。</li>
+</ol>
+<p>这个算法中，限流的速率 r 还是比较容易理解的，但令牌桶的容量 b 该怎么理解呢？b 其实是burst的简写，意义是<strong>限流器允许的最大突发流量</strong>。比如b=10，而且令牌桶中的令牌已满，此时限流器允许10个请求同时通过限流器，当然只是突发流量而已，这10个请求会带走10个令牌，所以后续的流量只能按照速率 r 通过限流器。</p>
+<p>令牌桶这个算法，如何用Java实现呢？很可能你的直觉会告诉你生产者-消费者模式：一个生产者线程定时向阻塞队列中添加令牌，而试图通过限流器的线程则作为消费者线程，只有从阻塞队列中获取到令牌，才允许通过限流器。</p>
+<p>这个算法看上去非常完美，而且实现起来非常简单，如果并发量不大，这个实现并没有什么问题。可实际情况却是使用限流的场景大部分都是高并发场景，而且系统压力已经临近极限了，此时这个实现就有问题了。问题就出在定时器上，在高并发场景下，当系统压力已经临近极限的时候，定时器的精度误差会非常大，同时定时器本身会创建调度线程，也会对系统的性能产生影响。</p>
+<p>那还有什么好的实现方式呢？当然有，Guava的实现就没有使用定时器，下面我们就来看看它是如何实现的。</p>
+<h1 id="guava如何实现令牌桶算法"><a class="markdownIt-Anchor" href="#guava如何实现令牌桶算法"></a> Guava如何实现令牌桶算法</h1>
+<p>Guava实现令牌桶算法，用了一个很简单的办法，其关键是<strong>记录并动态计算下一令牌发放的时间</strong>。下面我们以一个最简单的场景来介绍该算法的执行过程。假设令牌桶的容量为 b=1，限流速率 r = 1个请求/秒，如下图所示，如果当前令牌桶中没有令牌，下一个令牌的发放时间是在第3秒，而在第2秒的时候有一个线程T1请求令牌，此时该如何处理呢？</p>
+<p><img src="/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava RateLimiter/20200719183305221.png" alt="img"></p>
+<p>线程T1请求令牌示意图</p>
+<p>对于这个请求令牌的线程而言，很显然需要等待1秒，因为1秒以后（第3秒）它就能拿到令牌了。此时需要注意的是，下一个令牌发放的时间也要增加1秒，为什么呢？因为第3秒发放的令牌已经被线程T1预占了。处理之后如下图所示。</p>
+<p><img src="/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava RateLimiter/20200719183317163.png" alt="img"></p>
+<p>线程T1请求结束示意图</p>
+<p>假设T1在预占了第3秒的令牌之后，马上又有一个线程T2请求令牌，如下图所示。</p>
+<p><img src="/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava RateLimiter/20200719183350272.png" alt="img"></p>
+<p>线程T2请求令牌示意图</p>
+<p>很显然，由于下一个令牌产生的时间是第4秒，所以线程T2要等待两秒的时间，才能获取到令牌，同时由于T2预占了第4秒的令牌，所以下一令牌产生时间还要增加1秒，完全处理之后，如下图所示。</p>
+<p><img src="/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava RateLimiter/20200719183412189.png" alt="img"></p>
+<p>线程T2请求结束示意图</p>
+<p>上面线程T1、T2都是在<strong>下一令牌产生时间之前</strong>请求令牌，如果线程在<strong>下一令牌产生时间之后</strong>请求令牌会如何呢？假设在线程T1请求令牌之后的5秒，也就是第7秒，线程T3请求令牌，如下图所示。</p>
+<p><img src="/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava RateLimiter/20200719183434676.png" alt="img"></p>
+<p>线程T3请求令牌示意图</p>
+<p>由于在第5秒已经产生了一个令牌，所以此时线程T3可以直接拿到令牌，而无需等待。在第7秒，实际上限流器能够产生3个令牌，第5、6、7秒各产生一个令牌。由于我们假设令牌桶的容量是1，所以第6、7秒产生的令牌就丢弃了，其实等价地你也可以认为是保留的第7秒的令牌，丢弃的第5、6秒的令牌，也就是说第7秒的令牌被线程T3占有了，于是下一令牌的的产生时间应该是第8秒，如下图所示。</p>
+<p><img src="/article/2023/08/38案例分析-案例分析（一）：高性能限流器Guava RateLimiter/20200719183456879.png" alt="img"></p>
+<p>线程T3请求结束示意图</p>
+<p>通过上面简要地分析，你会发现，我们<strong>只需要记录一个下一令牌产生的时间，并动态更新它，就能够轻松完成限流功能</strong>。我们可以将上面的这个算法代码化，示例代码如下所示，依然假设令牌桶的容量是1。关键是<strong>reserve()方法</strong>，这个方法会为请求令牌的线程预分配令牌，同时返回该线程能够获取令牌的时间。其实现逻辑就是上面提到的：如果线程请求令牌的时间在下一令牌产生时间之后，那么该线程立刻就能够获取令牌；反之，如果请求时间在下一令牌产生时间之前，那么该线程是在下一令牌产生的时间获取令牌。由于此时下一令牌已经被该线程预占，所以下一令牌产生的时间需要加上1秒。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SimpleLimiter</span> </span>&#123;</span><br><span class="line">  <span class="comment">//下一令牌产生时间</span></span><br><span class="line">  <span class="keyword">long</span> next = System.nanoTime();</span><br><span class="line">  <span class="comment">//发放令牌间隔：纳秒</span></span><br><span class="line">  <span class="keyword">long</span> interval = <span class="number">1000_000_000</span>;</span><br><span class="line">  <span class="comment">//预占令牌，返回能够获取令牌的时间</span></span><br><span class="line">  <span class="function"><span class="keyword">synchronized</span> <span class="keyword">long</span> <span class="title">reserve</span><span class="params">(<span class="keyword">long</span> now)</span></span>&#123;</span><br><span class="line">    <span class="comment">//请求时间在下一令牌产生时间之后</span></span><br><span class="line">    <span class="comment">//重新计算下一令牌产生时间</span></span><br><span class="line">    <span class="keyword">if</span> (now &gt; next)&#123;</span><br><span class="line">      <span class="comment">//将下一令牌产生时间重置为当前时间</span></span><br><span class="line">      next = now;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//能够获取令牌的时间</span></span><br><span class="line">    <span class="keyword">long</span> at=next;</span><br><span class="line">    <span class="comment">//设置下一令牌产生时间</span></span><br><span class="line">    next += interval;</span><br><span class="line">    <span class="comment">//返回线程需要等待的时间</span></span><br><span class="line">    <span class="keyword">return</span> Math.max(at, <span class="number">0L</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//申请令牌</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">acquire</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//申请令牌时的时间</span></span><br><span class="line">    <span class="keyword">long</span> now = System.nanoTime();</span><br><span class="line">    <span class="comment">//预占令牌</span></span><br><span class="line">    <span class="keyword">long</span> at=reserve(now);</span><br><span class="line">    <span class="keyword">long</span> waitTime=max(at-now, <span class="number">0</span>);</span><br><span class="line">    <span class="comment">//按照条件等待</span></span><br><span class="line">    <span class="keyword">if</span>(waitTime &gt; <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        TimeUnit.NANOSECONDS</span><br><span class="line">          .sleep(waitTime);</span><br><span class="line">      &#125;<span class="keyword">catch</span>(InterruptedException e)&#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果令牌桶的容量大于1，又该如何处理呢？按照令牌桶算法，令牌要首先从令牌桶中出，所以我们需要按需计算令牌桶中的数量，当有线程请求令牌时，先从令牌桶中出。具体的代码实现如下所示。我们增加了一个<strong>resync()方法</strong>，在这个方法中，如果线程请求令牌的时间在下一令牌产生时间之后，会重新计算令牌桶中的令牌数，<strong>新产生的令牌的计算公式是：(now-next)/interval</strong>，你可对照上面的示意图来理解。reserve()方法中，则增加了先从令牌桶中出令牌的逻辑，不过需要注意的是，如果令牌是从令牌桶中出的，那么next就无需增加一个 interval 了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SimpleLimiter</span> </span>&#123;</span><br><span class="line">  <span class="comment">//当前令牌桶中的令牌数量</span></span><br><span class="line">  <span class="keyword">long</span> storedPermits = <span class="number">0</span>;</span><br><span class="line">  <span class="comment">//令牌桶的容量</span></span><br><span class="line">  <span class="keyword">long</span> maxPermits = <span class="number">3</span>;</span><br><span class="line">  <span class="comment">//下一令牌产生时间</span></span><br><span class="line">  <span class="keyword">long</span> next = System.nanoTime();</span><br><span class="line">  <span class="comment">//发放令牌间隔：纳秒</span></span><br><span class="line">  <span class="keyword">long</span> interval = <span class="number">1000_000_000</span>;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">//请求时间在下一令牌产生时间之后,则</span></span><br><span class="line">  <span class="comment">// 1.重新计算令牌桶中的令牌数</span></span><br><span class="line">  <span class="comment">// 2.将下一个令牌发放时间重置为当前时间</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">resync</span><span class="params">(<span class="keyword">long</span> now)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (now &gt; next) &#123;</span><br><span class="line">      <span class="comment">//新产生的令牌数</span></span><br><span class="line">      <span class="keyword">long</span> newPermits=(now-next)/interval;</span><br><span class="line">      <span class="comment">//新令牌增加到令牌桶</span></span><br><span class="line">      storedPermits=min(maxPermits, </span><br><span class="line">        storedPermits + newPermits);</span><br><span class="line">      <span class="comment">//将下一个令牌发放时间重置为当前时间</span></span><br><span class="line">      next = now;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//预占令牌，返回能够获取令牌的时间</span></span><br><span class="line">  <span class="function"><span class="keyword">synchronized</span> <span class="keyword">long</span> <span class="title">reserve</span><span class="params">(<span class="keyword">long</span> now)</span></span>&#123;</span><br><span class="line">    resync(now);</span><br><span class="line">    <span class="comment">//能够获取令牌的时间</span></span><br><span class="line">    <span class="keyword">long</span> at = next;</span><br><span class="line">    <span class="comment">//令牌桶中能提供的令牌</span></span><br><span class="line">    <span class="keyword">long</span> fb=min(<span class="number">1</span>, storedPermits);</span><br><span class="line">    <span class="comment">//令牌净需求：首先减掉令牌桶中的令牌</span></span><br><span class="line">    <span class="keyword">long</span> nr = <span class="number">1</span> - fb;</span><br><span class="line">    <span class="comment">//重新计算下一令牌产生时间</span></span><br><span class="line">    next = next + nr*interval;</span><br><span class="line">    <span class="comment">//重新计算令牌桶中的令牌</span></span><br><span class="line">    <span class="keyword">this</span>.storedPermits -= fb;</span><br><span class="line">    <span class="keyword">return</span> at;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//申请令牌</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">acquire</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//申请令牌时的时间</span></span><br><span class="line">    <span class="keyword">long</span> now = System.nanoTime();</span><br><span class="line">    <span class="comment">//预占令牌</span></span><br><span class="line">    <span class="keyword">long</span> at=reserve(now);</span><br><span class="line">    <span class="keyword">long</span> waitTime=max(at-now, <span class="number">0</span>);</span><br><span class="line">    <span class="comment">//按照条件等待</span></span><br><span class="line">    <span class="keyword">if</span>(waitTime &gt; <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        TimeUnit.NANOSECONDS</span><br><span class="line">          .sleep(waitTime);</span><br><span class="line">      &#125;<span class="keyword">catch</span>(InterruptedException e)&#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h1>
+<p>经典的限流算法有两个，一个是<strong>令牌桶算法（Token Bucket）</strong>，另一个是<strong>漏桶算法（Leaky Bucket）</strong>。令牌桶算法是定时向令牌桶发送令牌，请求能够从令牌桶中拿到令牌，然后才能通过限流器；而漏桶算法里，请求就像水一样注入漏桶，漏桶会按照一定的速率自动将水漏掉，只有漏桶里还能注入水的时候，请求才能通过限流器。令牌桶算法和漏桶算法很像一个硬币的正反面，所以你可以参考令牌桶算法的实现来实现漏桶算法。</p>
+<p>上面我们介绍了Guava是如何实现令牌桶算法的，我们的示例代码是对Guava RateLimiter的简化，Guava RateLimiter扩展了标准的令牌桶算法，比如还能支持预热功能。对于按需加载的缓存来说，预热后缓存能支持5万TPS的并发，但是在预热前5万TPS的并发直接就把缓存击垮了，所以如果需要给该缓存限流，限流器也需要支持预热功能，在初始阶段，限制的流速 r 很小，但是动态增长的。预热功能的实现非常复杂，Guava构建了一个积分函数来解决这个问题，如果你感兴趣，可以继续深入研究。</p>
+<p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Java并发编程实战/" rel="tag"># Java并发编程实战</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2023/08/37并发设计模式-设计模式模块热点问题答疑/" rel="prev" title="37并发设计模式-设计模式模块热点问题答疑">
+      <i class="fa fa-chevron-left"></i> 37并发设计模式-设计模式模块热点问题答疑
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2023/08/39案例分析-案例分析（二）：高性能网络应用框架Netty/" rel="next" title="39案例分析-案例分析（二）：高性能网络应用框架Netty">
+      39案例分析-案例分析（二）：高性能网络应用框架Netty <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#经典限流算法令牌桶算法"><span class="nav-number">1.</span> <span class="nav-text"> 经典限流算法：令牌桶算法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#guava如何实现令牌桶算法"><span class="nav-number">2.</span> <span class="nav-text"> Guava如何实现令牌桶算法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text"> 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">457</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">31</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : 'bbfacd244d9f9a7340d8d925395e298d',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
