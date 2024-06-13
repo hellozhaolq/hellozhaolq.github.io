@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="SQL 窗口 PL/SQL Developer 工具的 SQL 窗口只能执行 SQL 和 PLSQL，执行命令使用命令窗口。  分页查询 https://www.youtube.com/watch?v=BHzgsKi3dI4&amp;amp;list=PLD3Xyx6ef38yPjePP9e0yfIwX4lGOcb3w&amp;amp;index=28  复合索引 建立时的字段顺序和条件中的字段顺序相同才会走索">
+<meta name="keywords" content="Oracle">
+<meta property="og:type" content="article">
+<meta property="og:title" content="oracle查缺补漏">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2016/01/oracle查缺补漏/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="SQL 窗口 PL/SQL Developer 工具的 SQL 窗口只能执行 SQL 和 PLSQL，执行命令使用命令窗口。  分页查询 https://www.youtube.com/watch?v=BHzgsKi3dI4&amp;amp;list=PLD3Xyx6ef38yPjePP9e0yfIwX4lGOcb3w&amp;amp;index=28  复合索引 建立时的字段顺序和条件中的字段顺序相同才会走索">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2016/01/oracle查缺补漏/image-20220309194826259.png">
+<meta property="og:updated_time" content="2016-01-01T00:38:19.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="oracle查缺补漏">
+<meta name="twitter:description" content="SQL 窗口 PL/SQL Developer 工具的 SQL 窗口只能执行 SQL 和 PLSQL，执行命令使用命令窗口。  分页查询 https://www.youtube.com/watch?v=BHzgsKi3dI4&amp;amp;list=PLD3Xyx6ef38yPjePP9e0yfIwX4lGOcb3w&amp;amp;index=28  复合索引 建立时的字段顺序和条件中的字段顺序相同才会走索">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2016/01/oracle查缺补漏/image-20220309194826259.png">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2016/01/oracle查缺补漏/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>oracle查缺补漏 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2016/01/oracle查缺补漏/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          oracle查缺补漏
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2016-01-01 08:38:19" itemprop="dateCreated datePublished" datetime="2016-01-01T08:38:19+08:00">2016-01-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="sql-窗口"><a class="markdownIt-Anchor" href="#sql-窗口"></a> SQL 窗口</h1>
+<p>PL/SQL Developer 工具的 SQL 窗口只能执行 SQL 和 PLSQL，执行命令使用命令窗口。</p>
+<h1 id="分页查询"><a class="markdownIt-Anchor" href="#分页查询"></a> 分页查询</h1>
+<p><a href="https://www.youtube.com/watch?v=BHzgsKi3dI4&amp;list=PLD3Xyx6ef38yPjePP9e0yfIwX4lGOcb3w&amp;index=28" target="_blank" rel="noopener">https://www.youtube.com/watch?v=BHzgsKi3dI4&amp;list=PLD3Xyx6ef38yPjePP9e0yfIwX4lGOcb3w&amp;index=28</a></p>
+<h1 id="复合索引"><a class="markdownIt-Anchor" href="#复合索引"></a> 复合索引</h1>
+<p>建立时的字段顺序和条件中的字段顺序相同才会走索引。</p>
+<h1 id="反向建索引"><a class="markdownIt-Anchor" href="#反向建索引"></a> 反向建索引</h1>
+<p>当某字段的值连续增长时，构建标准索引会形成歪脖子树，查询性能不理想。反向建索引，可以让索引的值变得不规则，从而使索引树均匀分布。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">index</span> 索引名称 <span class="keyword">on</span> 表名(列名) <span class="keyword">reverse</span>;</span><br></pre></td></tr></table></figure>
+<p><img src="/article/2016/01/oracle查缺补漏/image-20220309194826259.png" alt="image-20220309194826259"></p>
+<h1 id="同义词"><a class="markdownIt-Anchor" href="#同义词"></a> 同义词</h1>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> [<span class="keyword">public</span>] <span class="keyword">SYNONYM</span> 同义词名称 <span class="keyword">for</span> <span class="keyword">object</span></span><br></pre></td></tr></table></figure>
+<p>public 是可选的，不加就是私有同义词，只能被当前用户使用。object 可以是表、试图、序列等要创建同义词的对象名称。</p>
+<p>为表 T_OWNERS 创建（私有）同义词，名称为 OWNERS，语句：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">synonym</span> OWNERS <span class="keyword">for</span> T_OWNERS;</span><br></pre></td></tr></table></figure>
+<p>使用同义词</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> OWNERS;</span><br></pre></td></tr></table></figure>
+<h1 id="视图"><a class="markdownIt-Anchor" href="#视图"></a> 视图</h1>
+<p>主要用来简化数据操作。</p>
+<p>视图提供了一个简单而有效的安全机制，可以定制不同用户对数据的访问权限。比如不希望一张表的敏感信息被他人查看，可以只赋予视图权限，而且只读。</p>
+<p>提供向后兼容性：视图使用户能够在表的架构更改时为表创建向后兼容接口。比如改表字段导致查询无法使用，可以使用视图查询。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> [<span class="keyword">OR</span> <span class="keyword">REPLACE</span>] [<span class="keyword">FORCE</span>|NOFORCE] <span class="keyword">VIEW</span> view_name</span><br><span class="line">    [(<span class="keyword">alias</span>[, <span class="keyword">alias</span>]...)]</span><br><span class="line"><span class="keyword">AS</span> subquery</span><br><span class="line">     [<span class="keyword">WITH</span> <span class="keyword">CHECK</span> <span class="keyword">OPTION</span> [<span class="keyword">CONSTRAINT</span> <span class="keyword">constraint</span>]]</span><br><span class="line">     [<span class="keyword">WITH</span> <span class="keyword">READ</span> <span class="keyword">ONLY</span>]</span><br></pre></td></tr></table></figure>
+<p>alias：为视图产生的列定义的别名；</p>
+<p>subquery ：一条完整的SELECT语句，可以在该语句中定义别名；</p>
+<p>WITH CHECK OPTION ：插入或修改的数据行必须满足视图定义的约束；</p>
+<p>WITH READ ONLY    ：<font color="red"><strong>默认可以通过视图对基表执行增删改操作</strong></font>，但是有很多在基表上的限制(比如：基表中某列不能为空，但是该列没有出现在视图中，则不能通过视图执行insert操作)，WITH READ ONLY说明视图是只读视图，不能通过该视图进行增删改操作。<font color="red"><strong>现实开发中，基本上不通过视图对表中的数据进行增删改操作。</strong></font></p>
+<p><font color="red"><strong>键保留表</strong></font>：把主键保留下来的那个表。通过视图查询的数据中，主键来自哪个表，哪个表就是键保留表，只能修改键保留表中的数据，而不能修改其他表的数据。</p>
+<p><font color="red"><strong>聚合统计的视图是没有键保留表的，这种视图都是只读的。</strong> </font></p>
+<h1 id="物化视图"><a class="markdownIt-Anchor" href="#物化视图"></a> 物化视图</h1>
+<p><a href="https://www.modb.pro/db/52367" target="_blank" rel="noopener">https://www.modb.pro/db/52367</a></p>
+<p><a href="https://www.youtube.com/watch?v=mo61cAiV0HE&amp;list=PLD3Xyx6ef38yPjePP9e0yfIwX4lGOcb3w&amp;index=45" target="_blank" rel="noopener">https://www.youtube.com/watch?v=mo61cAiV0HE&amp;list=PLD3Xyx6ef38yPjePP9e0yfIwX4lGOcb3w&amp;index=45</a></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> METERIALIZED <span class="keyword">VIEW</span> view_name</span><br><span class="line">[<span class="keyword">BUILD</span> <span class="keyword">IMMEDIATE</span> | <span class="keyword">BUILD</span> <span class="keyword">DEFERRED</span>]</span><br><span class="line"><span class="keyword">REFRESH</span> [<span class="keyword">FAST</span>|<span class="keyword">COMPLETE</span>|<span class="keyword">FORCE</span>]</span><br><span class="line">[</span><br><span class="line"><span class="keyword">ON</span> [<span class="keyword">COMMIT</span> | <span class="keyword">DEMAND</span>] | <span class="keyword">START</span> <span class="keyword">WITH</span> (START_TIME) <span class="keyword">NEXT</span> (NEXT_TIME)</span><br><span class="line">]</span><br><span class="line"><span class="keyword">AS</span></span><br><span class="line">subquery</span><br></pre></td></tr></table></figure>
+<p>会生成一个表。</p>
+<h2 id="参数详解"><a class="markdownIt-Anchor" href="#参数详解"></a> 参数详解</h2>
+<ul>
+<li>build immediate 在创建物化视图时就生成数据，此为默认值。</li>
+<li>build deferred 创建时不生成数据。当配合 commit 使用时，第一次必须手动刷新，后面才会自动刷新。</li>
+</ul>
+<p><strong>刷新模式：</strong></p>
+<ul>
+<li>commit 自动刷新，当基表有事务提交时刷新物化视图。</li>
+<li>demand 手动刷新。</li>
+</ul>
+<p><strong>刷新方法：</strong></p>
+<ul>
+<li>fast 采用<strong>增量刷新</strong>，只刷新自上次刷新以后进行的修改。<strong>前提是视图中用到的表必须都有物化视图日志，且建立的物化视图必须有基表的ROWID或主键字段（可以使用别名），物化视图会根据它确定需要更新的数据行</strong>。</li>
+<li>complete 对整个物化视图进行<strong>完全刷新</strong>。</li>
+<li>force 自动选择。在刷新时会去判断是否可以进行快速刷新，如果可以则采用 FAST 方式，否则采用 COMPLETE 的方式。</li>
+</ul>
+<p><strong>刷新时间（可选）：</strong></p>
+<ul>
+<li>start_time 指定起始时间。</li>
+<li>next_time 下次开始时间，起始到下次的间隔时间即改表的循环时间。</li>
+</ul>
+<h2 id="手动刷新"><a class="markdownIt-Anchor" href="#手动刷新"></a> 手动刷新</h2>
+<p>物化视图生成的表数据</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">begin</span></span><br><span class="line">	DBMS_MVIEW.refresh(<span class="string">'VIEW_NAME'</span>, <span class="string">'C'</span>); <span class="comment">-- 这是oracle封装的存储过程，有两个参数。</span></span><br><span class="line"><span class="keyword">end</span>;</span><br></pre></td></tr></table></figure>
+<p>也可以使用命令刷新，打开命令窗执行：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EXEC DBMS_MVIEW.refresh('VIEW_NAME', 'C');</span><br></pre></td></tr></table></figure>
+<h2 id="物化视图日志"><a class="markdownIt-Anchor" href="#物化视图日志"></a> 物化视图日志</h2>
+<p>此日志记录了基表发生的变化（增、删、改），物化视图用记录来刷新数据行，刷新完成后会自动删除日志记录，所以若要看到效果可以将物化视图定义为手动刷新（demand），当基表变化是查看日志表，手动刷新后，日志表数据被删除。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">materialized</span> <span class="keyword">view</span> <span class="keyword">log</span> <span class="keyword">on</span> 物化视图使用的表名 <span class="keyword">with</span> <span class="keyword">rowid</span>(或者主键); <span class="comment">-- 根据rowid更新物化视图</span></span><br></pre></td></tr></table></figure>
+<p>会生成一张表，默认物化视图日志的表名格式：<code>MLOG$_表名</code>。</p>
+<h1 id="备份和恢复"><a class="markdownIt-Anchor" href="#备份和恢复"></a> 备份和恢复</h1>
+<p><a href="https://www.cnblogs.com/codecat/p/10723389.html" target="_blank" rel="noopener">使用imp命令和exp命令对oracle数据库进行导入导出操作 </a></p>
+<p>整库导入导出</p>
+<p><a href="https://www.youtube.com/watch?v=_zOp8S4uQQ4&amp;list=PLD3Xyx6ef38yPjePP9e0yfIwX4lGOcb3w&amp;index=15" target="_blank" rel="noopener">https://www.youtube.com/watch?v=_zOp8S4uQQ4&amp;list=PLD3Xyx6ef38yPjePP9e0yfIwX4lGOcb3w&amp;index=15</a></p>
+<p>按用户和表导入导出</p>
+<p><a href="https://www.youtube.com/watch?v=2BoHiT_ymC4&amp;list=PLD3Xyx6ef38yPjePP9e0yfIwX4lGOcb3w&amp;index=16" target="_blank" rel="noopener">https://www.youtube.com/watch?v=2BoHiT_ymC4&amp;list=PLD3Xyx6ef38yPjePP9e0yfIwX4lGOcb3w&amp;index=16</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Oracle/" rel="tag"># Oracle</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2015/11/Java浮点型数据的精度问题/" rel="prev" title="Java浮点型数据的精度问题">
+      <i class="fa fa-chevron-left"></i> Java浮点型数据的精度问题
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2017/09/Properties类、加载properties文件、加载动态库、classpath/" rel="next" title="Properties类、加载properties文件、加载动态库、classpath">
+      Properties类、加载properties文件、加载动态库、classpath <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#sql-窗口"><span class="nav-number">1.</span> <span class="nav-text"> SQL 窗口</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#分页查询"><span class="nav-number">2.</span> <span class="nav-text"> 分页查询</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#复合索引"><span class="nav-number">3.</span> <span class="nav-text"> 复合索引</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#反向建索引"><span class="nav-number">4.</span> <span class="nav-text"> 反向建索引</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#同义词"><span class="nav-number">5.</span> <span class="nav-text"> 同义词</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#视图"><span class="nav-number">6.</span> <span class="nav-text"> 视图</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#物化视图"><span class="nav-number">7.</span> <span class="nav-text"> 物化视图</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#参数详解"><span class="nav-number">7.1.</span> <span class="nav-text"> 参数详解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#手动刷新"><span class="nav-number">7.2.</span> <span class="nav-text"> 手动刷新</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#物化视图日志"><span class="nav-number">7.3.</span> <span class="nav-text"> 物化视图日志</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#备份和恢复"><span class="nav-number">8.</span> <span class="nav-text"> 备份和恢复</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">498</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '77c52959b812ca491457e675f0f0f77f',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

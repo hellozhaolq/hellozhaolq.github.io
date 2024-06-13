@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="百科： Redis - 维基百科 推荐： Redis 教程 - 菜鸟 Redis 教程 - API参考文档 https://redis.io/docs/ 请习惯查看官网">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis教程">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2020/06/Redis教程/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="百科： Redis - 维基百科 推荐： Redis 教程 - 菜鸟 Redis 教程 - API参考文档 https://redis.io/docs/ 请习惯查看官网">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-06-01T02:30:51.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis教程">
+<meta name="twitter:description" content="百科： Redis - 维基百科 推荐： Redis 教程 - 菜鸟 Redis 教程 - API参考文档 https://redis.io/docs/ 请习惯查看官网">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2020/06/Redis教程/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Redis教程 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2020/06/Redis教程/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis教程
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-06-01 10:30:51" itemprop="dateCreated datePublished" datetime="2020-06-01T10:30:51+08:00">2020-06-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><font color="blue"><strong>百科：</strong></font></p>
+<p><a href="https://zh.wikipedia.org/wiki/Redis" target="_blank" rel="noopener">Redis - 维基百科</a></p>
+<p><font color="blue"><strong>推荐：</strong></font></p>
+<p><a href="https://www.runoob.com/redis/redis-tutorial.html" target="_blank" rel="noopener">Redis 教程 - 菜鸟</a></p>
+<p><a href="https://www.apiref.com/redis-zh/index.html" target="_blank" rel="noopener">Redis 教程 - API参考文档</a></p>
+<p><a href="https://redis.io/docs/" target="_blank" rel="noopener">https://redis.io/docs/</a></p>
+<p><strong>请习惯查看官网</strong></p>
+<a id="more"></a>
+<h1 id="redisinsight"><a class="markdownIt-Anchor" href="#redisinsight"></a> RedisInsight</h1>
+<p>RedisInsight 是 Redis 官网可视化工具，前身为 Redis Desktop Manager。</p>
+<h1 id="anotherredisdesktopmanager"><a class="markdownIt-Anchor" href="#anotherredisdesktopmanager"></a> AnotherRedisDesktopManager</h1>
+<p><a href="https://github.com/qishibo/AnotherRedisDesktopManager" target="_blank" rel="noopener">https://github.com/qishibo/AnotherRedisDesktopManager</a></p>
+<h1 id="官方"><a class="markdownIt-Anchor" href="#官方"></a> 官方</h1>
+<p><a href="https://redis.io/" target="_blank" rel="noopener">https://redis.io/</a></p>
+<p><a href="https://github.com/redis/redis" target="_blank" rel="noopener">https://github.com/redis/redis</a></p>
+<h2 id="font-colorblue文档font"><a class="markdownIt-Anchor" href="#font-colorblue文档font"></a> <font color="blue"><strong>文档</strong></font></h2>
+<p><a href="https://redis.io/documentation" target="_blank" rel="noopener">https://redis.io/documentation</a></p>
+<h2 id="font-colorblue命令font"><a class="markdownIt-Anchor" href="#font-colorblue命令font"></a> <font color="blue"><strong>命令</strong></font></h2>
+<p><a href="https://redis.io/commands" target="_blank" rel="noopener">https://redis.io/commands</a></p>
+<h2 id="font-colorblue交互式教程font"><a class="markdownIt-Anchor" href="#font-colorblue交互式教程font"></a> <font color="blue"><strong>交互式教程</strong></font></h2>
+<p><font color="red"><strong>可在线测试：</strong></font> <a href="https://try.redis.io/" target="_blank" rel="noopener">https://try.redis.io/</a></p>
+<h2 id="font-colorblue历史下载font"><a class="markdownIt-Anchor" href="#font-colorblue历史下载font"></a> <font color="blue"><strong>历史下载</strong></font></h2>
+<p><a href="https://download.redis.io/releases/" target="_blank" rel="noopener">https://download.redis.io/releases/</a></p>
+<p><a href="https://github.com/redis/redis/releases" target="_blank" rel="noopener">https://github.com/redis/redis/releases</a></p>
+<h2 id="配置文件"><a class="markdownIt-Anchor" href="#配置文件"></a> 配置文件</h2>
+<p><a href="https://github.com/redis/redis/blob/unstable/redis.conf" target="_blank" rel="noopener">https://github.com/redis/redis/blob/unstable/redis.conf</a></p>
+<h1 id="简介"><a class="markdownIt-Anchor" href="#简介"></a> 简介</h1>
+<p><a href="https://www.runoob.com/redis/redis-intro.html" target="_blank" rel="noopener">https://www.runoob.com/redis/redis-intro.html</a></p>
+<h1 id="下载与安装"><a class="markdownIt-Anchor" href="#下载与安装"></a> 下载与安装</h1>
+<h2 id="windows"><a class="markdownIt-Anchor" href="#windows"></a> windows</h2>
+<p><a href="https://www.redis.com.cn/redis-installation.html" target="_blank" rel="noopener">https://www.redis.com.cn/redis-installation.html</a></p>
+<p><a href="https://www.runoob.com/redis/redis-install.html" target="_blank" rel="noopener">https://www.runoob.com/redis/redis-install.html</a> <font color="red"><strong>附下载地址</strong></font></p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"># 安装Redis服务</span><br><span class="line">redis-server.exe --service-install redis.windows-service.conf --service-name Redis --loglevel verbose</span><br><span class="line"></span><br><span class="line"># 启动</span><br><span class="line">redis-server --service-<span class="built_in">start</span></span><br><span class="line"># 测试</span><br><span class="line">redis-cli.exe -h <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span> -p <span class="number">6379</span></span><br><span class="line"># 停止</span><br><span class="line">redis-server --service-stop</span><br><span class="line"></span><br><span class="line"># 卸载Redis服务</span><br><span class="line">redis-server --service-uninstall</span><br><span class="line">sc delete Redis</span><br></pre></td></tr></table></figure>
+<p>redis.windows.conf 和 redis.windows-service.conf 的以下配置不同</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">logfile "server_log.txt"</span><br><span class="line">syslog-enabled yes</span><br><span class="line">syslog-ident redis</span><br></pre></td></tr></table></figure>
+<p>redis.windows-service.conf 旨在作为服务/守护程序运行。这意味着它应该在后台运行并由操作系统管理（在重新启动时启动，如果崩溃则重新启动等）。<br>
+redis.windows.conf 旨在从命令行或脚本运行并在用户空间中进行管理。<br>
+两者之间唯一的实质性区别是服务挂钩到 Windows 系统日志中，这对于服务来说是一个非常好的主意，但对于正常进程来说通常是不必要的。<br>
+无论选择哪一种，都需要根据自己的目的对其进行调整。它们只是作为样本。</p>
+<h1 id="redis客户端"><a class="markdownIt-Anchor" href="#redis客户端"></a> Redis客户端</h1>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">-h &lt;hostname&gt; Server hostname (default: 127.0.0.1) # 指定ip</span><br><span class="line">-p &lt;port&gt; Server port (default: 6379) # 指定端口，默认是6379</span><br><span class="line">-a &lt;password&gt; Password to use when connecting to the server # 连接密码</span><br><span class="line">-n &lt;db&gt; Database number # 指定的数据库</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 登录时指定密码，不安全，可以在历史命令中查到</span></span><br><span class="line">redis-cli -h 127.0.0.1 -p port -a 123456 -n 0</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 不指定密码</span></span><br><span class="line">redis-cli -h 127.0.0.1 -p 6379 -n 0</span><br><span class="line">auth 123456</span><br></pre></td></tr></table></figure>
+<h1 id="redis五种数据类型"><a class="markdownIt-Anchor" href="#redis五种数据类型"></a> Redis五种数据类型</h1>
+<p><font color="red">Redis 没有专门的整数类型</font></p>
+<h2 id="string字符串"><a class="markdownIt-Anchor" href="#string字符串"></a> <a href="https://redis.io/docs/data-types/strings/" target="_blank" rel="noopener">String（字符串）</a></h2>
+<p><font color="red">string 是 redis 最基本的数据类型，一个 key 对应一个 value。</font></p>
+<p>string 类型是二进制安全的。意思是 redis 的 string 可以包含任何数据。比如jpg图片或者序列化的对象。</p>
+<p><font size="5"><strong>基本命令</strong></font></p>
+<p>请参阅<a href="https://redis.io/commands/?group=string" target="_blank" rel="noopener">字符串命令的完整列表</a>。</p>
+<ul>
+<li><a href="https://redis.io/commands/set" target="_blank" rel="noopener"><code>SET</code></a>存储一个字符串值。</li>
+<li><a href="https://redis.io/commands/setnx" target="_blank" rel="noopener"><code>SETNX</code></a>仅当键不存在时才存储字符串值。用于实现锁。</li>
+<li><a href="https://redis.io/commands/get" target="_blank" rel="noopener"><code>GET</code></a>检索字符串值。</li>
+<li><a href="https://redis.io/commands/mget" target="_blank" rel="noopener"><code>MGET</code></a>在单个操作中检索多个字符串值。</li>
+</ul>
+<p><font size="5"><strong>指标管理</strong></font></p>
+<ul>
+<li><a href="https://redis.io/commands/incrby" target="_blank" rel="noopener"><code>INCRBY</code></a>原子地递增（并在传递负数时递减）存储在给定键处的计数器。</li>
+<li>浮点计数器存在另一个命令：<a href="https://redis.io/commands/incrbyfloat" target="_blank" rel="noopener">INCRBYFLOAT</a>。</li>
+</ul>
+<p><font size="5"><strong>按位运算</strong></font></p>
+<p>要对字符串执行按位运算，请参阅<a href="https://redis.io/docs/data-types/bitmaps" target="_blank" rel="noopener">位图数据类型</a>文档。</p>
+<p><font size="5"><strong>表现</strong></font></p>
+<p>大多数字符串操作都是O(1)，这意味着它们的效率很高。但是，请小心使用<a href="https://redis.io/commands/substr" target="_blank" rel="noopener"><code>SUBSTR</code></a>复杂<a href="https://redis.io/commands/getrange" target="_blank" rel="noopener"><code>GETRANGE</code></a>度<a href="https://redis.io/commands/setrange" target="_blank" rel="noopener"><code>SETRANGE</code></a>命令，这些命令可以是O(n)。这些随机访问字符串命令在处理大字符串时可能会导致性能问题。</p>
+<p><font size="5"><strong>限制</strong></font></p>
+<p>默认情况下，单个 Redis 字符串最大为 <font color="red"><strong>512MB</strong></font>。</p>
+<p><font size="5"><strong>例子</strong></font></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">del mykey</span><br><span class="line">set mykey &quot;Hello\nWorld&quot;</span><br><span class="line">OK</span><br><span class="line">get mykey</span><br></pre></td></tr></table></figure>
+<h2 id="list列表"><a class="markdownIt-Anchor" href="#list列表"></a> <a href="https://redis.io/docs/data-types/lists/" target="_blank" rel="noopener">List（列表）</a></h2>
+<p>Redis 列表是简单的字符串列表，按照插入顺序排序。可以添加一个元素到列表的头部（左边）或者尾部（右边）。</p>
+<p>每个列表最多可存储 2<sup>32</sup> - 1 个元素（<font color="red"><strong>40多亿</strong></font>）。</p>
+<p>Redis 列表经常用于：</p>
+<ul>
+<li>实现栈和队列。</li>
+<li>为后台工作系统构建队列管理。</li>
+</ul>
+<p><font size="5"><strong>基本命令</strong></font></p>
+<p>请参阅<a href="https://redis.io/commands/?group=list" target="_blank" rel="noopener">完整的列表命令系列</a>。</p>
+<ul>
+<li><a href="https://redis.io/commands/lpush" target="_blank" rel="noopener"><code>LPUSH</code></a>添加一个新元素到列表的头部；<a href="https://redis.io/commands/rpush" target="_blank" rel="noopener"><code>RPUSH</code></a>添加到尾巴。</li>
+<li><a href="https://redis.io/commands/lpop" target="_blank" rel="noopener"><code>LPOP</code></a>从列表的头部移除并返回一个元素；<a href="https://redis.io/commands/rpop" target="_blank" rel="noopener"><code>RPOP</code></a>做同样的事情，但从列表的尾部开始。</li>
+<li><a href="https://redis.io/commands/llen" target="_blank" rel="noopener"><code>LLEN</code></a>返回列表的长度。</li>
+<li><a href="https://redis.io/commands/lmove" target="_blank" rel="noopener"><code>LMOVE</code></a>原子地将元素从一个列表移动到另一个列表。</li>
+<li><a href="https://redis.io/commands/ltrim" target="_blank" rel="noopener"><code>LTRIM</code></a>将列表减少到指定的元素范围。</li>
+</ul>
+<p><font size="5"><strong>阻塞命令</strong></font></p>
+<p>列表支持多种阻塞命令。例如：</p>
+<ul>
+<li><a href="https://redis.io/commands/blpop" target="_blank" rel="noopener"><code>BLPOP</code></a>从列表的头部移除并返回一个元素。如果列表为空，则命令将阻塞，直到元素可用或达到指定的超时为止。</li>
+<li><a href="https://redis.io/commands/blmove" target="_blank" rel="noopener"><code>BLMOVE</code></a>原子地将元素从源列表移动到目标列表。如果源列表为空，则该命令将阻塞，直到有新元素可用为止。</li>
+</ul>
+<p><font size="5"><strong>表现</strong></font></p>
+<p>访问其头部或尾部的列表操作的复杂度为 O(1)，这意味着它们非常高效。但是，操作列表中元素的命令通常是 O(n)。这些示例包括<a href="https://redis.io/commands/lindex" target="_blank" rel="noopener"><code>LINDEX</code></a>、<a href="https://redis.io/commands/linsert" target="_blank" rel="noopener"><code>LINSERT</code></a>和<a href="https://redis.io/commands/lset" target="_blank" rel="noopener"><code>LSET</code></a>。运行这些命令时要小心，特别是在对大型列表进行操作时。</p>
+<p><font size="5"><strong>限制</strong></font></p>
+<p>List的最大长度为 2<sup>32</sup> - 1（<font color="red"><strong>40多亿</strong></font>）。</p>
+<p><font size="5"><strong>例子</strong></font></p>
+<p>将列表视为队列（先进先出）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">del ids</span><br><span class="line">lpush work:queue:ids 1</span><br><span class="line">lpush work:queue:ids 2</span><br><span class="line">lpush work:queue:ids 3</span><br><span class="line"></span><br><span class="line">rpop work:queue:ids</span><br><span class="line">&quot;1&quot;</span><br><span class="line">rpop work:queue:ids</span><br><span class="line">&quot;2&quot;</span><br></pre></td></tr></table></figure>
+<p>将列表视为堆栈（先进后出）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">del ids</span><br><span class="line">lpush work:queue:ids 1</span><br><span class="line">lpush work:queue:ids 2</span><br><span class="line">lpush work:queue:ids 3</span><br><span class="line"></span><br><span class="line">lpop work:queue:ids</span><br><span class="line">&quot;3&quot;</span><br><span class="line">lpop work:queue:ids</span><br><span class="line">&quot;2&quot;</span><br></pre></td></tr></table></figure>
+<p>检查列表的长度：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">llen work:queue:ids</span><br><span class="line">(integer) 1</span><br></pre></td></tr></table></figure>
+<p>创建一个上限为100个元素的列表，可以在每次调用 <strong>LPUSH</strong> 后调用 <strong>LTRIM</strong> ：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">lpush notifications:user:1 &quot;You&apos;ve got mail!&quot;</span><br><span class="line">ltrim notifications:user:1 0 99</span><br><span class="line">lpush notifications:user:1 &quot;Your package will be delivered at 12:01 today.&quot;</span><br><span class="line">ltrim notifications:user:1 0 99</span><br></pre></td></tr></table></figure>
+<h2 id="set集合"><a class="markdownIt-Anchor" href="#set集合"></a> <a href="https://redis.io/docs/data-types/sets/" target="_blank" rel="noopener">Set（集合）</a></h2>
+<p>Redis 的 Set 是<font color="red"><strong>唯一</strong></font> string 类型元素的<font color="red"><strong>无序集合</strong></font>。</p>
+<p>可以使用 Redis 集来高效地：</p>
+<ul>
+<li>跟踪唯一项目（例如，跟踪访问给定博客文章的所有唯一 IP 地址）。</li>
+<li>表示关系（例如，具有给定角色的所有用户的集合）。</li>
+<li>执行常见的集合运算，例如交集、并集和差集。</li>
+</ul>
+<p><font size="5"><strong>基本命令</strong></font></p>
+<p>请参阅<a href="https://redis.io/commands/?group=set" target="_blank" rel="noopener">set 命令的完整列表</a>。</p>
+<ul>
+<li><a href="https://redis.io/commands/sadd" target="_blank" rel="noopener"><code>SADD</code></a>将新成员添加到集合中。</li>
+<li><a href="https://redis.io/commands/srem" target="_blank" rel="noopener"><code>SREM</code></a>从集合中删除指定的成员。</li>
+<li><a href="https://redis.io/commands/sismember" target="_blank" rel="noopener"><code>SISMEMBER</code></a>测试集合成员的字符串。</li>
+<li><a href="https://redis.io/commands/sinter" target="_blank" rel="noopener"><code>SINTER</code></a>返回两个或多个集合共有的成员集合（即交集）。</li>
+<li><a href="https://redis.io/commands/scard" target="_blank" rel="noopener"><code>SCARD</code></a>返回集合的大小（又名基数）。</li>
+</ul>
+<p><font size="5"><strong>表现</strong></font></p>
+<p>集合是通过哈希表实现的，所以大多数集合操作，包括添加、删除和检查项是否为集合成员，复杂度都是O(1)。这意味着它们的效率很高。</p>
+<p>但是，对于具有数十万或更多成员的大型集，在运行 <strong>SMEMBERS 命令</strong>时，应<strong>谨慎</strong>行事。此命令为O(n)，并在单个响应中返回整个集合。作为另一种选择，可以考虑SSCAN，它允许您迭代地检索集合的所有成员。</p>
+<p><font size="5"><strong>限制</strong></font></p>
+<p>每个集合的最大成员数为 2<sup>32</sup> - 1（<font color="red"><strong>40多亿</strong></font>）。</p>
+<p><font size="5"><strong>例子</strong></font></p>
+<p>存储用户 123 和 456 的收藏书 ID 集：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">sadd user:123:favorites 347</span><br><span class="line">sadd user:123:favorites 561</span><br><span class="line">sadd user:123:favorites 742</span><br><span class="line">sadd user:456:favorites 561</span><br><span class="line"></span><br><span class="line">sadd user:456:favorites 99999</span><br><span class="line">srem user:456:favorites 99999</span><br></pre></td></tr></table></figure>
+<p>检查用户 123 是否喜欢书籍 742 和 299</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sismember user:123:favorites 742</span><br><span class="line">sismember user:123:favorites 299</span><br></pre></td></tr></table></figure>
+<p>用户 123 和 456 有没有共同喜欢的书？</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sinter user:123:favorites user:456:favorites</span><br></pre></td></tr></table></figure>
+<p>用户 123 收藏了多少本书？</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scard user:123:favorites</span><br></pre></td></tr></table></figure>
+<h2 id="hash哈希"><a class="markdownIt-Anchor" href="#hash哈希"></a> <a href="https://redis.io/docs/data-types/hashes/" target="_blank" rel="noopener">Hash（哈希）</a></h2>
+<p>Redis hash 是一个键值对集合 (key=&gt;value)。</p>
+<p>Redis hash 是一个 string 类型的 field 和 value 的映射表（field=&gt;value对），hash 特别适合用于<font color="red"><strong>存储对象</strong></font>。</p>
+<p><font size="5"><strong>基本命令</strong></font></p>
+<p>请参阅<a href="https://redis.io/commands/?group=hash" target="_blank" rel="noopener">哈希命令的完整列表</a>。</p>
+<ul>
+<li><a href="https://redis.io/commands/hset" target="_blank" rel="noopener"><code>HSET</code></a>设置散列上一个或多个字段的值。</li>
+<li><a href="https://redis.io/commands/hget" target="_blank" rel="noopener"><code>HGET</code></a>返回给定字段的值。</li>
+<li><a href="https://redis.io/commands/hmget" target="_blank" rel="noopener"><code>HMGET</code></a>返回一个或多个给定字段的值。</li>
+<li><a href="https://redis.io/commands/hincrby" target="_blank" rel="noopener"><code>HINCRBY</code></a>通过提供的整数，增加给定字段的值。</li>
+</ul>
+<p><font size="5"><strong>表现</strong></font></p>
+<p>大多数 Redis 哈希命令的复杂度为 O(1)。</p>
+<p>一些命令 - 例如<a href="https://redis.io/commands/hkeys" target="_blank" rel="noopener"><code>HKEYS</code></a>、<a href="https://redis.io/commands/hvals" target="_blank" rel="noopener"><code>HVALS</code></a>和<a href="https://redis.io/commands/hgetall" target="_blank" rel="noopener"><code>HGETALL</code></a>- 是 O(n)，其中<em>n</em>是字段值对的数量。</p>
+<p><font size="5"><strong>限制</strong></font></p>
+<p>每个 hash 可以存储  2<sup>32</sup> - 1 个  <font color="red"><strong>键值对</strong></font>（<font color="red"><strong>40多亿</strong></font>）。实际上，仅受托管 Redis 部署的 VM 上的总内存的限制。</p>
+<p><font size="5"><strong>例子</strong></font></p>
+<p>将用户对象存储为散列</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">del zhangsan</span><br><span class="line">hset zhangsan sno 2022020037 name zhagnsan age 18 sex 1</span><br><span class="line">hget zhangsan sno</span><br><span class="line">hgetall zhangsan</span><br></pre></td></tr></table></figure>
+<p>存储设备 777 对服务器执行 ping 操作、发送错误或发出请求的次数的计数器</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">del device:777:stats</span><br><span class="line">hincrby device:777:stats pings 1 # key为pings的value加1</span><br><span class="line">hincrby device:777:stats pings 1 </span><br><span class="line">hincrby device:777:stats pings 10 # key为pings的value加10</span><br><span class="line"></span><br><span class="line">hincrby device:777:stats errors 1 # key为errors的value加1</span><br><span class="line"></span><br><span class="line">hincrby device:777:stats requests 1 # key为requests的value加1</span><br></pre></td></tr></table></figure>
+<h2 id="zsetsorted-set有序集合"><a class="markdownIt-Anchor" href="#zsetsorted-set有序集合"></a> <a href="https://redis.io/docs/data-types/sorted-sets/" target="_blank" rel="noopener">zset(sorted set：有序集合)</a></h2>
+<p>Redis zset 和 set 一样，也是<font color="red"><strong>唯一</strong></font> string 类型元素的集合。</p>
+<p>不同的是，每个元素都会关联一个double类型的<font color="red"><strong>分数</strong></font>，通过分数为集合中的成员<font color="red"><strong>排序</strong></font>（从大到小）。成员是唯一，分数(score)却可以重复。</p>
+<p>当多个字符串具有相同的分数时，字符串按字典顺序排列。zset 的示例：</p>
+<ul>
+<li>排行榜。使用排序集轻松维护大型在线游戏中最高分的有序列表。</li>
+<li>速率限制器。使用 zset 来构建滑动窗口速率限制器，以防止过多的 API 请求。</li>
+</ul>
+<p><font size="5"><strong>基本命令</strong></font></p>
+<p>请参阅<a href="https://redis.io/commands/?group=sorted-set" target="_blank" rel="noopener">排序集命令的完整列表</a>。</p>
+<ul>
+<li><a href="https://redis.io/commands/zadd" target="_blank" rel="noopener"><code>ZADD</code></a>将新成员和关联的分数添加到已排序的集合中。如果该成员已经存在，则更新分数。</li>
+<li><a href="https://redis.io/commands/zrange" target="_blank" rel="noopener"><code>ZRANGE</code></a>返回在给定范围内排序的有序集合的成员。</li>
+<li><a href="https://redis.io/commands/zrank" target="_blank" rel="noopener"><code>ZRANK</code></a>返回所提供成员的排名，假设排序是按升序排列。</li>
+<li><a href="https://redis.io/commands/zrevrank" target="_blank" rel="noopener"><code>ZREVRANK</code></a>返回所提供成员的排名，假设排序集按降序排列。</li>
+</ul>
+<p><font size="5"><strong>表现</strong></font></p>
+<p>大多数有序集合操作的复杂度为 O(log(n))，其中<em>n</em>是成员数。</p>
+<p><a href="https://redis.io/commands/zrange" target="_blank" rel="noopener"><code>ZRANGE</code></a>运行具有较大返回值（例如，数万或更多）的命令时要小心。此命令的时间复杂度为 O(log(n) + m)，其中<em>m</em>是返回的结果数。</p>
+<p><font size="5"><strong>备择方案</strong></font></p>
+<p>Redis 排序集有时用于索引其他 Redis 数据结构。如果您需要索引和查询您的数据，请考虑<a href="https://redis.io/docs/stack/search" target="_blank" rel="noopener">RediSearch</a>和<a href="https://redis.io/docs/stack/json" target="_blank" rel="noopener">RedisJSON</a>。</p>
+<p><font size="5"><strong>限制</strong></font></p>
+<p>每个集合的最大成员数为 2<sup>32</sup> - 1（<font color="red"><strong>40多亿</strong></font>）。</p>
+<p><font size="5"><strong>例子</strong></font></p>
+<p>随着玩家分数的变化更新实时排行榜</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ZADD leaderboard:455 100 user:1</span><br><span class="line">ZADD leaderboard:455 75 user:2</span><br><span class="line">ZADD leaderboard:455 101 user:3</span><br><span class="line">ZADD leaderboard:455 15 user:4</span><br><span class="line">ZADD leaderboard:455 275 user:2</span><br><span class="line"></span><br><span class="line"># 请注意，在最后一次调用user:2中更新了 score 。ZADD</span><br></pre></td></tr></table></figure>
+<p>获取前 3 名玩家的分数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ZRANGE leaderboard:455 0 2 REV WITHSCORES</span><br><span class="line">1) &quot;user:2&quot;</span><br><span class="line">2) &quot;275&quot;</span><br><span class="line">3) &quot;user:3&quot;</span><br><span class="line">4) &quot;101&quot;</span><br><span class="line">5) &quot;user:1&quot;</span><br><span class="line">6) &quot;100&quot;</span><br></pre></td></tr></table></figure>
+<p>用户 2 的排名是多少？</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ZREVRANK leaderboard:455 user:2</span><br><span class="line">(integer) 0</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2020/05/Linux 用户和用户组管理/" rel="prev" title="Linux 用户和用户组管理">
+      <i class="fa fa-chevron-left"></i> Linux 用户和用户组管理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2020/12/公私钥和证书的生成与管理/" rel="next" title="公私钥和证书的生成与管理">
+      公私钥和证书的生成与管理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#redisinsight"><span class="nav-number">1.</span> <span class="nav-text"> RedisInsight</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#anotherredisdesktopmanager"><span class="nav-number">2.</span> <span class="nav-text"> AnotherRedisDesktopManager</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#官方"><span class="nav-number">3.</span> <span class="nav-text"> 官方</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#font-colorblue文档font"><span class="nav-number">3.1.</span> <span class="nav-text"> 文档</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#font-colorblue命令font"><span class="nav-number">3.2.</span> <span class="nav-text"> 命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#font-colorblue交互式教程font"><span class="nav-number">3.3.</span> <span class="nav-text"> 交互式教程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#font-colorblue历史下载font"><span class="nav-number">3.4.</span> <span class="nav-text"> 历史下载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置文件"><span class="nav-number">3.5.</span> <span class="nav-text"> 配置文件</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#简介"><span class="nav-number">4.</span> <span class="nav-text"> 简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#下载与安装"><span class="nav-number">5.</span> <span class="nav-text"> 下载与安装</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#windows"><span class="nav-number">5.1.</span> <span class="nav-text"> windows</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#redis客户端"><span class="nav-number">6.</span> <span class="nav-text"> Redis客户端</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#redis五种数据类型"><span class="nav-number">7.</span> <span class="nav-text"> Redis五种数据类型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#string字符串"><span class="nav-number">7.1.</span> <span class="nav-text"> String（字符串）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#list列表"><span class="nav-number">7.2.</span> <span class="nav-text"> List（列表）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#set集合"><span class="nav-number">7.3.</span> <span class="nav-text"> Set（集合）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hash哈希"><span class="nav-number">7.4.</span> <span class="nav-text"> Hash（哈希）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#zsetsorted-set有序集合"><span class="nav-number">7.5.</span> <span class="nav-text"> zset(sorted set：有序集合)</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">498</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : 'f37ff411c8533887192dd526e80ab11c',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

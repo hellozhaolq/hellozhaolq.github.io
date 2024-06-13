@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="结果表不要建太多，不方便维护，所以要尽可能的考虑让多业务通用。  数据库 本文基于 PostgreSQL。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="创建结果表的存储过程执行时间过长解决方案">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/02/创建结果表的存储过程执行时间过长解决方案/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="结果表不要建太多，不方便维护，所以要尽可能的考虑让多业务通用。  数据库 本文基于 PostgreSQL。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-02-19T00:00:50.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="创建结果表的存储过程执行时间过长解决方案">
+<meta name="twitter:description" content="结果表不要建太多，不方便维护，所以要尽可能的考虑让多业务通用。  数据库 本文基于 PostgreSQL。">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/02/创建结果表的存储过程执行时间过长解决方案/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>创建结果表的存储过程执行时间过长解决方案 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/02/创建结果表的存储过程执行时间过长解决方案/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          创建结果表的存储过程执行时间过长解决方案
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-02-19 08:00:50" itemprop="dateCreated datePublished" datetime="2022-02-19T08:00:50+08:00">2022-02-19</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><font color="red"><strong>结果表不要建太多，不方便维护，所以要尽可能的考虑让多业务通用。</strong></font></p>
+<h1 id="数据库"><a class="markdownIt-Anchor" href="#数据库"></a> 数据库</h1>
+<p>本文基于 PostgreSQL。</p>
+<a id="more"></a>
+<h1 id="问题"><a class="markdownIt-Anchor" href="#问题"></a> 问题</h1>
+<p>若创建结果表的存储过程执行时间较长，如果先TRUNCATE，再INSERT，在INSERT期间此表将无法使用。</p>
+<h1 id="方案"><a class="markdownIt-Anchor" href="#方案"></a> 方案</h1>
+<p>两种方案：大概思路都是向临时表刷入数据，再将临时表更名为业务表。</p>
+<p>方案一：先建临时表，刷入数据；删除业务表，将临时表更名为业务表。</p>
+<p>方案二：先建业务表和临时表（临时表先删再建），向临时表刷入数据；将业务表更名为old表，将临时表更名为业务表，再将old表更名为临时表并TRUNCATE(以备下次使用)。</p>
+<p>临时表和业务表应该使用同一个序列。</p>
+<h1 id="方案一具体逻辑"><a class="markdownIt-Anchor" href="#方案一具体逻辑"></a> 方案一具体逻辑</h1>
+<p>索引创建放在插入数据之后，因为后建索引 Insert 更快。</p>
+<p>若想先建立索引，为了避免索引重名可以使用下面方式：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">execute</span> <span class="string">'CREATE INDEX IF NOT EXISTS idx_t_user_'</span> || datetime || <span class="string">' ON "t_user" ( account)'</span>;</span><br></pre></td></tr></table></figure>
+<p>步骤：</p>
+<p>1、创建序列 t_user_seq 如果不存在。</p>
+<p>2、删除 t_user_temp 表如果存在，创建 t_user_temp 表如果不存在，并添加表和字段注释。</p>
+<p>3、向 t_user_temp 表插入数据，使用 t_user_seq 序列。</p>
+<p>4、删除 t_user 表如果存在，将 t_user_temp 表重命名为 t_user。</p>
+<p>5、创建 t_user 表索引。</p>
+<p>存储过程：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">call</span> update_t_user();</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">OR</span> <span class="keyword">REPLACE</span> <span class="keyword">PROCEDURE</span> <span class="string">"update_t_user"</span>() <span class="keyword">AS</span> $<span class="keyword">BODY</span>$ </span><br><span class="line"></span><br><span class="line"><span class="keyword">DECLARE</span></span><br><span class="line">    <span class="built_in">date</span> <span class="built_in">varchar</span>(<span class="number">10</span>);</span><br><span class="line">    time varchar(10);</span><br><span class="line">    datetime varchar(20) := to_char(clock_timestamp(), 'yyyymmddhh24miss');</span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line">    <span class="keyword">select</span> to_char(clock_timestamp(), <span class="string">'yyyy-mm-dd'</span>) <span class="keyword">into</span> <span class="built_in">date</span>;</span><br><span class="line">    time := to_char(clock_timestamp(), 'hh24:mi:ss');</span><br><span class="line">    raise notice 'date: %', date;</span><br><span class="line">    raise notice 'time: %', time;</span><br><span class="line">    raise notice 'datetime: %', datetime;</span><br><span class="line">    </span><br><span class="line">    raise notice '开始同步数据';</span><br><span class="line"></span><br><span class="line">    <span class="comment">-- DROP SEQUENCE IF EXISTS t_user_seq; -- DROP的前提是任何表id都没将其用做默认值</span></span><br><span class="line">    <span class="keyword">CREATE</span> <span class="keyword">SEQUENCE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> t_user_seq <span class="keyword">MINVALUE</span> <span class="number">1</span> <span class="keyword">NO</span> MAXVALUE <span class="keyword">START</span> <span class="keyword">WITH</span> <span class="number">1</span> <span class="keyword">INCREMENT</span> <span class="keyword">BY</span> <span class="number">1</span> <span class="keyword">CACHE</span> <span class="number">10</span>;</span><br><span class="line">    <span class="comment">-- ALTER SEQUENCE IF EXISTS t_user_seq OWNED BY NONE;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">DROP</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> t_user_temp;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> t_user_temp (</span><br><span class="line">        <span class="comment">-- "id" bigserial PRIMARY KEY,</span></span><br><span class="line">        <span class="string">"id"</span> <span class="built_in">bigint</span> PRIMARY <span class="keyword">KEY</span> <span class="keyword">DEFAULT</span> <span class="keyword">nextval</span>( <span class="string">'t_user_seq'</span> :: regclass ),</span><br><span class="line">        <span class="string">"account"</span> <span class="built_in">VARCHAR</span> ( <span class="number">255</span> ),</span><br><span class="line">        <span class="string">"name"</span> <span class="built_in">VARCHAR</span> ( <span class="number">255</span> ),</span><br><span class="line">        <span class="string">"sex"</span> <span class="built_in">NUMERIC</span>,</span><br><span class="line">        <span class="string">"age"</span> <span class="built_in">NUMERIC</span>,</span><br><span class="line">        <span class="string">"birthday"</span> <span class="built_in">date</span>,	</span><br><span class="line">        <span class="string">"generation_time"</span> <span class="built_in">TIMESTAMP</span> ( <span class="number">6</span> ) </span><br><span class="line">    );</span><br><span class="line">    <span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">TABLE</span> t_user_temp <span class="keyword">IS</span> <span class="string">'用户信息表'</span>;</span><br><span class="line">    <span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">COLUMN</span> t_user_temp.account <span class="keyword">IS</span> <span class="string">'账号'</span>;</span><br><span class="line">    <span class="comment">-- ALTER SEQUENCE t_user_seq OWNED BY t_user_temp.id;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    raise notice '开始同步数据到temp表';</span><br><span class="line">    <span class="comment">-- 这里写插入数据sql</span></span><br><span class="line">    <span class="comment">-- 方式一：INSERT INTO t_user_temp SELECT... 需先建表</span></span><br><span class="line">    <span class="comment">-- 方式二：CREATE TABLE t_user_temp AS SELECT...</span></span><br><span class="line">    <span class="keyword">INSERT</span> <span class="keyword">INTO</span> t_user_temp</span><br><span class="line">    <span class="keyword">SELECT</span></span><br><span class="line">        <span class="keyword">nextval</span>( <span class="string">'t_user_seq'</span> ),</span><br><span class="line">        <span class="string">'zhangsan'</span> <span class="keyword">AS</span> <span class="keyword">account</span>,</span><br><span class="line">        <span class="string">'张三'</span> <span class="keyword">AS</span> <span class="keyword">NAME</span>,</span><br><span class="line">        <span class="number">1</span> <span class="keyword">AS</span> sex,</span><br><span class="line">        <span class="number">25</span> <span class="keyword">AS</span> age,</span><br><span class="line">        <span class="keyword">CURRENT_DATE</span> <span class="keyword">AS</span> birthday,</span><br><span class="line">        clock_timestamp( ) <span class="keyword">AS</span> generation_time;</span><br><span class="line"></span><br><span class="line">    raise notice '删除业务表，temp表重命名为业务表';</span><br><span class="line">    <span class="keyword">DROP</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> t_user;</span><br><span class="line">    <span class="keyword">ALTER</span> <span class="keyword">TABLE</span> t_user_temp <span class="keyword">rename</span> <span class="keyword">to</span> t_user;</span><br><span class="line"></span><br><span class="line">    <span class="comment">-- 创建索引</span></span><br><span class="line">    <span class="keyword">CREATE</span> <span class="keyword">INDEX</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> idx_t_user_0001 <span class="keyword">ON</span> <span class="string">"t_user"</span> ( <span class="keyword">account</span>, <span class="keyword">name</span>);</span><br><span class="line"></span><br><span class="line">    raise notice '同步完成';</span><br><span class="line"><span class="keyword">END</span></span><br><span class="line">$<span class="keyword">BODY</span>$ <span class="keyword">LANGUAGE</span> plpgsql;</span><br></pre></td></tr></table></figure>
+<h1 id="方案二具体逻辑"><a class="markdownIt-Anchor" href="#方案二具体逻辑"></a> 方案二具体逻辑</h1>
+<p>由于有规定，不允许在脚本中执行 DDL 语句，需另外提供表结构变动sql（建表、索引等），可采用此方案。</p>
+<p>步骤：</p>
+<p>1、清空 t_user_temp 表数据，并插入数据，使用 t_user_seq 序列。</p>
+<p>2、将 t_user_temp 表和 t_user 表替换。</p>
+<p>建表语句：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> t_user;</span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> t_user_temp;</span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">SEQUENCE</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> t_user_seq; <span class="comment">-- DROP的前提是任何表id都没将其用做默认值</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">SEQUENCE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> t_user_seq <span class="keyword">MINVALUE</span> <span class="number">1</span> <span class="keyword">NO</span> MAXVALUE <span class="keyword">START</span> <span class="keyword">WITH</span> <span class="number">1</span> <span class="keyword">INCREMENT</span> <span class="keyword">BY</span> <span class="number">1</span> <span class="keyword">CACHE</span> <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> t_user (</span><br><span class="line">    <span class="comment">-- "id" bigserial PRIMARY KEY,</span></span><br><span class="line">    <span class="string">"id"</span> <span class="built_in">bigint</span> PRIMARY <span class="keyword">KEY</span> <span class="keyword">DEFAULT</span> <span class="keyword">nextval</span>( <span class="string">'t_user_seq'</span> :: regclass ),</span><br><span class="line">    <span class="string">"account"</span> <span class="built_in">VARCHAR</span> ( <span class="number">255</span> ),</span><br><span class="line">    <span class="string">"name"</span> <span class="built_in">VARCHAR</span> ( <span class="number">255</span> ),</span><br><span class="line">    <span class="string">"sex"</span> <span class="built_in">NUMERIC</span>,</span><br><span class="line">    <span class="string">"age"</span> <span class="built_in">NUMERIC</span>,</span><br><span class="line">    <span class="string">"birthday"</span> <span class="built_in">date</span>,</span><br><span class="line">    <span class="string">"generation_time"</span> <span class="built_in">TIMESTAMP</span> ( <span class="number">6</span> ) </span><br><span class="line">);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> idx_t_user_0001 <span class="keyword">ON</span> <span class="string">"t_user"</span> ( <span class="keyword">account</span>, <span class="keyword">name</span>);</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">TABLE</span> t_user <span class="keyword">IS</span> <span class="string">'用户信息表'</span>;</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">COLUMN</span> t_user.account <span class="keyword">IS</span> <span class="string">'账号'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> t_user_temp (</span><br><span class="line">    <span class="comment">-- "id" bigserial PRIMARY KEY,</span></span><br><span class="line">    <span class="string">"id"</span> <span class="built_in">bigint</span> PRIMARY <span class="keyword">KEY</span> <span class="keyword">DEFAULT</span> <span class="keyword">nextval</span>( <span class="string">'t_user_seq'</span> :: regclass ),</span><br><span class="line">    <span class="string">"account"</span> <span class="built_in">VARCHAR</span> ( <span class="number">255</span> ),</span><br><span class="line">    <span class="string">"name"</span> <span class="built_in">VARCHAR</span> ( <span class="number">255</span> ),</span><br><span class="line">    <span class="string">"sex"</span> <span class="built_in">NUMERIC</span>,</span><br><span class="line">    <span class="string">"age"</span> <span class="built_in">NUMERIC</span>,</span><br><span class="line">    <span class="string">"birthday"</span> <span class="built_in">date</span>,</span><br><span class="line">    <span class="string">"generation_time"</span> <span class="built_in">TIMESTAMP</span> ( <span class="number">6</span> ) </span><br><span class="line">);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> idx_t_user_temp_0001 <span class="keyword">ON</span> <span class="string">"t_user_temp"</span> ( <span class="keyword">account</span>, <span class="keyword">name</span>);</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">TABLE</span> t_user <span class="keyword">IS</span> <span class="string">'用户信息表'</span>;</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">COLUMN</span> t_user.account <span class="keyword">IS</span> <span class="string">'账号'</span>;</span><br></pre></td></tr></table></figure>
+<p>存储过程：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">call</span> update_t_user();</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">OR</span> <span class="keyword">REPLACE</span> <span class="keyword">PROCEDURE</span> <span class="string">"update_t_user"</span>() <span class="keyword">AS</span> $<span class="keyword">BODY</span>$ </span><br><span class="line"></span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line">    <span class="keyword">raise</span> <span class="keyword">notice</span> <span class="string">'开始同步数据到temp表'</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">TRUNCATE</span> <span class="keyword">TABLE</span> t_user_temp;</span><br><span class="line">    <span class="keyword">INSERT</span> <span class="keyword">INTO</span> t_user_temp</span><br><span class="line">    <span class="keyword">SELECT</span></span><br><span class="line">        <span class="keyword">nextval</span>( <span class="string">'t_user_seq'</span> ),</span><br><span class="line">        <span class="string">'zhangsan'</span> <span class="keyword">AS</span> <span class="keyword">account</span>,</span><br><span class="line">        <span class="string">'张三'</span> <span class="keyword">AS</span> <span class="keyword">NAME</span>,</span><br><span class="line">        <span class="number">1</span> <span class="keyword">AS</span> sex,</span><br><span class="line">        <span class="number">25</span> <span class="keyword">AS</span> age,</span><br><span class="line">        <span class="keyword">CURRENT_DATE</span> <span class="keyword">AS</span> birthday,</span><br><span class="line">        clock_timestamp( ) <span class="keyword">AS</span> generation_time;</span><br><span class="line"></span><br><span class="line">    raise notice 'temp表和业务表替换';</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">ALTER</span> <span class="keyword">TABLE</span> t_user <span class="keyword">rename</span> <span class="keyword">to</span> t_user_20220101;</span><br><span class="line">    <span class="keyword">ALTER</span> <span class="keyword">TABLE</span> t_user_temp <span class="keyword">rename</span> <span class="keyword">to</span> t_user;</span><br><span class="line">    <span class="keyword">ALTER</span> <span class="keyword">TABLE</span> t_user_20220101 <span class="keyword">rename</span> <span class="keyword">to</span> t_user_temp;</span><br><span class="line"></span><br><span class="line">    raise notice '同步完成';</span><br><span class="line"><span class="keyword">END</span></span><br><span class="line">$<span class="keyword">BODY</span>$ <span class="keyword">LANGUAGE</span> plpgsql;</span><br></pre></td></tr></table></figure>
+<h1 id="选择哪一个"><a class="markdownIt-Anchor" href="#选择哪一个"></a> 选择哪一个？</h1>
+<p>如果对表结构的修改没有严格规定，推荐方案一，因为它可以灵活修改表结构，项目上生产以后会很方便。</p>
+<p>如果严格规定不允许脚本含有修改表结构语句，那么只能选方案二。</p>
+<h1 id="方案二优化"><a class="markdownIt-Anchor" href="#方案二优化"></a> 方案二优化</h1>
+<p>因为业务需要记录同步日志，所以新增 同步记录表 <code>sync_record</code>。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> t_sync_record;</span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">SEQUENCE</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> t_sync_record_seq; <span class="comment">-- DROP的前提是任何表id都没将其用做默认值</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">SEQUENCE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> t_sync_record_seq <span class="keyword">MINVALUE</span> <span class="number">1</span> <span class="keyword">NO</span> MAXVALUE <span class="keyword">START</span> <span class="keyword">WITH</span> <span class="number">1</span> <span class="keyword">INCREMENT</span> <span class="keyword">BY</span> <span class="number">1</span> <span class="keyword">CACHE</span> <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t_sync_record (</span><br><span class="line">    <span class="comment">-- "id" bigserial PRIMARY KEY,</span></span><br><span class="line">    <span class="string">"id"</span> <span class="built_in">int8</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="keyword">nextval</span>( <span class="string">'t_sync_record_seq'</span> :: regclass ),</span><br><span class="line">    <span class="string">"table_name"</span> <span class="built_in">varchar</span>(<span class="number">255</span>),</span><br><span class="line">    <span class="string">"sync_date"</span> <span class="built_in">varchar</span>(<span class="number">255</span>),</span><br><span class="line">    <span class="string">"flag"</span> <span class="built_in">smallint</span>,</span><br><span class="line">    <span class="string">"remark"</span> <span class="built_in">varchar</span>(<span class="number">255</span>),</span><br><span class="line">    <span class="string">"start_time"</span> <span class="built_in">timestamp</span>(<span class="number">6</span>) <span class="keyword">DEFAULT</span> clock_timestamp(),</span><br><span class="line">    <span class="string">"end_time"</span> <span class="built_in">timestamp</span>(<span class="number">6</span>) <span class="keyword">DEFAULT</span> clock_timestamp(),</span><br><span class="line">    <span class="string">"records_number"</span> <span class="built_in">numeric</span>(<span class="number">11</span>,<span class="number">0</span>),</span><br><span class="line">    <span class="string">"last_update_time"</span> <span class="built_in">timestamp</span>(<span class="number">6</span>),</span><br><span class="line">    <span class="keyword">CONSTRAINT</span> <span class="string">"pk_sync_record_id"</span> PRIMARY <span class="keyword">KEY</span> (<span class="string">"id"</span>)</span><br><span class="line">);</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">TABLE</span> t_sync_record <span class="keyword">IS</span> <span class="string">'数据同步记录表'</span>;</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">COLUMN</span> t_sync_record.table_name <span class="keyword">IS</span> <span class="string">'表名'</span>;</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">COLUMN</span> t_sync_record.sync_date <span class="keyword">IS</span> <span class="string">'同步日期。格式：yyyy-mm-dd'</span>;</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">COLUMN</span> t_sync_record.flag <span class="keyword">IS</span> <span class="string">'同步标识：1-正在同步，2-同步结束，0-同步失败'</span>;</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">COLUMN</span> t_sync_record.remark <span class="keyword">IS</span> <span class="string">'备注'</span>;</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">COLUMN</span> t_sync_record.start_time <span class="keyword">IS</span> <span class="string">'任务开始时间'</span>;</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">COLUMN</span> t_sync_record.end_time <span class="keyword">IS</span> <span class="string">'任务结束时间'</span>;</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">COLUMN</span> t_sync_record.records_number <span class="keyword">IS</span> <span class="string">'表名对应的记录数'</span>;</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="keyword">ON</span> <span class="keyword">COLUMN</span> t_sync_record.last_update_time <span class="keyword">IS</span> <span class="string">'最后更新时间'</span>;</span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">SEQUENCE</span> t_sync_record_seq OWNED <span class="keyword">BY</span> t_sync_record.id;</span><br></pre></td></tr></table></figure>
+<p>存储过程：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">call</span> update_t_user();</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">OR</span> <span class="keyword">REPLACE</span> <span class="keyword">PROCEDURE</span> update_t_user() <span class="keyword">AS</span> $<span class="keyword">BODY</span>$</span><br><span class="line"><span class="keyword">DECLARE</span></span><br><span class="line">    var_id <span class="built_in">numeric</span>(<span class="number">10</span>); <span class="comment">-- 记录id</span></span><br><span class="line">    var_table_name varchar(255) := 't_user';</span><br><span class="line">    var_start_time timestamp(6);</span><br><span class="line">    var_records_number numeric; <span class="comment">-- 记录数</span></span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line">    <span class="keyword">set</span> <span class="built_in">time</span> zone <span class="string">'PRC'</span>;</span><br><span class="line">		var_start_time := clock_timestamp();</span><br><span class="line">		</span><br><span class="line">		</span><br><span class="line">    <span class="keyword">begin</span></span><br><span class="line">        <span class="keyword">raise</span> <span class="keyword">notice</span> <span class="string">'开始同步数据到temp表'</span>;</span><br><span class="line">				</span><br><span class="line">        var_id := nextval('t_sync_record_seq');</span><br><span class="line">        <span class="comment">-- 记录表同步信息，插入一条记录</span></span><br><span class="line">        <span class="keyword">insert</span> <span class="keyword">into</span> t_sync_record(<span class="keyword">id</span>, table_name, sync_date, flag, remark, start_time, last_update_time)</span><br><span class="line">        <span class="keyword">values</span> (var_id, var_table_name, to_char(var_start_time, <span class="string">'yyyy-mm-dd'</span>), <span class="number">1</span>, to_char(var_start_time, <span class="string">'hh24:mi:ss'</span>) || <span class="string">'start'</span>, var_start_time, clock_timestamp());</span><br><span class="line">				</span><br><span class="line">        <span class="keyword">TRUNCATE</span> <span class="keyword">TABLE</span> t_user_temp;</span><br><span class="line">        <span class="keyword">INSERT</span> <span class="keyword">INTO</span> t_user_temp</span><br><span class="line">        <span class="keyword">SELECT</span></span><br><span class="line">            <span class="keyword">nextval</span>( <span class="string">'t_user_seq'</span> ),</span><br><span class="line">            <span class="string">'zhangsan'</span> <span class="keyword">AS</span> <span class="keyword">account</span>,</span><br><span class="line">            <span class="string">'张三'</span> <span class="keyword">AS</span> <span class="keyword">NAME</span>,</span><br><span class="line">            <span class="number">1</span> <span class="keyword">AS</span> sex,</span><br><span class="line">            <span class="number">25</span> <span class="keyword">AS</span> age,</span><br><span class="line">            <span class="keyword">CURRENT_DATE</span> <span class="keyword">AS</span> birthday,</span><br><span class="line">            clock_timestamp( ) <span class="keyword">AS</span> generation_time;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">select</span> <span class="keyword">count</span>(<span class="number">1</span>) <span class="keyword">into</span> var_records_number <span class="keyword">from</span> t_user_temp;</span><br><span class="line">        <span class="keyword">update</span> t_sync_record <span class="keyword">set</span> flag = <span class="number">2</span>, end_time = clock_timestamp(), records_number = var_records_number, remark = remark || <span class="string">'-&gt;'</span> || to_char(clock_timestamp(), <span class="string">'hh24:mi:ss'</span>) || <span class="string">'end'</span>, last_update_time = clock_timestamp() <span class="keyword">where</span> <span class="keyword">id</span> = var_id;</span><br><span class="line">	</span><br><span class="line">        raise notice 'temp表和业务表替换';</span><br><span class="line">        <span class="keyword">ALTER</span> <span class="keyword">TABLE</span> t_user <span class="keyword">rename</span> <span class="keyword">to</span> t_user_20220101;</span><br><span class="line">        <span class="keyword">ALTER</span> <span class="keyword">TABLE</span> t_user_temp <span class="keyword">rename</span> <span class="keyword">to</span> t_user;</span><br><span class="line">        <span class="keyword">ALTER</span> <span class="keyword">TABLE</span> t_user_20220101 <span class="keyword">rename</span> <span class="keyword">to</span> t_user_temp;</span><br><span class="line"></span><br><span class="line">        raise notice '同步完成';</span><br><span class="line">    <span class="keyword">end</span>;</span><br><span class="line">    <span class="comment">-- 如果子块及其父块都没有出现异常，则事务自动提交，否则回滚。</span></span><br><span class="line">		<span class="comment">-- 如果其他子块出现异常没有处理，而是继续抛向父块，此时，由于父块中出现异常，将导致所有子块回滚。</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">begin</span></span><br><span class="line">        <span class="keyword">raise</span> <span class="keyword">notice</span> <span class="string">'异常测试！'</span>;</span><br><span class="line">        raise exception '抛出一个异常！';</span><br><span class="line">        exception</span><br><span class="line">            when others then </span><br><span class="line">            raise notice 'error: %',sqlerrm; <span class="comment">-- 因为这里并没有继续抛出，所以前面的begin end块不会回滚。</span></span><br><span class="line">    <span class="keyword">end</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    EXCEPTION</span><br><span class="line">        when others then </span><br><span class="line">        raise notice 'error: %',sqlerrm;</span><br><span class="line">				<span class="keyword">set</span> <span class="built_in">time</span> zone <span class="string">'PRC'</span>;</span><br><span class="line">        <span class="keyword">insert</span> <span class="keyword">into</span> t_sync_record(<span class="keyword">id</span>, table_name, sync_date, flag, remark, start_time, end_time, records_number, last_update_time)</span><br><span class="line">        <span class="keyword">values</span> (var_id, var_table_name, to_char(var_start_time, <span class="string">'yyyy-mm-dd'</span>), <span class="number">0</span>, <span class="string">'error: '</span> || sqlerrm, var_start_time, clock_timestamp(), var_records_number, clock_timestamp());</span><br><span class="line">		</span><br><span class="line"><span class="keyword">END</span> $<span class="keyword">BODY</span>$ <span class="keyword">LANGUAGE</span> plpgsql;</span><br></pre></td></tr></table></figure>
+<h1 id="postgresql时区"><a class="markdownIt-Anchor" href="#postgresql时区"></a> PostgreSQL时区</h1>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> to_char(<span class="keyword">now</span>(), <span class="string">'yyyy-mm-dd hh24:mi:ss'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 查看支持的时区</span></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> pg_timezone_names t1 <span class="keyword">WHERE</span> t1.NAME <span class="keyword">LIKE</span> <span class="keyword">ANY</span> ( <span class="built_in">ARRAY</span> [ <span class="string">'%Shanghai%'</span>, <span class="string">'%PRC%'</span>, <span class="string">'%UTC%'</span> ] );</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 修改当前终端的时区，临时修改</span></span><br><span class="line"><span class="keyword">set</span> <span class="built_in">time</span> zone <span class="string">'UTC'</span>;</span><br><span class="line"><span class="keyword">set</span> <span class="built_in">time</span> zone <span class="string">'PRC'</span>;</span><br><span class="line"><span class="keyword">set</span> <span class="built_in">time</span> zone <span class="string">'Asia/Shanghai'</span>;</span><br><span class="line"><span class="comment">-- 查看当前终端时区</span></span><br><span class="line"><span class="keyword">show</span> <span class="built_in">time</span> zone;</span><br></pre></td></tr></table></figure>
+<h1 id="postgresql时间"><a class="markdownIt-Anchor" href="#postgresql时间"></a> PostgreSQL时间</h1>
+<p><a href="https://blog.csdn.net/horses/article/details/102581249" target="_blank" rel="noopener">PostgreSQL 获取当前日期时间及注意事项</a></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 1、当前事务开始的时间。</span></span><br><span class="line"><span class="comment">-- 在同一个事务期间，多次调用相同的函数将会返回相同的值，结果不会随着时间增加。这一点与其他数据库的实现可能不同。</span></span><br><span class="line"><span class="keyword">select</span> <span class="keyword">CURRENT_DATE</span>;</span><br><span class="line"><span class="comment">-- 包含时区信息，precision 用于指定小数秒的位数，取值为 0 - 6，默认为 6。</span></span><br><span class="line"><span class="keyword">select</span> <span class="keyword">CURRENT_TIME</span>;</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">CURRENT_TIME</span>(<span class="number">6</span>);</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">CURRENT_TIMESTAMP</span>;</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">CURRENT_TIMESTAMP</span>(<span class="number">6</span>);</span><br><span class="line"><span class="comment">-- 不包含时区信息</span></span><br><span class="line"><span class="keyword">select</span> <span class="keyword">LOCALTIME</span>;</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">LOCALTIME</span>(<span class="number">6</span>);</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">LOCALTIMESTAMP</span>;</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">LOCALTIMESTAMP</span>(<span class="number">6</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 2、当前语句开始时间。</span></span><br><span class="line"><span class="keyword">select</span> transaction_timestamp() <span class="keyword">from</span> generate_series(<span class="number">1</span>,<span class="number">10</span>); <span class="comment">-- 等价于 CURRENT_TIMESTAMP，但是作用更加明确。</span></span><br><span class="line"><span class="keyword">select</span> statement_timestamp() <span class="keyword">from</span> generate_series(<span class="number">1</span>,<span class="number">10</span>); <span class="comment">-- 返回当前语句的开始时间，更准确地说，应该是接收到客户端最新命令的时间。</span></span><br><span class="line"><span class="comment">-- transaction_timestamp() 和 statement_timestamp() 对于事务中的第一个命令返回的结果相同，但随后再执行 statement_timestamp() 将会返回不同的值。</span></span><br><span class="line"><span class="keyword">select</span> clock_timestamp() <span class="keyword">from</span> generate_series(<span class="number">1</span>,<span class="number">10</span>); <span class="comment">-- 返回当前实际的时间，即使在同一个 SQL 语句中也可能返回不同的值。</span></span><br><span class="line"><span class="keyword">select</span> timeofday() <span class="keyword">from</span> generate_series(<span class="number">1</span>,<span class="number">10</span>); <span class="comment">-- 一个历史遗留函数，它与 clock_timestamp() 一样返回当前实际时间，但是返回类型是一个格式化的字符串，而不是 timestamp with time zone。</span></span><br><span class="line"><span class="keyword">select</span> <span class="keyword">now</span>() <span class="keyword">from</span> generate_series(<span class="number">1</span>,<span class="number">10</span>); <span class="comment">-- 与 transaction_timestamp() 等价的一个传统函数，同一个事务中的结果不会改变。</span></span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2022/02/数据库连接池/" rel="prev" title="数据库连接池">
+      <i class="fa fa-chevron-left"></i> 数据库连接池
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2022/02/Oracle Merge Into/" rel="next" title="Oracle Merge Into">
+      Oracle Merge Into <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据库"><span class="nav-number">1.</span> <span class="nav-text"> 数据库</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#问题"><span class="nav-number">2.</span> <span class="nav-text"> 问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#方案"><span class="nav-number">3.</span> <span class="nav-text"> 方案</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#方案一具体逻辑"><span class="nav-number">4.</span> <span class="nav-text"> 方案一具体逻辑</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#方案二具体逻辑"><span class="nav-number">5.</span> <span class="nav-text"> 方案二具体逻辑</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#选择哪一个"><span class="nav-number">6.</span> <span class="nav-text"> 选择哪一个？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#方案二优化"><span class="nav-number">7.</span> <span class="nav-text"> 方案二优化</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#postgresql时区"><span class="nav-number">8.</span> <span class="nav-text"> PostgreSQL时区</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#postgresql时间"><span class="nav-number">9.</span> <span class="nav-text"> PostgreSQL时间</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">498</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '566b4b556c0f84520936543d6d1ccc88',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

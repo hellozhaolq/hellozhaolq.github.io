@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="合理的使用Java多线程可以更好地利用服务器资源。一般来讲，线程内部有自己私有的线程上下文，互不干扰。但是当需要多个线程间相互协作时，就需要掌握线程的通信方式。">
+<meta name="keywords" content="多线程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java多线程6之线程间通信">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2015/10/Java多线程6之线程间通信/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="合理的使用Java多线程可以更好地利用服务器资源。一般来讲，线程内部有自己私有的线程上下文，互不干扰。但是当需要多个线程间相互协作时，就需要掌握线程的通信方式。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2015/10/Java多线程6之线程间通信/image-20210720130343411.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2015/10/Java多线程6之线程间通信/image-20210720130231621.png">
+<meta property="og:updated_time" content="2015-10-12T01:00:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java多线程6之线程间通信">
+<meta name="twitter:description" content="合理的使用Java多线程可以更好地利用服务器资源。一般来讲，线程内部有自己私有的线程上下文，互不干扰。但是当需要多个线程间相互协作时，就需要掌握线程的通信方式。">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2015/10/Java多线程6之线程间通信/image-20210720130343411.png">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2015/10/Java多线程6之线程间通信/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Java多线程6之线程间通信 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2015/10/Java多线程6之线程间通信/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java多线程6之线程间通信
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2015-10-12 09:00:00" itemprop="dateCreated datePublished" datetime="2015-10-12T09:00:00+08:00">2015-10-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>合理的使用Java多线程可以更好地利用服务器资源。一般来讲，线程内部有自己私有的线程上下文，互不干扰。但是当需要多个线程间相互协作时，就需要掌握线程的通信方式。</p>
+<a id="more"></a>
+<h1 id="通信方式"><a class="markdownIt-Anchor" href="#通信方式"></a> 通信方式</h1>
+<p>实际上只有进程间需要通信，同一进程的线程共享地址空间，没有通信的必要，但要做好同步/互斥，保护共享的全局变量。</p>
+<p>而进程间通信无论是 信号、管道pipe、共享内存 都由操作系统保证，是系统调用。</p>
+<h2 id="进程间通信"><a class="markdownIt-Anchor" href="#进程间通信"></a> 进程间通信</h2>
+<p><font color="blue" size="4">管道(pipe)</font></p>
+<p>管道是一种半双工的通信方式，数据只能单向流动，而且只能在具有亲缘关系的进程间使用。进程的亲缘关系通常是指父子进程关系。</p>
+<p><font color="blue" size="4">有名管道 (namedpipe)</font></p>
+<p>有名管道也是半双工的通信方式，但是它允许无亲缘关系进程间的通信。</p>
+<p><font color="blue" size="4">信号量(semaphore)</font></p>
+<p>信号量是一个计数器，可以用来控制多个进程对共享资源的访问。它常作为一种锁机制，防止某进程正在访问共享资源时，其他进程也访问该资源。因此，主要作为进程间以及同一进程内不同线程之间的同步手段。</p>
+<p><font color="blue" size="4">消息队列(messagequeue)</font></p>
+<p>消息队列是由消息的链表，存放在内核中并由消息队列标识符标识。消息队列克服了信号传递信息少、管道只能承载无格式字节流以及缓冲区大小受限等缺点。</p>
+<p><font color="blue" size="4">信号 (sinal)</font></p>
+<p>信号是一种比较复杂的通信方式，用于通知接收进程某个事件已经发生。</p>
+<p><font color="blue" size="4">共享内存(shared memory)</font></p>
+<p>共享内存就是映射一段能被其他进程所访问的内存，这段共享内存由一个进程创建，但多个进程都可以访问。共享内存是最快的 IPC 方式，它是针对其他进程间通信方式运行效率低而专门设计的。它往往与其他通信机制，如信号量，配合使用，来实现进程间的同步和通信。</p>
+<p><font color="blue" size="4">套接字(socket)</font></p>
+<p>套接口也是一种进程间通信机制，与其他通信机制不同的是，它可用于不同设备及其间的进程通信。</p>
+<h2 id="线程间通信"><a class="markdownIt-Anchor" href="#线程间通信"></a> 线程间通信</h2>
+<p><font color="blue" size="4">锁机制：包括互斥锁、条件变量、读写锁</font></p>
+<p>互斥锁提供了以排他方式防止数据结构被并发修改的方法。<br>
+读写锁允许多个线程同时读共享数据，而对写操作是互斥的。<br>
+条件变量可以以原子的方式阻塞进程，直到某个特定条件为真为止。对条件的测试是在互斥锁的保护下进行的。条件变量始终与互斥锁一起使用。</p>
+<p>wait/notify 等待</p>
+<p>Volatile 内存共享</p>
+<p>CountDownLatch 并发工具</p>
+<p>CyclicBarrier 并发工具</p>
+<p><font color="blue" size="4">信号量机制(Semaphore)</font></p>
+<p>包括无名线程信号量和命名线程信号量。</p>
+<p><font color="blue" size="4">信号机制(Signal)</font></p>
+<p>类似进程间的信号处理。</p>
+<p>线程间的通信目的主要是用于线程同步，所以线程没有像进程通信中的用于数据交换的通信机制。</p>
+<h1 id="等待通知范式"><a class="markdownIt-Anchor" href="#等待通知范式"></a> 等待/通知范式</h1>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>await/wait</th>
+<th>sleep</th>
+<th>yield</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>是否释放持有的锁</td>
+<td>释放</td>
+<td>不释放</td>
+<td>不释放</td>
+</tr>
+<tr>
+<td>调用后何时恢复</td>
+<td>唤醒后进入就绪态</td>
+<td>指定时间后</td>
+<td>立刻进入就绪态</td>
+</tr>
+<tr>
+<td>谁的方法</td>
+<td>Condition/Object</td>
+<td>Thread</td>
+<td>Thread</td>
+</tr>
+<tr>
+<td>执行环境</td>
+<td>同步代码块</td>
+<td>任意位置</td>
+<td>任意位置</td>
+</tr>
+</tbody>
+</table>
+<h2 id="wait和notify"><a class="markdownIt-Anchor" href="#wait和notify"></a> wait()和notify()</h2>
+<p>notify()方法会随机叫醒一个正在等待的线程，而notifyAll()会叫醒所有正在等待的线程。</p>
+<p>Object的监视器方法 wait()、notify() 配合 synchronized 实现等待通知。</p>
+<p>1、JAVA 中，每个对象有且只有一把锁 (lock)，也叫监视器 (monitor)。</p>
+<p>2、方法属于 Object 类，并且无法被重写。</p>
+<p>3、调用 wait 方法的线程必需获得监视器锁并由锁对象调用，否则会抛出 <code>IllegalMonitorStateException</code> 异常。</p>
+<p>4、其它线程调用锁对象的 notify() 方法时，系统会在当前挂起等待的多个线程中，随机唤醒一个，被唤醒的线程需要重新获取锁，获取锁后将继续执行。</p>
+<p><img src="/article/2015/10/Java多线程6之线程间通信/image-20210720130343411.png" alt="image-20210720130343411"></p>
+<p><img src="/article/2015/10/Java多线程6之线程间通信/image-20210720130231621.png" alt="image-20210720130231621"></p>
+<p>等待者（也可以称之为消费者）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">synchronized</span> (对象lock) &#123;</span><br><span class="line">        <span class="keyword">while</span> (条件不满足) &#123;</span><br><span class="line">            对象.wait(); <span class="comment">// 释放锁</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// TODO 处理逻辑</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>通知者（也可以称之为生产者）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">synchronized</span> (对象lock) &#123;</span><br><span class="line">       <span class="keyword">while</span> (条件满足) &#123;</span><br><span class="line">           改变条件</span><br><span class="line">           对象.notify();</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>注意：</p>
+<p>实际开发中最好采用的是超时等待/通知模式，例如 <code>join(long millis, int nanos)</code>。</p>
+<p>等待/通知机制使用的是使用同一个对象锁，如果你两个线程使用的是不同的对象锁，那它们之间是不能用等待/通知机制通信的。</p>
+</blockquote>
+<h2 id="conditionawait和conditionsignal"><a class="markdownIt-Anchor" href="#conditionawait和conditionsignal"></a> Condition.await和Condition.signal</h2>
+<p>Condition配合Lock实现的等待/通知模式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">lock.newCondition().await();</span><br><span class="line">lock.newCondition().signal();</span><br></pre></td></tr></table></figure>
+<h2 id="locksupportpark和locksupportunpark"><a class="markdownIt-Anchor" href="#locksupportpark和locksupportunpark"></a> LockSupport.park()和LockSupport.unpark()</h2>
+<p>LockSupport阻塞park与唤醒unpark方式</p>
+<h2 id="生产者和消费者示例"><a class="markdownIt-Anchor" href="#生产者和消费者示例"></a> 生产者和消费者示例</h2>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Goods goods = <span class="keyword">new</span> Goods();</span><br><span class="line"></span><br><span class="line">        Producer producer = <span class="keyword">new</span> Producer(goods);</span><br><span class="line">        Consumer consumer = <span class="keyword">new</span> Consumer(goods);</span><br><span class="line"></span><br><span class="line">        Thread producerThread = <span class="keyword">new</span> Thread(producer);</span><br><span class="line">        Thread consumerThread = <span class="keyword">new</span> Thread(consumer);</span><br><span class="line"></span><br><span class="line">        producerThread.start();</span><br><span class="line">        consumerThread.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Producer</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Goods goods;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Producer</span><span class="params">(Goods goods)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.goods = goods;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (!Thread.currentThread().isInterrupted()) &#123;</span><br><span class="line">            <span class="keyword">if</span> (goods.getNum() == <span class="number">99</span>) &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">synchronized</span> (goods) &#123;</span><br><span class="line">                <span class="keyword">if</span> (goods.isFlag()) &#123;</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        goods.wait();</span><br><span class="line">                    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                        e.printStackTrace();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                goods.setNum(goods.getNum() + <span class="number">1</span>);</span><br><span class="line">                goods.setPrice(goods.getPrice().add(<span class="keyword">new</span> BigDecimal(<span class="number">1</span>)));</span><br><span class="line"></span><br><span class="line">                System.out.println(<span class="string">"已生产"</span>);</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 标记已生产状态</span></span><br><span class="line">                goods.setFlag(<span class="keyword">true</span>);</span><br><span class="line">                goods.notify();</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 与上面等效</span></span><br><span class="line">                <span class="comment">// goods.produce();</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Consumer</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Goods goods;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Consumer</span><span class="params">(Goods goods)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.goods = goods;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (!Thread.currentThread().isInterrupted()) &#123;</span><br><span class="line">            <span class="keyword">if</span> (goods.getNum() == <span class="number">99</span>) &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">synchronized</span> (goods) &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (!goods.isFlag()) &#123;</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        goods.wait();</span><br><span class="line">                    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                        e.printStackTrace();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                System.out.println(<span class="string">"已消费 商品编号: "</span> + goods.getNum() + <span class="string">"\t商品价格: "</span> + goods.getPrice());</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 标记未生产状态</span></span><br><span class="line">                goods.setFlag(<span class="keyword">false</span>);</span><br><span class="line">                goods.notify();</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 与上面等效</span></span><br><span class="line">                <span class="comment">// goods.consume();</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Goods</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> num = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">private</span> BigDecimal price = <span class="keyword">new</span> BigDecimal(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 商品生产状态，默认false。</span></span><br><span class="line"><span class="comment">     * 已生产: true;</span></span><br><span class="line"><span class="comment">     * 未生产: false;</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">boolean</span> flag = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 消费</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">consume</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!<span class="keyword">this</span>.isFlag()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">this</span>.wait();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">"已消费 商品编号: "</span> + <span class="keyword">this</span>.getNum() + <span class="string">"\t商品价格: "</span> + <span class="keyword">this</span>.getPrice());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 标记未生产状态</span></span><br><span class="line">        <span class="keyword">this</span>.setFlag(<span class="keyword">false</span>);</span><br><span class="line">        <span class="keyword">this</span>.notify();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 生产</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">produce</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">this</span>.isFlag()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">this</span>.wait();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.setNum(<span class="keyword">this</span>.getNum() + <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">this</span>.setPrice(<span class="keyword">this</span>.getPrice().add(<span class="keyword">new</span> BigDecimal(<span class="number">1</span>)));</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">"已生产"</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 标记已生产状态</span></span><br><span class="line">        <span class="keyword">this</span>.setFlag(<span class="keyword">true</span>);</span><br><span class="line">        <span class="keyword">this</span>.notify();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="信号量"><a class="markdownIt-Anchor" href="#信号量"></a> 信号量</h1>
+<p>JDK提供了一个类似于“信号量”功能的类 <code>Semaphore</code>。但本文不是要介绍这个类，而是介绍一种基于 <code>volatile</code> 关键字实现的信号量通信。</p>
+<p>比如现在有一个需求，想让线程A输出0，然后线程B输出1，再然后线程A输出2…以此类推。应该怎样实现呢？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Signal</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">volatile</span> <span class="keyword">int</span> signal = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> num = <span class="number">10000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        RunnableA runnableA = <span class="keyword">new</span> RunnableA();</span><br><span class="line">        <span class="keyword">new</span> Thread(runnableA, <span class="string">"ThreadA"</span>).start();</span><br><span class="line">        <span class="keyword">new</span> Thread(runnableA, <span class="string">"ThreadA"</span>).start();</span><br><span class="line"></span><br><span class="line">        Thread.sleep(<span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line">        RunnableB runnableB = <span class="keyword">new</span> RunnableB();</span><br><span class="line">        <span class="keyword">new</span> Thread(runnableB, <span class="string">"ThreadB"</span>).start();</span><br><span class="line">        <span class="keyword">new</span> Thread(runnableB, <span class="string">"ThreadB"</span>).start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">RunnableA</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                <span class="comment">// 其实这里sleep或yeild一下就不需要用volatile修饰了</span></span><br><span class="line">                <span class="keyword">if</span> (signal % <span class="number">2</span> == <span class="number">0</span> &amp;&amp; signal &lt; num) &#123;</span><br><span class="line">                    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (signal % <span class="number">2</span> == <span class="number">0</span> &amp;&amp; signal &lt; num) &#123;</span><br><span class="line">                            System.out.println(Thread.currentThread().getName() + <span class="string">" "</span> + signal);</span><br><span class="line">                            signal++;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (signal &gt;= num) &#123;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">// 其实这里sleep或yeild一下就不需要用volatile修饰了</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">RunnableB</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                <span class="comment">// 其实这里sleep或yeild一下就不需要用volatile修饰了</span></span><br><span class="line">                <span class="keyword">if</span> (signal % <span class="number">2</span> == <span class="number">1</span> &amp;&amp; signal &lt; num) &#123;</span><br><span class="line">                    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (signal % <span class="number">2</span> == <span class="number">1</span> &amp;&amp; signal &lt; num) &#123;</span><br><span class="line">                            System.out.println(Thread.currentThread().getName() + <span class="string">" "</span> + signal);</span><br><span class="line">                            signal = signal + <span class="number">1</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (signal &gt;= num) &#123;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">// 其实这里sleep或yeild一下就不需要用volatile修饰了</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 输出：</span></span><br><span class="line">threadA: <span class="number">0</span></span><br><span class="line">threadB: <span class="number">1</span></span><br><span class="line">threadA: <span class="number">2</span></span><br><span class="line">threadB: <span class="number">3</span></span><br><span class="line">threadA: <span class="number">4</span></span><br></pre></td></tr></table></figure>
+<p>可以看到，使用 <code>volatile</code> 变量 <code>signal</code> 实现了“信号量”的模型。但需要注意，<code>volatile</code> 变量需要进行原子操作。<code>signal++</code> 并不是一个原子操作，所以一旦有多个 ThreadA 或 ThreadB 就需要使用 <code>synchronized</code> 给它“上锁”。</p>
+<blockquote>
+<p>这种实现方式并不一定高效，本例只是演示信号量</p>
+</blockquote>
+<p><font color="blue" size="4">信号量的应用场景：</font></p>
+<p>在公共停车场中，车位是公共资源，先到先得，车辆看做线程，看门的管理员就是起到了“信号量”的作用。</p>
+<p>因为在这种场景下，多个线程（超过2个）需要相互合作，我们用简单的“锁”和“等待通知机制”就不那么方便了。这个时候就可以用到信号量。</p>
+<p>其实JDK中提供的很多多线程通信工具类都是基于信号量模型的。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/多线程/" rel="tag"># 多线程</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2015/10/Java多线程5之线程安全与同步6-线程安全案例/" rel="prev" title="Java多线程5之线程安全与同步6-线程安全案例">
+      <i class="fa fa-chevron-left"></i> Java多线程5之线程安全与同步6-线程安全案例
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2015/10/Java多线程7之线程组/" rel="next" title="Java多线程7之线程组">
+      Java多线程7之线程组 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#通信方式"><span class="nav-number">1.</span> <span class="nav-text"> 通信方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#进程间通信"><span class="nav-number">1.1.</span> <span class="nav-text"> 进程间通信</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#线程间通信"><span class="nav-number">1.2.</span> <span class="nav-text"> 线程间通信</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#等待通知范式"><span class="nav-number">2.</span> <span class="nav-text"> 等待/通知范式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#wait和notify"><span class="nav-number">2.1.</span> <span class="nav-text"> wait()和notify()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#conditionawait和conditionsignal"><span class="nav-number">2.2.</span> <span class="nav-text"> Condition.await和Condition.signal</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#locksupportpark和locksupportunpark"><span class="nav-number">2.3.</span> <span class="nav-text"> LockSupport.park()和LockSupport.unpark()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#生产者和消费者示例"><span class="nav-number">2.4.</span> <span class="nav-text"> 生产者和消费者示例</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#信号量"><span class="nav-number">3.</span> <span class="nav-text"> 信号量</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">498</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '6434cca94c4b9bd448f4029d05885389',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

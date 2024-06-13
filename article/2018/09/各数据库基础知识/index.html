@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="SQL标准 - 维基百科 ，以SQL为基础的其他延伸语言： Transact-SQL - 维基百科 、 PL-SQL(Oracle) - 维基百科">
+<meta property="og:type" content="article">
+<meta property="og:title" content="各数据库基础知识">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2018/09/各数据库基础知识/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="SQL标准 - 维基百科 ，以SQL为基础的其他延伸语言： Transact-SQL - 维基百科 、 PL-SQL(Oracle) - 维基百科">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-09-27T00:02:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="各数据库基础知识">
+<meta name="twitter:description" content="SQL标准 - 维基百科 ，以SQL为基础的其他延伸语言： Transact-SQL - 维基百科 、 PL-SQL(Oracle) - 维基百科">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2018/09/各数据库基础知识/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>各数据库基础知识 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2018/09/各数据库基础知识/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          各数据库基础知识
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-09-27 08:02:00" itemprop="dateCreated datePublished" datetime="2018-09-27T08:02:00+08:00">2018-09-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><a href="https://zh.wikipedia.org/wiki/SQL" target="_blank" rel="noopener">SQL标准 - 维基百科</a> ，以SQL为基础的其他延伸语言： <a href="https://zh.wikipedia.org/wiki/Transact-SQL" target="_blank" rel="noopener">Transact-SQL - 维基百科</a> 、 <a href="https://zh.wikipedia.org/wiki/PL-SQL" target="_blank" rel="noopener">PL-SQL(Oracle) - 维基百科</a></p>
+<a id="more"></a>
+<h1 id="数据类型"><a class="markdownIt-Anchor" href="#数据类型"></a> 数据类型</h1>
+<h2 id="数值"><a class="markdownIt-Anchor" href="#数值"></a> 数值</h2>
+<p><font color="#FF8C00" size="5"><strong>Oracle</strong></font></p>
+<p><a href="https://zh.wikipedia.org/wiki/PL-SQL#%E6%95%B0%E5%80%BC%E7%B1%BB%E5%9E%8B" target="_blank" rel="noopener">PL-SQL#数值类型 - 维基百科</a></p>
+<p><strong>number 类型</strong>： <code>number[([precision], [scale])]</code></p>
+<p>precision 表示十进制有效数字的个数，最多不能超过38个有效数字 number(38,0) （实际支持39-40位十进制数字）。</p>
+<p>Scale的范围为[-84，127]。Scale为<strong>正数</strong>时，表示从<font color="blue">小数点</font>到<font color="blue">最不重要的</font>十进制有效数字的个数（<font color="red">小数点后多余舍弃</font>）；为<strong>负数</strong>时，其<strong>绝对值</strong>表示从<font color="blue">最不重要的</font>十进制有效数字到<font color="blue">小数点</font>的位数（<font color="red">小数点前四舍五入变为0</font>）。</p>
+<p><strong>如果指定了精度</strong>，没有指定scale，scale默认为0。</p>
+<p><strong>如果没有指定精度</strong>，precision与scale默认为最大的取值区间（维基百科是这样说的），实际测试如下（Oracle 11g）：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">插入数据</th>
+<th style="text-align:left">查询结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">0.123456789123456789123456789123456789</td>
+<td style="text-align:left">0.123456789123457</td>
+</tr>
+<tr>
+<td style="text-align:left">1.123456789123456789123456789123456789</td>
+<td style="text-align:left">1.12345678912346</td>
+</tr>
+<tr>
+<td style="text-align:left">12.123456789123456789123456789123456789</td>
+<td style="text-align:left">12.1234567891235</td>
+</tr>
+<tr>
+<td style="text-align:left">123456789123456789.123456789123456789123456789123456789</td>
+<td style="text-align:left">123456789.123457</td>
+</tr>
+<tr>
+<td style="text-align:left">123456789123456789.123456789123456789123456789123456789</td>
+<td style="text-align:left">123456789123457000</td>
+</tr>
+</tbody>
+</table>
+<p><font color="blue">结论：从左到右，最多保留十进制有效数字15个。其余部分，小数点前四舍五入变为0，小数点后舍弃。</font></p>
+<p><strong>浮点类型</strong>：binary_float、binary_double</p>
+<p>MySQL</p>
+<h2 id="字符类型"><a class="markdownIt-Anchor" href="#字符类型"></a> 字符类型</h2>
+<p><font color="#FF8C00" size="5"><strong>Oracle</strong></font></p>
+<ul>
+<li>固定长度类型：char/nchar，自动补足空格，最多可以存储2000字节。</li>
+<li>可变长度类型：varchar2/nvarchar2，<font color="red">最大字节数都是4000</font>，自动删除首尾的空格.</li>
+</ul>
+<p>格式：char(size [byte| char]) 、varchar2(size [byte| char]) 、nvarchar2(size)</p>
+<p>例：</p>
+<p>char(8 byte) ：默认是byte</p>
+<p>varchar2(4000) / varchar2(4000 char) ：可以存入4000个字母，不能存入4000个汉字。如果数据库字符集是GBK，那么varchar2最多存放2000个汉字；如果字符集是UTF-8，那么最多存放1333个汉字了。<font color="blue">存放汉字建议使用nvarchar2</font>。</p>
+<p>nvarchar2(2000) ：每个字符长度都是2个字节，所以size最大值为4000/2=2000，最多存放2000个汉字或字母，<font color="blue">不受数据库字符集的影响</font>。</p>
+<h2 id="日期类型"><a class="markdownIt-Anchor" href="#日期类型"></a> 日期类型</h2>
+<p><font color="#FF8C00" size="5"><strong>Oracle</strong></font></p>
+<p>秒、毫秒、微秒、纳秒</p>
+<p><strong>date 类型</strong>：精度到秒，占用7个字节的存储空间。</p>
+<p><strong>timestamp 类型</strong>：最高精度可以到ns(纳秒)，小数位数可以指定为0-9，默认为6位。如果精度为0，则用7字节存储，与date类型功能相同；如果精度大于0，则用11字节存储。</p>
+<p><strong>timestamp with time zone 类型</strong>：timestamp 类型的变种，它包含了时区偏移量的值，保持 client 的 timezone。</p>
+<p><strong>timestamp with local time zone 类型</strong>：把 client 的 timezone 转换成 DB 的 timezone 对应的时间。</p>
+<p><font color="green">带时区的类型需要 Java 也是用带时区的？</font></p>
+<h1 id="序列"><a class="markdownIt-Anchor" href="#序列"></a> 序列</h1>
+<p>Gauss</p>
+<p><a href="https://support.huaweicloud.com/intl/zh-cn/sqlreference-dws/dws_06_0174.html" target="_blank" rel="noopener">https://support.huaweicloud.com/intl/zh-cn/sqlreference-dws/dws_06_0174.html</a></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">SEQUENCE</span> <span class="keyword">name</span></span><br><span class="line">[ <span class="keyword">INCREMENT</span> [ <span class="keyword">BY</span> ] <span class="keyword">increment</span>]</span><br><span class="line">[ <span class="keyword">MINVALUE</span> <span class="keyword">minvalue</span> | <span class="keyword">NO</span> <span class="keyword">MINVALUE</span> | <span class="keyword">NOMINVALUE</span>]</span><br><span class="line">[ MAXVALUE maxvalue | <span class="keyword">NO</span> MAXVALUE | <span class="keyword">NOMAXVALUE</span>]</span><br><span class="line">[ <span class="keyword">START</span> [ <span class="keyword">WITH</span> ] <span class="keyword">start</span>]</span><br><span class="line">[ <span class="keyword">CACHE</span> <span class="keyword">cache</span>]</span><br><span class="line">[ [ <span class="keyword">NO</span> ] <span class="keyword">CYCLE</span> | <span class="keyword">NOCYCLE</span>]</span><br><span class="line">[ OWNED <span class="keyword">BY</span> &#123; table_name.column_name | <span class="keyword">NONE</span> &#125;];</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 示例</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">SEQUENCE</span> <span class="built_in">serial</span></span><br><span class="line"> <span class="keyword">START</span> <span class="number">1</span></span><br><span class="line"> <span class="keyword">CACHE</span> <span class="number">20</span></span><br><span class="line">OWNED <span class="keyword">BY</span> t_user.id;</span><br></pre></td></tr></table></figure>
+<h1 id="存储过程和函数的区别"><a class="markdownIt-Anchor" href="#存储过程和函数的区别"></a> 存储过程和函数的区别</h1>
+<table>
+<thead>
+<tr>
+<th>存储过程</th>
+<th>函数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>程序头部声明用procedure</td>
+<td>程序头部声明用function</td>
+</tr>
+<tr>
+<td>程序头部声明时不需要描述返回类型</td>
+<td>程序头部声明要描述返回类型，而且PL/SQL块中至少要包括一个有效的return语句</td>
+</tr>
+<tr>
+<td>可以使用in/out/in  out三种模式的参数</td>
+<td>可以使用in/out/in out三种模式的参数</td>
+</tr>
+<tr>
+<td>可以通过out/in  out返回零个或者多个值</td>
+<td>通过return语句返回一个值，且该值要与申明部分一致，也可以是通过out类型的参数带出的变量</td>
+</tr>
+<tr>
+<td>可以作为一个独立的PL/SQL语句来执行</td>
+<td>不能独立执行，必须作为表达式的一部分调用</td>
+</tr>
+<tr>
+<td>用于在数据库中完成特定的操作或者任务(如插入、删除)</td>
+<td>用于特定的数据(如选择)</td>
+</tr>
+<tr>
+<td>SQL语句(DML或SELECT)中不可调用存储过程</td>
+<td>SQL语句(DML或SELECT)中可以调用函数</td>
+</tr>
+</tbody>
+</table>
+<h1 id="常用函数"><a class="markdownIt-Anchor" href="#常用函数"></a> 常用函数</h1>
+<h2 id="通用函数"><a class="markdownIt-Anchor" href="#通用函数"></a> 通用函数</h2>
+<h3 id="coalesce"><a class="markdownIt-Anchor" href="#coalesce"></a> COALESCE</h3>
+<p>COALESCE函数是返回参数中的第一个非null的值，它要求参数中至少有一个是非null的，如果参数都是null会报错。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">COALESCE</span>	( <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="string">'巴顿'</span> ) <span class="keyword">AS</span> <span class="keyword">NAME</span></span><br></pre></td></tr></table></figure>
+<h2 id="postgresql"><a class="markdownIt-Anchor" href="#postgresql"></a> PostgreSQL</h2>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">	<span class="comment">-- 数学函数</span></span><br><span class="line">    <span class="keyword">ABS</span> ( - <span class="number">17.4</span> ) <span class="keyword">AS</span> <span class="string">"绝对值"</span>,<span class="comment">-- 17.4</span></span><br><span class="line">    <span class="keyword">sign</span>( - <span class="number">8.5</span> ) <span class="keyword">AS</span> <span class="string">"参数的符号(-1,0,+1)"</span>,<span class="comment">-- -1</span></span><br><span class="line">    <span class="keyword">SQRT</span> ( <span class="number">4.0</span> ) <span class="keyword">AS</span> <span class="string">"	平方根"</span>,<span class="comment">-- 2</span></span><br><span class="line">    cbrt( <span class="number">27.0</span> ) <span class="keyword">AS</span> <span class="string">"立方根"</span>,<span class="comment">-- 3</span></span><br><span class="line">    <span class="keyword">CEIL</span> ( - <span class="number">42.8</span> ) <span class="keyword">AS</span> <span class="string">"向上取整"</span>,<span class="comment">-- -42</span></span><br><span class="line">    <span class="keyword">FLOOR</span> ( - <span class="number">42.8</span> ) <span class="keyword">AS</span> <span class="string">"向下取整"</span>,<span class="comment">-- -43</span></span><br><span class="line">    <span class="keyword">MOD</span> ( <span class="number">9</span>, <span class="number">4</span> ) <span class="keyword">AS</span> <span class="string">"取余"</span>,<span class="comment">-- 1</span></span><br><span class="line">    trunc( <span class="number">42.438</span> ) <span class="keyword">AS</span> <span class="string">"截断小数位"</span>,<span class="comment">-- 42</span></span><br><span class="line">    trunc( <span class="number">42.438</span>, <span class="number">2</span> ) <span class="keyword">AS</span> <span class="string">"截断小数，保留2位小数"</span>,<span class="comment">-- 42.43</span></span><br><span class="line">    <span class="keyword">round</span>( <span class="number">42.4</span> ) <span class="keyword">AS</span> <span class="string">"四舍五入"</span>,<span class="comment">-- 42</span></span><br><span class="line">    <span class="keyword">round</span>( <span class="number">42.438</span>, <span class="number">2</span> ) <span class="keyword">AS</span> <span class="string">"四舍五入，保留2位小数"</span>,<span class="comment">-- 42.44</span></span><br><span class="line">    TRUNC( <span class="keyword">ROUND</span>( <span class="string">'10'</span> :: <span class="built_in">NUMERIC</span> / <span class="string">'100'</span> :: <span class="built_in">NUMERIC</span>, <span class="number">4</span> ) * <span class="number">100</span>, <span class="number">2</span> ) <span class="keyword">AS</span> <span class="keyword">percent</span>,<span class="comment">-- 10.00</span></span><br><span class="line">    <span class="keyword">POWER</span> ( <span class="number">2.0</span>, <span class="number">3.0</span> ) <span class="keyword">AS</span> <span class="string">"2的3次幂"</span>,<span class="comment">-- 8.0</span></span><br><span class="line">    <span class="keyword">log</span>( <span class="number">2.0</span>, <span class="number">8.0</span> ) <span class="keyword">AS</span> <span class="string">"以2为底8的对数"</span>,<span class="comment">-- 3.0</span></span><br><span class="line">    <span class="keyword">log</span>( <span class="number">100.0</span> ) <span class="keyword">AS</span> <span class="string">"以10为底100的对数"</span>,<span class="comment">-- 2.0</span></span><br><span class="line">    <span class="keyword">EXP</span> ( <span class="number">1.0</span> ) <span class="keyword">AS</span> <span class="string">"自然指数"</span>,<span class="comment">-- 2.7182818284590452</span></span><br><span class="line">    <span class="keyword">LN</span> ( <span class="number">2.7182818284590452</span> ) <span class="keyword">AS</span> <span class="string">"自然对数"</span>,<span class="comment">-- 1.0</span></span><br><span class="line">    <span class="keyword">degrees</span>( <span class="number">1</span> ) <span class="keyword">AS</span> <span class="string">"弧度转角度"</span>,<span class="comment">-- 57.29577951308232</span></span><br><span class="line">    <span class="keyword">radians</span>( <span class="number">57.29577951308232</span> ) <span class="keyword">AS</span> <span class="string">"角度转弧度"</span>,<span class="comment">-- 1</span></span><br><span class="line">    <span class="keyword">pi</span>( ) <span class="keyword">AS</span> <span class="string">"π常量"</span>,<span class="comment">-- 3.141592653589793</span></span><br><span class="line">    random( ) <span class="keyword">AS</span> <span class="string">"0.0到1.0之间的随机数值"</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">-- 三角函数列表</span></span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    <span class="comment">-- 其他</span></span><br><span class="line">    asd.proj_cn_name <span class="keyword">ILIKE</span> <span class="keyword">concat</span> ( <span class="string">'%'</span>, <span class="comment">#&#123;requestParam.likeCondition,jdbcType=VARCHAR&#125;, '%' ),</span></span><br><span class="line">    to_number( <span class="keyword">RIGHT</span> ( tt.mon_asd, <span class="number">2</span> ), <span class="string">'99'</span> ) <span class="keyword">AS</span> name_cn,</span><br><span class="line">    <span class="keyword">CAST</span> ( offer.pc_id <span class="keyword">AS</span> <span class="built_in">VARCHAR</span> ( <span class="number">50</span> ) ) <span class="keyword">AS</span> pc_id,</span><br><span class="line">  <span class="keyword">from</span> table_name</span><br><span class="line">  <span class="keyword">where</span></span><br><span class="line">    &lt;![CDATA[</span><br><span class="line">        asd.mon_asd &lt;= to_char( <span class="keyword">CURRENT_TIMESTAMP</span>, <span class="string">'YYYYMM'</span> )</span><br><span class="line">    <span class="keyword">AND</span> asd.mon_asd &gt;= to_char( <span class="keyword">CURRENT_TIMESTAMP</span> + <span class="string">'-5 month'</span>, <span class="string">'YYYYMM'</span> )</span><br><span class="line">    ]]&gt;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">AND</span> asd.name <span class="keyword">ilike</span> <span class="keyword">concat</span>( <span class="string">'%'</span>, <span class="string">'petty'</span>,<span class="string">'%'</span>)</span><br></pre></td></tr></table></figure>
+<h2 id="mysql"><a class="markdownIt-Anchor" href="#mysql"></a> MySQL</h2>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">  <span class="keyword">CONVERT</span> ( <span class="string">'-1'</span>, signed ), <span class="comment">-- 有符号</span></span><br><span class="line">  <span class="keyword">CONVERT</span> ( <span class="string">'-1'</span>, <span class="keyword">unsigned</span> ), <span class="comment">-- 无符号</span></span><br><span class="line">  </span><br><span class="line">  <span class="keyword">IF</span> ( dt.operator <span class="keyword">IS</span> <span class="literal">NULL</span>, <span class="number">0</span>, <span class="number">1</span> ) isExistData,</span><br><span class="line">  <span class="keyword">IFNULL</span> ( <span class="keyword">SUM</span>( t.spart_cnt ), <span class="number">0</span> ) <span class="keyword">AS</span> quantity,</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">CASE</span> <span class="string">'1'</span> </span><br><span class="line">      <span class="keyword">WHEN</span> <span class="string">'1'</span> <span class="keyword">THEN</span> <span class="string">'正常'</span> </span><br><span class="line">      <span class="keyword">WHEN</span> <span class="string">'2'</span> <span class="keyword">THEN</span> <span class="string">'受控'</span> </span><br><span class="line">      <span class="keyword">WHEN</span> <span class="string">'3'</span> <span class="keyword">THEN</span> <span class="string">'禁止'</span></span><br><span class="line">    <span class="keyword">ELSE</span> <span class="literal">NULL</span></span><br><span class="line">  <span class="keyword">END</span> <span class="keyword">AS</span> sale_state,</span><br><span class="line">  <span class="keyword">CASE</span> </span><br><span class="line">    <span class="keyword">WHEN</span> t.name <span class="keyword">is</span> <span class="literal">null</span> <span class="keyword">THEN</span> <span class="string">'正常'</span> </span><br><span class="line">    <span class="keyword">ELSE</span> <span class="string">'异常'</span></span><br><span class="line">  <span class="keyword">END</span> <span class="keyword">AS</span> name_state,</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">concat</span> ( t.region_name_cn, <span class="string">'-'</span>, t.country_name_en, <span class="string">'-'</span>, t.customer_name_en ) <span class="keyword">AS</span> customer_name_en,</span><br><span class="line">  <span class="keyword">group_concat</span> ( item.product_cn <span class="keyword">ORDER</span> <span class="keyword">BY</span> product_cn <span class="keyword">DESC</span> SEPARATOR <span class="string">'$'</span> ) <span class="keyword">AS</span> product_name </span><br><span class="line">  <span class="keyword">LEFT</span> ( opp.<span class="string">`month`</span>, <span class="number">4</span> ) <span class="keyword">AS</span> <span class="string">'year'</span>,</span><br><span class="line">  <span class="keyword">TRUNCATE</span>( <span class="keyword">ROUND</span> ( T.sum_quantity :: <span class="built_in">NUMERIC</span> / t2.total_quantity :: <span class="built_in">NUMERIC</span>, <span class="number">4</span> ) * <span class="number">100</span>, <span class="number">2</span> ) quantity_percent,</span><br><span class="line">  <span class="keyword">CAST</span> ( <span class="string">'2022-01-31 13:28:56'</span> <span class="keyword">AS</span> <span class="built_in">TIMESTAMP</span> ),</span><br><span class="line">  <span class="keyword">DATE_FORMAT</span> ( <span class="string">'2022-01-06 13:56:35'</span>, <span class="string">'%Y-%m-%d %H:%i:%S'</span> ),</span><br><span class="line">  <span class="keyword">DATE_FORMAT</span> ( <span class="keyword">now</span>(), <span class="string">'%Y-%m-%d %H:%i:%S'</span> ),</span><br><span class="line">  <span class="keyword">CHARSET</span> ( <span class="string">'ABC'</span> ),</span><br><span class="line">  <span class="keyword">CHARSET</span> ( <span class="keyword">CONVERT</span>( <span class="string">'ABC'</span> <span class="keyword">USING</span> gbk ) )</span><br><span class="line"><span class="keyword">from</span> table_name</span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">  &lt;!<span class="comment">-- 历史6个月 --&gt;</span></span><br><span class="line">  &lt;![CDATA[</span><br><span class="line">      t.<span class="string">`month`</span> &lt;= <span class="keyword">DATE_FORMAT</span>( <span class="keyword">CURDATE</span>(), <span class="string">'%Y%m'</span> )</span><br><span class="line">  <span class="keyword">AND</span> t.<span class="string">`month`</span> &gt;= <span class="keyword">DATE_FORMAT</span>(<span class="keyword">DATE_SUB</span>( <span class="keyword">NOW</span>(), <span class="built_in">INTERVAL</span> <span class="number">5</span> <span class="keyword">MONTH</span> ), <span class="string">'%Y%m'</span>)</span><br><span class="line">  ]]&gt;</span><br><span class="line">  &lt;!<span class="comment">-- 未来6个月 --&gt;</span></span><br><span class="line">  &lt;![CDATA[</span><br><span class="line">      t.<span class="string">`MONTH`</span> &gt;= <span class="keyword">DATE_FORMAT</span>( <span class="keyword">NOW</span>(), <span class="string">'%Y%m'</span> )</span><br><span class="line">  <span class="keyword">AND</span> t.<span class="string">`MONTH`</span> &lt;= <span class="keyword">DATE_FORMAT</span>( <span class="keyword">DATE_ADD</span>( <span class="keyword">NOW</span>(), <span class="built_in">INTERVAL</span> <span class="number">5</span> <span class="keyword">MONTH</span> ), <span class="string">'%Y%m'</span> )</span><br><span class="line">  ]]&gt;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">AND</span> <span class="built_in">binary</span> asd.name <span class="keyword">like</span> <span class="keyword">concat</span>( <span class="string">'%'</span>, <span class="string">'petty'</span>,<span class="string">'%'</span>) <span class="comment">-- binary区分大小写，mysql默认不区分大小写</span></span><br></pre></td></tr></table></figure>
+<h2 id="oracle"><a class="markdownIt-Anchor" href="#oracle"></a> Oracle</h2>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2018/09/数据库建模工具/" rel="prev" title="数据库建模工具">
+      <i class="fa fa-chevron-left"></i> 数据库建模工具
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2019/06/VMware使用前的bios设置/" rel="next" title="VMware使用前的bios设置">
+      VMware使用前的bios设置 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据类型"><span class="nav-number">1.</span> <span class="nav-text"> 数据类型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#数值"><span class="nav-number">1.1.</span> <span class="nav-text"> 数值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字符类型"><span class="nav-number">1.2.</span> <span class="nav-text"> 字符类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#日期类型"><span class="nav-number">1.3.</span> <span class="nav-text"> 日期类型</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#序列"><span class="nav-number">2.</span> <span class="nav-text"> 序列</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#存储过程和函数的区别"><span class="nav-number">3.</span> <span class="nav-text"> 存储过程和函数的区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#常用函数"><span class="nav-number">4.</span> <span class="nav-text"> 常用函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#通用函数"><span class="nav-number">4.1.</span> <span class="nav-text"> 通用函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#coalesce"><span class="nav-number">4.1.1.</span> <span class="nav-text"> COALESCE</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#postgresql"><span class="nav-number">4.2.</span> <span class="nav-text"> PostgreSQL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mysql"><span class="nav-number">4.3.</span> <span class="nav-text"> MySQL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#oracle"><span class="nav-number">4.4.</span> <span class="nav-text"> Oracle</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">498</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '15663cec40ca4543c9e60c6ffd71e759',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
