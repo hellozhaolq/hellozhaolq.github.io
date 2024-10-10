@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Oracle JDK与OpenJDK之间的区别">
+<meta name="keywords" content="JDK">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Oracle JDK与OpenJDK之间的区别">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2018/07/Oracle JDK与OpenJDK之间的区别/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="Oracle JDK与OpenJDK之间的区别">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2018/07/Oracle%20JDK与OpenJDK之间的区别/169d7f268103c36b.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2018/07/Oracle%20JDK与OpenJDK之间的区别/169d7f2683e2ecd0.png">
+<meta property="og:updated_time" content="2019-07-31T23:30:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Oracle JDK与OpenJDK之间的区别">
+<meta name="twitter:description" content="Oracle JDK与OpenJDK之间的区别">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2018/07/Oracle%20JDK与OpenJDK之间的区别/169d7f268103c36b.png">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2018/07/Oracle JDK与OpenJDK之间的区别/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Oracle JDK与OpenJDK之间的区别 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2018/07/Oracle JDK与OpenJDK之间的区别/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Oracle JDK与OpenJDK之间的区别
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-08-01 07:30:00" itemprop="dateCreated datePublished" datetime="2018-08-01T07:30:00+08:00">2018-08-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-08-01 07:30:00" itemprop="dateModified" datetime="2019-08-01T07:30:00+08:00">2019-08-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">Oracle JDK与OpenJDK之间的区别</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><font color="blue">推荐链接：</font></p>
+<p><a href="https://zh.wikipedia.org/wiki/OpenJDK" target="_blank" rel="noopener">OpenJDK</a></p>
+<p><a href="https://zh.wikipedia.org/wiki/JDK" target="_blank" rel="noopener">OracleJDK</a></p>
+<h1 id="oracle与openjdk之间的区别"><a class="markdownIt-Anchor" href="#oracle与openjdk之间的区别"></a> Oracle与OpenJDK之间的区别</h1>
+<p><img src="/article/2018/07/Oracle JDK与OpenJDK之间的区别/169d7f268103c36b.png" alt="vs.png"></p>
+<h2 id="简介"><a class="markdownIt-Anchor" href="#简介"></a> 简介</h2>
+<p>在本文中，我们将探讨<a href="https://www.oracle.com/java/technologies/" target="_blank" rel="noopener">Oracle Java Development Kit</a>和<a href="https://openjdk.java.net/" target="_blank" rel="noopener">OpenJDK</a>之间的差异并进行比较。</p>
+<a id="more"></a>
+<h2 id="oracle-jdk"><a class="markdownIt-Anchor" href="#oracle-jdk"></a> Oracle JDK</h2>
+<p>Oracle JDK由Oracle公司开发，该公司是Sun许可证，基于Java标准版规范实现。它以二进制产品的形式发布。它支持多种操作系统，如Windows，Linux，Solaris，MacOS等。它支持不同的平台，如Intel 32位和64位架构，ARM架构和SPARC。它完全基于Java编程语言。之后，该许可证宣布将根据GPL（通用公共许可证）许可证发布。Oracle JDK包含许多组件作为库形式的编程工具集合。</p>
+<p>我们来看看Java SE的历史：</p>
+<ul>
+<li>JDK Beta - 1995</li>
+<li>JDK 1.0 - 1996年1月</li>
+<li>JDK 1.1 - 1997年2月</li>
+<li>J2SE 1.2 - 1998年12月</li>
+<li>J2SE 1.3 - 2000年5月</li>
+<li>J2SE 1.4 - 2002年2月</li>
+<li>J2SE 5.0 - 2004年9月</li>
+<li>Java SE 6 - 2006年12月</li>
+<li>Java SE 7 - 2011年7月</li>
+<li><strong>Java SE 8（LTS） - 2014年3月</strong></li>
+<li>Java SE 9 - 2017年9月</li>
+<li>Java SE 10（18.3） - 2018年3月</li>
+<li><strong>Java SE 11（18.9 LTS） - 2018年9月</strong></li>
+<li>Java SE 12（19.3） - 2019年3月</li>
+</ul>
+<p>注意：不再支持斜体版本。</p>
+<p>我们可以看到Java SE的主要版本大约每两年发布一次，直到Java SE 7.从Java SE 6开始花了五年时间，之后又花了三年时间到达Java SE 8。</p>
+<p>自Java SE 10以来，我们可以期待每六个月发布一次新版本。但是，并非所有版本都是长期支持（LTS）版本。由于Oracle的发布计划，LTS产品发布仅每三年发布一次。</p>
+<h2 id="openjdk"><a class="markdownIt-Anchor" href="#openjdk"></a> OpenJDK</h2>
+<p>OpenJDK是Java SE平台版的开源和免费实现，它是Sun Corporation（现在的Oracle Corporation）于2006年开始的开发结果。它是根据GNU GPL许可证授权的。它最初于2007年发布。它由Oracle Corporation，Red Hat，IBM，Apple Inc.，OpenJDK和Java Community等开发。它是使用C ++和Java编程语言编写的。它支持不同的操作系统，如FreeBSD，Linux，Microsoft Windows，Mac OS X. OpenJDK是Java SE Platform Edition的官方参考实现。</p>
+<p>现在让我们看看OpenJDK版本：</p>
+<ul>
+<li><em>OpenJDK 6项目 - 基于JDK 7，但经过修改后提供了Java 6的开源版本</em></li>
+<li><em>OpenJDK 7项目 - 2011年7月28日</em></li>
+<li><em>OpenJDK 7u项目 - 该项目开发Java Development Kit 7的更新</em></li>
+<li><em>OpenJDK 8项目 - 2014年3月18日</em></li>
+<li><em>OpenJDK 8u项目 - 该项目开发Java Development Kit 8的更新</em></li>
+<li><em>OpenJDK 9项目 - 2017年9月21日</em></li>
+<li><em>JDK项目于2018年3月10日至20日发布</em></li>
+<li><strong>JDK项目于2018年9月11日至25日发布</strong></li>
+<li>JDK项目发布12 - <a href="https://link.juejin.im/?target=http%3A%2F%2Fopenjdk.java.net%2Fjeps%2F3" target="_blank" rel="noopener">稳定阶段</a></li>
+</ul>
+<h2 id="oracle与openjdk之间的比较信息图表"><a class="markdownIt-Anchor" href="#oracle与openjdk之间的比较信息图表"></a> Oracle与OpenJDK之间的比较（信息图表）</h2>
+<p><img src="/article/2018/07/Oracle JDK与OpenJDK之间的区别/169d7f2683e2ecd0.png" alt="对比图.jpg"></p>
+<h2 id="oracle与openjdk之间的主要区别"><a class="markdownIt-Anchor" href="#oracle与openjdk之间的主要区别"></a> Oracle与OpenJDK之间的主要区别</h2>
+<blockquote>
+<p>Oracle与OpenJDK都是市场上的热门选择; 让我们讨论一下OracleJDK与OpenJDK之间的一些主要差异：</p>
+</blockquote>
+<ol>
+<li>Oracle JDK版本将每三年发布一次，而OpenJDK版本每三个月发布一次。</li>
+<li>Oracle JDK将更多地关注稳定性，它重视更多的企业级用户，而OpenJDK经常发布以支持其他性能，这可能会导致不稳定。</li>
+<li>Oracle JDK支持长期发布的更改，而Open JDK仅支持计划和完成下一个发行版。</li>
+<li>Oracle JDK根据二进制代码许可协议获得许可，而OpenJDK根据GPL v2许可获得许可。 使用Oracle平台时会产生一些许可影响。如Oracle <a href="https://link.juejin.im/?target=https%3A%2F%2Fjava.com%2Fen%2Fdownload%2Frelease_notice.jsp" target="_blank" rel="noopener">宣布的</a>那样，在没有商业许可的情况下，在2019年1月之后发布的Oracle Java SE 8的公开更新将无法用于商业，商业或生产用途。但是，OpenJDK是完全开源的，可以自由使用。</li>
+<li>Oracle JDK的构建过程基于OpenJDK，因此OpenJDK与Oracle JDK之间没有技术差异。</li>
+<li>顶级公司正在使用Oracle JDK，例如Android Studio，Minecraft和IntelliJ IDEA开发工具，其中Open JDK不太受欢迎。</li>
+<li>Oracle JDK具有Flight Recorder，Java Mission Control和Application Class-Data Sharing功能，Open JDK具有Font Renderer功能，这是OpenJDK与Oracle JDK之间的显着差异。</li>
+<li>Oracle JDK具有良好的GC选项和更好的渲染器，而OpenJDK具有更少的GC选项，并且由于其包含自己的渲染器的分布，因此具有较慢的图形渲染器选项。</li>
+<li>在响应性和JVM性能方面，Oracle JDK与OpenJDK相比提供了更好的性能。</li>
+<li>与OpenJDK相比，Oracle JDK的开源社区较少，OpenJDK社区用户的表现优于Oracle JDK发布的功能，以提高性能。</li>
+<li>如果使用Oracle JDK会产生许可影响，而OpenJDK没有这样的问题，并且可以以任何方式使用，以满足完全开源和免费使用。</li>
+<li>Oracle JDK在运行JDK时不会产生任何问题，而OpenJDK在为某些用户运行JDK时会产生一些问题。</li>
+<li>根据使用方的使用和许可协议，现有应用程序可以从Oracle JDK迁移到Open JDK，反之亦然。</li>
+<li>Oracle JDK将从其10.0.X版本将收费，用户必须付费或必须依赖OpenJDK才能使用其免费版本。</li>
+<li>Oracle JDK不会为即将发布的版本提供长期支持，用户每次都必须通过更新到最新版本获得支持来获取最新版本。</li>
+<li>Oracle JDK以前的1.0版以前的版本是由Sun开发的，后来被Oracle收购并为其他版本维护，而OpenJDK最初只基于Java SDK或JDK版本7。</li>
+<li>Oracle JDK发布时大多数功能都是开源的，其中一些功能免于开源，并且根据Sun的许可授权，而OpenJDK发布了所有功能，如开源和免费。</li>
+<li>Oracle JDK完全由Oracle公司开发，而Open JDK项目由IBM，Apple，SAP AG，Redhat等顶级公司加入和合作。</li>
+</ol>
+<h2 id="oracle与openjdk比较表"><a class="markdownIt-Anchor" href="#oracle与openjdk比较表"></a> Oracle与OpenJDK比较表</h2>
+<blockquote>
+<p>以下是Oracle与OpenJDK之间最重要的比较：</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Oracle与OpenJDK之间比较</th>
+<th>Oracle JDK</th>
+<th>OpenJDK</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>执照</td>
+<td>它是根据GPL（通用公共许可证）许可证授权的</td>
+<td>它是根据GNU GPL（通用公共许可证）许可证授权的</td>
+</tr>
+<tr>
+<td>发展</td>
+<td>由Sun Microsystems Inc.开发</td>
+<td>由Oracle，OpenJDK和Java社区开发</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>根据Sun JDK的开发和实现提供性能</td>
+<td>提供由Oracle JDK之上的一些供应商开发的高性能</td>
+</tr>
+<tr>
+<td>可扩展性</td>
+<td>根据Sun的实施</td>
+<td>可以使用其他库或Oracle JDK进行改进</td>
+</tr>
+<tr>
+<td>费用</td>
+<td>Sun的官方执行许可证</td>
+<td>开源和免费实施可供免费使用</td>
+</tr>
+<tr>
+<td>速度</td>
+<td>由Sun Microsystems Inc.开发</td>
+<td>第三方供应商将通过进行一些调整来提高JVM的速度</td>
+</tr>
+<tr>
+<td>操作系统</td>
+<td>支持Windows，Linux，Solaris，MacOS</td>
+<td>FreeBSD，Linux，Microsoft Windows，Mac OS X.</td>
+</tr>
+<tr>
+<td>便于使用</td>
+<td>可以与任何应用程序开发一起使用</td>
+<td>可以与任何应用程序开发和其他开源工具一起使用，以提高开源实现模型的性能。</td>
+</tr>
+</tbody>
+</table>
+<h2 id="结论"><a class="markdownIt-Anchor" href="#结论"></a> 结论</h2>
+<p>Oracle JDK可用于开发Java Web应用程序，独立应用程序以及许多其他图形用户界面以及其他开发工具。Oracle JDK执行的所有操作或任务也可以由OpenJDK执行，但只有Oracle与OpenJDK之间的区别在于Open JDK在现有Oracle JDK之上的许可和其他工具集成和实现。使用OpenJDK的优点是可以根据应用程序的要求修改性能，可伸缩性和实现，以根据需要调整Java虚拟机。</p>
+<p>OpenJDK的优势更多，Oracle JDK的使用在Oracle JDK实现中使用的标准方面也有一些好处，这将确保应用程序稳定和良好维护。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JDK/" rel="tag"># JDK</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2018/07/查看及调试JDK源码/" rel="prev" title="查看及调试JDK源码">
+      <i class="fa fa-chevron-left"></i> 查看及调试JDK源码
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2018/08/Java5新特性/" rel="next" title="Java5新特性">
+      Java5新特性 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#oracle与openjdk之间的区别"><span class="nav-number">1.</span> <span class="nav-text"> Oracle与OpenJDK之间的区别</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.1.</span> <span class="nav-text"> 简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#oracle-jdk"><span class="nav-number">1.2.</span> <span class="nav-text"> Oracle JDK</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#openjdk"><span class="nav-number">1.3.</span> <span class="nav-text"> OpenJDK</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#oracle与openjdk之间的比较信息图表"><span class="nav-number">1.4.</span> <span class="nav-text"> Oracle与OpenJDK之间的比较（信息图表）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#oracle与openjdk之间的主要区别"><span class="nav-number">1.5.</span> <span class="nav-text"> Oracle与OpenJDK之间的主要区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#oracle与openjdk比较表"><span class="nav-number">1.6.</span> <span class="nav-text"> Oracle与OpenJDK比较表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#结论"><span class="nav-number">1.7.</span> <span class="nav-text"> 结论</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">518</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '0b732e6c993a36de500938d4804df22b',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

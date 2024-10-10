@@ -1,0 +1,271 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN">
+<head>
+<title>ajax请求</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="description" content="" />
+
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+
+<style>
+    .load{
+        width:500px;
+        height:300px;
+        border:1px solid #abcdef;
+    }
+</style>
+</head>
+    <body>
+        <input type="text" name="username" id="username" />
+        <input type="button" value="GO"/>
+        <div class="load" id="info">
+            <img src="http://localhost:8080/resource/image/avatar.png" alt="" id="loading" style="display:none"/>
+            <ul></ul>
+        </div>
+        <span style="color:red"></span>
+    </body>
+
+
+<script>
+
+
+
+
+//例5.ajax
+$('input[type=button]').click(function(){
+    var url = 'pro.php';
+    var sendData = {'username':$('#username').val()};
+    $.ajax({
+        url:url,                // 向服务器发送的请求地址
+        type:'get',             // GET方式传输
+        data:sendData,          // 发送的数据
+        success:function(data){ // 回调函数
+             if(data == 'true') {
+                $('div').html('用户名可以使用');
+             } else {
+                $('div').html('用户名不可以是admin');
+             }
+        }
+    });
+})
+
+// 例6.ajax
+$('input').click(function(){
+    $.ajax({
+        url:'pro.php?'+Math.random(),
+        type:'get',
+        success:function(data){
+            //alert(data);
+            $('#info').html(data);//$('#info') DIV中的ID
+        }
+    });
+});
+
+$('input').click(function(){
+    $.ajax({
+        //url:'pro.php?'+Math.random(),
+        url:'test.php/a',
+        type:'get',
+        success:function(data){
+            alert(data);
+            //$('#info').html(data);//$('#info') DIV中的ID
+        }
+    });
+});
+
+// 数组和对象
+// 数组  var a = [1,2,3,4];alert(a[1]);
+// 对象  var a = {color:'yellow',hex:'#f90'}alert(a.color);
+
+$('input').click(function(){
+    $.ajax({
+        url:'pro.php?'+Math.random(),
+        type:'get',
+        success:function(data){
+            //alert(data[0].title);
+            //$('#info').html(data[0].title);//$('#info') DIV中的ID
+            //alert(typeof data);   //string
+            var res = eval(data);   // eval 把字符串解析成js代码对象
+            //alert(typeof res);      //object
+            $('#info').html(res[0].title);
+        }
+    });
+});
+
+
+// 复杂的数组和JSON格式
+$('input').click(function(){
+    var ul = $('#info>ul'); // 获取ul
+    $.ajax({
+        url:'pro.php?'+Math.random(),
+        type:'get',
+        success:function(data){
+            //alert(data);
+            var result = eval(data);
+            for(var i=0;i<result.length;i++){
+                //alert(result[i].title);
+                ul.append('<li>'+result[i].title+' <em>'+result[i].time+'</em></li>');//向某个标签插入某些元素
+            }
+        }
+
+    });
+});
+
+// 复杂的数组和JSON格式+延迟
+$('input').click(function(){
+    var ul = $('#info>ul'); // 获取ul
+    $.ajax({
+        url:'pro.php?'+Math.random(),
+        type:'get',
+        success:function(data){
+            //alert(data);
+            var result = eval(data);
+            for(var i=0;i<result.length;i++){
+                //alert(result[i].title);
+                ul.append('<li>'+result[i].title+' <em>'+result[i].time+'</em></li>');//向某个标签插入某些元素
+            }
+        }
+
+    });
+});
+$(document).ajaxStart(function(){   // 显示加载图片
+    $('#loading').show();
+}).ajaxStop(function(){             // 图片消失
+    $('#loading').hide();
+});
+
+//GBK数据获取,发送与接收端编码要保持一致
+$('input').click(function(){
+    $.ajax({
+        url:'test.txt?'+Math.random(),
+        type:'get',
+        success:function(data){
+            $('div').html(data);
+        }
+    });
+});
+//.serialize();辅助函数,方便获取列表
+
+
+// XML文件获取
+$('input').click(function(){
+    var ul = $('#info>ul');
+    $.ajax({
+        url:'xml.php?'+Math.random(),
+        type:'get',
+        dataType:'xml',
+        success:function(xml){
+            //alert(xml);
+            $(xml).find('title').each(function(){
+                //alert($(this).text());//操作XML文件时,html()方法不可用
+                ul.append('<li>'+$(this).text()+'</li>');
+            });
+            //$('div').html(data);
+        }
+    });
+});
+
+
+//JQ中ajax请求出错处理
+$('input').click(function(){
+    var ul = $('#info>ul'); // 获取ul
+    $.ajax({
+        url:'pro1.php?'+Math.random(),
+        type:'get',
+        //timeout:1000,// 毫秒
+        success:function(data){
+            $('div').html(data);
+        },
+        error:function(jqXHR,textStatus,errorThrown){
+            //alert('textStatus:'+textStatus);
+            //alert('errorThrown:'+errorThrown);
+            //if(errorThrown == 'Not Found') {$('span').html('你请求的地址不存在!');}
+            //if(textStatus == 'timeout'){$('span').html('请求超时,请刷新页面重新操作!');}
+        }
+
+    });
+});
+$(document).ajaxError(function(){//只要ajax发生错误就执行代码
+    $('span').html('ajax请求发生错误');
+});
+</script>
+
+
+
+
+<!--
+    // 加入记录
+    
+    使用淡出效果来隐藏一个 <p> 元素：
+    $(".btn1").click(function(){
+      $("p").fadeOut();
+    });
+  
+    $('.invest_zjmm_pop_body').find('.fr').click(function(){
+        $('.invest_zjmm_pop').fadeOut();
+        $('.black_bg').fadeOut();
+    })
+      
+        
+    var page = 0;               // 分页0
+    var limit = 5;              // 每页显示5条
+    var type_code = 'JBB04';    // 变量：JBB04
+    var pages = '59';
+    pages = Math.ceil(pages/limit); // 返回大于参数x的最小整数,即对浮点数向上取整返回大于参数x的最小整数,即对浮点数向上取整
+    var text ='<p>暂无相关数据</p>';
+  
+    $('.invest').click(function(){
+        //$.post(url,parameters,callback)url:服务器端地址,parameters:需要传递到服务器端的参数,callback:在请求完成时被调用
+        $.post('/index.php/test/detail_jbb_list?per_page='+limit*page+'&type_code='+type_code,{},function(result){// 获取POST
+            result = JSON.parse(result);//parse用于从一个字符串中解析出json对象
+            text = '';
+            // for循环来展示标签数据
+            for(var i=0;i<result.data.data.length;i++){                     
+                text = text+'<p>';
+                text=text+'<span class="payment_no">'+result.data.data[i].order_code+'</span>';
+                text=text+'<span><font class="name">'+result.data.data[i].user_name.substring(0,1)+"**"+'</font></span>';
+                text=text+'<span class="amount">'+result.data.data[i].amount+'</span>';
+                text=text+'<span class="pay_time">'+unixtime_style(result.data.data[i].purchase_time,'Y-m-d h:i:s')+'</span>';
+                text=text+'</p>';   
+            }
+            $('#invest-lists').html(text);// html()函数用于设置或返回当前jQuery对象所匹配的DOM元素内的html内容。
+        }); 
+    })
+    //分页
+    if(pages!=0){
+        $(".invest_home_paging").createPage({
+            pageCount:pages,
+            current:1,
+            backFn:function(p){
+                $.post('/index.php/invest/detail_jbb_list?per_page='+limit*(p-1)+'&type_code='+type_code,{},function(result){
+                    page=p-1;
+                    result = JSON.parse(result);
+                    text = '';
+                    for(var i=0;i<result.data.data.length;i++){ 
+                        text = text+'<p>';
+                        text=text+'<span class="payment_no">'+result.data.data[i].order_code+'</span>';
+                        text=text+'<span><font class="name">'+result.data.data[i].user_name.substring(0,1)+"**"+'</font></span>';
+                        text=text+'<span class="amount">'+result.data.data[i].amount+'</span>';
+                        text=text+'<span class="pay_time">'+unixtime_style(result.data.data[i].purchase_time,'Y-m-d h:i:s')+'</span>';
+                        text=text+'</p>';   
+                    }
+                    $('#invest-lists').html(text);
+                });                 
+            }
+        });
+        function formatDate(now){     
+            var year=now.getYear();     
+            var month=now.getMonth()+1;     
+            var date=now.getDate();     
+            var hour=now.getHours();     
+            var minute=now.getMinutes();     
+            var second=now.getSeconds();     
+            return year+"-"+month+"-"+date+"   "+hour+":"+minute+":"+second;     
+        }    
+    }
+    -->
+
+</html>

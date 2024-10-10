@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="包装类  定义 包装类的作用：基本类型不是类，所以无法获得类的基本特性，无法参与转型、泛型、集合、反射等过程，包装类的出现就是为了弥补这个缺陷。 为了对基本类型的数据进行更多的操作，将 基本数据类型 封装成类，并在类中定义一些功能，这个类就是 包装类(8个)。 byte              Byte short             Short int">
+<meta name="keywords" content="Java基础">
+<meta property="og:type" content="article">
+<meta property="og:title" content="07Java常用类2之包装类">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2015/10/07Java常用类2之包装类/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="包装类  定义 包装类的作用：基本类型不是类，所以无法获得类的基本特性，无法参与转型、泛型、集合、反射等过程，包装类的出现就是为了弥补这个缺陷。 为了对基本类型的数据进行更多的操作，将 基本数据类型 封装成类，并在类中定义一些功能，这个类就是 包装类(8个)。 byte              Byte short             Short int">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2015-10-04T02:00:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="07Java常用类2之包装类">
+<meta name="twitter:description" content="包装类  定义 包装类的作用：基本类型不是类，所以无法获得类的基本特性，无法参与转型、泛型、集合、反射等过程，包装类的出现就是为了弥补这个缺陷。 为了对基本类型的数据进行更多的操作，将 基本数据类型 封装成类，并在类中定义一些功能，这个类就是 包装类(8个)。 byte              Byte short             Short int">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2015/10/07Java常用类2之包装类/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>07Java常用类2之包装类 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2015/10/07Java常用类2之包装类/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          07Java常用类2之包装类
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2015-10-04 10:00:00" itemprop="dateCreated datePublished" datetime="2015-10-04T10:00:00+08:00">2015-10-04</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="包装类"><a class="markdownIt-Anchor" href="#包装类"></a> 包装类</h1>
+<h2 id="定义"><a class="markdownIt-Anchor" href="#定义"></a> 定义</h2>
+<p>包装类的作用：基本类型不是类，所以无法获得类的基本特性，无法参与转型、泛型、集合、反射等过程，包装类的出现就是为了弥补这个缺陷。</p>
+<p>为了对基本类型的数据进行更多的操作，将 <strong><font color="red">基本数据类型</font></strong> 封装成类，并在类中定义一些功能，这个类就是 <strong><font color="red">包装类(8个)</font></strong>。</p>
+<p>byte              Byte</p>
+<p>short             Short</p>
+<p>int                  <strong>Integer</strong></p>
+<p>long               Long</p>
+<p>float               Float</p>
+<p>double           <strong>Double</strong></p>
+<p>char               Character</p>
+<p>boolean          Boolean</p>
+<p>常见的操作之一：用于基本数据类型与字符串之间的转换。</p>
+<h2 id="装箱与拆箱"><a class="markdownIt-Anchor" href="#装箱与拆箱"></a> 装箱与拆箱</h2>
+<h3 id="装箱"><a class="markdownIt-Anchor" href="#装箱"></a> 装箱</h3>
+<p>​		将 基本数据类型 转换为 包装类类型。</p>
+<p>​        自动装箱    基本类型 – 包装类类型（引用类型）</p>
+<h3 id="拆箱"><a class="markdownIt-Anchor" href="#拆箱"></a> 拆箱</h3>
+<p>​		将 包装类类型 转换为 基本数据类型。</p>
+<p>​        自动拆箱    包装类类型（引用类型）-- 基本类型</p>
+<h3 id="自动装箱与拆箱"><a class="markdownIt-Anchor" href="#自动装箱与拆箱"></a> 自动装箱与拆箱</h3>
+<p>从JDK1.5开始可以自动装箱与拆箱。所以下面是正确的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">　　　　　　　　Integer num1 = <span class="number">100</span>;</span><br><span class="line">　　　　　　　　<span class="keyword">int</span> num2 = <span class="keyword">new</span> Integer(<span class="number">100</span>);</span><br><span class="line"></span><br><span class="line">　　　　　　把下面的这个代码理解即可：</span><br><span class="line"></span><br><span class="line">　　　　　　　　Integer num = <span class="number">100</span>;</span><br><span class="line">　　　　　　　　num += <span class="number">200</span>;</span><br><span class="line">　　　　　　　　System.out.println(<span class="string">"num:"</span> + num);</span><br><span class="line"></span><br><span class="line">　　　　　　通过*反编译*后的代码：</span><br><span class="line"></span><br><span class="line">　　　　　　　　Integer num = Integer.valueOf(<span class="number">100</span>); <span class="comment">// 自动装箱</span></span><br><span class="line">　　　　　　　　num = Integer.valueOf(num.intValue() + <span class="number">200</span>); <span class="comment">// 自动拆箱，再自动装箱</span></span><br><span class="line">　　　　　　　　System.out.println((<span class="keyword">new</span> StringBuilder(<span class="string">"num:"</span>)).append(num).toString()); <span class="comment">// 我们用 + 号做的拼接，其本质是调用append()方法。因为用 + 号做拼接内存占用空间比较大，字符串拼接浪费很多空间，所以在底层自动做了转换。</span></span><br><span class="line"></span><br><span class="line">　　　　　　需要注意：</span><br><span class="line">　　　　　　　　在使用时，Integer num = <span class="keyword">null</span>;上面的代码就会出现NullPointerException。因为num为空引用无法调用方法。</span><br></pre></td></tr></table></figure>
+<h2 id="integer"><a class="markdownIt-Anchor" href="#integer"></a> Integer</h2>
+<p>Integer 类在对象中包装了一个基本类型 int 的值。Integer 类型的对象包含一个 int 类型的字段。</p>
+<p>此外，该类提供了多个方法，能在 int 类型和 String 类型之间互相转换，还提供了处理 int 类型时非常有用的其他一些常量和方法。</p>
+<h3 id="构造方法"><a class="markdownIt-Anchor" href="#构造方法"></a> 构造方法</h3>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">　　　　     <span class="function"><span class="keyword">public</span> <span class="title">Integer</span><span class="params">(<span class="keyword">int</span> value)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">　　　　　　　　Integer i </span>= <span class="keyword">new</span> Integer(<span class="number">100</span>);</span><br><span class="line"></span><br><span class="line">　　　　     <span class="function"><span class="keyword">public</span> <span class="title">Integer</span><span class="params">(String s)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">　　　　　　　　Integer i </span>= <span class="keyword">new</span> Integer(<span class="string">"100"</span>);</span><br><span class="line"></span><br><span class="line">　　　　　　注意：这里的字符串必须是由数字字符组成</span><br><span class="line"></span><br><span class="line">　　　　　　　　　　抛出： NumberFormatException - 如果 String 不包含可解析的整数。</span><br></pre></td></tr></table></figure>
+<h3 id="成员方法"><a class="markdownIt-Anchor" href="#成员方法"></a> 成员方法</h3>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MAX_VALUE</span><br><span class="line">    System.out.println(Integer.MAX_VALUE);<span class="comment">// 2147483647</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MIN_VALUE</span><br><span class="line">    System.out.println(Integer.MIN_VALUE);<span class="comment">// -2147483648</span></span><br></pre></td></tr></table></figure>
+<p>​				A.    String、包装类、基本数据类型 的相互转换</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">　　　　　　　　<span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">intValue</span><span class="params">()</span></span></span><br><span class="line"><span class="function">　　　　　　　　<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">parseInt</span><span class="params">(String s)</span></span></span><br><span class="line"><span class="function">　　　　　　　　<span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">toString</span><span class="params">(<span class="keyword">int</span> i)</span></span></span><br><span class="line"><span class="function">　　　　　　　　<span class="keyword">public</span> <span class="keyword">static</span> Integer <span class="title">valueOf</span><span class="params">(<span class="keyword">int</span> i)</span></span></span><br><span class="line"><span class="function">　　　　　　　　<span class="keyword">public</span> <span class="keyword">static</span> Integer <span class="title">valueOf</span><span class="params">(String s)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">　　　　　　    String – 包装类	<span class="comment">//将String转换为包装类，使用包装类的valueOf()</span></span></span><br><span class="line"><span class="function">　　　　　　　　　　String s </span>= <span class="string">"100"</span>;</span><br><span class="line">　　　　　　　　　　Integer num1 = Integer.valueOf(s);</span><br><span class="line">　　　　　　　　　　Double num2 = Double.valueOf(s);</span><br><span class="line"></span><br><span class="line">　　　　　　    String – <span class="keyword">int</span>	  <span class="comment">//将String转换为基本数据类型,使用对应包装类的parseXXX()即可</span></span><br><span class="line">　　　　　　　　　　String str = <span class="string">"100"</span>;</span><br><span class="line">　　　　　　　　<span class="number">1</span>).    <span class="keyword">int</span> num1 = <span class="keyword">new</span> Integer(str).intValue();</span><br><span class="line">　　　　　　　　<span class="number">2</span>).    <span class="keyword">int</span> num2 = Integer.parseInt(str); <span class="comment">//推荐，*记住很重要*</span></span><br><span class="line">　　　　　　　　<span class="number">3</span>).    <span class="keyword">double</span> num3 = Double.parseDouble(str)</span><br><span class="line"></span><br><span class="line">　　　　　　    <span class="keyword">int</span> – String</span><br><span class="line">　　　　　　　　　　<span class="keyword">int</span> value = <span class="number">100</span>;</span><br><span class="line">　　　　　　　　<span class="number">1</span>).    String s1 = <span class="string">""</span> + value;</span><br><span class="line">　　　　　　　　<span class="number">2</span>).    String s2 = String.valueOf(value); <span class="comment">//推荐，它可以将任意类型转换成字符串</span></span><br><span class="line">　　　　　　　　<span class="number">3</span>).    String s3 = <span class="keyword">new</span> Integer(value).toString();</span><br><span class="line">　　　　　　　　<span class="number">4</span>).    String s4 = Integer.valueOf(value).toString();</span><br><span class="line">　　　　　　　　<span class="number">5</span>).    String s5 = Integer.toString(value);</span><br></pre></td></tr></table></figure>
+<p>​				B.    进制转换（了解）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">　　　　　　　　<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">toBinaryString</span><span class="params">(<span class="keyword">int</span> i)</span></span></span><br><span class="line"><span class="function">　　　　　　　　<span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">toOctalString</span><span class="params">(<span class="keyword">int</span> i)</span></span></span><br><span class="line"><span class="function">　　　　　　　　<span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">toHexString</span><span class="params">(<span class="keyword">int</span> i)</span></span></span><br><span class="line"><span class="function">　　　　　　　　<span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">toString</span><span class="params">(<span class="keyword">int</span> i, <span class="keyword">int</span> radix)</span></span></span><br><span class="line"><span class="function">　　　　　　　　<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">parseInt</span><span class="params">(String s, <span class="keyword">int</span> radix)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">　　　　　　    常用的基本进制转换：</span></span><br><span class="line"><span class="function">　　　　　　　　<span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">toBinaryString</span><span class="params">(<span class="keyword">int</span> i)</span></span></span><br><span class="line"><span class="function">　　　　　　　　　　System.out.<span class="title">println</span><span class="params">(Integer.toBinaryString(<span class="number">100</span>)</span>)</span>;<span class="comment">// 1100100</span></span><br><span class="line">　　　　　　　　<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">toOctalString</span><span class="params">(<span class="keyword">int</span> i)</span></span></span><br><span class="line"><span class="function">　　　　　　　　　　System.out.<span class="title">println</span><span class="params">(Integer.toOctalString(<span class="number">100</span>)</span>)</span>;<span class="comment">// 144</span></span><br><span class="line">　　　　　　　　<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">toHexString</span><span class="params">(<span class="keyword">int</span> i)</span></span></span><br><span class="line"><span class="function">　　　　　　　　　　System.out.<span class="title">println</span><span class="params">(Integer.toHexString(<span class="number">100</span>)</span>)</span>;<span class="comment">// 64</span></span><br><span class="line"></span><br><span class="line">　　　　　　    十进制转其他进制：</span><br><span class="line">　　　　　　　　<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">toString</span><span class="params">(<span class="keyword">int</span> i, <span class="keyword">int</span> radix)</span> ：radix的范围（即进制的范围）2 – 36</span></span><br><span class="line"><span class="function">　　　　　　　　为什么？ 0,...9,a...z 一共36个</span></span><br><span class="line"><span class="function">　　　　　　　　　　System.out.<span class="title">println</span><span class="params">(Integer.toString(<span class="number">100</span>, <span class="number">2</span>)</span>.<span class="title">toUpperCase</span><span class="params">()</span>)</span>;<span class="comment">// 1100100</span></span><br><span class="line">　　　　　　　　　　System.out.println(Integer.toString(<span class="number">100</span>, <span class="number">8</span>).toUpperCase());<span class="comment">// 144</span></span><br><span class="line">　　　　　　　　　　System.out.println(Integer.toString(<span class="number">100</span>, <span class="number">16</span>).toUpperCase());<span class="comment">// 64</span></span><br><span class="line">　　　　　　　　　　System.out.println(Integer.toString(<span class="number">100</span>, <span class="number">1</span>).toUpperCase());<span class="comment">// 100</span></span><br><span class="line">　　　　　　　　　　System.out.println(Integer.toString(<span class="number">100</span>, <span class="number">37</span>).toUpperCase());<span class="comment">// 100</span></span><br><span class="line"></span><br><span class="line">　　　　　　    其他进制转十进制：</span><br><span class="line">　　　　　　　　<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">parseInt</span><span class="params">(String s, <span class="keyword">int</span> radix)</span></span></span><br><span class="line"><span class="function">　　　　　　　　System.out.<span class="title">println</span><span class="params">(Integer.parseInt(<span class="string">"1100100"</span>, <span class="number">2</span>)</span>)</span>;<span class="comment">// 100</span></span><br><span class="line">　　　　　　　　System.out.println(Integer.parseInt(<span class="string">"144"</span>, <span class="number">8</span>));<span class="comment">// 100</span></span><br><span class="line">　　　　　　　　System.out.println(Integer.parseInt(<span class="string">"64"</span>, <span class="number">16</span>));<span class="comment">// 100</span></span><br><span class="line"></span><br><span class="line">　　　　　　　　System.out.println(Integer.parseInt(<span class="string">"100"</span>, <span class="number">10</span>));<span class="comment">// 100</span></span><br><span class="line">　　　　　　　　System.out.println(Integer.parseInt(<span class="string">"100"</span>, <span class="number">2</span>));<span class="comment">// 4</span></span><br><span class="line">　　　　　　　　System.out.println(Integer.parseInt(<span class="string">"100"</span>, <span class="number">8</span>));<span class="comment">// 64</span></span><br><span class="line">　　　　　　　　System.out.println(Integer.parseInt(<span class="string">"100"</span>, <span class="number">16</span>));<span class="comment">// 256</span></span><br><span class="line"> </span><br><span class="line">　　　　　　　　System.out.println(Integer.parseInt(<span class="string">"123"</span>, <span class="number">2</span>)); <span class="comment">//抛出：NumberFormatException - 如果 String 不包含可解析的 int。</span></span><br></pre></td></tr></table></figure>
+<h3 id="案例"><a class="markdownIt-Anchor" href="#案例"></a> 案例</h3>
+<p>​		-128到127之间的数据缓冲池问题</p>
+<p>​				注意：Integer的数据直接赋值，如果在-128到127之间，会直接从缓冲池里获取数据</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">IntegerDemo</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Integer i1 = <span class="keyword">new</span> Integer(<span class="number">127</span>);</span><br><span class="line">        Integer i2 = <span class="keyword">new</span> Integer(<span class="number">127</span>);</span><br><span class="line">        System.out.println(i1 == i2); <span class="comment">// false</span></span><br><span class="line">        System.out.println(i1.equals(i2)); <span class="comment">// true</span></span><br><span class="line">        Integer i3 = <span class="keyword">new</span> Integer(<span class="number">128</span>);</span><br><span class="line">        Integer i4 = <span class="keyword">new</span> Integer(<span class="number">128</span>);</span><br><span class="line">        System.out.println(i3 == i4); <span class="comment">// false</span></span><br><span class="line">        System.out.println(i3.equals(i4)); <span class="comment">// true</span></span><br><span class="line">        Integer i5 = <span class="number">128</span>;</span><br><span class="line">        Integer i6 = <span class="number">128</span>;</span><br><span class="line">        System.out.println(i5 == i6); <span class="comment">// false</span></span><br><span class="line">        System.out.println(i5.equals(i6)); <span class="comment">// true</span></span><br><span class="line">        Integer i7 = <span class="number">127</span>;</span><br><span class="line">        Integer i8 = <span class="number">127</span>;</span><br><span class="line">        System.out.println(i7 == i8); <span class="comment">// true</span></span><br><span class="line">        System.out.println(i7.equals(i8)); <span class="comment">// true</span></span><br><span class="line">        <span class="comment">// 通过查看源码，我们就知道了，针对-128到127之间的数据，做了一个数据缓冲池，如果数据是该范围内的，每次并不创建新的空间</span></span><br><span class="line">        <span class="comment">// Integer ii = Integer.valueOf(127);</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="character了解"><a class="markdownIt-Anchor" href="#character了解"></a> Character(了解)</h2>
+<p>​		Character 类在对象中包装一个基本类型 char 的值。Character 类型的对象包含类型为 char 的单个字段。</p>
+<p>​		此外，该类提供了几种方法，以确定字符的类别（小写字母，数字，等等），并将字符从大写转换成小写，反之亦然。</p>
+<p>​		字符信息基于 Unicode 标准，版本 4.0。</p>
+<h3 id="构造方法-2"><a class="markdownIt-Anchor" href="#构造方法-2"></a> 构造方法</h3>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Character</span><span class="params">(<span class="keyword">char</span> value)</span></span></span><br><span class="line"><span class="function">    Character ch </span>= <span class="keyword">new</span> Character((<span class="keyword">char</span>) <span class="number">97</span>);</span><br><span class="line">    Character ch = <span class="keyword">new</span> Character(<span class="string">'a'</span>);</span><br><span class="line">    System.out.println(<span class="string">"ch:"</span> + ch);<span class="comment">//ch:a -- 说明重写了toString()方法。</span></span><br></pre></td></tr></table></figure>
+<h3 id="成员方法-2"><a class="markdownIt-Anchor" href="#成员方法-2"></a> 成员方法</h3>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">A.    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">isUpperCase</span><span class="params">(<span class="keyword">char</span> ch)</span>：    判断给定的字符是否是大写</span></span><br><span class="line"><span class="function">B.    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">isLowerCase</span><span class="params">(<span class="keyword">char</span> ch)</span>：    判断给定的字符是否是小写</span></span><br><span class="line"><span class="function">C.    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">isDigit</span><span class="params">(<span class="keyword">char</span> ch)</span>：        判断给定的字符是否是数字字符</span></span><br><span class="line"><span class="function">D.    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">char</span> <span class="title">toUpperCase</span><span class="params">(<span class="keyword">char</span> ch)</span>：    	 把给定的字符转换为大写</span></span><br><span class="line"><span class="function">E.    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">char</span> <span class="title">toLowerCase</span><span class="params">(<span class="keyword">char</span> ch)</span>：    	 把给定的字符转换为小写</span></span><br></pre></td></tr></table></figure>
+<h3 id="案例-2"><a class="markdownIt-Anchor" href="#案例-2"></a> 案例</h3>
+<p>​		统计字符串中大写，小写及数字字符出现的次数</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">IntegerDemo</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 定义三个统计变量。</span></span><br><span class="line">        <span class="keyword">int</span> bigCount = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span> smallCount = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span> numberCount = <span class="number">0</span>;</span><br><span class="line">        <span class="comment">// 键盘录入一个字符串。</span></span><br><span class="line">        Scanner sc = <span class="keyword">new</span> Scanner(System.in);</span><br><span class="line">        System.out.println(<span class="string">"请输入一个字符串："</span>);</span><br><span class="line">        String line = sc.nextLine();</span><br><span class="line">        <span class="comment">// 把字符串转换为字符数组。</span></span><br><span class="line">        <span class="keyword">char</span>[] chs = line.toCharArray();</span><br><span class="line">        <span class="comment">// 历字符数组获取到每一个字符</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> x = <span class="number">0</span>; x &lt; chs.length; x++) &#123;</span><br><span class="line">            <span class="keyword">char</span> ch = chs[x];</span><br><span class="line">            <span class="comment">// 判断该字符</span></span><br><span class="line">            <span class="keyword">if</span> (Character.isUpperCase(ch)) &#123;</span><br><span class="line">                bigCount++;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Character.isLowerCase(ch)) &#123;</span><br><span class="line">                smallCount++;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Character.isDigit(ch)) &#123;</span><br><span class="line">                numberCount++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 输出结果即可</span></span><br><span class="line">        System.out.println(<span class="string">"大写字母："</span> + bigCount + <span class="string">"个"</span>);</span><br><span class="line">        System.out.println(<span class="string">"小写字母："</span> + smallCount + <span class="string">"个"</span>);</span><br><span class="line">        System.out.println(<span class="string">"数字字符："</span> + numberCount + <span class="string">"个"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="弊端"><a class="markdownIt-Anchor" href="#弊端"></a> 弊端</h2>
+<p>包装类的弊端，不断地拆装箱会引发性能问题：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Integer sum1 = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        StopWatch stopWatch = <span class="keyword">new</span> StopWatch();</span><br><span class="line">        stopWatch.start();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">1000000000</span>; i++) &#123;</span><br><span class="line">            sum1 += <span class="number">1</span>; <span class="comment">// Integer.valueOf(sum1.intValue() + i);</span></span><br><span class="line">        &#125;</span><br><span class="line">        stopWatch.stop();</span><br><span class="line">        System.out.println(stopWatch.getTotal(TimeUnit.MILLISECONDS)); <span class="comment">// 当 sum1 为int类型时，只需要1毫秒</span></span><br><span class="line">        System.out.println(sum1);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="重载和自动拆装箱"><a class="markdownIt-Anchor" href="#重载和自动拆装箱"></a> 重载和自动拆装箱</h2>
+<p>有更匹配的重载方法时，不自动拆装箱</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        fun(<span class="keyword">new</span> Integer(<span class="number">3</span>)); <span class="comment">// Param is a Integer!</span></span><br><span class="line">        fun(<span class="number">3</span>); <span class="comment">// Param is a int!</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">fun</span><span class="params">(Integer i)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Param is a Integer!"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">fun</span><span class="params">(<span class="keyword">int</span> i)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Param is a int!"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="常量池"><a class="markdownIt-Anchor" href="#常量池"></a> 常量池</h2>
+<p><font color="red"><strong>注意：包装类的比较必须使用equals()， ‘==’ 比较的是两个引用是否指向一个对象。</strong></font></p>
+<p>包装类的创建很浪费性能，因此Java对简单的<font color="red"><strong>数字（-128~127）</strong></font>对应的包装类进行了<font color="red"><strong>缓存</strong></font>，称为常量池。通过直接量赋值的包装类如果在此范围内，会直接使用常量池中的引用。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Integer i1 = <span class="number">200</span>;</span><br><span class="line">        Integer i2 = <span class="number">200</span>;</span><br><span class="line">        Integer i3 = <span class="number">100</span>;</span><br><span class="line">        Integer i4 = <span class="number">100</span>;</span><br><span class="line">        Integer i5 = <span class="keyword">new</span> Integer(<span class="number">100</span>);</span><br><span class="line"></span><br><span class="line">        System.out.println(i1 == i2); <span class="comment">// false</span></span><br><span class="line">        System.out.println(i3 == i4); <span class="comment">// true</span></span><br><span class="line">        System.out.println(i3 == i5); <span class="comment">// false</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Java基础/" rel="tag"># Java基础</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2015/10/06Java常用类1/" rel="prev" title="06Java常用类1">
+      <i class="fa fa-chevron-left"></i> 06Java常用类1
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2015/10/08Java常用类3/" rel="next" title="08Java常用类3">
+      08Java常用类3 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#包装类"><span class="nav-number">1.</span> <span class="nav-text"> 包装类</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#定义"><span class="nav-number">1.1.</span> <span class="nav-text"> 定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#装箱与拆箱"><span class="nav-number">1.2.</span> <span class="nav-text"> 装箱与拆箱</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#装箱"><span class="nav-number">1.2.1.</span> <span class="nav-text"> 装箱</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#拆箱"><span class="nav-number">1.2.2.</span> <span class="nav-text"> 拆箱</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#自动装箱与拆箱"><span class="nav-number">1.2.3.</span> <span class="nav-text"> 自动装箱与拆箱</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#integer"><span class="nav-number">1.3.</span> <span class="nav-text"> Integer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#构造方法"><span class="nav-number">1.3.1.</span> <span class="nav-text"> 构造方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#成员方法"><span class="nav-number">1.3.2.</span> <span class="nav-text"> 成员方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#案例"><span class="nav-number">1.3.3.</span> <span class="nav-text"> 案例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#character了解"><span class="nav-number">1.4.</span> <span class="nav-text"> Character(了解)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#构造方法-2"><span class="nav-number">1.4.1.</span> <span class="nav-text"> 构造方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#成员方法-2"><span class="nav-number">1.4.2.</span> <span class="nav-text"> 成员方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#案例-2"><span class="nav-number">1.4.3.</span> <span class="nav-text"> 案例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#弊端"><span class="nav-number">1.5.</span> <span class="nav-text"> 弊端</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#重载和自动拆装箱"><span class="nav-number">1.6.</span> <span class="nav-text"> 重载和自动拆装箱</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常量池"><span class="nav-number">1.7.</span> <span class="nav-text"> 常量池</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">518</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">34</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : 'b5c8d5209cc5ce54fa147ff6a8cc87f5',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
