@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="数据库连接池 概念：数据库连接池负责分配、管理和释放数据库连接，它允许应用程序重复使用一个现有的数据库连接，而不是再重新建立一个。能明显提高对数据库操作的性能。 优点： 1.节约资源 2.高效">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据库连接池">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/02/数据库连接池/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="数据库连接池 概念：数据库连接池负责分配、管理和释放数据库连接，它允许应用程序重复使用一个现有的数据库连接，而不是再重新建立一个。能明显提高对数据库操作的性能。 优点： 1.节约资源 2.高效">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-02-19T00:00:20.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="数据库连接池">
+<meta name="twitter:description" content="数据库连接池 概念：数据库连接池负责分配、管理和释放数据库连接，它允许应用程序重复使用一个现有的数据库连接，而不是再重新建立一个。能明显提高对数据库操作的性能。 优点： 1.节约资源 2.高效">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/02/数据库连接池/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>数据库连接池 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/02/数据库连接池/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          数据库连接池
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-02-19 08:00:20" itemprop="dateCreated datePublished" datetime="2022-02-19T08:00:20+08:00">2022-02-19</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="数据库连接池"><a class="markdownIt-Anchor" href="#数据库连接池"></a> 数据库连接池</h1>
+<p>概念：数据库连接池负责分配、管理和释放数据库连接，它允许应用程序重复使用一个现有的数据库连接，而不是再重新建立一个。能明显提高对数据库操作的性能。</p>
+<p>优点：</p>
+<p>1.节约资源</p>
+<p>2.高效</p>
+<a id="more"></a>
+<h1 id="数据库连接池的原理"><a class="markdownIt-Anchor" href="#数据库连接池的原理"></a> 数据库连接池的原理</h1>
+<p>连接池基本的思想是在系统初始化的时候，将数据库连接作为对象存储在内存中，当用户需要访问数据库时，并非建立一个新的连接，而是从连接池中取出一个已建立的空闲连接对象。</p>
+<p>使用完毕后，用户也并非将连接关闭，而是将连接放回连接池中，以供下一个请求访问使用。而连接的建立、断开都由连接池自身来管理。同时，还可以通过设置连接池的参数来控制连接池中的初始连接数、连接的上下限数以及每个连接的最大使用次数、最大空闲时间等等，也可以通过其自身的管理机制来监视数据库连接的数量、使用情况等。</p>
+<h1 id="常见的数据库连接池介绍"><a class="markdownIt-Anchor" href="#常见的数据库连接池介绍"></a> 常见的数据库连接池介绍</h1>
+<h2 id="c3p0"><a class="markdownIt-Anchor" href="#c3p0"></a> C3P0</h2>
+<p>主要特性：1、编码的简单易用</p>
+<p>缺点：C3P0 本身存在BUG，容易造成死锁</p>
+<h2 id="druid"><a class="markdownIt-Anchor" href="#druid"></a> Druid</h2>
+<p>主要特性：</p>
+<p>1、 强大的监控特性，通过Druid提供的监控功能，可以清楚知道连接池和SQL</p>
+<p>a.监控SQL的执行时间、ResultSet持有时间、返回行数、更新行数、错误次数、错误堆栈信息;</p>
+<p>b. SQL执行的耗时区间分布。什么是耗时区间分布呢？比如说，某个SQL执行了1000次，其中0<sub>1毫秒区间50次，1</sub>10毫秒800次，10<sub>100毫秒100次，100</sub>1000毫秒30次，1~10秒15次，10秒以上5次。通过耗时区间分布，能够非常清楚知道SQL的执行耗时情况。</p>
+<p>c. 监控连接池的物理连接创建和销毁次数、逻辑连接的申请和关闭次数、非空等待次数、PSCache命中率等。</p>
+<p>2、便于扩展。Druid提供了Filter-Chain模式的扩展API，可以自己编写Filter拦截JDBC中的任何方法，可以在上面做任何事情，比如说性能监控、SQL审计、用户名密码加密、日志等等。</p>
+<h2 id="hikaricp"><a class="markdownIt-Anchor" href="#hikaricp"></a> HikariCP</h2>
+<p>主要特性：快速，简单，可靠，稳定性高，据说是性能最好是一个高性能的JDBC连接池。Spring Boot将在2.0版本中把HikariCP作为其默认的JDBC连接池。配置方便，默认就是它了。</p>
+<h1 id="hikaricp待测试"><a class="markdownIt-Anchor" href="#hikaricp待测试"></a> HikariCP(待测试)</h1>
+<p>(CP:Connect Pool)</p>
+<h2 id="依赖"><a class="markdownIt-Anchor" href="#依赖"></a> 依赖</h2>
+<p>maven仓库： <a href="https://mvnrepository.com/artifact/com.zaxxer/HikariCP" target="_blank" rel="noopener">https://mvnrepository.com/artifact/com.zaxxer/HikariCP</a></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.zaxxer<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>HikariCP<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>5.0.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>它是 Spring Boot2.0 后默认的数据库连接池，更具体的说，由 spring-boot-starter-jdbc 模块引入。</p>
+<h2 id="配置数据源"><a class="markdownIt-Anchor" href="#配置数据源"></a> 配置数据源</h2>
+<h3 id="配置文件方式"><a class="markdownIt-Anchor" href="#配置文件方式"></a> 配置文件方式</h3>
+<p>配置文件</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">datasource:</span></span><br><span class="line">    <span class="attr">driver-class-name:</span> <span class="string">com.mysql.jdbc.Driver</span> <span class="comment"># 数据源驱动</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">com.zaxxer.hikari.HikariDataSource</span> <span class="comment"># 数据源类型</span></span><br><span class="line">    <span class="comment"># 数据库地址，编译类型为utf-8</span></span><br><span class="line">    <span class="attr">url:</span> <span class="string">mysql://localhost:5588/database?useUnicode=true&amp;characterEncoding=UTF8&amp;allowMultiQueries=true</span></span><br><span class="line">    <span class="attr">username:</span> <span class="string">root</span> <span class="comment"># 数据库用户名</span></span><br><span class="line">    <span class="attr">password:</span> <span class="string">root</span> <span class="comment"># 数据库密码</span></span><br><span class="line">    <span class="attr">hikari:</span></span><br><span class="line">      <span class="attr">pool-name:</span> <span class="string">MyHikariCP</span> <span class="comment"># 连接池名称</span></span><br><span class="line">      <span class="attr">minimum-idle:</span> <span class="number">5</span> <span class="comment"># 最小空闲连接数量</span></span><br><span class="line">      <span class="attr">maximum-pool-size:</span> <span class="number">10</span> <span class="comment"># 池中最大连接数，包括闲置和使用中的连接，默认是10</span></span><br><span class="line">      <span class="attr">idle-timeout:</span> <span class="number">600000</span> <span class="comment"># 连接允许在池中闲置的最长时间，默认600000毫秒（10分钟）</span></span><br><span class="line">      <span class="attr">max-lifetime:</span> <span class="number">1800000</span> <span class="comment"># 池中连接最长生命周期，值0表示无限生命周期，默认1800000毫秒即30分钟</span></span><br><span class="line">      <span class="attr">auto-commit:</span> <span class="literal">true</span> <span class="comment"># 此属性控制从池返回的连接的默认自动提交行为,默认值：true</span></span><br><span class="line">      <span class="attr">connection-test-query:</span> <span class="string">SELECT</span> <span class="number">1</span></span><br><span class="line">      <span class="attr">connection-timeout:</span> <span class="number">30000</span> <span class="comment"># 等待来自池的连接的最大毫秒数</span></span><br><span class="line">      <span class="attr">connection-init-sql:</span> <span class="literal">null</span> <span class="comment"># 该属性设置一个SQL语句，在将每个新连接创建后，将其添加到池中之前执行该语句。</span></span><br><span class="line">      <span class="attr">validation-timeout:</span> <span class="number">5000</span></span><br><span class="line">      <span class="attr">transactionIsolation:</span> <span class="literal">null</span> <span class="comment"># 控制从池返回的连接的默认事务隔离级别</span></span><br><span class="line">      <span class="attr">metric-registry:</span></span><br><span class="line">      <span class="attr">health-check-registry:</span></span><br><span class="line">      <span class="attr">initialization-fail-timeout:</span></span><br><span class="line">      <span class="attr">driver-class-name:</span></span><br><span class="line">      <span class="attr">jdbc-url:</span></span><br><span class="line">      <span class="attr">username:</span></span><br><span class="line">      <span class="attr">password:</span></span><br></pre></td></tr></table></figure>
+<p>配置Mybatis扫描mapper的路径</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@MapperScan</span>(basePackages = <span class="string">"com.zhaolq.service.*.dao"</span>, sqlSessionTemplateRef = <span class="string">"pgsqlSqlSessionTemplate"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ServiceApplication</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span></span><br><span class="line"><span class="function">		SpringApplication.<span class="title">run</span><span class="params">(ServiceApplication.class, args)</span></span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="配置类配置文件方式"><a class="markdownIt-Anchor" href="#配置类配置文件方式"></a> 配置类+配置文件方式</h3>
+<p>配置类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="comment">// 配置Mybatis mapper的扫描路径</span></span><br><span class="line"><span class="meta">@MapperScan</span>(<span class="string">"com.zhaolq.service.*.dao"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DataSourceConfiguration</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;jdbc.driver&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String jdbcDriver;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;jdbc.url&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String jdbcUrl;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;jdbc.username&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String jdbcUserName;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;jdbc.password&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String jdbcPassWord;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Create data source combo pooled data source</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> the combo pooled data source</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> PropertyVetoException property veto exception</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean</span>(name = <span class="string">"dataSource"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataSource <span class="title">getHikariDataSource</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        HikariConfig config = <span class="keyword">new</span> HikariConfig();</span><br><span class="line">        config.setJdbcUrl(jdbcUrl); <span class="comment">// 数据源</span></span><br><span class="line">        config.setUsername(jdbcUserName); <span class="comment">// 用户名</span></span><br><span class="line">        config.setPassword(jdbcPassWord); <span class="comment">// 密码</span></span><br><span class="line">        config.setDriverClassName(jdbcDriver);</span><br><span class="line">        <span class="comment">// 关闭连接后不自动commit</span></span><br><span class="line">        config.setAutoCommit(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 保持最小的连接数</span></span><br><span class="line">        config.setMinimumIdle(<span class="number">3</span>);</span><br><span class="line">        <span class="comment">// 连接池中允许的最大连接数，默认是10</span></span><br><span class="line">        config.setMaximumPoolSize(<span class="number">10</span>);</span><br><span class="line">        <span class="comment">// 一个连接idle状态的最大时长（毫秒），超时则被释放（retired），默认:10分钟</span></span><br><span class="line">        config.setIdleTimeout(<span class="number">600000</span>);</span><br><span class="line">        <span class="comment">// 等待连接池分配连接的最大时长（毫秒），超过这个时长还没可用的连接则发生SQLException， 默认:30秒</span></span><br><span class="line">        config.setConnectionTimeout(<span class="number">30000</span>);</span><br><span class="line">        <span class="comment">// 一个连接的生命时长（毫秒），超时而且没被使用则被释放（retired），默认:30分钟 1800000ms，建议设置比数据库超时时长少60秒</span></span><br><span class="line">        config.setMaxLifetime(<span class="number">1800000</span>);</span><br><span class="line">        config.setConnectionTestQuery(<span class="string">"select 1"</span>);</span><br><span class="line"></span><br><span class="line">        HikariDataSource ds = <span class="keyword">new</span> HikariDataSource(config);</span><br><span class="line">        <span class="keyword">return</span> ds;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="druid-spring-boot-starter"><a class="markdownIt-Anchor" href="#druid-spring-boot-starter"></a> druid-spring-boot-starter</h1>
+<p>使用Spring boot封装的Druid依赖（支持配置文件和配置类两种方式）。</p>
+<h2 id="依赖-2"><a class="markdownIt-Anchor" href="#依赖-2"></a> 依赖</h2>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- Spring boot封装的Druid数据源依赖 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.alibaba<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>druid-spring-boot-starter<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.2.8<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="配置数据源-2"><a class="markdownIt-Anchor" href="#配置数据源-2"></a> 配置数据源</h2>
+<h3 id="配置文件方式-2"><a class="markdownIt-Anchor" href="#配置文件方式-2"></a> 配置文件方式</h3>
+<p>配置文件</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">datasource:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">com.alibaba.druid.pool.DruidDataSource</span> <span class="comment"># 统一配置为 druid</span></span><br><span class="line">    <span class="attr">druid:</span></span><br><span class="line">      <span class="attr">driver-class-name:</span> <span class="string">org.postgresql.Driver</span>  <span class="comment"># 对应驱动</span></span><br><span class="line">      <span class="attr">url:</span> <span class="string">jdbc:postgresql://127.0.0.1:5432/testDB</span> <span class="comment"># 数据库地址</span></span><br><span class="line">      <span class="attr">username:</span> <span class="string">test</span></span><br><span class="line">      <span class="attr">password:</span> <span class="string">test</span></span><br><span class="line">      <span class="attr">initial-size:</span> <span class="number">10</span> <span class="comment">#初始化时建立物理连接的个数。 取值：产品 360 项目统一为 10</span></span><br><span class="line">      <span class="attr">min-idle:</span> <span class="number">10</span> <span class="comment">#最小连接池数量。 取值产品 360 项目统一为 10</span></span><br><span class="line">      <span class="attr">max-active:</span> <span class="number">30</span> <span class="comment">#最大连接池数量。 取值：产品 360 项目统一为 30</span></span><br><span class="line">      <span class="attr">time-between-eviction-runs-millis:</span> <span class="number">60000</span> <span class="comment">#配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒</span></span><br><span class="line">      <span class="attr">min-evictable-idle-time-millis:</span> <span class="number">300000</span> <span class="comment"># 连接保持空闲而不被驱逐的最小时间，配置连接在池中的最小生存时间</span></span><br><span class="line">      <span class="attr">validation-query:</span> <span class="string">select</span> <span class="string">'1'</span> <span class="string">from</span> <span class="string">dual</span> <span class="comment">#用来检测连接是否有效的sql</span></span><br><span class="line">      <span class="attr">test-while-idle:</span> <span class="literal">true</span> <span class="comment">#建议配置为true，不影响性能，并且保证安全性。申请连接的时候检测，如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效。</span></span><br><span class="line">      <span class="attr">test-on-borrow:</span> <span class="literal">false</span> <span class="comment">#申请连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能。</span></span><br><span class="line">      <span class="attr">test-on-return:</span> <span class="literal">false</span> <span class="comment">#归还连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能</span></span><br><span class="line"></span><br><span class="line">      <span class="comment"># 是否缓存preparedStatement，也就是PSCache。PSCache对支持游标的数据库性能提升巨大，比如说oracle。在mysql下建议关闭。</span></span><br><span class="line">      <span class="comment"># 打开 PSCache，并且指定每个连接上 PSCache 的大小</span></span><br><span class="line">      <span class="attr">pool-prepared-statements:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">max-open-prepared-statements:</span> <span class="number">20</span></span><br><span class="line">      <span class="attr">max-pool-prepared-statement-per-connection-size:</span> <span class="number">20</span> <span class="comment">#要启用PSCache，必须配置大于0，当大于0时，poolPreparedStatements自动触发修改为true</span></span><br><span class="line"></span><br><span class="line">      <span class="attr">filters:</span> <span class="string">stat</span> <span class="comment"># 配置监控统计拦截的filters，去掉后监控界面sql无法统计，配置了之后，在项目ip:port/druid，就可以查看监控数据</span></span><br><span class="line">      <span class="comment"># 设置只有通过登录认证才可以访问</span></span><br><span class="line">      <span class="attr">stat-view-servlet:</span></span><br><span class="line">        <span class="attr">url-pattern:</span> <span class="string">/druid/*</span></span><br><span class="line">        <span class="attr">reset-enable:</span> <span class="literal">false</span></span><br><span class="line">        <span class="attr">login-username:</span> <span class="string">admin</span></span><br><span class="line">        <span class="attr">login-password:</span> <span class="string">admin</span></span><br><span class="line">        <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">web-stat-filter:</span> <span class="comment"># 排除一些静态资源，以提高效率</span></span><br><span class="line">        <span class="attr">url-pattern:</span> <span class="string">/*</span></span><br><span class="line">        <span class="attr">exclusions:</span> <span class="string">"*.js,*.gif,*.jpg,*.bmp,*.png,*.css,*.ico,/druid/*"</span></span><br><span class="line">        <span class="attr">enabled:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<p>配置Mybatis扫描mapper的路径</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@MapperScan</span>(basePackages = <span class="string">"com.zhaolq.service.*.dao"</span>, sqlSessionTemplateRef = <span class="string">"pgsqlSqlSessionTemplate"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ServiceApplication</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span></span><br><span class="line"><span class="function">		SpringApplication.<span class="title">run</span><span class="params">(ServiceApplication.class, args)</span></span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>druid内置的监控页面：<a href="http://ip" target="_blank" rel="noopener">http://ip</a>:port/server.servlet.context-path/druid/login.html，账号、密码见配置文件。</p>
+<p>需要配置监控访问路径不拦截。</p>
+<h3 id="配置类配置文件方式-2"><a class="markdownIt-Anchor" href="#配置类配置文件方式-2"></a> 配置类+配置文件方式</h3>
+<p>配置文件</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 数据库配置</span></span><br><span class="line"><span class="attr">pgsql:</span></span><br><span class="line">  <span class="attr">driver-class-name:</span> <span class="string">org.postgresql.Driver</span> <span class="comment"># 对应驱动</span></span><br><span class="line">  <span class="attr">rl:</span> <span class="string">jdbc:postgresql://127.0.0.1:5432/testDB</span> <span class="comment"># 数据库地址</span></span><br><span class="line">  <span class="attr">username:</span> <span class="string">test</span></span><br><span class="line">  <span class="attr">password:</span> <span class="string">test</span></span><br><span class="line"><span class="comment"># druid登录认证的账号密码</span></span><br><span class="line"><span class="attr">druid:</span></span><br><span class="line">  <span class="attr">login-username:</span> <span class="string">admin</span></span><br><span class="line">  <span class="attr">login-password:</span> <span class="string">admin</span></span><br></pre></td></tr></table></figure>
+<p>配置类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@MapperScan</span>(basePackages = <span class="string">"com.zhaolq.service.*.dao"</span>, sqlSessionTemplateRef = <span class="string">"pgsqlSqlSessionTemplate"</span>)</span><br><span class="line"><span class="meta">@Slf</span>4j</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PgsqlDataSourceConfiguration</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;pgsql.driver&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String jdbcDriver;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;pgsql.url&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String jdbcUrl;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;pgsql.username&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String jdbcUserName;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;pgsql.password&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String jdbcPassWord;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;druid.login-username&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String loginUsername;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;druid.login-password&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String loginPassword;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * sql</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> javax.sql.DataSource</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> SQLException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean</span>(name = <span class="string">"pgsqlDataSource"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataSource <span class="title">createDataSource</span><span class="params">()</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">        DruidDataSource dataSource = <span class="keyword">new</span> DruidDataSource();</span><br><span class="line">        dataSource.setDriverClassName(jdbcDriver);</span><br><span class="line">        dataSource.setUrl(jdbcUrl);</span><br><span class="line">        dataSource.setUsername(jdbcUserName);</span><br><span class="line">        dataSource.setPassword(jdbcPassWord);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 初始化时建立物理连接的个数。 取值：产品 360 项目统一为 10</span></span><br><span class="line">        dataSource.setInitialSize(<span class="number">10</span>);</span><br><span class="line">        <span class="comment">// 最小连接池数量。 取值产品 360 项目统一为 10</span></span><br><span class="line">        dataSource.setMinIdle(<span class="number">10</span>);</span><br><span class="line">        <span class="comment">// 最大连接池数量。 取值：产品 360 项目统一为 30</span></span><br><span class="line">        dataSource.setMaxActive(<span class="number">30</span>);</span><br><span class="line">        <span class="comment">// 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒</span></span><br><span class="line">        dataSource.setTimeBetweenEvictionRunsMillis(<span class="number">60000</span>);</span><br><span class="line">        <span class="comment">// 连接保持空闲而不被驱逐的最小时间，配置连接在池中的最小生存时间</span></span><br><span class="line">        dataSource.setMinEvictableIdleTimeMillis(<span class="number">300000</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 用来检测连接是否有效的sql</span></span><br><span class="line">        dataSource.setValidationQuery(<span class="string">"select '1'"</span>);</span><br><span class="line">        <span class="comment">// 建议配置为true，不影响性能，并且保证安全性。申请连接的时候检测，如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效。</span></span><br><span class="line">        dataSource.setTestWhileIdle(<span class="keyword">true</span>);</span><br><span class="line">        <span class="comment">// 申请连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能。</span></span><br><span class="line">        dataSource.setTestOnBorrow(<span class="keyword">false</span>);</span><br><span class="line">        <span class="comment">// 归还连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能</span></span><br><span class="line">        dataSource.setTestOnReturn(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">        dataSource.setPoolPreparedStatements(<span class="keyword">false</span>);</span><br><span class="line">        dataSource.setMaxOpenPreparedStatements(<span class="number">10</span>);</span><br><span class="line">        dataSource.setMaxPoolPreparedStatementPerConnectionSize(<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 配置监控统计拦截的filters，去掉后监控界面sql无法统计，配置了之后，在项目ip:port/druid,就可以查看监控数据</span></span><br><span class="line">        dataSource.setFilters(<span class="string">"stat"</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> dataSource;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 配置，设置只有通过登录认证才可以访问</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> ServletRegistrationBean ServletRegistrationBean</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ServletRegistrationBean <span class="title">druidStatViewServlet</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ServletRegistrationBean servletRegistrationBean = <span class="keyword">new</span> ServletRegistrationBean(<span class="keyword">new</span> StatViewServlet(),</span><br><span class="line">                <span class="string">"/druid/*"</span>);</span><br><span class="line">        servletRegistrationBean.addInitParameter(<span class="string">"resetEnable"</span>, <span class="string">"false"</span>);</span><br><span class="line">        servletRegistrationBean.addInitParameter(<span class="string">"loginUsername"</span>, loginUsername);</span><br><span class="line">        servletRegistrationBean.addInitParameter(<span class="string">"loginPassword"</span>, loginPassword);</span><br><span class="line">        servletRegistrationBean.addInitParameter(<span class="string">"ehabled"</span>, <span class="string">"true"</span>);</span><br><span class="line">        <span class="keyword">return</span> servletRegistrationBean;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 排除一些静态资源，以提高效率</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> FilterRegistrationBean FilterRegistrationBean</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> FilterRegistrationBean <span class="title">druidStatFilter</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        FilterRegistrationBean filterRegistrationBean = <span class="keyword">new</span> FilterRegistrationBean(<span class="keyword">new</span> WebStatFilter());</span><br><span class="line">        filterRegistrationBean.addUrlPatterns(<span class="string">"/*"</span>);</span><br><span class="line">        filterRegistrationBean.addInitParameter(<span class="string">"exclusions"</span>, <span class="string">"*.js,*.gif,*.jpg,*.bmp,*.png,*.css,*.ico,/druid/*,/jdbc/*"</span>);</span><br><span class="line">        filterRegistrationBean.addInitParameter(<span class="string">"ehabled"</span>, <span class="string">"true"</span>);</span><br><span class="line">        <span class="keyword">return</span> filterRegistrationBean;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注：</p>
+<p>避免配置文件过长，除了数据库连接，其他的配置全写死在配置类中。</p>
+<p>单数据源使用配置文件方式即可。如果是多数据源，就要用配置类方式。</p>
+<h1 id="druid-2"><a class="markdownIt-Anchor" href="#druid-2"></a> druid</h1>
+<h2 id="druid-和-druid-spring-boot-starter"><a class="markdownIt-Anchor" href="#druid-和-druid-spring-boot-starter"></a> druid 和 druid-spring-boot-starter</h2>
+<p>1）druid-spring-boot-starter只是在druid基础上进行了一次封装，专门用来整合spring-boot项目，两者配置都相同；</p>
+<p>2）使用druid，需要手动编写配置类并注入到bean中，并加载对应的配置参数。druid-spring-boot-starter 只需要在配置文件中配置，就可实现数据库连接池的配置。</p>
+<h2 id="配置方式的选择"><a class="markdownIt-Anchor" href="#配置方式的选择"></a> 配置方式的选择</h2>
+<p>1）两种都可用的情况下，druid-spring-boot-starter 更方便，不用编写配置类。</p>
+<p>2）druid-spring-boot-starter 由于未入库，所以开源扫描不通过，可以挂靠到其它。因此应选择 druid 依赖。</p>
+<h2 id="依赖-3"><a class="markdownIt-Anchor" href="#依赖-3"></a> 依赖</h2>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 使用阿里的原生druid数据源依赖 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.alibaba<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>druid<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.2.8<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="配置数据源配置文件配置类"><a class="markdownIt-Anchor" href="#配置数据源配置文件配置类"></a> 配置数据源(配置文件+配置类)</h2>
+<p>配置文件：只需要配置数据库连接相关参数，其他写死在配置类即可。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 数据库配置</span></span><br><span class="line"><span class="attr">pgsql:</span></span><br><span class="line">  <span class="attr">driver-class-name:</span> <span class="string">org.postgresql.Driver</span> <span class="comment"># 对应驱动</span></span><br><span class="line">  <span class="attr">rl:</span> <span class="string">jdbc:postgresql://127.0.0.1:5432/testDB</span> <span class="comment"># 数据库地址</span></span><br><span class="line">  <span class="attr">username:</span> <span class="string">test</span></span><br><span class="line">  <span class="attr">password:</span> <span class="string">test</span></span><br><span class="line"><span class="comment"># druid登录认证的账号密码</span></span><br><span class="line"><span class="attr">druid:</span></span><br><span class="line">  <span class="attr">login-username:</span> <span class="string">admin</span></span><br><span class="line">  <span class="attr">login-password:</span> <span class="string">admin</span></span><br></pre></td></tr></table></figure>
+<p>配置类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@MapperScan</span>(basePackages = <span class="string">"com.zhaolq.service.*.dao"</span>, sqlSessionTemplateRef = <span class="string">"pgsqlSqlSessionTemplate"</span>)</span><br><span class="line"><span class="meta">@Slf</span>4j</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PgsqlDataSourceConfiguration</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;pgsql.driver&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String jdbcDriver;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;pgsql.url&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String jdbcUrl;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;pgsql.username&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String jdbcUserName;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;pgsql.password&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String jdbcPassWord;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;druid.login-username&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String loginUsername;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;druid.login-password&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String loginPassword;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * sql</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> javax.sql.DataSource</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> SQLException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean</span>(name = <span class="string">"pgsqlDataSource"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataSource <span class="title">createDataSource</span><span class="params">()</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">        DruidDataSource dataSource = <span class="keyword">new</span> DruidDataSource();</span><br><span class="line">        dataSource.setDriverClassName(jdbcDriver);</span><br><span class="line">        dataSource.setUrl(jdbcUrl);</span><br><span class="line">        dataSource.setUsername(jdbcUserName);</span><br><span class="line">        dataSource.setPassword(jdbcPassWord);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 初始化时建立物理连接的个数。 取值：产品 360 项目统一为 10</span></span><br><span class="line">        dataSource.setInitialSize(<span class="number">10</span>);</span><br><span class="line">        <span class="comment">// 最小连接池数量。 取值产品 360 项目统一为 10</span></span><br><span class="line">        dataSource.setMinIdle(<span class="number">10</span>);</span><br><span class="line">        <span class="comment">// 最大连接池数量。 取值：产品 360 项目统一为 30</span></span><br><span class="line">        dataSource.setMaxActive(<span class="number">30</span>);</span><br><span class="line">        <span class="comment">// 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒</span></span><br><span class="line">        dataSource.setTimeBetweenEvictionRunsMillis(<span class="number">60000</span>);</span><br><span class="line">        <span class="comment">// 连接保持空闲而不被驱逐的最小时间，配置连接在池中的最小生存时间</span></span><br><span class="line">        dataSource.setMinEvictableIdleTimeMillis(<span class="number">300000</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 用来检测连接是否有效的sql</span></span><br><span class="line">        dataSource.setValidationQuery(<span class="string">"select '1'"</span>);</span><br><span class="line">        <span class="comment">// 建议配置为true，不影响性能，并且保证安全性。申请连接的时候检测，如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效。</span></span><br><span class="line">        dataSource.setTestWhileIdle(<span class="keyword">true</span>);</span><br><span class="line">        <span class="comment">// 申请连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能。</span></span><br><span class="line">        dataSource.setTestOnBorrow(<span class="keyword">false</span>);</span><br><span class="line">        <span class="comment">// 归还连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能</span></span><br><span class="line">        dataSource.setTestOnReturn(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">        dataSource.setPoolPreparedStatements(<span class="keyword">false</span>);</span><br><span class="line">        dataSource.setMaxOpenPreparedStatements(<span class="number">10</span>);</span><br><span class="line">        dataSource.setMaxPoolPreparedStatementPerConnectionSize(<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 配置监控统计拦截的filters，去掉后监控界面sql无法统计，配置了之后，在项目ip:port/druid,就可以查看监控数据</span></span><br><span class="line">        dataSource.setFilters(<span class="string">"stat"</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> dataSource;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 配置，设置只有通过登录认证才可以访问</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> ServletRegistrationBean ServletRegistrationBean</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ServletRegistrationBean <span class="title">druidStatViewServlet</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ServletRegistrationBean servletRegistrationBean = <span class="keyword">new</span> ServletRegistrationBean(<span class="keyword">new</span> StatViewServlet(),</span><br><span class="line">                <span class="string">"/druid/*"</span>);</span><br><span class="line">        servletRegistrationBean.addInitParameter(<span class="string">"resetEnable"</span>, <span class="string">"false"</span>);</span><br><span class="line">        servletRegistrationBean.addInitParameter(<span class="string">"loginUsername"</span>, loginUsername);</span><br><span class="line">        servletRegistrationBean.addInitParameter(<span class="string">"loginPassword"</span>, loginPassword);</span><br><span class="line">        servletRegistrationBean.addInitParameter(<span class="string">"ehabled"</span>, <span class="string">"true"</span>);</span><br><span class="line">        <span class="keyword">return</span> servletRegistrationBean;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 排除一些静态资源，以提高效率</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> FilterRegistrationBean FilterRegistrationBean</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> FilterRegistrationBean <span class="title">druidStatFilter</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        FilterRegistrationBean filterRegistrationBean = <span class="keyword">new</span> FilterRegistrationBean(<span class="keyword">new</span> WebStatFilter());</span><br><span class="line">        filterRegistrationBean.addUrlPatterns(<span class="string">"/*"</span>);</span><br><span class="line">        filterRegistrationBean.addInitParameter(<span class="string">"exclusions"</span>, <span class="string">"*.js,*.gif,*.jpg,*.bmp,*.png,*.css,*.ico,/druid/*,/jdbc/*"</span>);</span><br><span class="line">        filterRegistrationBean.addInitParameter(<span class="string">"ehabled"</span>, <span class="string">"true"</span>);</span><br><span class="line">        <span class="keyword">return</span> filterRegistrationBean;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * pgsqlSqlSessionFactory</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> dataSource dataSource</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> org.apache.ibatis.session.SqlSessionFactory</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> IOException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean</span>(name = <span class="string">"pgsqlSqlSessionFactory"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> SqlSessionFactory <span class="title">sqlSessionFactory</span><span class="params">(@Qualifier(<span class="string">"pgsqlDataSource"</span>)</span> DataSource dataSource) <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        SqlSessionFactory sql = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            SqlSessionFactoryBean factoryBean = <span class="keyword">new</span> SqlSessionFactoryBean();</span><br><span class="line">            factoryBean.setDataSource(dataSource);</span><br><span class="line">            factoryBean.setMapperLocations(</span><br><span class="line">                    <span class="keyword">new</span> PathMatchingResourcePatternResolver().getResources(<span class="string">"classpath*:mapper/*/*.xml"</span>));</span><br><span class="line"></span><br><span class="line">            Properties properties = <span class="keyword">new</span> Properties();</span><br><span class="line">            properties.setProperty(<span class="string">"helperDialect"</span>, <span class="string">"postgresql"</span>);</span><br><span class="line">            properties.setProperty(<span class="string">"offsetAsPageNum"</span>, <span class="string">"true"</span>);</span><br><span class="line">            properties.setProperty(<span class="string">"rowBoundsWithCount"</span>, <span class="string">"true"</span>);</span><br><span class="line">            properties.setProperty(<span class="string">"reasonable"</span>, <span class="string">"true"</span>);</span><br><span class="line">            properties.setProperty(<span class="string">"supportMethodsArguments"</span>, <span class="string">"true"</span>);</span><br><span class="line">            properties.setProperty(<span class="string">"params"</span>, <span class="string">"pageNum=pageNumKey;pageSize=pageSizeKey;"</span>);</span><br><span class="line">            <span class="comment">// 分页插件</span></span><br><span class="line">            Interceptor interceptor = <span class="keyword">new</span> PageInterceptor();</span><br><span class="line">            interceptor.setProperties(properties);</span><br><span class="line">            factoryBean.setPlugins(<span class="keyword">new</span> Interceptor[]&#123;interceptor&#125;);</span><br><span class="line">            <span class="comment">// 支持驼峰</span></span><br><span class="line">            factoryBean.getObject().getConfiguration().setMapUnderscoreToCamelCase(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">            sql = factoryBean.getObject();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            log.error(e.getMessage(), e);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> sql;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * sql</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> dataSource dataSource</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> org.springframework.jdbc.datasource.DataSourceTransactionManager</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean</span>(name = <span class="string">"pgsqlTransactionManager"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataSourceTransactionManager <span class="title">transactionManager</span><span class="params">(@Qualifier(<span class="string">"pgsqlDataSource"</span>)</span> DataSource dataSource) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> DataSourceTransactionManager(dataSource);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * sql</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> sqlSessionFactory sqlSessionFactory</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> org.mybatis.spring.SqlSessionTemplate</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean</span>(name = <span class="string">"pgsqlSqlSessionTemplate"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> SqlSessionTemplate <span class="title">sqlSessionTemplate</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">            @Qualifier(<span class="string">"pgsqlSqlSessionFactory"</span>)</span> SqlSessionFactory sqlSessionFactory) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> SqlSessionTemplate(sqlSessionFactory);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>需要配置监控访问路径不拦截</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2022/02/异步和多线程区别/" rel="prev" title="异步和多线程区别">
+      <i class="fa fa-chevron-left"></i> 异步和多线程区别
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2022/02/创建结果表的存储过程执行时间过长解决方案/" rel="next" title="创建结果表的存储过程执行时间过长解决方案">
+      创建结果表的存储过程执行时间过长解决方案 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据库连接池"><span class="nav-number">1.</span> <span class="nav-text"> 数据库连接池</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数据库连接池的原理"><span class="nav-number">2.</span> <span class="nav-text"> 数据库连接池的原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#常见的数据库连接池介绍"><span class="nav-number">3.</span> <span class="nav-text"> 常见的数据库连接池介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#c3p0"><span class="nav-number">3.1.</span> <span class="nav-text"> C3P0</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#druid"><span class="nav-number">3.2.</span> <span class="nav-text"> Druid</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hikaricp"><span class="nav-number">3.3.</span> <span class="nav-text"> HikariCP</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#hikaricp待测试"><span class="nav-number">4.</span> <span class="nav-text"> HikariCP(待测试)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#依赖"><span class="nav-number">4.1.</span> <span class="nav-text"> 依赖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置数据源"><span class="nav-number">4.2.</span> <span class="nav-text"> 配置数据源</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#配置文件方式"><span class="nav-number">4.2.1.</span> <span class="nav-text"> 配置文件方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配置类配置文件方式"><span class="nav-number">4.2.2.</span> <span class="nav-text"> 配置类+配置文件方式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#druid-spring-boot-starter"><span class="nav-number">5.</span> <span class="nav-text"> druid-spring-boot-starter</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#依赖-2"><span class="nav-number">5.1.</span> <span class="nav-text"> 依赖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置数据源-2"><span class="nav-number">5.2.</span> <span class="nav-text"> 配置数据源</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#配置文件方式-2"><span class="nav-number">5.2.1.</span> <span class="nav-text"> 配置文件方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配置类配置文件方式-2"><span class="nav-number">5.2.2.</span> <span class="nav-text"> 配置类+配置文件方式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#druid-2"><span class="nav-number">6.</span> <span class="nav-text"> druid</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#druid-和-druid-spring-boot-starter"><span class="nav-number">6.1.</span> <span class="nav-text"> druid 和 druid-spring-boot-starter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置方式的选择"><span class="nav-number">6.2.</span> <span class="nav-text"> 配置方式的选择</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#依赖-3"><span class="nav-number">6.3.</span> <span class="nav-text"> 依赖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置数据源配置文件配置类"><span class="nav-number">6.4.</span> <span class="nav-text"> 配置数据源(配置文件+配置类)</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">532</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '359118489dd17c915fb09efe398c7b56',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

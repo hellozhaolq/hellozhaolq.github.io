@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="推荐连接 https://www.getssl.cn/docs/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Nginx安装SSL证书开启HTTPS">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/12/Nginx配置SSL证书开启HTTPS教程/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="推荐连接 https://www.getssl.cn/docs/">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/12/Nginx配置SSL证书开启HTTPS教程/52b7f45032d0962acfe0306a998af5c2.gif">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/12/Nginx配置SSL证书开启HTTPS教程/00a118f6edffb00dbcb0fd474bc1f8f8.png">
+<meta property="og:updated_time" content="2020-09-22T02:00:01.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Nginx安装SSL证书开启HTTPS">
+<meta name="twitter:description" content="推荐连接 https://www.getssl.cn/docs/">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2019/12/Nginx配置SSL证书开启HTTPS教程/52b7f45032d0962acfe0306a998af5c2.gif">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/12/Nginx配置SSL证书开启HTTPS教程/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Nginx安装SSL证书开启HTTPS | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/12/Nginx配置SSL证书开启HTTPS教程/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Nginx安装SSL证书开启HTTPS
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-05 10:00:01" itemprop="dateCreated datePublished" datetime="2019-12-05T10:00:01+08:00">2019-12-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-09-22 10:00:01" itemprop="dateModified" datetime="2020-09-22T10:00:01+08:00">2020-09-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WebServer/" itemprop="url" rel="index"><span itemprop="name">WebServer</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><font color="blue">推荐连接</font></p>
+<p><a href="https://www.getssl.cn/docs/" target="_blank" rel="noopener">https://www.getssl.cn/docs/</a></p>
+<a id="more"></a>
+<p>转载： <a href="https://www.nginx.cn/5641.html" target="_blank" rel="noopener">https://www.nginx.cn/5641.html</a></p>
+<p>参考： <a href="https://www.cnblogs.com/chjbbs/p/5748369.html" target="_blank" rel="noopener">https://www.cnblogs.com/chjbbs/p/5748369.html</a></p>
+<h1 id="https-是什么"><a class="markdownIt-Anchor" href="#https-是什么"></a> HTTPS 是什么？</h1>
+<p>超文本传输安全协议（缩写：HTTPS，英语：Hypertext Transfer Protocol Secure）是超文本传输协议和SSL/TLS的组合，用以提供加密通讯及对网络服务器身份的鉴定。HTTPS连接经常被用于万维网上的交易支付和企业信息系统中敏感信息的传输。</p>
+<p>HTTPS 目前已经是所有注重隐私和安全的网站的首选，随着技术的不断发展，<a href="https://www.nginx.cn/4778.html" target="_blank" rel="noopener">HTTPS</a> 网站已不再是大型网站的专利，所有普通的个人站长和博客均可以自己动手搭建一个安全的加密的网站。开启 HTTPS 有利于提升网站在搜索引擎中的排名。</p>
+<p>如果一个网站没有加密，那么你的所有帐号密码都是明文传输。可想而知，如果涉及到隐私和金融问题，不加密的传输是多么可怕的一件事。</p>
+<h1 id="http-和-https-比较"><a class="markdownIt-Anchor" href="#http-和-https-比较"></a> HTTP 和 HTTPS 比较</h1>
+<p><img src="/article/2019/12/Nginx配置SSL证书开启HTTPS教程/52b7f45032d0962acfe0306a998af5c2.gif" alt="img"></p>
+<p>HTTP：是互联网上应用最为广泛的一种网络协议，是一个客户端和服务器端请求和应答的标准（TCP），用于从WWW服务器传输超文本到本地浏览器的传输协议，它可以使浏览器更加高效，使网络传输减少。</p>
+<p><img src="/article/2019/12/Nginx配置SSL证书开启HTTPS教程/00a118f6edffb00dbcb0fd474bc1f8f8.png" alt="img"></p>
+<p>HTTPS：是以安全为目标的HTTP通道，简单讲是HTTP的安全版，即HTTP下加入SSL层，HTTPS的安全基础是SSL，因此加密的详细内容就需要SSL。</p>
+<p>HTTPS协议的主要作用可以分为两种：一种是建立一个信息安全通道，来保证数据传输的安全；另一种就是确认网站的真实性。</p>
+<h1 id="使用-openssl-生成-ssl-key-和-csr"><a class="markdownIt-Anchor" href="#使用-openssl-生成-ssl-key-和-csr"></a> 使用 OpenSSL 生成 SSL Key 和 CSR</h1>
+<p>由于只有浏览器或者系统信赖的 CA 才可以让所有的访问者通畅的访问你的加密网站，而不是出现证书错误的提示。</p>
+<p>OpenSSL 在 Linux、OS X 等常规的系统下默认都安装了，因为一些安全问题，一般现在的第三方 SSL 证书签发机构都要求起码 2048 位的 RSA 加密的私钥。</p>
+<p>同时，普通的 SSL 证书认证分两种形式，一种是 DV（Domain Validated），还有一种是 OV （Organization Validated），前者只需要验证域名，后者需要验证你的组织或公司，在安全性方面，肯定是后者要好。</p>
+<p>无论你用 DV 还是 OV 生成私钥，都需要填写一些基本信息，这里我们假设如下：</p>
+<ul>
+<li>域名，也称为 Common Name，因为特殊的证书不一定是域名：<a href="http://example.com" target="_blank" rel="noopener">example.com</a></li>
+<li>组织或公司名字（Organization）：Example, Inc.</li>
+<li>部门（Department）：可以不填写，这里我们写Web Security</li>
+<li>城市（City）：Beijing</li>
+<li>省份（State / Province）：Beijing</li>
+<li>国家（Country）：CN</li>
+<li>加密强度：2048 位，如果你的机器性能强劲，也可以选择 4096 位</li>
+</ul>
+<p>按照以上信息，使用 OpenSSL 生成 key 和 csr 的命令如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">openssl req -new -newkey rsa:2048 -sha256 -nodes -out example_com.csr -keyout \</span><br><span class="line">example_com.key -subj &quot;/C=CN/ST=Beijing/L=Beijing/O=Example Inc./OU=Web Security/CN=example.com&quot;</span><br></pre></td></tr></table></figure>
+<p>PS：如果是泛域名证书，则应该填写*.example.com</p>
+<p>你可以在系统的任何地方运行这个命令，会自动在当前目录生成example_com.csr和example_com.key这两个文件</p>
+<p>接下来你可以查看一下example_com.csr，得到类似这么一长串的文字</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">-----BEGIN CERTIFICATE REQUEST-----</span><br><span class="line">MIICujCCAaICAQAwdTELMAkGA1UEBhMCQ04xEDAOBgNVBAgTB0JlaWppbmcxEDAO  </span><br><span class="line">BgNVBAcTB0JlaWppbmcxFTATBgNVBAoTDEV4YW1wbGUgSW5jLjEVMBMGA1UECxMM  </span><br><span class="line">V2ViIFNlY3VyaXR5MRQwEgYDVQQDEwtleGFtcGxlLmNvbTCCASIwDQYJKoZIhvcN  </span><br><span class="line">AQEBBQADggEPADCCAQoCggEBAPME+nvVCdGN9VWn+vp7JkMoOdpOurYMPvclIbsI  </span><br><span class="line">iD7mGN982Ocl22O9wCV/4tL6DpTcXfNX+eWd7CNEKT4i+JYGqllqP3/CojhkemiY  </span><br><span class="line">SF3jwncvP6VoST/HsZeMyNB71XwYnxFCGqSyE3QjxmQ9ae38H2LIpCllfd1l7iVp  </span><br><span class="line">AX4i2+HvGTHFzb0XnmMLzq4HyVuEIMoYwiZX8hq+kwEAhKpBdfawkOcIRkbOlFew  </span><br><span class="line">SEjLyHY+nruXutmQx1d7lzZCxut5Sm5At9al0bf5FOaaJylTEwNEpFkP3L29GtoU  </span><br><span class="line">qg1t9Q8WufIfK9vXqQqwg8J1muK7kksnbYcoPnNgPx36kZsCAwEAAaAAMA0GCSqG  </span><br><span class="line">SIb3DQEBBQUAA4IBAQCHgIuhpcgrsNwDuW6731/DeVwq2x3ZRqRBuj9/M8oONQen  </span><br><span class="line">1QIacBifEMr+Ma+C+wIpt3bHvtXEF8cCAJAR9sQ4Svy7M0w25DwrwaWIjxcf/J8U  </span><br><span class="line">audL/029CkAuewFCdBILTRAAeDqxsAsUyiBIGTIT+uqi+EpGG4OlyKK/MF13FxDj  </span><br><span class="line">/oKyrSJDtp1Xr9R7iqGCs/Zl5qWmDaLN7/qxBK6vX2R/HLhOK0aKi1ZQ4cZeP7Mr</span><br><span class="line">8EzjDIAko87Nb/aIsFyKrt6Ze3jOF0/vnnpw7pMvhq+folWdTVXddjd9Dpr2x1nc  </span><br><span class="line">y5hnop4k6kVRXDjQ4OTduQq4P+SzU4hb41GIQEz4  </span><br><span class="line">-----END CERTIFICATE REQUEST-----</span><br></pre></td></tr></table></figure>
+<p>这个 CSR 文件就是你需要提交给 SSL 认证机构的，当你的域名或组织通过验证后，认证机构就会颁发给你一个example_com.crt</p>
+<p>而example_com.key是需要用在 <a href="https://www.nginx.cn/" target="_blank" rel="noopener">Nginx</a> 配置里和example_com.crt配合使用的，需要好好保管，千万别泄露给任何第三方。</p>
+<h1 id="nginx-配置-https-网站以及增加安全的配置"><a class="markdownIt-Anchor" href="#nginx-配置-https-网站以及增加安全的配置"></a> Nginx 配置 HTTPS 网站以及增加安全的配置</h1>
+<p>前面已经提到，你需要提交 CSR 文件给第三方 SSL 认证机构，通过认证后，他们会颁发给你一个 CRT 文件，我们命名为example_com.crt</p>
+<p>同时，为了统一，你可以把这三个文件（example_com.crt、example_com.key、example_com.csr）都移动到/etc/ssl/private/目录。</p>
+<p>然后可以修改 Nginx 配置文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">server &#123;  </span><br><span class="line">    listen 80;</span><br><span class="line">    listen [::]:80 ssl ipv6only=on; </span><br><span class="line">    listen 443 ssl;</span><br><span class="line">    listen [::]:443 ssl ipv6only=on;</span><br><span class="line">    server_name example.com;</span><br><span class="line"></span><br><span class="line">    ssl on;</span><br><span class="line">    ssl_certificate /etc/ssl/private/example_com.crt;</span><br><span class="line">    ssl_certificate_key /etc/ssl/private/example_com.key;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>检测配置文件没问题后重新读取 Nginx 即可</p>
+<p>nginx -t &amp;&amp; nginx -s reload</p>
+<p>但是这么做并不安全，默认是 SHA-1 形式，而现在主流的方案应该都避免 SHA-1，为了确保更强的安全性，我们可以采取迪菲－赫尔曼密钥交换</p>
+<p>首先，进入/etc/ssl/certs目录并生成一个dhparam.pem</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /etc/ssl/certs  </span><br><span class="line">openssl dhparam -out dhparam.pem 2048 # 如果你的机器性能足够强大，可以用 4096 位加密</span><br></pre></td></tr></table></figure>
+<p>生成完毕后，在 Nginx 的 SSL 配置后面加入</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ssl_prefer_server_ciphers on;</span><br><span class="line">ssl_dhparam /etc/ssl/certs/dhparam.pem;</span><br><span class="line">ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</span><br><span class="line">ssl_ciphers ECDH+AESGCM:ECDH+AES256:ECDH+AES128:DHE+AES128:!ADH:!AECDH:!MD5;</span><br><span class="line">keepalive_timeout 70;</span><br><span class="line">ssl_session_cache shared:SSL:10m;</span><br><span class="line">ssl_session_timeout 10m;</span><br></pre></td></tr></table></figure>
+<p>同时，如果是全站 HTTPS 并且不考虑 HTTP 的话，可以加入 HSTS 告诉你的浏览器本网站全站加密，并且强制用 HTTPS 访问</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">add_header Strict-Transport-Security max-age=63072000;</span><br><span class="line">add_header X-Frame-Options DENY;</span><br><span class="line">add_header X-Content-Type-Options nosniff;</span><br></pre></td></tr></table></figure>
+<p>同时也可以单独开一个 Nginx 配置，把 HTTP 的访问请求都用 301 跳转到 HTTPS</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">server &#123;  </span><br><span class="line">        listen 80;</span><br><span class="line">        listen [::]:80 ssl ipv6only=on;</span><br><span class="line">        server_name     example.com;</span><br><span class="line">        return 301 https://example.com$request_uri;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="证书链"><a class="markdownIt-Anchor" href="#证书链"></a> 证书链</h1>
+<p>ssl证书有根证书直接签发，也用根证书签发的二三级证书签发证书，所以如果你的证书不是由顶级根证书直接签发的情况下，你需要补全中间的二三级证书和根证书到证书链文件里。顺序是：你的ssl证书＋中间证书＋根证书。</p>
+<p>通常来说浏览起会内置顶级知名根证书，对于中间证书可能会不内置，例如安卓端会不认中间证书颁发的ssl证书证书，因为安卓没有内置这些中间证书，需要你把这些证书拼接到一个证书链文件中发给客户端。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat nginx.crt bundle.crt &gt; nginx.chain.crt</span><br></pre></td></tr></table></figure>
+<p>在 Nginx 配置里使用 nginx.chain.crt 即可解决不识别证书的问题，证书的顺序不能反了，反了会报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SSL_CTX_use_PrivateKey_file(&quot; ... /www.example.com.key&quot;) failed</span><br><span class="line">   (SSL: error:0B080074:x509 certificate routines:</span><br><span class="line">    X509_check_private_key:key values mismatch)</span><br></pre></td></tr></table></figure>
+<p>因为 nginx 中的私钥 key 是和证书链中的第一个证书验证，如果顺序反了，就变成和bundle.crt配对。</p>
+<h1 id="一个ip多个证书"><a class="markdownIt-Anchor" href="#一个ip多个证书"></a> 一个IP多个证书</h1>
+<p>TLS SNI support enabled<br>
+在一个主机（IP）上配置多个域名，使用虚拟主机（virtual host）就可以解决了。但是申请TLS证书的时候，是绑定了具体的域名和IP地址。建立TLS连接的时候，服务器要下发哪个证书呢？<br>
+等等，证书明明和域名绑定，都知道了域名，为什么会有选择选择证书的问题？<br>
+那是因为，域名是http的概念。client和server先建立了tcp连接，再经过TLS握手，才能实现https通信。在最初，这个过程，是没有域名的概念的！<br>
+为了解决单个主机部署多个TLS证书的问题，带来了TLS的SNI扩展。</p>
+<p>nginx开启TLS SNI ，只需要在编译时打开–with-openssl编译选项，具体可以参考<a href="https://www.nginx.cn/install" target="_blank" rel="noopener">nginx安装。</a></p>
+<p>检查nginx是否支持TLS SNI，执行 nginx -V</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@www ~]# /usr/local/nginx/sbin/nginx -V</span><br><span class="line">nginx version: nginx/1.18.0</span><br><span class="line">built by gcc 4.8.5 20150623 (Red Hat 4.8.5-39) (GCC)</span><br><span class="line">built with OpenSSL 1.1.1g  21 Apr 2020</span><br><span class="line">TLS SNI support enabled</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2019/12/根证书、服务器证书、用户证书的区别/" rel="prev" title="根证书、服务器证书、用户证书的区别">
+      <i class="fa fa-chevron-left"></i> 根证书、服务器证书、用户证书的区别
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2019/12/nginx禁止未绑定https域名访问/" rel="next" title="nginx禁止未绑定https域名访问">
+      nginx禁止未绑定https域名访问 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#https-是什么"><span class="nav-number">1.</span> <span class="nav-text"> HTTPS 是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#http-和-https-比较"><span class="nav-number">2.</span> <span class="nav-text"> HTTP 和 HTTPS 比较</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用-openssl-生成-ssl-key-和-csr"><span class="nav-number">3.</span> <span class="nav-text"> 使用 OpenSSL 生成 SSL Key 和 CSR</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#nginx-配置-https-网站以及增加安全的配置"><span class="nav-number">4.</span> <span class="nav-text"> Nginx 配置 HTTPS 网站以及增加安全的配置</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#证书链"><span class="nav-number">5.</span> <span class="nav-text"> 证书链</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一个ip多个证书"><span class="nav-number">6.</span> <span class="nav-text"> 一个IP多个证书</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">532</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '8ce53d701bfc11caa468014c8221262b',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

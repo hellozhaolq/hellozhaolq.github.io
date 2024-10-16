@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="[toc]  10. StringTable  10.1. String 的基本特性  String：字符串，使用一对&amp;quot;&amp;quot;引起来表示 String 声明为 final 的，不可被继承 String 实现了 Serializable 接口：表示字符串是支持序列化的。 String 实现了 Comparable 接口：表示 string 可以比较大小 String 在 jdk8">
+<meta name="keywords" content="JVM上篇：内存与垃圾回收篇">
+<meta property="og:type" content="article">
+<meta property="og:title" content="10-StringTable">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2020/10/10-StringTable/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="[toc]  10. StringTable  10.1. String 的基本特性  String：字符串，使用一对&amp;quot;&amp;quot;引起来表示 String 声明为 final 的，不可被继承 String 实现了 Serializable 接口：表示字符串是支持序列化的。 String 实现了 Comparable 接口：表示 string 可以比较大小 String 在 jdk8">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/10-StringTable/27b7bf706fc1724baf503eac9b49c7fc.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/10-StringTable/c59830deeebca85d5b2e446211e4e28d.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/10-StringTable/0ca01e17abb22f0fa16e87dd93b26a65.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/10-StringTable/b3657b493efaf41f83b72e2debffb14b.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/10-StringTable/4c11070481d7c3cdb566163802cf582b.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/10-StringTable/3a3bab69ad3c6302ea00c301dffb5193.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/10-StringTable/bb9abdd927bd9ac80c1c18359d299629.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/10-StringTable/e6c4796fa8d9b5dda9438c799bb45540.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/10-StringTable/ad465da04603bb228d6dde8950ee95ec.png">
+<meta property="og:updated_time" content="2020-10-10T01:00:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="10-StringTable">
+<meta name="twitter:description" content="[toc]  10. StringTable  10.1. String 的基本特性  String：字符串，使用一对&amp;quot;&amp;quot;引起来表示 String 声明为 final 的，不可被继承 String 实现了 Serializable 接口：表示字符串是支持序列化的。 String 实现了 Comparable 接口：表示 string 可以比较大小 String 在 jdk8">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2020/10/10-StringTable/27b7bf706fc1724baf503eac9b49c7fc.png">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2020/10/10-StringTable/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>10-StringTable | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2020/10/10-StringTable/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          10-StringTable
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-10 09:00:00" itemprop="dateCreated datePublished" datetime="2020-10-10T09:00:00+08:00">2020-10-10</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <a id="more"></a>
+<p>[toc]</p>
+<h1 id="10-stringtable"><a class="markdownIt-Anchor" href="#10-stringtable"></a> 10. StringTable</h1>
+<h2 id="101-string-的基本特性"><a class="markdownIt-Anchor" href="#101-string-的基本特性"></a> 10.1. String 的基本特性</h2>
+<ul>
+<li>String：字符串，使用一对&quot;&quot;引起来表示</li>
+<li>String 声明为 final 的，不可被继承</li>
+<li>String 实现了 Serializable 接口：表示字符串是支持序列化的。</li>
+<li>String 实现了 Comparable 接口：表示 string 可以比较大小</li>
+<li>String 在 jdk8 及以前内部定义了 final char[] value 用于存储字符串数据。JDK9 时改为 byte[]</li>
+</ul>
+<h3 id="1011-string-在-jdk9-中存储结构变更"><a class="markdownIt-Anchor" href="#1011-string-在-jdk9-中存储结构变更"></a> 10.1.1. String 在 jdk9 中存储结构变更</h3>
+<p>官网地址：<a href="http://openjdk.java.net/jeps/254" target="_blank" rel="noopener">JEP 254: Compact Strings (java.net)</a></p>
+<blockquote>
+<h2 id="motivation"><a class="markdownIt-Anchor" href="#motivation"></a> Motivation</h2>
+<p>The current implementation of the <code>String</code> class stores characters in a <code>char</code> array, using two bytes (sixteen bits) for each character. Data gathered from many different applications indicates that strings are a major component of heap usage and, moreover, that most <code>String</code> objects contain only Latin-1 characters. Such characters require only one byte of storage, hence half of the space in the internal <code>char</code> arrays of such <code>String</code> objects is going unused.</p>
+<h2 id="description"><a class="markdownIt-Anchor" href="#description"></a> Description</h2>
+<p>We propose to change the internal representation of the <code>String</code> class from a UTF-16 <code>char</code> array to a <code>byte</code> array plus an encoding-flag field. The new <code>String</code> class will store characters encoded either as ISO-8859-1/Latin-1 (one byte per character), or as UTF-16 (two bytes per character), based upon the contents of the string. The encoding flag will indicate which encoding is used.</p>
+<p>String-related classes such as <code>AbstractStringBuilder</code>, <code>StringBuilder</code>, and <code>StringBuffer</code> will be updated to use the same representation, as will the HotSpot VM’s intrinsic string operations.</p>
+<p>This is purely an implementation change, with no changes to existing public interfaces. There are no plans to add any new public APIs or other interfaces.</p>
+<p>The prototyping work done to date confirms the expected reduction in memory footprint, substantial reductions of GC activity, and minor performance regressions in some corner cases.</p>
+</blockquote>
+<p><strong>动机</strong></p>
+<p>目前 String 类的实现将字符存储在一个 char 数组中，每个字符使用两个字节（16 位）。从许多不同的应用中收集到的数据表明，字符串是堆使用的主要组成部分，此外，大多数字符串对象只包含 Latin-1 字符。这些字符只需要一个字节的存储空间，因此这些字符串对象的内部字符数组中有一半的空间没有被使用。</p>
+<p><strong>说明</strong></p>
+<p>我们建议将 String 类的内部表示方法从 UTF-16 字符数组改为字节数组加编码标志域。新的 String 类将根据字符串的内容，以 ISO-8859-1/Latin-1（每个字符一个字节）或 UTF-16（每个字符两个字节）的方式存储字符编码。编码标志将表明使用的是哪种编码。</p>
+<hr>
+<p>与字符串相关的类，如<mark>AbstractStringBuilder、StringBuilder 和 StringBuffer 将被更新以使用相同的表示方法，HotSpot VM 的内在字符串操作也是如此</mark>。</p>
+<p>这纯粹是一个实现上的变化，对现有的公共接口没有变化。目前没有计划增加任何新的公共 API 或其他接口。</p>
+<p>迄今为止所做的原型设计工作证实了内存占用的预期减少，GC 活动的大幅减少，以及在某些角落情况下的轻微性能倒退。</p>
+<p>结论：String 再也不用 char[] 来存储了，改成了 byte [] 加上编码标记，节约了一些空间</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">String</span> <span class="keyword">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span>, <span class="title">Comparable</span>&lt;<span class="title">String</span>&gt;, <span class="title">CharSequence</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Stable</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">byte</span>[] value;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1012-string-的基本特性"><a class="markdownIt-Anchor" href="#1012-string-的基本特性"></a> 10.1.2. String 的基本特性</h3>
+<p>String：代表不可变的字符序列。简称：不可变性。</p>
+<ul>
+<li>当对字符串重新赋值时，需要重写指定内存区域赋值，不能使用原有的 value 进行赋值。</li>
+<li>当对现有的字符串进行连接操作时，也需要重新指定内存区域赋值，不能使用原有的 value 进行赋值。</li>
+<li>当调用 string 的 replace()方法修改指定字符或字符串时，也需要重新指定内存区域赋值，不能使用原有的 value 进行赋值。</li>
+</ul>
+<p>通过字面量的方式（区别于 new）给一个字符串赋值，此时的字符串值声明在字符串常量池中。</p>
+<p><mark>字符串常量池是不会存储相同内容的字符串的</mark></p>
+<p>String 的 String Pool 是一个固定大小的 Hashtable，默认值大小长度是 1009。如果放进 String Pool 的 String 非常多，就会造成 Hash 冲突严重，从而导致链表会很长，而链表长了后直接会造成的影响就是当调用 String.intern 时性能会大幅下降。</p>
+<p>使用<code>-XX:StringTablesize</code>可设置 StringTable 的长度</p>
+<ul>
+<li>
+<p>在 jdk6 中 StringTable 是固定的，就是 1009 的长度，所以如果常量池中的字符串过多就会导致效率下降很快。StringTablesize 设置没有要求</p>
+</li>
+<li>
+<p>在 jdk7 中，StringTable 的长度默认值是 60013，StringTablesize 设置没有要求</p>
+</li>
+<li>
+<p>在 JDK8 中，设置 StringTable 长度的话，1009 是可以设置的最小值</p>
+</li>
+</ul>
+<h2 id="102-string-的内存分配"><a class="markdownIt-Anchor" href="#102-string-的内存分配"></a> 10.2. String 的内存分配</h2>
+<p>在 Java 语言中有 8 种基本数据类型和一种比较特殊的类型 String。这些类型为了使它们在运行过程中速度更快、更节省内存，都提供了一种常量池的概念。</p>
+<p>常量池就类似一个 Java 系统级别提供的缓存。8 种基本数据类型的常量池都是系统协调的，<mark>String 类型的常量池比较特殊。它的主要使用方法有两种。</mark></p>
+<ul>
+<li>
+<p>直接使用双引号声明出来的 String 对象会直接存储在常量池中。</p>
+</li>
+<li>
+<p>如果不是用双引号声明的 String 对象，可以使用 String 提供的 intern()方法。这个后面重点谈</p>
+</li>
+</ul>
+<p>Java 6 及以前，字符串常量池存放在永久代</p>
+<p>Java 7 中 Oracle 的工程师对字符串池的逻辑做了很大的改变，即将<mark>字符串常量池的位置调整到 Java 堆内</mark></p>
+<ul>
+<li>
+<p>所有的字符串都保存在堆（Heap）中，和其他普通对象一样，这样可以让你在进行调优应用时仅需要调整堆大小就可以了。</p>
+</li>
+<li>
+<p>字符串常量池概念原本使用得比较多，但是这个改动使得我们有足够的理由让我们重新考虑在 Java 7 中使用<code>String.intern()</code>。</p>
+</li>
+</ul>
+<p>Java8 元空间，字符串常量在堆</p>
+<p><img src="/article/2020/10/10-StringTable/27b7bf706fc1724baf503eac9b49c7fc.png" alt="image-20200711093546398"></p>
+<p><img src="/article/2020/10/10-StringTable/c59830deeebca85d5b2e446211e4e28d.png" alt="image-20200711093558709"></p>
+<p><strong>StringTable 为什么要调整？</strong></p>
+<p>官网地址：<a href="https://www.oracle.com/java/technologies/javase/jdk7-relnotes.html#jdk7changes" target="_blank" rel="noopener">Java SE 7 Features and Enhancements (oracle.com)</a></p>
+<blockquote>
+<p><strong>Synopsis:</strong> In JDK 7, interned strings are no longer allocated in the permanent generation of the Java heap, but are instead allocated in the main part of the Java heap (known as the young and old generations), along with the other objects created by the application. This change will result in more data residing in the main Java heap, and less data in the permanent generation, and thus may require heap sizes to be adjusted. Most applications will see only relatively small differences in heap usage due to this change, but larger applications that load many classes or make heavy use of the <code>String.intern()</code> method will see more significant differences.</p>
+</blockquote>
+<p>简介：在 JDK 7 中，内部字符串不再分配在 Java 堆的永久代中，而是分配在 Java 堆的主要部分（称为年轻代和老年代），与应用程序创建的其他对象一起。这种变化将导致更多的数据驻留在主 Java 堆中，而更少的数据在永久代中，因此可能需要调整堆的大小。大多数应用程序将看到由于这一变化而导致的堆使用的相对较小的差异，但<mark>加载许多类或大量使用 String.intern()方法的大型应用程序将看到更明显的差异</mark>。</p>
+<h2 id="103-string-的基本操作"><a class="markdownIt-Anchor" href="#103-string-的基本操作"></a> 10.3. String 的基本操作</h2>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    System.out.print1n(<span class="string">"1"</span>); <span class="comment">//2321</span></span><br><span class="line">    System.out.println(<span class="string">"2"</span>);</span><br><span class="line">    System.out.println(<span class="string">"3"</span>);</span><br><span class="line">    System.out.println(<span class="string">"4"</span>);</span><br><span class="line">    System.out.println(<span class="string">"5"</span>);</span><br><span class="line">    System.out.println(<span class="string">"6"</span>);</span><br><span class="line">    System.out.println(<span class="string">"7"</span>);</span><br><span class="line">    System.out.println(<span class="string">"8"</span>);</span><br><span class="line">    System.out.println(<span class="string">"9"</span>);</span><br><span class="line">    System.out.println(<span class="string">"10"</span>); <span class="comment">//2330</span></span><br><span class="line">    System.out.println(<span class="string">"1"</span>); <span class="comment">//2321</span></span><br><span class="line">    System.out.println(<span class="string">"2"</span>); <span class="comment">//2322</span></span><br><span class="line">    System.out.println(<span class="string">"3"</span>);</span><br><span class="line">    System.out.println(<span class="string">"4"</span>);</span><br><span class="line">    System.out.println(<span class="string">"5"</span>);</span><br><span class="line">    System.out.print1n(<span class="string">"6"</span>);</span><br><span class="line">    System.out.print1n(<span class="string">"7"</span>);</span><br><span class="line">    System.out.println(<span class="string">"8"</span>);</span><br><span class="line">    System.out.println(<span class="string">"9"</span>);</span><br><span class="line">    System.out.println(<span class="string">"10"</span>);<span class="comment">//2330</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Java 语言规范里要求完全相同的字符串字面量，应该包含同样的 Unicode 字符序列（包含同一份码点序列的常量），并且必须是指向同一个 String 类实例。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Memory</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;<span class="comment">//line 1</span></span><br><span class="line">        <span class="keyword">int</span> i= <span class="number">1</span>;<span class="comment">//line 2</span></span><br><span class="line">        Object obj = <span class="keyword">new</span> Object();<span class="comment">//line 3</span></span><br><span class="line">        Memory mem = <span class="keyword">new</span> Memory();<span class="comment">//Line 4</span></span><br><span class="line">        mem.foo(obj);<span class="comment">//Line 5</span></span><br><span class="line">    &#125;<span class="comment">//Line 9</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">foo</span><span class="params">(Object param)</span> </span>&#123;<span class="comment">//line 6</span></span><br><span class="line">        String str = param.toString();<span class="comment">//line 7</span></span><br><span class="line">        System.out.println(str);</span><br><span class="line">    &#125;<span class="comment">//Line 8</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/article/2020/10/10-StringTable/0ca01e17abb22f0fa16e87dd93b26a65.png" alt="image-20210511111607132"></p>
+<h2 id="104-字符串拼接操作"><a class="markdownIt-Anchor" href="#104-字符串拼接操作"></a> 10.4. 字符串拼接操作</h2>
+<ul>
+<li>常量与常量的拼接结果在常量池，原理是编译期优化</li>
+<li>常量池中不会存在相同内容的变量</li>
+<li>只要其中有一个是变量，结果就在堆中。变量拼接的原理是 StringBuilder</li>
+<li>如果拼接的结果调用 intern()方法，则主动将常量池中还没有的字符串对象放入池中，并返回此对象地址</li>
+</ul>
+<p><strong>举例 1</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">test1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 都是常量，前端编译期会进行代码优化</span></span><br><span class="line">    <span class="comment">// 通过idea直接看对应的反编译的class文件，会显示 String s1 = "abc"; 说明做了代码优化</span></span><br><span class="line">    String s1 = <span class="string">"a"</span> + <span class="string">"b"</span> + <span class="string">"c"</span>;</span><br><span class="line">    String s2 = <span class="string">"abc"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// true，有上述可知，s1和s2实际上指向字符串常量池中的同一个值</span></span><br><span class="line">    System.out.println(s1 == s2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>举例 2</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">test5</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    String s1 = <span class="string">"javaEE"</span>;</span><br><span class="line">    String s2 = <span class="string">"hadoop"</span>;</span><br><span class="line"></span><br><span class="line">    String s3 = <span class="string">"javaEEhadoop"</span>;</span><br><span class="line">    String s4 = <span class="string">"javaEE"</span> + <span class="string">"hadoop"</span>;</span><br><span class="line">    String s5 = s1 + <span class="string">"hadoop"</span>;</span><br><span class="line">    String s6 = <span class="string">"javaEE"</span> + s2;</span><br><span class="line">    String s7 = s1 + s2;</span><br><span class="line"></span><br><span class="line">    System.out.println(s3 == s4); <span class="comment">// true 编译期优化</span></span><br><span class="line">    System.out.println(s3 == s5); <span class="comment">// false s1是变量，不能编译期优化</span></span><br><span class="line">    System.out.println(s3 == s6); <span class="comment">// false s2是变量，不能编译期优化</span></span><br><span class="line">    System.out.println(s3 == s7); <span class="comment">// false s1、s2都是变量</span></span><br><span class="line">    System.out.println(s5 == s6); <span class="comment">// false s5、s6 不同的对象实例</span></span><br><span class="line">    System.out.println(s5 == s7); <span class="comment">// false s5、s7 不同的对象实例</span></span><br><span class="line">    System.out.println(s6 == s7); <span class="comment">// false s6、s7 不同的对象实例</span></span><br><span class="line"></span><br><span class="line">    String s8 = s6.intern();</span><br><span class="line">    System.out.println(s3 == s8); <span class="comment">// true intern之后，s8和s3一样，指向字符串常量池中的"javaEEhadoop"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>举例 3</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test6</span><span class="params">()</span></span>&#123;</span><br><span class="line">    String s0 = <span class="string">"beijing"</span>;</span><br><span class="line">    String s1 = <span class="string">"bei"</span>;</span><br><span class="line">    String s2 = <span class="string">"jing"</span>;</span><br><span class="line">    String s3 = s1 + s2;</span><br><span class="line">    System.out.println(s0 == s3); <span class="comment">// false s3指向对象实例，s0指向字符串常量池中的"beijing"</span></span><br><span class="line">    String s7 = <span class="string">"shanxi"</span>;</span><br><span class="line">    <span class="keyword">final</span> String s4 = <span class="string">"shan"</span>;</span><br><span class="line">    <span class="keyword">final</span> String s5 = <span class="string">"xi"</span>;</span><br><span class="line">    String s6 = s4 + s5;</span><br><span class="line">    System.out.println(s6 == s7); <span class="comment">// true s4和s5是final修饰的，编译期就能确定s6的值了</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>不使用 final 修饰，即为变量。如 s3 行的 s1 和 s2，会通过 new StringBuilder 进行拼接</li>
+<li>使用 final 修饰，即为常量。会在编译器进行代码优化。<mark>在实际开发中，能够使用 final 的，尽量使用</mark></li>
+</ul>
+<p><strong>举例 4</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test3</span><span class="params">()</span></span>&#123;</span><br><span class="line">    String s1 = <span class="string">"a"</span>;</span><br><span class="line">    String s2 = <span class="string">"b"</span>;</span><br><span class="line">    String s3 = <span class="string">"ab"</span>;</span><br><span class="line">    String s4 = s1 + s2;</span><br><span class="line">    System.out.println(s3==s4);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>字节码</strong></p>
+<p>我们拿例 4 的字节码进行查看，可以发现<code>s1 + s2</code>实际上是 new 了一个 StringBuilder 对象，并使用了 append 方法将 s1 和 s2 添加进来，最后调用了 toString 方法赋给 s4</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"> 0 ldc #2 &lt;a&gt;</span><br><span class="line"> 2 astore_1</span><br><span class="line"> 3 ldc #3 &lt;b&gt;</span><br><span class="line"> 5 astore_2</span><br><span class="line"> 6 ldc #4 &lt;ab&gt;</span><br><span class="line"> 8 astore_3</span><br><span class="line"> 9 new #5 &lt;java/lang/StringBuilder&gt;</span><br><span class="line">12 dup</span><br><span class="line">13 invokespecial #6 &lt;java/lang/StringBuilder.&lt;init&gt;&gt;</span><br><span class="line">16 aload_1</span><br><span class="line">17 invokevirtual #7 &lt;java/lang/StringBuilder.append&gt;</span><br><span class="line">20 aload_2</span><br><span class="line">21 invokevirtual #7 &lt;java/lang/StringBuilder.append&gt;</span><br><span class="line">24 invokevirtual #8 &lt;java/lang/StringBuilder.toString&gt;</span><br><span class="line">27 astore 4</span><br><span class="line">29 getstatic #9 &lt;java/lang/System.out&gt;</span><br><span class="line">32 aload_3</span><br><span class="line">33 aload 4</span><br><span class="line">35 if_acmpne 42 (+7)</span><br><span class="line">38 iconst_1</span><br><span class="line">39 goto 43 (+4)</span><br><span class="line">42 iconst_0</span><br><span class="line">43 invokevirtual #10 &lt;java/io/PrintStream.println&gt;</span><br><span class="line">46 return</span><br></pre></td></tr></table></figure>
+<p><strong>字符串拼接操作性能对比</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> times = <span class="number">50000</span>;        <span class="comment">// String        </span></span><br><span class="line">        <span class="keyword">long</span> start = System.currentTimeMillis();</span><br><span class="line">        testString(times);</span><br><span class="line">        <span class="keyword">long</span> end = System.currentTimeMillis();</span><br><span class="line">        System.out.println(<span class="string">"String: "</span> + (end - start) + <span class="string">"ms"</span>);        <span class="comment">// StringBuilder        </span></span><br><span class="line">        start = System.currentTimeMillis();</span><br><span class="line">        testStringBuilder(times);</span><br><span class="line">        end = System.currentTimeMillis();</span><br><span class="line">        System.out.println(<span class="string">"StringBuilder: "</span> + (end - start) + <span class="string">"ms"</span>);        <span class="comment">// StringBuffer        </span></span><br><span class="line">        start = System.currentTimeMillis();</span><br><span class="line">        testStringBuffer(times);</span><br><span class="line">        end = System.currentTimeMillis();</span><br><span class="line">        System.out.println(<span class="string">"StringBuffer: "</span> + (end - start) + <span class="string">"ms"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">testString</span><span class="params">(<span class="keyword">int</span> times)</span> </span>&#123;</span><br><span class="line">        String str = <span class="string">""</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; times; i++) &#123;</span><br><span class="line">            str += <span class="string">"test"</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">testStringBuilder</span><span class="params">(<span class="keyword">int</span> times)</span> </span>&#123;</span><br><span class="line">        StringBuilder sb = <span class="keyword">new</span> StringBuilder();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; times; i++) &#123;</span><br><span class="line">            sb.append(<span class="string">"test"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">testStringBuffer</span><span class="params">(<span class="keyword">int</span> times)</span> </span>&#123;</span><br><span class="line">        StringBuffer sb = <span class="keyword">new</span> StringBuffer();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; times; i++) &#123;</span><br><span class="line">            sb.append(<span class="string">"test"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="comment">// 结果 String: 7963ms StringBuilder: 1ms StringBuffer: 4ms</span></span><br></pre></td></tr></table></figure>
+<p>本实验进行 5 万次循环，String 拼接方式的时间是 StringBuilder.append 方式的约 8000 倍，StringBuffer.append()方式的时间是 StringBuilder.append()方式的约 4 倍</p>
+<p>可以看到，通过 StringBuilder 的 append 方式的速度，要比直接对 String 使用“+”拼接的方式<mark>快的不是一点半点</mark></p>
+<p>那么，在实际开发中，对于需要<mark>多次或大量拼接</mark>的操作，在不考虑线程安全问题时，我们就应该尽可能<mark>使用 StringBuilder 进行 append 操作</mark></p>
+<p>除此之外，还有那些操作能够帮助我们提高字符串方面的运行效率呢？</p>
+<p>StringBuilder 空参构造器的初始化大小为 16。那么，如果提前知道需要拼接 String 的个数，就应该直接使用<mark>带参构造器</mark>指定 capacity，以减少扩容的次数（扩容的逻辑可以自行查看源代码）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Constructs a string builder with no characters in it and an * initial capacity of 16 characters.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">StringBuilder</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>(<span class="number">16</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Constructs a string builder with no characters in it and an * initial capacity specified by the &#123;<span class="doctag">@code</span> capacity&#125; argument. * * <span class="doctag">@param</span>      </span></span><br><span class="line"><span class="comment"> * capacity  the initial capacity. * <span class="doctag">@throws</span>     NegativeArraySizeException  if the &#123;<span class="doctag">@code</span> capacity&#125; *               argument is less than &#123;<span class="doctag">@code</span> 0&#125;.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">StringBuilder</span><span class="params">(<span class="keyword">int</span> capacity)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>(capacity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="105-intern的使用"><a class="markdownIt-Anchor" href="#105-intern的使用"></a> 10.5. intern()的使用</h2>
+<p>官方 API 文档中的解释</p>
+<blockquote>
+<p>public String intern()</p>
+<p>Returns a canonical representation for the string object.</p>
+<p>A pool of strings, initially empty, is maintained privately by the class <code>String</code>.</p>
+<p>When the intern method is invoked, if the pool already contains a string equal to this <code>String</code> object as determined by the <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html#equals-java.lang.Object-" target="_blank" rel="noopener"><code>equals(Object)</code></a> method, then the string from the pool is returned. Otherwise, this <code>String</code> object is added to the pool and a reference to this <code>String</code> object is returned.</p>
+<p>It follows that for any two strings <code>s</code> and <code>t</code>, <code>s.intern() == t.intern()</code> is <code>true</code> if and only if <code>s.equals(t)</code> is <code>true</code>.</p>
+<p>All literal strings and string-valued constant expressions are interned. String literals are defined in section 3.10.5 of the The Java™ Language Specification.</p>
+<ul>
+<li>
+<p><strong>Returns:</strong></p>
+<p>a string that has the same contents as this string, but is guaranteed to be from a pool of unique strings.</p>
+</li>
+</ul>
+</blockquote>
+<p>当调用 intern 方法时，如果池子里已经包含了一个与这个 String 对象相等的字符串，正如 equals(Object)方法所确定的，那么池子里的字符串会被返回。否则，这个 String 对象被添加到池中，并返回这个 String 对象的引用。</p>
+<p>由此可见，对于任何两个字符串 s 和 t，当且仅当 s.equals(t)为真时，s.intern() == t.intern()为真。</p>
+<p>所有字面字符串和以字符串为值的常量表达式都是 interned。</p>
+<p>返回一个与此字符串内容相同的字符串，但保证是来自一个唯一的字符串池。</p>
+<hr>
+<p>intern 是一个 native 方法，调用的是底层 C 的方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">native</span> String <span class="title">intern</span><span class="params">()</span></span>;</span><br></pre></td></tr></table></figure>
+<p>如果不是用双引号声明的 String 对象，可以使用 String 提供的 intern 方法，它会从字符串常量池中查询当前字符串是否存在，若不存在就会将当前字符串放入常量池中。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">String myInfo = <span class="keyword">new</span> string(<span class="string">"I love atguigu"</span>).intern();</span><br></pre></td></tr></table></figure>
+<p>也就是说，如果在任意字符串上调用 String.intern 方法，那么其返回结果所指向的那个类实例，必须和直接以常量形式出现的字符串实例完全相同。因此，下列表达式的值必定是 true</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(<span class="string">"a"</span>+<span class="string">"b"</span>+<span class="string">"c"</span>).intern() == <span class="string">"abc"</span></span><br></pre></td></tr></table></figure>
+<p>通俗点讲，Interned string 就是确保字符串在内存里只有一份拷贝，这样可以节约内存空间，加快字符串操作任务的执行速度。注意，这个值会被存放在字符串内部池（String Intern Pool）</p>
+<p><img src="/article/2020/10/10-StringTable/b3657b493efaf41f83b72e2debffb14b.png" alt="image-20210511145542579"></p>
+<h3 id="1051-intern-的使用jdk6-vs-jdk78"><a class="markdownIt-Anchor" href="#1051-intern-的使用jdk6-vs-jdk78"></a> 10.5.1. intern 的使用：JDK6 vs JDK7/8</h3>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * ① String s = new String("1") * 创建了两个对象，堆空间中一个new对象，字符串常量池中一个字符串常量"1"（注意：此时字符串常量池中已有"1"） </span></span><br><span class="line"><span class="comment">     * ② s.intern() 由于字符串常量池中已存在"1" ，s 指向的是堆空间中的对象地址，s2 指向的是堆空间中常量池中"1"的地址，所以不相等</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    String s = <span class="keyword">new</span> String(<span class="string">"1"</span>);</span><br><span class="line">    s.intern();</span><br><span class="line">    String s2 = <span class="string">"1"</span>;</span><br><span class="line">    System.out.println(s == s2); <span class="comment">// jdk1.6 false jdk7/8 false</span></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * ① String s3 = new String("1") + new String("1") 等价于new String（"11"），但是，常量池中并不生成字符串"11"；</span></span><br><span class="line"><span class="comment">     * ② s3.intern() 由于此时常量池中并无"11"，所以把s3中记录的对象的地址存入常量池，所以s3 和 s4 指向的都是一个地址</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    String s3 = <span class="keyword">new</span> String(<span class="string">"1"</span>) + <span class="keyword">new</span> String(<span class="string">"1"</span>);</span><br><span class="line">    s3.intern();</span><br><span class="line">    String s4 = <span class="string">"11"</span>;</span><br><span class="line">    System.out.println(s3 == s4); <span class="comment">// jdk1.6 false jdk7/8 true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/article/2020/10/10-StringTable/4c11070481d7c3cdb566163802cf582b.png" alt="image-20210511152240683"></p>
+<p><img src="/article/2020/10/10-StringTable/3a3bab69ad3c6302ea00c301dffb5193.png" alt="image-20200711145925091"></p>
+<p>总结 String 的 intern()的使用：</p>
+<p>JDK1.6 中，将这个字符串对象尝试放入串池。</p>
+<ul>
+<li>如果串池中有，则并不会放入。返回已有的串池中的对象的地址</li>
+<li>如果没有，会把此<mark>对象复制一份</mark>，放入串池，并返回串池中的对象地址</li>
+</ul>
+<p>JDK1.7 起，将这个字符串对象尝试放入串池。</p>
+<ul>
+<li>如果串池中有，则并不会放入。返回已有的串池中的对象的地址</li>
+<li>如果没有，则会把<mark>对象的引用地址</mark>复制一份，放入串池，并返回串池中的引用地址</li>
+</ul>
+<p><strong>练习 1</strong></p>
+<p><img src="/article/2020/10/10-StringTable/bb9abdd927bd9ac80c1c18359d299629.png" alt="image-20200711150859709"></p>
+<p><img src="/article/2020/10/10-StringTable/e6c4796fa8d9b5dda9438c799bb45540.png" alt="image-20200711151326909"></p>
+<p><strong>练习 2</strong></p>
+<p><img src="/article/2020/10/10-StringTable/ad465da04603bb228d6dde8950ee95ec.png" alt="image-20200711151433277"></p>
+<h3 id="1052-intern-的效率测试空间角度"><a class="markdownIt-Anchor" href="#1052-intern-的效率测试空间角度"></a> 10.5.2. intern 的效率测试：空间角度</h3>
+<p>我们通过测试一下，使用了 intern 和不使用的时候，其实相差还挺多的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StringIntern2</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MAX_COUNT = <span class="number">1000</span> * <span class="number">10000</span>;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> String[] arr = <span class="keyword">new</span> String[MAX_COUNT];</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Integer[] data = <span class="keyword">new</span> Integer[]&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>, <span class="number">10</span>&#125;;</span><br><span class="line">        <span class="keyword">long</span> start = System.currentTimeMillis();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; MAX_COUNT; i++) &#123;</span><br><span class="line">            arr[i] = <span class="keyword">new</span> String(String.valueOf(data[i % data.length]));</span><br><span class="line">            <span class="comment">// arr[i] = new String(String.valueOf(data[i % data.length])).intern();</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">long</span> end = System.currentTimeMillis();</span><br><span class="line">        System.out.println(<span class="string">"花费的时间为："</span> + (end - start));</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Thread.sleep(<span class="number">1000000</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.getStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="comment">// 运行结果不使用intern：7256ms, 使用intern：1395ms</span></span><br></pre></td></tr></table></figure>
+<p><strong>结论</strong>：对于程序中大量使用存在的字符串时，尤其存在很多已经重复的字符串时，使用 intern()方法能够节省内存空间。</p>
+<p>大的网站平台，需要内存中存储大量的字符串。比如社交网站，很多人都存储：北京市、海淀区等信息。这时候如果字符串都调用 intern()方法，就会很明显降低内存的大小。</p>
+<h2 id="106-stringtable-的垃圾回收"><a class="markdownIt-Anchor" href="#106-stringtable-的垃圾回收"></a> 10.6. StringTable 的垃圾回收</h2>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StringGCTest</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * -Xms15m -Xmx15m -XX:+PrintGCDetails</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++) &#123;</span><br><span class="line">            String.valueOf(i).intern();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行结果</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[GC (Allocation Failure) [PSYoungGen: <span class="number">4096</span>K-&gt;<span class="number">504</span>K(<span class="number">4608</span>K)] <span class="number">4096</span>K-&gt;<span class="number">1689</span>K(<span class="number">15872</span>K), <span class="number">0.0581583</span> secs] [Times: user=<span class="number">0.00</span> sys=<span class="number">0.00</span>, real=<span class="number">0.06</span> secs] [GC (Allocation Failure) [PSYoungGen: <span class="number">4600</span>K-&gt;<span class="number">504</span>K(<span class="number">4608</span>K)] <span class="number">5785</span>K-&gt;<span class="number">2310</span>K(<span class="number">15872</span>K), <span class="number">0.0015621</span> secs] [Times: user=<span class="number">0.00</span> sys=<span class="number">0.00</span>, real=<span class="number">0.00</span> secs] [GC (Allocation Failure) [PSYoungGen: <span class="number">4600</span>K-&gt;<span class="number">504</span>K(<span class="number">4608</span>K)] <span class="number">6406</span>K-&gt;<span class="number">2350</span>K(<span class="number">15872</span>K), <span class="number">0.0034849</span> secs] [Times: user=<span class="number">0.00</span> sys=<span class="number">0.00</span>, real=<span class="number">0.00</span> secs] Heap PSYoungGen      total <span class="number">4608</span>K, used <span class="number">1919</span>K [<span class="number">0x00000000ffb00000</span>, <span class="number">0x0000000100000000</span>, <span class="number">0x0000000100000000</span>)  eden space <span class="number">4096</span>K, <span class="number">34</span>% used [<span class="number">0x00000000ffb00000</span>,<span class="number">0x00000000ffc61d30</span>,<span class="number">0x00000000fff00000</span>)  from space <span class="number">512</span>K, <span class="number">98</span>% used [<span class="number">0x00000000fff00000</span>,<span class="number">0x00000000fff7e010</span>,<span class="number">0x00000000fff80000</span>)  to   space <span class="number">512</span>K, <span class="number">0</span>% used [<span class="number">0x00000000fff80000</span>,<span class="number">0x00000000fff80000</span>,<span class="number">0x0000000100000000</span>) ParOldGen       total <span class="number">11264</span>K, used <span class="number">1846</span>K [<span class="number">0x00000000ff000000</span>, <span class="number">0x00000000ffb00000</span>, <span class="number">0x00000000ffb00000</span>)  object space <span class="number">11264</span>K, <span class="number">16</span>% used [<span class="number">0x00000000ff000000</span>,<span class="number">0x00000000ff1cd9b0</span>,<span class="number">0x00000000ffb00000</span>) Metaspace       used <span class="number">3378</span>K, capacity <span class="number">4496</span>K, committed <span class="number">4864</span>K, reserved <span class="number">1056768</span>K  <span class="class"><span class="keyword">class</span> <span class="title">space</span>    <span class="title">used</span> 361<span class="title">K</span>, <span class="title">capacity</span> 388<span class="title">K</span>, <span class="title">committed</span> 512<span class="title">K</span>, <span class="title">reserved</span> 1048576<span class="title">K</span></span></span><br></pre></td></tr></table></figure>
+<h2 id="107-g1-中的-string-去重操作"><a class="markdownIt-Anchor" href="#107-g1-中的-string-去重操作"></a> 10.7. G1 中的 String 去重操作</h2>
+<p>官网地址：<a href="http://openjdk.java.net/jeps/192" target="_blank" rel="noopener">JEP 192: String Deduplication in G1 (java.net)</a></p>
+<blockquote>
+<h2 id="motivation-2"><a class="markdownIt-Anchor" href="#motivation-2"></a> Motivation</h2>
+<p>Many large-scale Java applications are currently bottlenecked on memory. Measurements have shown that roughly 25% of the Java heap live data set in these types of applications is consumed by <code>String</code> objects. Further, roughly half of those <code>String</code> objects are duplicates, where duplicates means <code>string1.equals(string2)</code> is true. Having duplicate <code>String</code> objects on the heap is, essentially, just a waste of memory. This project will implement automatic and continuous <code>String</code> deduplication in the G1 garbage collector to avoid wasting memory and reduce the memory footprint.</p>
+</blockquote>
+<p>目前，许多大规模的 Java 应用程序在内存上遇到了瓶颈。测量表明，在这些类型的应用程序中，大约 25%的 Java 堆实时数据集被<code>String'对象所消耗。此外，这些 &quot;String &quot;对象中大约有一半是重复的，其中重复意味着 &quot;string1.equals(string2) &quot;是真的。在堆上有重复的</code>String’对象，从本质上讲，只是一种内存的浪费。这个项目将在 G1 垃圾收集器中实现自动和持续的`String’重复数据删除，以避免浪费内存，减少内存占用。</p>
+<hr>
+<p>注意这里说的重复，指的是在堆中的数据，而不是常量池中的，因为常量池中的本身就不会重复</p>
+<p>背景：对许多 Java 应用（有大的也有小的）做的测试得出以下结果：</p>
+<ul>
+<li>堆存活数据集合里面 string 对象占了 25%</li>
+<li>堆存活数据集合里面重复的 string 对象有 13.5%</li>
+<li>string 对象的平均长度是 45</li>
+</ul>
+<p>许多大规模的 Java 应用的瓶颈在于内存，测试表明，在这些类型的应用里面，<mark>Java 堆中存活的数据集合差不多 25%是 String 对象</mark>。更进一步，这里面差不多一半 string 对象是重复的，重复的意思是说： <code>stringl.equals(string2)= true</code>。<mark>堆上存在重复的 String 对象必然是一种内存的浪费</mark>。这个项目将在 G1 垃圾收集器中实现自动持续对重复的 string 对象进行去重，这样就能避免浪费内存。</p>
+<p><strong>实现</strong></p>
+<ol>
+<li>当垃圾收集器工作的时候，会访问堆上存活的对象。<mark>对每一个访问的对象都会检查是否是候选的要去重的 String 对象</mark></li>
+<li>如果是，把这个对象的一个引用插入到队列中等待后续的处理。一个去重的线程在后台运行，处理这个队列。处理队列的一个元素意味着从队列删除这个元素，然后尝试去重它引用的 string 对象。</li>
+<li>使用一个 hashtable 来记录所有的被 String 对象使用的不重复的 char 数组。当去重的时候，会查这个 hashtable，来看堆上是否已经存在一个一模一样的 char 数组。</li>
+<li>如果存在，String 对象会被调整引用那个数组，释放对原来的数组的引用，最终会被垃圾收集器回收掉。</li>
+<li>如果查找失败，char 数组会被插入到 hashtable，这样以后的时候就可以共享这个数组了。</li>
+</ol>
+<p><strong>命令行选项</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 开启String去重，默认是不开启的，需要手动开启。</span></span><br><span class="line">UseStringDeduplication(bool)  # 打印详细的去重统计信息</span><br><span class="line">PrintStringDeduplicationStatistics(bool)  # 达到这个年龄的String对象被认为是去重的候选对象</span><br><span class="line">StringpeDuplicationAgeThreshold(uintx)</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JVM上篇：内存与垃圾回收篇/" rel="tag"># JVM上篇：内存与垃圾回收篇</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2020/10/09-执行引擎/" rel="prev" title="09-执行引擎">
+      <i class="fa fa-chevron-left"></i> 09-执行引擎
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2020/10/11-垃圾回收概述及算法/" rel="next" title="11-垃圾回收概述及算法">
+      11-垃圾回收概述及算法 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#10-stringtable"><span class="nav-number">1.</span> <span class="nav-text"> 10. StringTable</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#101-string-的基本特性"><span class="nav-number">1.1.</span> <span class="nav-text"> 10.1. String 的基本特性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1011-string-在-jdk9-中存储结构变更"><span class="nav-number">1.1.1.</span> <span class="nav-text"> 10.1.1. String 在 jdk9 中存储结构变更</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#motivation"><span class="nav-number">1.2.</span> <span class="nav-text"> Motivation</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#description"><span class="nav-number">1.3.</span> <span class="nav-text"> Description</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1012-string-的基本特性"><span class="nav-number">1.3.1.</span> <span class="nav-text"> 10.1.2. String 的基本特性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#102-string-的内存分配"><span class="nav-number">1.4.</span> <span class="nav-text"> 10.2. String 的内存分配</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#103-string-的基本操作"><span class="nav-number">1.5.</span> <span class="nav-text"> 10.3. String 的基本操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#104-字符串拼接操作"><span class="nav-number">1.6.</span> <span class="nav-text"> 10.4. 字符串拼接操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#105-intern的使用"><span class="nav-number">1.7.</span> <span class="nav-text"> 10.5. intern()的使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1051-intern-的使用jdk6-vs-jdk78"><span class="nav-number">1.7.1.</span> <span class="nav-text"> 10.5.1. intern 的使用：JDK6 vs JDK7/8</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1052-intern-的效率测试空间角度"><span class="nav-number">1.7.2.</span> <span class="nav-text"> 10.5.2. intern 的效率测试：空间角度</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#106-stringtable-的垃圾回收"><span class="nav-number">1.8.</span> <span class="nav-text"> 10.6. StringTable 的垃圾回收</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#107-g1-中的-string-去重操作"><span class="nav-number">1.9.</span> <span class="nav-text"> 10.7. G1 中的 String 去重操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#motivation-2"><span class="nav-number">1.10.</span> <span class="nav-text"> Motivation</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">532</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '9252cc90c29fe6d4e8f90a91ea57f8fa',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

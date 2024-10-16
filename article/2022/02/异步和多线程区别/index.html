@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="同步、异步、多线程、阻塞、非阻塞">
+<meta property="og:type" content="article">
+<meta property="og:title" content="异步和多线程区别">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/02/异步和多线程区别/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="同步、异步、多线程、阻塞、非阻塞">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-02-19T00:00:10.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="异步和多线程区别">
+<meta name="twitter:description" content="同步、异步、多线程、阻塞、非阻塞">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/02/异步和多线程区别/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>异步和多线程区别 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/02/异步和多线程区别/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          异步和多线程区别
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-02-19 08:00:10" itemprop="dateCreated datePublished" datetime="2022-02-19T08:00:10+08:00">2022-02-19</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/其他/" itemprop="url" rel="index"><span itemprop="name">其他</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>同步、异步、多线程、阻塞、非阻塞</p>
+<a id="more"></a>
+<h1 id="同步sync-同步阻塞"><a class="markdownIt-Anchor" href="#同步sync-同步阻塞"></a> 同步(sync)-同步阻塞</h1>
+<p>发出一个功能调用时，在没有得到结果之前，该调用就不返回。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"处理前执行..."</span>);</span><br><span class="line">        syncProcess();</span><br><span class="line">        System.out.println(<span class="string">"处理后执行..."</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">syncProcess</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"syncProcess方法"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">处理前执行...</span><br><span class="line">synProcess方法</span><br><span class="line">处理后执行...</span><br></pre></td></tr></table></figure>
+<h1 id="异步async-异步非阻塞"><a class="markdownIt-Anchor" href="#异步async-异步非阻塞"></a> 异步(async)-异步非阻塞</h1>
+<p>与同步相对，在调用发出之后就直接返回了，可能没有返回结果。对于异步调用，调用的返回并不受调用者控制。</p>
+<p>当调用完成后，一般通过状态、通知或回调来通知调用者，具体如下：</p>
+<p>状态：调用者监听被调用者的状态（轮询），需要每隔一定时间检查一次，效率低。</p>
+<p>通知：当被调用者执行完成后，向调用者发出通知，无需消耗太多性能。</p>
+<p>回调：与通知类似，当被调用者执行完成后，调用调用者提供的回调函数。</p>
+<p><font color="red"><strong>下面代码若不调用 <code>task.get()</code> 就是多线程。</strong></font></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> ExecutionException, InterruptedException </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"处理前执行..."</span>);</span><br><span class="line">        FutureTask&lt;Integer&gt; task = asyncProcess();</span><br><span class="line">        System.out.println(<span class="string">"处理后执行..."</span>);</span><br><span class="line">        System.out.println(<span class="string">"处理结果: "</span> + task.get()); <span class="comment">// get()使用轮询方式获取被调用者结果</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> FutureTask <span class="title">asyncProcess</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 从返回值可以看出，使用的构造方法为 public FutureTask(Callable&lt;V&gt; callable)</span></span><br><span class="line">        FutureTask&lt;Integer&gt; task = <span class="keyword">new</span> FutureTask(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">int</span> i = <span class="number">1</span>;</span><br><span class="line">            <span class="keyword">while</span> (i &lt;= <span class="number">5</span>) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">                    System.out.println(<span class="string">"asyncProcess: "</span> + i++);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> --i;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="keyword">new</span> Thread(task).start(); <span class="comment">// 使用的构造方法为 public Thread(Runnable target)</span></span><br><span class="line">        <span class="keyword">return</span> task;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">处理前执行...</span><br><span class="line">处理后执行...</span><br><span class="line">asynProcess: 1</span><br><span class="line">asynProcess: 2</span><br><span class="line">asynProcess: 3</span><br><span class="line">asynProcess: 4</span><br><span class="line">asynProcess: 5</span><br><span class="line">处理结果: 5</span><br></pre></td></tr></table></figure>
+<h1 id="多线程"><a class="markdownIt-Anchor" href="#多线程"></a> 多线程</h1>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> ExecutionException, InterruptedException </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"处理前执行..."</span>);</span><br><span class="line">        multithreading();</span><br><span class="line">        System.out.println(<span class="string">"处理后执行..."</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">multithreading</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 使用的构造方法为 public Thread(Runnable target)</span></span><br><span class="line">        <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">int</span> i = <span class="number">1</span>;</span><br><span class="line">            <span class="keyword">while</span> (i &lt;= <span class="number">5</span>) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">                    System.out.println(<span class="string">"multithreading: "</span> + i++);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;).start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">处理前执行...</span><br><span class="line">处理后执行...</span><br><span class="line">multithreading: 1</span><br><span class="line">multithreading: 2</span><br><span class="line">multithreading: 3</span><br><span class="line">multithreading: 4</span><br><span class="line">multithreading: 5</span><br></pre></td></tr></table></figure>
+<h1 id="多线程和异步区别"><a class="markdownIt-Anchor" href="#多线程和异步区别"></a> 多线程和异步区别</h1>
+<p>多线程关注功能的<strong>并发执行</strong>，与具体的执行者相关。</p>
+<p>异步编程关注<strong>函数之间的非阻塞执行</strong>，与任务相关，我们可以将异步应用于单线程或多线程当中。</p>
+<p>异步和多线程并<font color="gree"><strong>不是一个同等关系</strong></font>，<font color="red">异步是最终目的，多线程只是实现异步的一种手段</font>。</p>
+<h1 id="font-colorblue实现异步场景非多线程font"><a class="markdownIt-Anchor" href="#font-colorblue实现异步场景非多线程font"></a> <font color="blue">实现异步场景(非多线程)</font></h1>
+<p>手机验证码登录场景，当我们点击 <code>发送验证码</code> 时，页面立即提示发送成功。</p>
+<p><font color="green"><strong>实现</strong></font>：</p>
+<p>1、接口收到请求后，生成一个六位验证码，将 <code>发送验证码</code> 的任务放到 <code>验证码队列</code>（生产者），返回接口 <code>发送成功</code>。</p>
+<p>2、验证码消费者负责具体发送功能，同时将此验证码存到redis中的Hash表（key为固定值 <code>SMS_verification_code</code>，field为 <code>手机号</code>，value为 <code>验证码+生成时间</code>）。</p>
+<p>3、当用户输入验证码登录调用登录接口时，查询redis中key为固定值 <code>SMS_verification_code</code>，field为 <code>手机号</code> 的value值，有几种情况：</p>
+<table>
+<thead>
+<tr>
+<th>value值</th>
+<th>验证value有效期(5分钟)</th>
+<th>value与用户输入值比较</th>
+<th>处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>不存在</td>
+<td>——</td>
+<td>——</td>
+<td>登录接口返回 msg=“验证码错误”</td>
+</tr>
+<tr>
+<td>存在</td>
+<td>无效</td>
+<td>——</td>
+<td>登录接口返回 msg=“验证码过期，请重新获取！”</td>
+</tr>
+<tr>
+<td>存在</td>
+<td>有效</td>
+<td>不一致</td>
+<td>登录接口返回 msg=“验证码错误”</td>
+</tr>
+<tr>
+<td>存在</td>
+<td>有效</td>
+<td>一致</td>
+<td>继续登录验证操作</td>
+</tr>
+</tbody>
+</table>
+<h1 id="阻塞block"><a class="markdownIt-Anchor" href="#阻塞block"></a> 阻塞(block)</h1>
+<p>阻塞调用：指调用结果返回（或调用者收到通知）之前，当前线程会被挂起，即不继续执行后续操作。</p>
+<p>简单来说，等前一件做完了才能做下一件事。</p>
+<h1 id="非阻塞non-block"><a class="markdownIt-Anchor" href="#非阻塞non-block"></a> 非阻塞(non-block)</h1>
+<p>非阻塞调用：指在不能立刻得到调用结果的情况下，该调用不会阻塞当前线程。</p>
+<h1 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h1>
+<p><strong>所以所谓同步异步，是对于被调用者而言的；而阻塞非阻塞，则是对调用者而言的。</strong></p>
+<p>加深理解：</p>
+<p>1、<font color="blue"><strong>同步阻塞</strong></font>：你打电话给114查路线，在不挂断的情况下，客服帮你查了十分钟之后告诉你，期间你一直在接听电话。</p>
+<p>2、同步非阻塞：你打电话给114查路线，在不挂断的情况下，客服帮你查了十分钟之后告诉你，你期间吃了个🍉（打电话没有影响你做其他事）。</p>
+<p>3、<font color="blue"><strong>异步非阻塞</strong></font>：你打电话给114查路线，客服说查好之后打给你，这期间你可以做任何事。</p>
+<p>4、<font color="blue"><strong>异步阻塞</strong></font>：你打电话给114查路线，客服说查好之后打给你，但这期间你什么都没做，等到回复电话之后，再继续下一步动作。（是不是很傻）现实运用中，<font color="blue"><strong>多线程获取锁就是异步阻塞</strong></font>。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2022/02/分布式、集群、微服务/" rel="prev" title="分布式、集群、微服务">
+      <i class="fa fa-chevron-left"></i> 分布式、集群、微服务
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2022/02/数据库连接池/" rel="next" title="数据库连接池">
+      数据库连接池 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#同步sync-同步阻塞"><span class="nav-number">1.</span> <span class="nav-text"> 同步(sync)-同步阻塞</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#异步async-异步非阻塞"><span class="nav-number">2.</span> <span class="nav-text"> 异步(async)-异步非阻塞</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#多线程"><span class="nav-number">3.</span> <span class="nav-text"> 多线程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#多线程和异步区别"><span class="nav-number">4.</span> <span class="nav-text"> 多线程和异步区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#font-colorblue实现异步场景非多线程font"><span class="nav-number">5.</span> <span class="nav-text"> 实现异步场景(非多线程)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#阻塞block"><span class="nav-number">6.</span> <span class="nav-text"> 阻塞(block)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#非阻塞non-block"><span class="nav-number">7.</span> <span class="nav-text"> 非阻塞(non-block)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">8.</span> <span class="nav-text"> 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">532</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '7ef79fcc6349730fe0e97675789a28b1',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
