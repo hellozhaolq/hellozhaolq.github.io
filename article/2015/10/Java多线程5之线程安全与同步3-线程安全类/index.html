@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="java中与线程安全有关的类：Lock、concurrent 包下的原子类（例如 AtomicInteger）、安全的集合类等。  集合类 线程安全(Thread-safe)的集合对象：  Vector HashTable StringBuffer  如何把一个线程不安全的集合类变成一个线程安全的集合类？ 1234567public class ThreadDemo &amp;#123;    publi">
+<meta name="keywords" content="多线程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java多线程5之线程安全与同步3-线程安全类">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2015/10/Java多线程5之线程安全与同步3-线程安全类/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="java中与线程安全有关的类：Lock、concurrent 包下的原子类（例如 AtomicInteger）、安全的集合类等。  集合类 线程安全(Thread-safe)的集合对象：  Vector HashTable StringBuffer  如何把一个线程不安全的集合类变成一个线程安全的集合类？ 1234567public class ThreadDemo &amp;#123;    publi">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2015/10/Java多线程5之线程安全与同步3-线程安全类/image-20210714185046829.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2015/10/Java多线程5之线程安全与同步3-线程安全类/image-20210714204748943.png">
+<meta property="og:updated_time" content="2015-10-11T03:00:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java多线程5之线程安全与同步3-线程安全类">
+<meta name="twitter:description" content="java中与线程安全有关的类：Lock、concurrent 包下的原子类（例如 AtomicInteger）、安全的集合类等。  集合类 线程安全(Thread-safe)的集合对象：  Vector HashTable StringBuffer  如何把一个线程不安全的集合类变成一个线程安全的集合类？ 1234567public class ThreadDemo &amp;#123;    publi">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2015/10/Java多线程5之线程安全与同步3-线程安全类/image-20210714185046829.png">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2015/10/Java多线程5之线程安全与同步3-线程安全类/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Java多线程5之线程安全与同步3-线程安全类 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2015/10/Java多线程5之线程安全与同步3-线程安全类/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java多线程5之线程安全与同步3-线程安全类
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2015-10-11 11:00:00" itemprop="dateCreated datePublished" datetime="2015-10-11T11:00:00+08:00">2015-10-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>java中与线程安全有关的类：Lock、concurrent 包下的原子类（例如 AtomicInteger）、安全的集合类等。</p>
+<h1 id="集合类"><a class="markdownIt-Anchor" href="#集合类"></a> 集合类</h1>
+<p>线程安全(Thread-safe)的集合对象：</p>
+<ul>
+<li>Vector</li>
+<li>HashTable</li>
+<li>StringBuffer</li>
+</ul>
+<p><font color="red">如何把一个线程不安全的集合类变成一个线程安全的集合类？</font></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadDemo</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// Vector是线程安全的时候才去考虑使用的，但即使要安全，也不用</span></span><br><span class="line">        List&lt;String&gt; list1 = <span class="keyword">new</span> ArrayList&lt;String&gt;();<span class="comment">// 线程不安全</span></span><br><span class="line">        List&lt;String&gt; list2 = Collections.synchronizedList(list1); <span class="comment">// 线程安全</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="原子类"><a class="markdownIt-Anchor" href="#原子类"></a> 原子类</h1>
+<h1 id="lock之reentrantlock"><a class="markdownIt-Anchor" href="#lock之reentrantlock"></a> Lock之ReentrantLock</h1>
+<blockquote>
+<p>java.util.concurrent.locks.ReentrantLock</p>
+</blockquote>
+<p>这个是 JDK @since 1.5 添加的一种颗粒度更小的锁，它完全可以替代 synchronized 关键字来实现它的所有功能，而且 ReentrantLock 锁的灵活度要远远大于 synchronized 关键字，它更清晰的表达了如何<strong>加锁</strong>和<strong>释放锁</strong>。</p>
+<p><img src="/article/2015/10/Java多线程5之线程安全与同步3-线程安全类/image-20210714185046829.png" alt="image-20210714185046829"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 详细说明见官方API</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 这四个方法都可以获取锁</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lock</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lockInterruptibly</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">tryLock</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">tryLock</span><span class="params">(<span class="keyword">long</span> timeout, TimeUnit unit)</span> <span class="keyword">throws</span> InterruptedException</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Condition <span class="title">newCondition</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">isFair</span><span class="params">()</span> <span class="comment">// 判断锁是否是公平锁</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isLocked</span><span class="params">()</span> <span class="comment">// 查询此锁是否被任何线程持有。此方法设计用于监视系统状态，而不是用于同步控制。</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isHeldByCurrentThread</span><span class="params">()</span> <span class="comment">// 查询当前线程是否持有此锁。</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">hasQueuedThreads</span><span class="params">()</span> <span class="comment">// 查询是否有线程正在等待获取此锁。请注意，取消可能随时发生，如果可能有其他线程等待获取锁，则返回true。该方法主要设计用于监视系统状态。</span></span></span><br></pre></td></tr></table></figure>
+<h2 id="lock-阻塞式"><a class="markdownIt-Anchor" href="#lock-阻塞式"></a> lock() 阻塞式</h2>
+<p>获取锁，平常使用最多的一个方法。</p>
+<p>如果其他线程没有持有锁，则获取该锁并立即返回，将锁持有计数设置为 1。</p>
+<p>如果当前线程已经持有锁，那么持有计数加一并且该方法立即返回。</p>
+<p>如果该锁被另一个线程持有，那么当前线程将因线程调度目的而被禁用并处于<font color="red">休眠状态(等待获取锁)</font>，直到获得该锁为止，此时锁持有计数设置为 1。</p>
+<p>注意：</p>
+<ul>
+<li>必须主动去释放锁。</li>
+<li>发生异常时，不会自动释放锁。所以使用Lock必须在try{}catch{}块中进行，并且将释放锁的操作放在finally块中进行，以保证锁一定被被释放，防止<font color="red">死锁</font>的发生。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Lock lock = <span class="keyword">new</span> XxxLock();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    lock.lock(); <span class="comment">// 获取锁，阻塞</span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// ... method body</span></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        lock.unlock(); <span class="comment">// 释放锁</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="lockinterruptibly-阻塞可中断"><a class="markdownIt-Anchor" href="#lockinterruptibly-阻塞可中断"></a> lockInterruptibly() 阻塞可中断</h2>
+<p>这个方法比较特殊，当通过该方法获取锁时，如果线程正在等待获取锁，则这个线程能够响应中断，即中断线程的等待状态。也就使说，当两个线程同时使用 <code>lock.lockInterruptibly()</code> 获取某个锁时，假若此时线程A获取到了锁，线程B在等待，那么对线程B调用 <code>threadB.interrupt()</code> 方法能够中断线程B的等待过程。</p>
+<p>由于该方法的声明中抛出了异常，所以它必须放在try块中或者在调用的方法上抛出 <code>InterruptedException</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Lock lock = <span class="keyword">new</span> XxxLock();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        lock.lockInterruptibly();</span><br><span class="line">        <span class="comment">// ... method body</span></span><br><span class="line">    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        lock.unlock(); <span class="comment">// 释放锁</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><font color="red"><strong>注意：</strong></font></p>
+<p>当一个线程获取了锁之后，是不会被 interrupt() 方法中断的。调用 interrupt() 方法不能中断正在运行过程中的线程（在代码没有特殊处理中断状态的前提下），只能中断阻塞过程中的线程。</p>
+<h2 id="trylock-非阻塞式"><a class="markdownIt-Anchor" href="#trylock-非阻塞式"></a> tryLock() 非阻塞式</h2>
+<p><code>tryLock()</code> 有返回值，它表示用来尝试获取锁。</p>
+<p>如果其他线程没有持有锁，则获取该锁并立即返回true值，将锁持有计数设置为 1。即使此锁已设置为使用公平排序策略，调用tryLock()将立即获取可用的锁，无论其他线程当前是否正在等待该锁。这种“闯入”行为在某些情况下很有用，即使它破坏了公平。 如果你想尊重这个锁的公平性设置，那么使用 <code>tryLock(0, TimeUnit.SECONDS)</code> 这几乎是等效的（它也检测中断）。</p>
+<p>如果当前线程已持有此锁，则持有计数将增加 1 并且该方法返回 true。</p>
+<p>如果锁被另一个线程持有，那么这个方法将<font color="red">立即返回</font> false 值。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Lock lock = <span class="keyword">new</span> XxxLock();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (lock.tryLock()) &#123; <span class="comment">// 获取锁，非阻塞</span></span><br><span class="line">         <span class="keyword">try</span> &#123;</span><br><span class="line">             <span class="comment">// ... method body</span></span><br><span class="line">         &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line"></span><br><span class="line">         &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">             lock.unlock(); <span class="comment">// 释放锁</span></span><br><span class="line">         &#125; </span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 如果不能获取锁，则直接做其他事情</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="trylocktimeunit-限时阻塞可中断"><a class="markdownIt-Anchor" href="#trylocktimeunit-限时阻塞可中断"></a> tryLock(time,unit) 限时阻塞可中断</h2>
+<p>如果在给定的<font color="red">等待时间</font>内没有被另一个线程持有并且当前线程没有被中断，则获取该锁并立即返回true值，将锁持有计数设置为 1。</p>
+<p>由于该方法的声明中抛出了异常，所以它必须放在try块中或者在调用的方法上抛出 <code>InterruptedException</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Lock lock = <span class="keyword">new</span> XxxLock();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (lock.tryLock(<span class="number">1000</span>, TimeUnit.SECONDS)) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// ... method body</span></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            lock.unlock(); <span class="comment">// 释放锁</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 如果不能获取锁，则直接做其他事情</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="示例"><a class="markdownIt-Anchor" href="#示例"></a> 示例</h2>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SellTicket</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 定义票</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> tickets = <span class="number">1</span>;</span><br><span class="line">    <span class="comment">// 定义锁对象</span></span><br><span class="line">    <span class="keyword">private</span> Lock lock = <span class="keyword">new</span> ReentrantLock();</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (!Thread.currentThread().isInterrupted()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                lock.lock();<span class="comment">// 加锁</span></span><br><span class="line">                <span class="keyword">if</span> (tickets &lt;= <span class="number">100</span>) &#123;</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        Thread.sleep(<span class="number">100</span>);</span><br><span class="line">                    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                        e.printStackTrace();</span><br><span class="line">                    &#125;</span><br><span class="line">                    System.out.println(Thread.currentThread().getName() + <span class="string">"正在出售第"</span> + (tickets++) + <span class="string">"张票"</span>);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                lock.unlock();<span class="comment">// 释放锁</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="readwritelock之reentrantreadwritelock"><a class="markdownIt-Anchor" href="#readwritelock之reentrantreadwritelock"></a> ReadWriteLock之ReentrantReadWriteLock</h1>
+<p><img src="/article/2015/10/Java多线程5之线程安全与同步3-线程安全类/image-20210714204748943.png" alt="image-20210714204748943"></p>
+<p>ReadWriteLock也是一个接口，只定义了两个方法，一个用来<font color="red">获取读锁</font>，一个用来<font color="red">获取写锁</font>。也就是说将文件的读写操作分开，分成2个锁来分配给线程，<font color="red">从而使得多个线程可以同时进行读操作</font>，大大提升了读操作的效率。</p>
+<p>实现类 ReentrantReadWriteLock 提供了丰富的用于监视系统状态的方法，不过<font color="red">最主要的只有</font>两个方法：<code>readLock()</code> 和 <code>writeLock()</code> 用来获取读锁和写锁。</p>
+<p><font color="red"><strong>注意：</strong></font></p>
+<p>如果有一个线程已经占用了读锁，则此时其他线程如果申请写锁，则申请写锁的线程会一直等待释放读锁。</p>
+<p>如果有一个线程已经占用了写锁，则此时其他线程如果申请写锁或者读锁，则申请的线程会一直等待释放写锁。</p>
+<p><a href="https://www.cnblogs.com/xiaoxi/p/9140541.html" target="_blank" rel="noopener">ReentrantReadWriteLock读写锁详解</a></p>
+<h1 id="stampedlock冲压锁"><a class="markdownIt-Anchor" href="#stampedlock冲压锁"></a> StampedLock冲压锁</h1>
+<h1 id="详见javautilconcurrentlocks"><a class="markdownIt-Anchor" href="#详见javautilconcurrentlocks"></a> 详见java.util.concurrent.locks</h1>
+<h1 id="lock和synchronized的选择"><a class="markdownIt-Anchor" href="#lock和synchronized的选择"></a> Lock和synchronized的选择</h1>
+<p>总结来说，Lock和synchronized有以下几点不同：</p>
+<p>1）Lock是一个接口，而synchronized是Java中的关键字，synchronized是内置的语言实现；</p>
+<p>2）synchronized在发生异常时，会自动释放线程占有的锁，因此不会导致死锁现象发生；而Lock在发生异常时，如果没有主动通过unLock()去释放锁，则很可能造成死锁现象，因此使用Lock时需要在finally块中释放锁；</p>
+<p>3）Lock可以让等待锁的线程响应中断，而synchronized却不行，使用synchronized时，等待的线程会一直等待下去，不能够响应中断；</p>
+<p>4）通过Lock可以知道有没有成功获取锁，而synchronized却无法办到。</p>
+<p>5）Lock可以提高多个线程进行读操作的效率。</p>
+<p>在性能上来说，如果竞争资源不激烈，两者的性能是差不多的，而当<font color="red">竞争资源非常激烈时</font>（即有大量线程同时竞争），此时<font color="red">Lock的性能要远远优于synchronized</font>。所以说，在具体使用时要根据适当情况选择。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/多线程/" rel="tag"># 多线程</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2015/10/Java多线程5之线程安全与同步2-线程安全关键字/" rel="prev" title="Java多线程5之线程安全与同步2-线程安全关键字">
+      <i class="fa fa-chevron-left"></i> Java多线程5之线程安全与同步2-线程安全关键字
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2015/10/Java多线程5之线程安全与同步4-锁的分类/" rel="next" title="Java多线程5之线程安全与同步4-锁的分类">
+      Java多线程5之线程安全与同步4-锁的分类 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#集合类"><span class="nav-number">1.</span> <span class="nav-text"> 集合类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#原子类"><span class="nav-number">2.</span> <span class="nav-text"> 原子类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#lock之reentrantlock"><span class="nav-number">3.</span> <span class="nav-text"> Lock之ReentrantLock</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#lock-阻塞式"><span class="nav-number">3.1.</span> <span class="nav-text"> lock() 阻塞式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lockinterruptibly-阻塞可中断"><span class="nav-number">3.2.</span> <span class="nav-text"> lockInterruptibly() 阻塞可中断</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#trylock-非阻塞式"><span class="nav-number">3.3.</span> <span class="nav-text"> tryLock() 非阻塞式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#trylocktimeunit-限时阻塞可中断"><span class="nav-number">3.4.</span> <span class="nav-text"> tryLock(time,unit) 限时阻塞可中断</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#示例"><span class="nav-number">3.5.</span> <span class="nav-text"> 示例</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#readwritelock之reentrantreadwritelock"><span class="nav-number">4.</span> <span class="nav-text"> ReadWriteLock之ReentrantReadWriteLock</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#stampedlock冲压锁"><span class="nav-number">5.</span> <span class="nav-text"> StampedLock冲压锁</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#详见javautilconcurrentlocks"><span class="nav-number">6.</span> <span class="nav-text"> 详见java.util.concurrent.locks</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#lock和synchronized的选择"><span class="nav-number">7.</span> <span class="nav-text"> Lock和synchronized的选择</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">531</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '4e043f209fb8bfd0c8b18581ac28235a',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

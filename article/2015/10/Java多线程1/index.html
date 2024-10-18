@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="推荐链接： Java 多线程编程 - 菜鸟 Java 多线程详解系列 300 行代码带你秒懂 Java 多线程！  程序 链接： 计算机程序 ​		一个普通文件，一个机器代码指令和数据的集合  进程 链接： 进程 、 多进程 ​		进程是资源分配的最小单位，线程是CPU调度的最小单位。 ​		就是正在运行的程序。">
+<meta name="keywords" content="多线程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java多线程1">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2015/10/Java多线程1/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="推荐链接： Java 多线程编程 - 菜鸟 Java 多线程详解系列 300 行代码带你秒懂 Java 多线程！  程序 链接： 计算机程序 ​		一个普通文件，一个机器代码指令和数据的集合  进程 链接： 进程 、 多进程 ​		进程是资源分配的最小单位，线程是CPU调度的最小单位。 ​		就是正在运行的程序。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2015-10-07T00:56:19.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java多线程1">
+<meta name="twitter:description" content="推荐链接： Java 多线程编程 - 菜鸟 Java 多线程详解系列 300 行代码带你秒懂 Java 多线程！  程序 链接： 计算机程序 ​		一个普通文件，一个机器代码指令和数据的集合  进程 链接： 进程 、 多进程 ​		进程是资源分配的最小单位，线程是CPU调度的最小单位。 ​		就是正在运行的程序。">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2015/10/Java多线程1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Java多线程1 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2015/10/Java多线程1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java多线程1
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2015-10-07 08:56:19" itemprop="dateCreated datePublished" datetime="2015-10-07T08:56:19+08:00">2015-10-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>推荐链接：</p>
+<p><a href="https://www.runoob.com/java/java-multithreading.html" target="_blank" rel="noopener">Java 多线程编程 - 菜鸟</a></p>
+<p><a href="https://www.cnblogs.com/ysocean/tag/Java%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%E8%AF%A6%E8%A7%A3%E7%B3%BB%E5%88%97/" target="_blank" rel="noopener">Java 多线程详解系列</a></p>
+<p><a href="https://mp.weixin.qq.com/s?__biz=MzA3MjMwMzg2Nw==&amp;mid=2247489891&amp;idx=2&amp;sn=509c8e04c3767ef26062606f83b8d131&amp;chksm=9f210cf7a85685e1839cf60c157a69c87b6faa7b2f2dd43e8ad997a57a3f9c870cd25c5d59b8&amp;scene=21#wechat_redirect" target="_blank" rel="noopener">300 行代码带你秒懂 Java 多线程！</a></p>
+<h1 id="程序"><a class="markdownIt-Anchor" href="#程序"></a> 程序</h1>
+<p>链接： <a href="https://zh.wikipedia.org/wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F" target="_blank" rel="noopener">计算机程序</a></p>
+<p>​		一个普通文件，一个机器代码指令和数据的集合</p>
+<h1 id="进程"><a class="markdownIt-Anchor" href="#进程"></a> 进程</h1>
+<p>链接： <a href="https://zh.wikipedia.org/wiki/%E8%A1%8C%E7%A8%8B" target="_blank" rel="noopener">进程</a> 、 多进程</p>
+<p>​		<strong>进程是资源分配的最小单位，线程是CPU调度的最小单位。</strong></p>
+<p>​		就是<strong>正在运行的程序</strong>。</p>
+<a id="more"></a>
+<p>​		通过任务管理器我们就看到了进程的存在。</p>
+<p>每一个进程都有它自己的内存空间和系统资源。</p>
+<p>多进程意义</p>
+<p>进程的计算机只能做一件事情，而我们现在的计算机都可以做多件事情。</p>
+<p>举例：一边玩游戏(游戏进程)，一边听音乐(音乐进程)。</p>
+<p>现在的计算机都是支持多进程的，可以在一个时间段内执行多个任务。</p>
+<p>可以提高CPU的使用率。</p>
+<p>问题：</p>
+<p>游戏，一边听音乐是同时进行的吗?</p>
+<p>不是。因为单CPU在某一个时间点上只能做一件事情。而我们在玩游戏，或者听音乐的时候，是CPU在做着程序间的高效切换让我们觉得是同时进行的。</p>
+<h1 id="程序和进程的区别"><a class="markdownIt-Anchor" href="#程序和进程的区别"></a> 程序和进程的区别</h1>
+<p>进程是动态的，程序是静态的：程序是有序代码的集合，进程是程序的执行。进程有核心态/用户态。</p>
+<p>进程是暂时的，程序是永久的；进程是一个状态变化的过程，程序可以长久保存</p>
+<p>进程和程序的组成不同，进程的组成包括程序、数据和进程控制块（即进程状态信息）</p>
+<h1 id="线程依赖于进程而存在"><a class="markdownIt-Anchor" href="#线程依赖于进程而存在"></a> 线程：依赖于进程而存在</h1>
+<p>链接： <a href="https://zh.wikipedia.org/wiki/%E7%BA%BF%E7%A8%8B" target="_blank" rel="noopener">线程</a> 、 <a href="https://zh.wikipedia.org/wiki/%E5%A4%9A%E7%BA%BF%E7%A8%8B" target="_blank" rel="noopener">多线程</a> 、 <a href="https://www.cnblogs.com/-new/p/7234332.html" target="_blank" rel="noopener">https://www.cnblogs.com/-new/p/7234332.html</a></p>
+<p>​		<strong>进程是资源分配的最小单位，线程是CPU调度的最小单位。</strong></p>
+<p>在同一个进程内又可以执行多个任务，而这每一个任务我就可以看出是一个线程。</p>
+<p>线程：是进程中的单个顺序控制流，是一条执行路径。</p>
+<p>单线程：一个进程只有一条执行路径。</p>
+<p>多线程：一个进程有多条执行路径。</p>
+<p>多线程意义</p>
+<p>多线程的存在，不是提高程序的执行速度。其实是为了提高应用程序的使用率。</p>
+<p>程序的执行其实都是在抢CPU的资源，CPU的执行权。</p>
+<p>多个进程是在抢这个资源，而其中的某一个进程如果执行路径比较多，就会有更高的几率抢到CPU的执行权。</p>
+<p>我们是不敢保证哪一个线程能够在哪个时刻抢到，所以线程的执行有随机性。</p>
+<p>Java程序的运行原理及JVM的启动是多线程的吗?</p>
+<p>A:Java命令会启动JVM，等于启动了一个应用程序，也就是启动了一个进程。该进程会自动启动一个 “主线程”， 然后主线程去调用某个类的 main 方法。所以 main方法运行在主线程中。在此之前的所有程序都是单线程的。</p>
+<p>B:JVM的启动是多线程的，因为它最低有两个线程启动了，主线程和垃圾回收线程。</p>
+<h1 id="并发-并行-同步-异步-多线程的区别"><a class="markdownIt-Anchor" href="#并发-并行-同步-异步-多线程的区别"></a> 并发、并行、同步、异步、多线程的区别</h1>
+<p><a href="https://www.cnblogs.com/botoo/p/10399404.html" target="_blank" rel="noopener">并发、并行、同步、异步、多线程的区别？</a></p>
+<p><a href="https://www.codenong.com/cs106332929/" target="_blank" rel="noopener">并发和并行、同步和异步及多线程概念详解</a></p>
+<p>并发和并行最开始都是操作系统中的概念，表示的是CPU执行多个任务的方式。这两个概念极容易混淆。</p>
+<p>并发（Concurrent）是逻辑上同时发生，指在<strong>同一时间段内</strong>同时发生，在同一个CPU的同一个核心上交替运行。单核单CPU同时处理多个任务，多个任务之间互相抢占资源。</p>
+<p>并行（Parallel）是物理上同时发生，指在<strong>同一时刻</strong>同时发生。当一个CPU执行一个进程时，另一个CPU可以执行另一个进程，两个进程互不抢占CPU资源，可以同时进行，这种方式我们称之为并行(Parallel)。多CPU(或多核单CPU)同时处理多个不同的任务，多个任务之间不互相抢占资源。</p>
+<p>只有在多CPU(或多核单CPU)的情况中，才会发生并行。否则，看似同时发生的事情，其实都是并发执行的。</p>
+<p><a href="https://zh.wikipedia.org/wiki/%E5%90%8C%E6%AD%A5" target="_blank" rel="noopener">同步 - 维基百科</a></p>
+<p>异步和多线程：不是同等关系，异步是目的，多线程只是实现异步的一种手段。实现异步可以采用多线程技术或者交给其他进程处理。</p>
+<h1 id="什么是cpu密集型-io密集型"><a class="markdownIt-Anchor" href="#什么是cpu密集型-io密集型"></a> 什么是CPU密集型、IO密集型</h1>
+<p><a href="https://zh.wikipedia.org/wiki/CPU%E5%AF%86%E9%9B%86%E5%9E%8B" target="_blank" rel="noopener">CPU密集型 - 维基百科</a></p>
+<p><a href="https://blog.csdn.net/youanyyou/article/details/78990156" target="_blank" rel="noopener">什么是CPU密集型、IO密集型？</a></p>
+<p><a href="https://cloud.tencent.com/developer/article/1806245" target="_blank" rel="noopener">CPU 密集型 和 IO密集型 的区别，如何确定线程池大小？</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/多线程/" rel="tag"># 多线程</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2015/10/13JavaIO流/" rel="prev" title="13JavaIO流">
+      <i class="fa fa-chevron-left"></i> 13JavaIO流
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2015/10/Java多线程2之生命周期和状态/" rel="next" title="Java多线程2之生命周期和状态">
+      Java多线程2之生命周期和状态 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#程序"><span class="nav-number">1.</span> <span class="nav-text"> 程序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#进程"><span class="nav-number">2.</span> <span class="nav-text"> 进程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#程序和进程的区别"><span class="nav-number">3.</span> <span class="nav-text"> 程序和进程的区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#线程依赖于进程而存在"><span class="nav-number">4.</span> <span class="nav-text"> 线程：依赖于进程而存在</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#并发-并行-同步-异步-多线程的区别"><span class="nav-number">5.</span> <span class="nav-text"> 并发、并行、同步、异步、多线程的区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#什么是cpu密集型-io密集型"><span class="nav-number">6.</span> <span class="nav-text"> 什么是CPU密集型、IO密集型</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">531</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '97e77b092350b9643958bde8d48b558d',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
