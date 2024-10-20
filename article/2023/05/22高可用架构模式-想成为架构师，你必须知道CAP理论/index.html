@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="CAP定理（CAP theorem）又被称作布鲁尔定理（Brewer’s theorem），是加州大学伯克利分校的计算机科学家埃里克·布鲁尔（Eric Brewer）在2000年的ACM PODC上提出的一个猜想。2002年，麻省理工学院的赛斯·吉尔伯特（Seth Gilbert）和南希·林奇（Nancy Lynch）发表了布鲁尔猜想的证明，使之成为分布式计算领域公认的一个定理。对于设计分布式系统">
+<meta name="keywords" content="从零开始学架构">
+<meta property="og:type" content="article">
+<meta property="og:title" content="22高可用架构模式-想成为架构师，你必须知道CAP理论">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/05/22高可用架构模式-想成为架构师，你必须知道CAP理论/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="CAP定理（CAP theorem）又被称作布鲁尔定理（Brewer’s theorem），是加州大学伯克利分校的计算机科学家埃里克·布鲁尔（Eric Brewer）在2000年的ACM PODC上提出的一个猜想。2002年，麻省理工学院的赛斯·吉尔伯特（Seth Gilbert）和南希·林奇（Nancy Lynch）发表了布鲁尔猜想的证明，使之成为分布式计算领域公认的一个定理。对于设计分布式系统">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/05/22高可用架构模式-想成为架构师，你必须知道CAP理论/48b8ebe5f7154facb9af8551006b0b05.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/05/22高可用架构模式-想成为架构师，你必须知道CAP理论/6837344b13344710905ab7e826d8c85c.png">
+<meta property="og:updated_time" content="2023-05-22T00:00:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="22高可用架构模式-想成为架构师，你必须知道CAP理论">
+<meta name="twitter:description" content="CAP定理（CAP theorem）又被称作布鲁尔定理（Brewer’s theorem），是加州大学伯克利分校的计算机科学家埃里克·布鲁尔（Eric Brewer）在2000年的ACM PODC上提出的一个猜想。2002年，麻省理工学院的赛斯·吉尔伯特（Seth Gilbert）和南希·林奇（Nancy Lynch）发表了布鲁尔猜想的证明，使之成为分布式计算领域公认的一个定理。对于设计分布式系统">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/05/22高可用架构模式-想成为架构师，你必须知道CAP理论/48b8ebe5f7154facb9af8551006b0b05.png">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/05/22高可用架构模式-想成为架构师，你必须知道CAP理论/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>22高可用架构模式-想成为架构师，你必须知道CAP理论 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/05/22高可用架构模式-想成为架构师，你必须知道CAP理论/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          22高可用架构模式-想成为架构师，你必须知道CAP理论
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-05-22 08:00:00" itemprop="dateCreated datePublished" datetime="2023-05-22T08:00:00+08:00">2023-05-22</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/架构/" itemprop="url" rel="index"><span itemprop="name">架构</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>CAP定理（CAP theorem）又被称作布鲁尔定理（Brewer’s theorem），是加州大学伯克利分校的计算机科学家埃里克·布鲁尔（Eric Brewer）在2000年的ACM PODC上提出的一个猜想。2002年，麻省理工学院的赛斯·吉尔伯特（Seth Gilbert）和南希·林奇（Nancy Lynch）发表了布鲁尔猜想的证明，使之成为分布式计算领域公认的一个定理。对于设计分布式系统的架构师来说，CAP是必须掌握的理论。</p>
+<a id="more"></a>
+<p>布鲁尔在提出CAP猜想的时候，并没有详细定义Consistency、Availability、Partition Tolerance三个单词的明确定义，因此如果初学者去查询CAP定义的时候会感到比较困惑，因为不同的资料对CAP的详细定义有一些细微的差别，例如：</p>
+<blockquote>
+<p><strong>Consistency</strong>: where all nodes see the same data at the same time.</p>
+<p><strong>Availability</strong>: which guarantees that every request receives a response about whether it succeeded or failed.</p>
+<p><strong>Partition tolerance</strong>: where the system continues to operate even if any one part of the system is lost or fails.</p>
+</blockquote>
+<p>(<a href="https://console.bluemix.net/docs/services/Cloudant/guides/cap_theorem.html#cap-" target="_blank" rel="noopener">https://console.bluemix.net/docs/services/Cloudant/guides/cap_theorem.html#cap-</a>)</p>
+<blockquote>
+<p><strong>Consistency</strong>: Every read receives the most recent write or an error.</p>
+<p><strong>Availability</strong>: Every request receives a (non-error) response – without guarantee that it contains the most recent write.</p>
+<p><strong>Partition tolerance</strong>: The system continues to operate despite an arbitrary number of messages being dropped (or delayed) by the network between nodes.</p>
+</blockquote>
+<p>(<a href="https://en.wikipedia.org/wiki/CAP_theorem#cite_note-Brewer2012-6" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/CAP_theorem#cite_note-Brewer2012-6</a>)</p>
+<blockquote>
+<p><strong>Consistency</strong>: all nodes have access to the same data simultaneously.</p>
+<p><strong>Availability</strong>: a promise that every request receives a response, at minimum whether the request succeeded or failed.</p>
+<p><strong>Partition tolerance</strong>: the system will continue to work even if some arbitrary node goes offline or can’t communicate.</p>
+</blockquote>
+<p>(<a href="https://www.teamsilverback.com/understanding-the-cap-theorem/" target="_blank" rel="noopener">https://www.teamsilverback.com/understanding-the-cap-theorem/</a>)</p>
+<p>为了更好地解释CAP理论，我挑选了Robert Greiner（<a href="http://robertgreiner.com/about/%EF%BC%89%E7%9A%84%E6%96%87%E7%AB%A0%E4%BD%9C%E4%B8%BA%E5%8F%82%E8%80%83%E5%9F%BA%E7%A1%80%E3%80%82%E6%9C%89%E8%B6%A3%E7%9A%84%E6%98%AF%EF%BC%8CRobert" target="_blank" rel="noopener">http://robertgreiner.com/about/）的文章作为参考基础。有趣的是，Robert</a> Greiner对CAP的理解也经历了一个过程，他写了两篇文章来阐述CAP理论，第一篇被标记为“outdated”（有一些中文翻译文章正好参考了第一篇），我将对比前后两篇解释的差异点，通过对比帮助你更加深入地理解CAP理论。</p>
+<h1 id="cap理论"><a class="markdownIt-Anchor" href="#cap理论"></a> CAP理论</h1>
+<p>第一版解释：</p>
+<blockquote>
+<p>Any distributed system cannot guaranty C, A, and P simultaneously.</p>
+</blockquote>
+<p>（<a href="http://robertgreiner.com/2014/06/cap-theorem-explained/%EF%BC%89" target="_blank" rel="noopener">http://robertgreiner.com/2014/06/cap-theorem-explained/）</a></p>
+<p>简单翻译为：对于一个分布式计算系统，不可能同时满足一致性（Consistence）、可用性（Availability）、分区容错性（Partition Tolerance）三个设计约束。</p>
+<p>第二版解释：</p>
+<blockquote>
+<p>In a distributed system (a collection of interconnected nodes that share data.), you can only have two out of the following three guarantees across a write/read pair: Consistency, Availability, and Partition Tolerance - one of them must be sacrificed.</p>
+</blockquote>
+<p>（<a href="http://robertgreiner.com/2014/08/cap-theorem-revisited/%EF%BC%89" target="_blank" rel="noopener">http://robertgreiner.com/2014/08/cap-theorem-revisited/）</a></p>
+<p>简单翻译为：在一个分布式系统（指互相连接并共享数据的节点的集合）中，当涉及读写操作时，只能保证一致性（Consistence）、可用性（Availability）、分区容错性（Partition Tolerance）三者中的两个，另外一个必须被牺牲。</p>
+<p>对比两个版本的定义，有几个很关键的差异点：</p>
+<ul>
+<li>第二版定义了什么才是CAP理论探讨的分布式系统，强调了两点：interconnected和share data，为何要强调这两点呢？ 因为<strong>分布式系统并不一定会互联和共享数据</strong>。最简单的例如Memcache的集群，相互之间就没有连接和共享数据，因此Memcache集群这类分布式系统就不符合CAP理论探讨的对象；而MySQL集群就是互联和进行数据复制的，因此是CAP理论探讨的对象。</li>
+<li>第二版强调了write/read pair，这点其实是和上一个差异点一脉相承的。也就是说，<strong>CAP关注的是对数据的读写操作，而不是分布式系统的所有功能</strong>。例如，ZooKeeper的选举机制就不是CAP探讨的对象。</li>
+</ul>
+<p>相比来说，第二版的定义更加精确。</p>
+<p>虽然第二版的定义和解释更加严谨，但内容相比第一版来说更加难记一些，所以现在大部分技术人员谈论CAP理论时，更多还是按照第一版的定义和解释来说的，因为第一版虽然不严谨，但非常简单和容易记住。</p>
+<p>第二版除了基本概念，三个基本的设计约束也进行了重新阐述，我来详细分析一下。</p>
+<p>1.一致性（Consistency）</p>
+<p>第一版解释：</p>
+<blockquote>
+<p>All nodes see the same data at the same time.</p>
+</blockquote>
+<p>简单翻译为：所有节点在同一时刻都能看到相同的数据。</p>
+<p>第二版解释：</p>
+<blockquote>
+<p>A read is guaranteed to return the most recent write for a given client.</p>
+</blockquote>
+<p>简单翻译为：对某个指定的客户端来说，读操作保证能够返回最新的写操作结果。</p>
+<p>第一版解释和第二版解释的主要差异点表现在：</p>
+<ul>
+<li>第一版从节点node的角度描述，第二版从客户端client的角度描述。</li>
+</ul>
+<p>相比来说，第二版更加符合我们观察和评估系统的方式，即站在客户端的角度来观察系统的行为和特征。</p>
+<ul>
+<li>第一版的关键词是see，第二版的关键词是read。</li>
+</ul>
+<p>第一版解释中的see，其实并不确切，因为节点node是拥有数据，而不是看到数据，即使要描述也是用have；第二版从客户端client的读写角度来描述一致性，定义更加精确。</p>
+<ul>
+<li>第一版强调同一时刻拥有相同数据（same time + same data），第二版并没有强调这点。</li>
+</ul>
+<p>这就意味着实际上对于节点来说，可能同一时刻拥有不同数据（same time + different data），这和我们通常理解的一致性是有差异的，为何做这样的改动呢？其实在第一版的详细解释中已经提到了，具体内容如下：</p>
+<blockquote>
+<p>A system has consistency if a transaction starts with the system in a consistent state, and ends with the system in a consistent state. In this model, a system can (and does) shift into an inconsistent state during a transaction, but the entire transaction gets rolled back if there is an error during any stage in the process.</p>
+</blockquote>
+<p>参考上述的解释，对于系统执行事务来说，<strong>在事务执行过程中，系统其实处于一个不一致的状态，不同的节点的数据并不完全一致</strong>，因此第一版的解释“All nodes see the same data at the same time”是不严谨的。而第二版强调client读操作能够获取最新的写结果就没有问题，因为事务在执行过程中，client是无法读取到未提交的数据的，只有等到事务提交后，client才能读取到事务写入的数据，而如果事务失败则会进行回滚，client也不会读取到事务中间写入的数据。</p>
+<p>2.可用性（Availability）</p>
+<p>第一版解释：</p>
+<blockquote>
+<p>Every request gets a response on success/failure.</p>
+</blockquote>
+<p>简单翻译为：每个请求都能得到成功或者失败的响应。</p>
+<p>第二版解释：</p>
+<blockquote>
+<p>A non-failing node will return a reasonable response within a reasonable amount of time (no error or timeout).</p>
+</blockquote>
+<p>简单翻译为：非故障的节点在合理的时间内返回合理的响应（不是错误和超时的响应）。</p>
+<p>第一版解释和第二版解释主要差异点表现在：</p>
+<ul>
+<li>第一版是every request，第二版强调了A non-failing node。</li>
+</ul>
+<p>第一版的every request是不严谨的，因为只有非故障节点才能满足可用性要求，如果节点本身就故障了，发给节点的请求不一定能得到一个响应。</p>
+<ul>
+<li>第一版的response分为success和failure，第二版用了两个reasonable：reasonable response 和reasonable time，而且特别强调了no error or timeout。</li>
+</ul>
+<p>第一版的success/failure的定义太泛了，几乎任何情况，无论是否符合CAP理论，我们都可以说请求成功和失败，因为超时也算失败、错误也算失败、异常也算失败、结果不正确也算失败；即使是成功的响应，也不一定是正确的。例如，本来应该返回100，但实际上返回了90，这就是成功的响应，但并没有得到正确的结果。相比之下，第二版的解释明确了不能超时、不能出错，结果是合理的，<strong>注意没有说“正确”的结果</strong>。例如，应该返回100但实际上返回了90，肯定是不正确的结果，但可以是一个合理的结果。</p>
+<p>3.分区容忍性（Partition Tolerance）</p>
+<p>第一版解释：</p>
+<blockquote>
+<p>System continues to work despite message loss or partial failure.</p>
+</blockquote>
+<p>简单翻译为：出现消息丢失或者分区错误时系统能够继续运行。</p>
+<p>第二版解释：</p>
+<blockquote>
+<p>The system will continue to function when network partitions occur.</p>
+</blockquote>
+<p>简单翻译为：当出现网络分区后，系统能够继续“履行职责”。</p>
+<p>第一版解释和第二版解释主要差异点表现在：</p>
+<ul>
+<li>第一版用的是work，第二版用的是function。</li>
+</ul>
+<p>work强调“运行”，只要系统不宕机，我们都可以说系统在work，返回错误也是work，拒绝服务也是work；而function强调“发挥作用”“履行职责”，这点和可用性是一脉相承的。也就是说，只有返回reasonable response才是function。相比之下，第二版解释更加明确。</p>
+<ul>
+<li>第一版描述分区用的是message loss or partial failure，第二版直接用network partitions。</li>
+</ul>
+<p>对比两版解释，第一版是直接说原因，即message loss造成了分区，但message loss的定义有点狭隘，因为通常我们说的message loss（丢包），只是网络故障中的一种；第二版直接说现象，即发生了<strong>分区现象</strong>，不管是什么原因，可能是丢包，也可能是连接中断，还可能是拥塞，只要导致了网络分区，就通通算在里面。</p>
+<h1 id="cap应用"><a class="markdownIt-Anchor" href="#cap应用"></a> CAP应用</h1>
+<p>虽然CAP理论定义是三个要素中只能取两个，但放到分布式环境下来思考，我们会发现必须选择P（分区容忍）要素，因为网络本身无法做到100%可靠，有可能出故障，所以分区是一个必然的现象。如果我们选择了CA而放弃了P，那么当发生分区现象时，为了保证C，系统需要禁止写入，当有写入请求时，系统返回error（例如，当前系统不允许写入），这又和A冲突了，因为A要求返回no error和no timeout。因此，分布式系统理论上不可能选择CA架构，只能选择CP或者AP架构。</p>
+<p>1.CP - Consistency/Partition Tolerance</p>
+<p>如下图所示，为了保证一致性，当发生分区现象后，N1节点上的数据已经更新到y，但由于N1和N2之间的复制通道中断，数据y无法同步到N2，N2节点上的数据还是x。这时客户端C访问N2时，N2需要返回Error，提示客户端C“系统现在发生了错误”，这种处理方式违背了可用性（Availability）的要求，因此CAP三者只能满足CP。</p>
+<p><img src="/article/2023/05/22高可用架构模式-想成为架构师，你必须知道CAP理论/48b8ebe5f7154facb9af8551006b0b05.png" alt="img"></p>
+<p>2.AP - Availability/Partition Tolerance</p>
+<p>如下图所示，为了保证可用性，当发生分区现象后，N1节点上的数据已经更新到y，但由于N1和N2之间的复制通道中断，数据y无法同步到N2，N2节点上的数据还是x。这时客户端C访问N2时，N2将当前自己拥有的数据x返回给客户端C了，而实际上当前最新的数据已经是y了，这就不满足一致性（Consistency）的要求了，因此CAP三者只能满足AP。注意：这里N2节点返回x，虽然不是一个“正确”的结果，但是一个“合理”的结果，因为x是旧的数据，并不是一个错乱的值，只是不是最新的数据而已。</p>
+<p><img src="/article/2023/05/22高可用架构模式-想成为架构师，你必须知道CAP理论/6837344b13344710905ab7e826d8c85c.png" alt="img"></p>
+<h1 id="小结"><a class="markdownIt-Anchor" href="#小结"></a> 小结</h1>
+<p>今天我为你讲了CAP理论，通过对比两个不同版本的CAP理论解释，详细地分析了CAP理论的准确定义，希望对你有所帮助。</p>
+<p>这就是今天的全部内容，留一道思考题给你吧，基于Paxos算法构建的分布式系统，属于CAP架构中的哪一种？谈谈你的分析和理解。</p>
+<p>欢迎你把答案写到留言区，和我一起讨论。相信经过深度思考的回答，也会让你对知识的理解更加深刻。（编辑乱入：精彩的留言有机会获得丰厚福利哦！）</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/从零开始学架构/" rel="tag"># 从零开始学架构</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2023/05/21高性能架构模式-高性能负载均衡：算法/" rel="prev" title="21高性能架构模式-高性能负载均衡：算法">
+      <i class="fa fa-chevron-left"></i> 21高性能架构模式-高性能负载均衡：算法
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2023/05/23高可用架构模式-想成为架构师，你必须掌握的CAP细节/" rel="next" title="23高可用架构模式-想成为架构师，你必须掌握的CAP细节">
+      23高可用架构模式-想成为架构师，你必须掌握的CAP细节 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#cap理论"><span class="nav-number">1.</span> <span class="nav-text"> CAP理论</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#cap应用"><span class="nav-number">2.</span> <span class="nav-text"> CAP应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#小结"><span class="nav-number">3.</span> <span class="nav-text"> 小结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">531</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '7187574d8cad5d5ec5d05efa5b8a0b16',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="今天，我们来学习23种经典设计模式中的最后一个，中介模式。跟前面刚刚讲过的命令模式、解释器模式类似，中介模式也属于不怎么常用的模式，应用场景比较特殊、有限，但是，跟它俩不同的是，中介模式理解起来并不难，代码实现也非常简单，学习难度要小很多。 如果你对中介模式有所了解，你可能会知道，中介模式跟之前讲过的观察者模式有点相似，所以，今天我们还会详细讨论下这两种模式的区别。 话不多说，让我们正式开始今天的">
+<meta name="keywords" content="设计模式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="73设计模式与范式之行为型-中介模式：什么时候用中介模式？什么时候用观察者模式？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/12/73设计模式与范式之行为型-中介模式：什么时候用中介模式？什么时候用观察者模式？/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="今天，我们来学习23种经典设计模式中的最后一个，中介模式。跟前面刚刚讲过的命令模式、解释器模式类似，中介模式也属于不怎么常用的模式，应用场景比较特殊、有限，但是，跟它俩不同的是，中介模式理解起来并不难，代码实现也非常简单，学习难度要小很多。 如果你对中介模式有所了解，你可能会知道，中介模式跟之前讲过的观察者模式有点相似，所以，今天我们还会详细讨论下这两种模式的区别。 话不多说，让我们正式开始今天的">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/12/73设计模式与范式之行为型-中介模式：什么时候用中介模式？什么时候用观察者模式？/20201125083359.jpg">
+<meta property="og:updated_time" content="2022-12-13T00:00:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="73设计模式与范式之行为型-中介模式：什么时候用中介模式？什么时候用观察者模式？">
+<meta name="twitter:description" content="今天，我们来学习23种经典设计模式中的最后一个，中介模式。跟前面刚刚讲过的命令模式、解释器模式类似，中介模式也属于不怎么常用的模式，应用场景比较特殊、有限，但是，跟它俩不同的是，中介模式理解起来并不难，代码实现也非常简单，学习难度要小很多。 如果你对中介模式有所了解，你可能会知道，中介模式跟之前讲过的观察者模式有点相似，所以，今天我们还会详细讨论下这两种模式的区别。 话不多说，让我们正式开始今天的">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2022/12/73设计模式与范式之行为型-中介模式：什么时候用中介模式？什么时候用观察者模式？/20201125083359.jpg">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/12/73设计模式与范式之行为型-中介模式：什么时候用中介模式？什么时候用观察者模式？/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>73设计模式与范式之行为型-中介模式：什么时候用中介模式？什么时候用观察者模式？ | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/12/73设计模式与范式之行为型-中介模式：什么时候用中介模式？什么时候用观察者模式？/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          73设计模式与范式之行为型-中介模式：什么时候用中介模式？什么时候用观察者模式？
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-12-13 08:00:00" itemprop="dateCreated datePublished" datetime="2022-12-13T08:00:00+08:00">2022-12-13</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/设计模式/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>今天，我们来学习23种经典设计模式中的最后一个，中介模式。跟前面刚刚讲过的命令模式、解释器模式类似，中介模式也属于不怎么常用的模式，应用场景比较特殊、有限，但是，跟它俩不同的是，中介模式理解起来并不难，代码实现也非常简单，学习难度要小很多。</p>
+<p>如果你对中介模式有所了解，你可能会知道，中介模式跟之前讲过的观察者模式有点相似，所以，今天我们还会详细讨论下这两种模式的区别。</p>
+<p>话不多说，让我们正式开始今天的学习吧！</p>
+<a id="more"></a>
+<h1 id="中介模式的原理和实现"><a class="markdownIt-Anchor" href="#中介模式的原理和实现"></a> 中介模式的原理和实现</h1>
+<p>中介模式的英文翻译是Mediator Design Pattern。在GoF中的《设计模式》一书中，它是这样定义的：</p>
+<blockquote>
+<p>Mediator pattern defines a separate (mediator) object that encapsulates the interaction between a set of objects and the objects delegate their interaction to a mediator object instead of interacting with each other directly.</p>
+</blockquote>
+<p>翻译成中文就是：中介模式定义了一个单独的（中介）对象，来封装一组对象之间的交互。将这组对象之间的交互委派给与中介对象交互，来避免对象之间的直接交互。</p>
+<p>还记得我们在<a href="https://time.geekbang.org/column/article/187761" target="_blank" rel="noopener">第30节课</a>中讲的“如何给代码解耦”吗？其中一个方法就是引入中间层。</p>
+<p>实际上，中介模式的设计思想跟中间层很像，通过引入中介这个中间层，将一组对象之间的交互关系（或者说依赖关系）从多对多（网状关系）转换为一对多（星状关系）。原来一个对象要跟n个对象交互，现在只需要跟一个中介对象交互，从而最小化对象之间的交互关系，降低了代码的复杂度，提高了代码的可读性和可维护性。</p>
+<p>这里我画了一张对象交互关系的对比图。其中，右边的交互图是利用中介模式对左边交互关系优化之后的结果，从图中我们可以很直观地看出，右边的交互关系更加清晰、简洁。</p>
+<p><img src="/article/2022/12/73设计模式与范式之行为型-中介模式：什么时候用中介模式？什么时候用观察者模式？/20201125083359.jpg" alt="img"></p>
+<p>提到中介模式，有一个比较经典的例子不得不说，那就是航空管制。</p>
+<p>为了让飞机在飞行的时候互不干扰，每架飞机都需要知道其他飞机每时每刻的位置，这就需要时刻跟其他飞机通信。飞机通信形成的通信网络就会无比复杂。这个时候，我们通过引入“塔台”这样一个中介，让每架飞机只跟塔台来通信，发送自己的位置给塔台，由塔台来负责每架飞机的航线调度。这样就大大简化了通信网络。</p>
+<p>刚刚举的是生活中的例子，我们再举一个跟编程开发相关的例子。这个例子与UI控件有关，算是中介模式比较经典的应用，很多书籍在讲到中介模式的时候，都会拿它来举例。</p>
+<p>假设我们有一个比较复杂的对话框，对话框中有很多控件，比如按钮、文本框、下拉框等。当我们对某个控件进行操作的时候，其他控件会做出相应的反应，比如，我们在下拉框中选择“注册”，注册相关的控件就会显示在对话框中。如果我们在下拉框中选择“登陆”，登陆相关的控件就会显示在对话框中。</p>
+<p>按照通常我们习惯的UI界面的开发方式，我们将刚刚的需求用代码实现出来，就是下面这个样子。在这种实现方式中，控件和控件之间互相操作、互相依赖。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UIControl</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String LOGIN_BTN_ID = <span class="string">"login_btn"</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String REG_BTN_ID = <span class="string">"reg_btn"</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String USERNAME_INPUT_ID = <span class="string">"username_input"</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String PASSWORD_INPUT_ID = <span class="string">"pswd_input"</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String REPEATED_PASSWORD_INPUT_ID = <span class="string">"repeated_pswd_input"</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String HINT_TEXT_ID = <span class="string">"hint_text"</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String SELECTION_ID = <span class="string">"selection"</span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    Button loginButton = (Button)findViewById(LOGIN_BTN_ID);</span><br><span class="line">    Button regButton = (Button)findViewById(REG_BTN_ID);</span><br><span class="line">    Input usernameInput = (Input)findViewById(USERNAME_INPUT_ID);</span><br><span class="line">    Input passwordInput = (Input)findViewById(PASSWORD_INPUT_ID);</span><br><span class="line">    Input repeatedPswdInput = (Input)findViewById(REPEATED_PASSWORD_INPUT_ID);</span><br><span class="line">    Text hintText = (Text)findViewById(HINT_TEXT_ID);</span><br><span class="line">    Selection selection = (Selection)findViewById(SELECTION_ID);</span><br><span class="line"></span><br><span class="line">    loginButton.setOnClickListener(<span class="keyword">new</span> OnClickListener() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">        String username = usernameInput.text();</span><br><span class="line">        String password = passwordInput.text();</span><br><span class="line">        <span class="comment">//校验数据...</span></span><br><span class="line">        <span class="comment">//做业务处理...</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    regButton.setOnClickListener(<span class="keyword">new</span> OnClickListener() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">      <span class="comment">//获取usernameInput、passwordInput、repeatedPswdInput数据...</span></span><br><span class="line">      <span class="comment">//校验数据...</span></span><br><span class="line">      <span class="comment">//做业务处理...</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//...省略selection下拉选择框相关代码....</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们再按照中介模式，将上面的代码重新实现一下。在新的代码实现中，各个控件只跟中介对象交互，中介对象负责所有业务逻辑的处理。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Mediator</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">handleEvent</span><span class="params">(Component component, String event)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LandingPageDialog</span> <span class="keyword">implements</span> <span class="title">Mediator</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> Button loginButton;</span><br><span class="line">  <span class="keyword">private</span> Button regButton;</span><br><span class="line">  <span class="keyword">private</span> Selection selection;</span><br><span class="line">  <span class="keyword">private</span> Input usernameInput;</span><br><span class="line">  <span class="keyword">private</span> Input passwordInput;</span><br><span class="line">  <span class="keyword">private</span> Input repeatedPswdInput;</span><br><span class="line">  <span class="keyword">private</span> Text hintText;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleEvent</span><span class="params">(Component component, String event)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (component.equals(loginButton)) &#123;</span><br><span class="line">      String username = usernameInput.text();</span><br><span class="line">      String password = passwordInput.text();</span><br><span class="line">      <span class="comment">//校验数据...</span></span><br><span class="line">      <span class="comment">//做业务处理...</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (component.equals(regButton)) &#123;</span><br><span class="line">      <span class="comment">//获取usernameInput、passwordInput、repeatedPswdInput数据...</span></span><br><span class="line">      <span class="comment">//校验数据...</span></span><br><span class="line">      <span class="comment">//做业务处理...</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (component.equals(selection)) &#123;</span><br><span class="line">      String selectedItem = selection.select();</span><br><span class="line">      <span class="keyword">if</span> (selectedItem.equals(<span class="string">"login"</span>)) &#123;</span><br><span class="line">        usernameInput.show();</span><br><span class="line">        passwordInput.show();</span><br><span class="line">        repeatedPswdInput.hide();</span><br><span class="line">        hintText.hide();</span><br><span class="line">        <span class="comment">//...省略其他代码</span></span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (selectedItem.equals(<span class="string">"register"</span>)) &#123;</span><br><span class="line">        <span class="comment">//....</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UIControl</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String LOGIN_BTN_ID = <span class="string">"login_btn"</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String REG_BTN_ID = <span class="string">"reg_btn"</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String USERNAME_INPUT_ID = <span class="string">"username_input"</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String PASSWORD_INPUT_ID = <span class="string">"pswd_input"</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String REPEATED_PASSWORD_INPUT_ID = <span class="string">"repeated_pswd_input"</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String HINT_TEXT_ID = <span class="string">"hint_text"</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String SELECTION_ID = <span class="string">"selection"</span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    Button loginButton = (Button)findViewById(LOGIN_BTN_ID);</span><br><span class="line">    Button regButton = (Button)findViewById(REG_BTN_ID);</span><br><span class="line">    Input usernameInput = (Input)findViewById(USERNAME_INPUT_ID);</span><br><span class="line">    Input passwordInput = (Input)findViewById(PASSWORD_INPUT_ID);</span><br><span class="line">    Input repeatedPswdInput = (Input)findViewById(REPEATED_PASSWORD_INPUT_ID);</span><br><span class="line">    Text hintText = (Text)findViewById(HINT_TEXT_ID);</span><br><span class="line">    Selection selection = (Selection)findViewById(SELECTION_ID);</span><br><span class="line"></span><br><span class="line">    Mediator dialog = <span class="keyword">new</span> LandingPageDialog();</span><br><span class="line">    dialog.setLoginButton(loginButton);</span><br><span class="line">    dialog.setRegButton(regButton);</span><br><span class="line">    dialog.setUsernameInput(usernameInput);</span><br><span class="line">    dialog.setPasswordInput(passwordInput);</span><br><span class="line">    dialog.setRepeatedPswdInput(repeatedPswdInput);</span><br><span class="line">    dialog.setHintText(hintText);</span><br><span class="line">    dialog.setSelection(selection);</span><br><span class="line"></span><br><span class="line">    loginButton.setOnClickListener(<span class="keyword">new</span> OnClickListener() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">        dialog.handleEvent(loginButton, <span class="string">"click"</span>);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    regButton.setOnClickListener(<span class="keyword">new</span> OnClickListener() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">        dialog.handleEvent(regButton, <span class="string">"click"</span>);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//....</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从代码中我们可以看出，原本业务逻辑会分散在各个控件中，现在都集中到了中介类中。实际上，这样做既有好处，也有坏处。好处是简化了控件之间的交互，坏处是中介类有可能会变成大而复杂的“上帝类”（God Class）。所以，在使用中介模式的时候，我们要根据实际的情况，平衡对象之间交互的复杂度和中介类本身的复杂度。</p>
+<h1 id="中介模式-vs-观察者模式"><a class="markdownIt-Anchor" href="#中介模式-vs-观察者模式"></a> 中介模式 VS 观察者模式</h1>
+<p>前面讲观察者模式的时候，我们讲到，观察者模式有多种实现方式。虽然经典的实现方式没法彻底解耦观察者和被观察者，观察者需要注册到被观察者中，被观察者状态更新需要调用观察者的update()方法。但是，在跨进程的实现方式中，我们可以利用消息队列实现彻底解耦，观察者和被观察者都只需要跟消息队列交互，观察者完全不知道被观察者的存在，被观察者也完全不知道观察者的存在。</p>
+<p>我们前面提到，中介模式也是为了解耦对象之间的交互，所有的参与者都只与中介进行交互。而观察者模式中的消息队列，就有点类似中介模式中的“中介”，观察者模式的中观察者和被观察者，就有点类似中介模式中的“参与者”。那问题来了：中介模式和观察者模式的区别在哪里呢？什么时候选择使用中介模式？什么时候选择使用观察者模式呢？</p>
+<p>在观察者模式中，尽管一个参与者既可以是观察者，同时也可以是被观察者，但是，大部分情况下，交互关系往往都是单向的，一个参与者要么是观察者，要么是被观察者，不会兼具两种身份。也就是说，在观察者模式的应用场景中，参与者之间的交互关系比较有条理。</p>
+<p>而中介模式正好相反。只有当参与者之间的交互关系错综复杂，维护成本很高的时候，我们才考虑使用中介模式。毕竟，中介模式的应用会带来一定的副作用，前面也讲到，它有可能会产生大而复杂的上帝类。除此之外，如果一个参与者状态的改变，其他参与者执行的操作有一定先后顺序的要求，这个时候，中介模式就可以利用中介类，通过先后调用不同参与者的方法，来实现顺序的控制，而观察者模式是无法实现这样的顺序要求的。</p>
+<h1 id="重点回顾"><a class="markdownIt-Anchor" href="#重点回顾"></a> 重点回顾</h1>
+<p>好了，今天的内容到此就讲完了。我们一块来总结回顾一下，你需要重点掌握的内容。</p>
+<p>中介模式的设计思想跟中间层很像，通过引入中介这个中间层，将一组对象之间的交互关系（或者依赖关系）从多对多（网状关系）转换为一对多（星状关系）。原来一个对象要跟n个对象交互，现在只需要跟一个中介对象交互，从而最小化对象之间的交互关系，降低了代码的复杂度，提高了代码的可读性和可维护性。</p>
+<p>观察者模式和中介模式都是为了实现参与者之间的解耦，简化交互关系。两者的不同在于应用场景上。在观察者模式的应用场景中，参与者之间的交互比较有条理，一般都是单向的，一个参与者只有一个身份，要么是观察者，要么是被观察者。而在中介模式的应用场景中，参与者之间的交互关系错综复杂，既可以是消息的发送者、也可以同时是消息的接收者。</p>
+<h1 id="课堂讨论"><a class="markdownIt-Anchor" href="#课堂讨论"></a> 课堂讨论</h1>
+<p>在讲观察者模式的时候，我们有讲到EventBus框架。当时我们认为它是观察者模式的实现框架。EventBus作为一个事件处理的中心，事件的派送、订阅都通过这个中心来完成，那是不是更像中介模式的实现框架呢？</p>
+<p>欢迎留言和我分享你的想法。如果有收获，也欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/设计模式/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2022/12/72设计模式与范式之行为型-解释器模式：如何设计实现一个自定义接口告警规则功能？/" rel="prev" title="72设计模式与范式之行为型-解释器模式：如何设计实现一个自定义接口告警规则功能？">
+      <i class="fa fa-chevron-left"></i> 72设计模式与范式之行为型-解释器模式：如何设计实现一个自定义接口告警规则功能？
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2022/12/74设计模式与范式之总结课-总结回顾23种经典设计模式的原理、背后的思想、应用场景等/" rel="next" title="74设计模式与范式之总结课-总结回顾23种经典设计模式的原理、背后的思想、应用场景等">
+      74设计模式与范式之总结课-总结回顾23种经典设计模式的原理、背后的思想、应用场景等 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#中介模式的原理和实现"><span class="nav-number">1.</span> <span class="nav-text"> 中介模式的原理和实现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#中介模式-vs-观察者模式"><span class="nav-number">2.</span> <span class="nav-text"> 中介模式 VS 观察者模式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#重点回顾"><span class="nav-number">3.</span> <span class="nav-text"> 重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#课堂讨论"><span class="nav-number">4.</span> <span class="nav-text"> 课堂讨论</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">531</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '259d5fedbb867d0a9bd6b4c0c695b3c3',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

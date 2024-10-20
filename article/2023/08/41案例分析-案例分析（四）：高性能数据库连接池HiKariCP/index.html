@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="实际工作中，我们总会难免和数据库打交道；只要和数据库打交道，就免不了使用数据库连接池。业界知名的数据库连接池有不少，例如c3p0、DBCP、Tomcat JDBC Connection Pool、Druid等，不过最近最火的是HiKariCP。 HiKariCP号称是业界跑得最快的数据库连接池，这两年发展得顺风顺水，尤其是Springboot 2.0将其作为默认数据库连接池后，江湖一哥的地位已是毋">
+<meta name="keywords" content="Java并发编程实战">
+<meta property="og:type" content="article">
+<meta property="og:title" content="41案例分析-案例分析（四）：高性能数据库连接池HiKariCP">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/08/41案例分析-案例分析（四）：高性能数据库连接池HiKariCP/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="实际工作中，我们总会难免和数据库打交道；只要和数据库打交道，就免不了使用数据库连接池。业界知名的数据库连接池有不少，例如c3p0、DBCP、Tomcat JDBC Connection Pool、Druid等，不过最近最火的是HiKariCP。 HiKariCP号称是业界跑得最快的数据库连接池，这两年发展得顺风顺水，尤其是Springboot 2.0将其作为默认数据库连接池后，江湖一哥的地位已是毋">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/08/41案例分析-案例分析（四）：高性能数据库连接池HiKariCP/20200720001607146.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/08/41案例分析-案例分析（四）：高性能数据库连接池HiKariCP/20200720001942869.png">
+<meta property="og:updated_time" content="2023-08-11T00:00:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="41案例分析-案例分析（四）：高性能数据库连接池HiKariCP">
+<meta name="twitter:description" content="实际工作中，我们总会难免和数据库打交道；只要和数据库打交道，就免不了使用数据库连接池。业界知名的数据库连接池有不少，例如c3p0、DBCP、Tomcat JDBC Connection Pool、Druid等，不过最近最火的是HiKariCP。 HiKariCP号称是业界跑得最快的数据库连接池，这两年发展得顺风顺水，尤其是Springboot 2.0将其作为默认数据库连接池后，江湖一哥的地位已是毋">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/08/41案例分析-案例分析（四）：高性能数据库连接池HiKariCP/20200720001607146.png">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/08/41案例分析-案例分析（四）：高性能数据库连接池HiKariCP/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>41案例分析-案例分析（四）：高性能数据库连接池HiKariCP | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/08/41案例分析-案例分析（四）：高性能数据库连接池HiKariCP/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          41案例分析-案例分析（四）：高性能数据库连接池HiKariCP
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-08-11 08:00:00" itemprop="dateCreated datePublished" datetime="2023-08-11T08:00:00+08:00">2023-08-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java并发编程实战/" itemprop="url" rel="index"><span itemprop="name">Java并发编程实战</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>实际工作中，我们总会难免和数据库打交道；只要和数据库打交道，就免不了使用数据库连接池。业界知名的数据库连接池有不少，例如c3p0、DBCP、Tomcat JDBC Connection Pool、Druid等，不过最近最火的是HiKariCP。</p>
+<p><strong>HiKariCP号称是业界跑得最快的数据库连接池</strong>，这两年发展得顺风顺水，尤其是Springboot 2.0将其作为<strong>默认数据库连接池</strong>后，江湖一哥的地位已是毋庸置疑了。那它为什么那么快呢？今天咱们就重点聊聊这个话题。</p>
+<a id="more"></a>
+<h1 id="什么是数据库连接池"><a class="markdownIt-Anchor" href="#什么是数据库连接池"></a> 什么是数据库连接池</h1>
+<p>在详细分析HiKariCP高性能之前，我们有必要先简单介绍一下什么是数据库连接池。本质上，数据库连接池和线程池一样，都属于池化资源，作用都是避免重量级资源的频繁创建和销毁，对于数据库连接池来说，也就是避免数据库连接频繁创建和销毁。如下图所示，服务端会在运行期持有一定数量的数据库连接，当需要执行SQL时，并不是直接创建一个数据库连接，而是从连接池中获取一个；当SQL执行完，也并不是将数据库连接真的关掉，而是将其归还到连接池中。</p>
+<p><img src="/article/2023/08/41案例分析-案例分析（四）：高性能数据库连接池HiKariCP/20200720001607146.png" alt="img"></p>
+<p>数据库连接池示意图</p>
+<p>在实际工作中，我们都是使用各种持久化框架来完成数据库的增删改查，基本上不会直接和数据库连接池打交道，为了能让你更好地理解数据库连接池的工作原理，下面的示例代码并没有使用任何框架，而是原生地使用HiKariCP。执行数据库操作基本上是一系列规范化的步骤：</p>
+<ol>
+<li>通过数据源获取一个数据库连接；</li>
+<li>创建Statement；</li>
+<li>执行SQL；</li>
+<li>通过ResultSet获取SQL执行结果；</li>
+<li>释放ResultSet；</li>
+<li>释放Statement；</li>
+<li>释放数据库连接。</li>
+</ol>
+<p>下面的示例代码，通过 <code>ds.getConnection()</code> 获取一个数据库连接时，其实是向数据库连接池申请一个数据库连接，而不是创建一个新的数据库连接。同样，通过 <code>conn.close()</code> 释放一个数据库连接时，也不是直接将连接关闭，而是将连接归还给数据库连接池。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//数据库连接池配置</span></span><br><span class="line">HikariConfig config = <span class="keyword">new</span> HikariConfig();</span><br><span class="line">config.setMinimumIdle(<span class="number">1</span>);</span><br><span class="line">config.setMaximumPoolSize(<span class="number">2</span>);</span><br><span class="line">config.setConnectionTestQuery(<span class="string">"SELECT 1"</span>);</span><br><span class="line">config.setDataSourceClassName(<span class="string">"org.h2.jdbcx.JdbcDataSource"</span>);</span><br><span class="line">config.addDataSourceProperty(<span class="string">"url"</span>, <span class="string">"jdbc:h2:mem:test"</span>);</span><br><span class="line"><span class="comment">// 创建数据源</span></span><br><span class="line">DataSource ds = <span class="keyword">new</span> HikariDataSource(config);</span><br><span class="line">Connection conn = <span class="keyword">null</span>;</span><br><span class="line">Statement stmt = <span class="keyword">null</span>;</span><br><span class="line">ResultSet rs = <span class="keyword">null</span>;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">  <span class="comment">// 获取数据库连接</span></span><br><span class="line">  conn = ds.getConnection();</span><br><span class="line">  <span class="comment">// 创建Statement </span></span><br><span class="line">  stmt = conn.createStatement();</span><br><span class="line">  <span class="comment">// 执行SQL</span></span><br><span class="line">  rs = stmt.executeQuery(<span class="string">"select * from abc"</span>);</span><br><span class="line">  <span class="comment">// 获取结果</span></span><br><span class="line">  <span class="keyword">while</span> (rs.next()) &#123;</span><br><span class="line">    <span class="keyword">int</span> id = rs.getInt(<span class="number">1</span>);</span><br><span class="line">    ......</span><br><span class="line">  &#125;</span><br><span class="line">&#125; <span class="keyword">catch</span>(Exception e) &#123;</span><br><span class="line">   e.printStackTrace();</span><br><span class="line">&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">  <span class="comment">//关闭ResultSet</span></span><br><span class="line">  close(rs);</span><br><span class="line">  <span class="comment">//关闭Statement </span></span><br><span class="line">  close(stmt);</span><br><span class="line">  <span class="comment">//关闭Connection</span></span><br><span class="line">  close(conn);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//关闭资源</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">close</span><span class="params">(AutoCloseable rs)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (rs != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      rs.close();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (SQLException e) &#123;</span><br><span class="line">      e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole" target="_blank" rel="noopener">HiKariCP官方网站</a>解释了其性能之所以如此之高的秘密。微观上HiKariCP程序编译出的字节码执行效率更高，站在字节码的角度去优化Java代码，HiKariCP的作者对性能的执着可见一斑，不过遗憾的是他并没有详细解释都做了哪些优化。而宏观上主要是和两个数据结构有关，一个是FastList，另一个是ConcurrentBag。下面我们来看看它们是如何提升HiKariCP的性能的。</p>
+<h1 id="fastlist解决了哪些性能问题"><a class="markdownIt-Anchor" href="#fastlist解决了哪些性能问题"></a> FastList解决了哪些性能问题</h1>
+<p>按照规范步骤，执行完数据库操作之后，需要依次关闭ResultSet、Statement、Connection，但是总有粗心的同学只是关闭了Connection，而忘了关闭ResultSet和Statement。为了解决这种问题，最好的办法是当关闭Connection时，能够自动关闭Statement。为了达到这个目标，Connection就需要跟踪创建的Statement，最简单的办法就是将创建的Statement保存在数组ArrayList里，这样当关闭Connection的时候，就可以依次将数组中的所有Statement关闭。</p>
+<p>HiKariCP觉得用ArrayList还是太慢，当通过 <code>conn.createStatement()</code> 创建一个Statement时，需要调用ArrayList的add()方法加入到ArrayList中，这个是没有问题的；但是当通过 <code>stmt.close()</code> 关闭Statement的时候，需要调用 ArrayList的remove()方法来将其从ArrayList中删除，这里是有优化余地的。</p>
+<p>假设一个Connection依次创建6个Statement，分别是S1、S2、S3、S4、S5、S6，按照正常的编码习惯，关闭Statement的顺序一般是逆序的，关闭的顺序是：S6、S5、S4、S3、S2、S1，而ArrayList的remove(Object o)方法是顺序遍历查找，逆序删除而顺序查找，这样的查找效率就太慢了。如何优化呢？很简单，优化成逆序查找就可以了。</p>
+<p><img src="/article/2023/08/41案例分析-案例分析（四）：高性能数据库连接池HiKariCP/20200720001942869.png" alt="img"></p>
+<p>逆序删除示意图</p>
+<p>HiKariCP中的FastList相对于ArrayList的一个优化点就是将 <code>remove(Object element)</code> 方法的<strong>查找顺序变成了逆序查找</strong>。除此之外，FastList还有另一个优化点，是 <code>get(int index)</code> 方法没有对index参数进行越界检查，HiKariCP能保证不会越界，所以不用每次都进行越界检查。</p>
+<p>整体来看，FastList的优化点还是很简单的。下面我们再来聊聊HiKariCP中的另外一个数据结构ConcurrentBag，看看它又是如何提升性能的。</p>
+<h1 id="concurrentbag解决了哪些性能问题"><a class="markdownIt-Anchor" href="#concurrentbag解决了哪些性能问题"></a> ConcurrentBag解决了哪些性能问题</h1>
+<p>如果让我们自己来实现一个数据库连接池，最简单的办法就是用两个阻塞队列来实现，一个用于保存空闲数据库连接的队列idle，另一个用于保存忙碌数据库连接的队列busy；获取连接时将空闲的数据库连接从idle队列移动到busy队列，而关闭连接时将数据库连接从busy移动到idle。这种方案将并发问题委托给了阻塞队列，实现简单，但是性能并不是很理想。因为Java SDK中的阻塞队列是用锁实现的，而高并发场景下锁的争用对性能影响很大。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//忙碌队列</span></span><br><span class="line">BlockingQueue&lt;Connection&gt; busy;</span><br><span class="line"><span class="comment">//空闲队列</span></span><br><span class="line">BlockingQueue&lt;Connection&gt; idle;</span><br></pre></td></tr></table></figure>
+<p>HiKariCP并没有使用Java SDK中的阻塞队列，而是自己实现了一个叫做ConcurrentBag的并发容器。ConcurrentBag的设计最初源自C#，它的一个核心设计是使用ThreadLocal避免部分并发问题，不过HiKariCP中的ConcurrentBag并没有完全参考C#的实现，下面我们来看看它是如何实现的。</p>
+<p>ConcurrentBag中最关键的属性有4个，分别是：用于存储所有的数据库连接的共享队列sharedList、线程本地存储threadList、等待数据库连接的线程数waiters以及分配数据库连接的工具handoffQueue。其中，handoffQueue用的是Java SDK提供的SynchronousQueue，SynchronousQueue主要用于线程之间传递数据。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//用于存储所有的数据库连接</span></span><br><span class="line">CopyOnWriteArrayList&lt;T&gt; sharedList;</span><br><span class="line"><span class="comment">//线程本地存储中的数据库连接</span></span><br><span class="line">ThreadLocal&lt;List&lt;Object&gt;&gt; threadList;</span><br><span class="line"><span class="comment">//等待数据库连接的线程数</span></span><br><span class="line">AtomicInteger waiters;</span><br><span class="line"><span class="comment">//分配数据库连接的工具</span></span><br><span class="line">SynchronousQueue&lt;T&gt; handoffQueue;</span><br></pre></td></tr></table></figure>
+<p>当线程池创建了一个数据库连接时，通过调用ConcurrentBag的add()方法加入到ConcurrentBag中，下面是add()方法的具体实现，逻辑很简单，就是将这个连接加入到共享队列sharedList中，如果此时有线程在等待数据库连接，那么就通过handoffQueue将这个连接分配给等待的线程。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//将空闲连接添加到队列</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">add</span><span class="params">(<span class="keyword">final</span> T bagEntry)</span></span>&#123;</span><br><span class="line">  <span class="comment">//加入共享队列</span></span><br><span class="line">  sharedList.add(bagEntry);</span><br><span class="line">  <span class="comment">//如果有等待连接的线程，</span></span><br><span class="line">  <span class="comment">//则通过handoffQueue直接分配给等待的线程</span></span><br><span class="line">  <span class="keyword">while</span> (waiters.get() &gt; <span class="number">0</span> </span><br><span class="line">    &amp;&amp; bagEntry.getState() == STATE_NOT_IN_USE </span><br><span class="line">    &amp;&amp; !handoffQueue.offer(bagEntry)) &#123;</span><br><span class="line">      yield();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过ConcurrentBag提供的borrow()方法，可以获取一个空闲的数据库连接，borrow()的主要逻辑是：</p>
+<ol>
+<li>首先查看线程本地存储是否有空闲连接，如果有，则返回一个空闲的连接；</li>
+<li>如果线程本地存储中无空闲连接，则从共享队列中获取。</li>
+<li>如果共享队列中也没有空闲的连接，则请求线程需要等待。</li>
+</ol>
+<p>需要注意的是，线程本地存储中的连接是可以被其他线程窃取的，所以需要用CAS方法防止重复分配。在共享队列中获取空闲连接，也采用了CAS方法防止重复分配。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">T <span class="title">borrow</span><span class="params">(<span class="keyword">long</span> timeout, <span class="keyword">final</span> TimeUnit timeUnit)</span></span>&#123;</span><br><span class="line">  <span class="comment">// 先查看线程本地存储是否有空闲连接</span></span><br><span class="line">  <span class="keyword">final</span> List&lt;Object&gt; list = threadList.get();</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> i = list.size() - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line">    <span class="keyword">final</span> Object entry = list.remove(i);</span><br><span class="line">    <span class="keyword">final</span> T bagEntry = weakThreadLocals </span><br><span class="line">      ? ((WeakReference&lt;T&gt;) entry).get() </span><br><span class="line">      : (T) entry;</span><br><span class="line">    <span class="comment">//线程本地存储中的连接也可以被窃取，</span></span><br><span class="line">    <span class="comment">//所以需要用CAS方法防止重复分配</span></span><br><span class="line">    <span class="keyword">if</span> (bagEntry != <span class="keyword">null</span> </span><br><span class="line">      &amp;&amp; bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) &#123;</span><br><span class="line">      <span class="keyword">return</span> bagEntry;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 线程本地存储中无空闲连接，则从共享队列中获取</span></span><br><span class="line">  <span class="keyword">final</span> <span class="keyword">int</span> waiting = waiters.incrementAndGet();</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">for</span> (T bagEntry : sharedList) &#123;</span><br><span class="line">      <span class="comment">//如果共享队列中有空闲连接，则返回</span></span><br><span class="line">      <span class="keyword">if</span> (bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) &#123;</span><br><span class="line">        <span class="keyword">return</span> bagEntry;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//共享队列中没有连接，则需要等待</span></span><br><span class="line">    timeout = timeUnit.toNanos(timeout);</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">      <span class="keyword">final</span> <span class="keyword">long</span> start = currentTime();</span><br><span class="line">      <span class="keyword">final</span> T bagEntry = handoffQueue.poll(timeout, NANOSECONDS);</span><br><span class="line">      <span class="keyword">if</span> (bagEntry == <span class="keyword">null</span> </span><br><span class="line">        || bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) &#123;</span><br><span class="line">          <span class="keyword">return</span> bagEntry;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">//重新计算等待时间</span></span><br><span class="line">      timeout -= elapsedNanos(start);</span><br><span class="line">    &#125; <span class="keyword">while</span> (timeout &gt; <span class="number">10_000</span>);</span><br><span class="line">    <span class="comment">//超时没有获取到连接，返回null</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    waiters.decrementAndGet();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>释放连接需要调用ConcurrentBag提供的requite()方法，该方法的逻辑很简单，首先将数据库连接状态更改为STATE_NOT_IN_USE，之后查看是否存在等待线程，如果有，则分配给等待线程；如果没有，则将该数据库连接保存到线程本地存储里。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//释放连接</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">requite</span><span class="params">(<span class="keyword">final</span> T bagEntry)</span></span>&#123;</span><br><span class="line">  <span class="comment">//更新连接状态</span></span><br><span class="line">  bagEntry.setState(STATE_NOT_IN_USE);</span><br><span class="line">  <span class="comment">//如果有等待的线程，则直接分配给线程，无需进入任何队列</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; waiters.get() &gt; <span class="number">0</span>; i++) &#123;</span><br><span class="line">    <span class="keyword">if</span> (bagEntry.getState() != STATE_NOT_IN_USE </span><br><span class="line">      || handoffQueue.offer(bagEntry)) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> ((i &amp; <span class="number">0xff</span>) == <span class="number">0xff</span>) &#123;</span><br><span class="line">      parkNanos(MICROSECONDS.toNanos(<span class="number">10</span>));</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      yield();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//如果没有等待的线程，则进入线程本地存储</span></span><br><span class="line">  <span class="keyword">final</span> List&lt;Object&gt; threadLocalList = threadList.get();</span><br><span class="line">  <span class="keyword">if</span> (threadLocalList.size() &lt; <span class="number">50</span>) &#123;</span><br><span class="line">    threadLocalList.add(weakThreadLocals </span><br><span class="line">      ? <span class="keyword">new</span> WeakReference&lt;&gt;(bagEntry) </span><br><span class="line">      : bagEntry);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h1>
+<p>HiKariCP中的FastList和ConcurrentBag这两个数据结构使用得非常巧妙，虽然实现起来并不复杂，但是对于性能的提升非常明显，根本原因在于这两个数据结构适用于数据库连接池这个特定的场景。FastList适用于逆序删除场景；而ConcurrentBag通过ThreadLocal做一次预分配，避免直接竞争共享资源，非常适合池化资源的分配。</p>
+<p>在实际工作中，我们遇到的并发问题千差万别，这时选择合适的并发数据结构就非常重要了。当然能选对的前提是对特定场景的并发特性有深入的了解，只有了解到无谓的性能消耗在哪里，才能对症下药。</p>
+<p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Java并发编程实战/" rel="tag"># Java并发编程实战</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2023/08/40案例分析-案例分析（三）：高性能队列Disruptor/" rel="prev" title="40案例分析-案例分析（三）：高性能队列Disruptor">
+      <i class="fa fa-chevron-left"></i> 40案例分析-案例分析（三）：高性能队列Disruptor
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2023/08/42其他并发模型-Actor模型：面向对象原生的并发模型/" rel="next" title="42其他并发模型-Actor模型：面向对象原生的并发模型">
+      42其他并发模型-Actor模型：面向对象原生的并发模型 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么是数据库连接池"><span class="nav-number">1.</span> <span class="nav-text"> 什么是数据库连接池</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#fastlist解决了哪些性能问题"><span class="nav-number">2.</span> <span class="nav-text"> FastList解决了哪些性能问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#concurrentbag解决了哪些性能问题"><span class="nav-number">3.</span> <span class="nav-text"> ConcurrentBag解决了哪些性能问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text"> 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">531</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '09aa476a7a239f56492e2c2d552219e3',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

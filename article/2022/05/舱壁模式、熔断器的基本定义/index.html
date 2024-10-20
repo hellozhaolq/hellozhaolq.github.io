@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="原文链接：https://blog.csdn.net/fly910905/article/details/104090857">
+<meta property="og:type" content="article">
+<meta property="og:title" content="舱壁模式、熔断器的基本定义">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/05/舱壁模式、熔断器的基本定义/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="原文链接：https://blog.csdn.net/fly910905/article/details/104090857">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-05-05T00:02:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="舱壁模式、熔断器的基本定义">
+<meta name="twitter:description" content="原文链接：https://blog.csdn.net/fly910905/article/details/104090857">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/05/舱壁模式、熔断器的基本定义/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>舱壁模式、熔断器的基本定义 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/05/舱壁模式、熔断器的基本定义/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          舱壁模式、熔断器的基本定义
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-05-05 08:02:00" itemprop="dateCreated datePublished" datetime="2022-05-05T08:02:00+08:00">2022-05-05</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>原文链接：<a href="https://blog.csdn.net/fly910905/article/details/104090857" target="_blank" rel="noopener">https://blog.csdn.net/fly910905/article/details/104090857</a></p>
+<a id="more"></a>
+<h1 id="舱壁模式-熔断器的基本定义"><a class="markdownIt-Anchor" href="#舱壁模式-熔断器的基本定义"></a> 舱壁模式、熔断器的基本定义</h1>
+<h2 id="舱壁隔离bulkhead-isolation"><a class="markdownIt-Anchor" href="#舱壁隔离bulkhead-isolation"></a> 舱壁隔离(Bulkhead Isolation)</h2>
+<p>在造船行业，往往使用此类模式对船舱进行隔离，利用舱壁将不同的船舱隔离起来，这样如果一个船舱破了进水，只损失一个船舱，其它船舱可以不受影响，而借鉴造船行业的经验，这种模式也在软件行业得到使用。</p>
+<blockquote>
+<p>**舱壁模式（Bulkhead）**隔离了每个工作负载或服务的关键资源，如连接池、内存和 CPU。使用舱壁避免了单个工作负载（或服务）消耗掉所有资源，从而导致其他服务出现故障的场景。这种模式主要是通过防止由一个服务引起的级联故障来增加系统的弹性。</p>
+</blockquote>
+<p><strong>舱壁模式</strong>对于熟悉<a href="https://so.csdn.net/so/search?q=Docker&amp;spm=1001.2101.3001.7020" target="_blank" rel="noopener">Docker</a>的软件开发者一定不陌生，Docker通过“舱壁模式”实现进程的隔离，使得容器与容器之间不会互相影响。</p>
+<p><strong>Hystrix</strong>则使用该模式实现线程池的隔离。通过将每个依赖服务分配独立的线程池进行资源隔离，从而避免服务雪崩。</p>
+<p><strong>Hystrix</strong>会为每一个Hystrix命令（@HystrixCommand来将某个函数包装成了Hystrix命令，Hystrix框架就会自动的为这个函数实现调用的隔离）创建一个独立的线程池，这样就算某个在Hystrix命令包装下的依赖服务出现延迟过高的情况，也只是对该依赖服务的调用产生影响，而不会拖慢其他的服务。</p>
+<p><font size="4" color="blue"><strong>何时使舱壁模式</strong></font></p>
+<p>使用此模式可以：</p>
+<ul>
+<li>隔离使用一组后端服务所用的资源，尤其是应用程序可以提供某种功能级别时，即使某个服务未能响应。</li>
+<li>将关键使用者与标准使用者相隔离。</li>
+<li>防止应用程序发生连锁故障。</li>
+</ul>
+<p>此模式可能不适用于以下情况：</p>
+<ul>
+<li>项目中可能不接受资源的低效利用。</li>
+<li>没有必要提高复杂性</li>
+</ul>
+<h2 id="熔断器circuit-breaker"><a class="markdownIt-Anchor" href="#熔断器circuit-breaker"></a> 熔断器(Circuit Breaker)</h2>
+<p>在我们的工程实践中，偶尔会<strong>遇到一些服务由于网络连接超时，系统有异常或load过高出现暂时不可用等情况，导致对这些服务的调用失败，可能需要一段时间才能修复</strong>，这种对请求的阻塞可能会占用宝贵的系统资源，如：内存，线程，数据库连接等等，最坏的情况下会导致这些资源被消耗殆尽，使得系统里不相关的部分所使用的资源也耗尽从而拖累整个系统。在这种情况下，<strong>调用操作能够立即返回错误而不是等待超时的发生或者重试可能是一种更好的选择，只有当被调用的服务有可能成功时我们再去尝试</strong>。</p>
+<p>熔断器模式可以<strong>防止我们的系统不断地尝试执行可能会失败的调用，使得我们的系统继续执行而不用等待修正错误，或者浪费CPU时间去等到长时间的超时产生</strong>。熔断器模式也可以使我们系统能够检测错误是否已经修正，如果已经修正，系统会再次尝试调用操作。</p>
+<p><font size="4" color="blue"><strong>何时使用熔断器</strong></font></p>
+<p>使用此模式：</p>
+<ul>
+<li>防止应用程序尝试调用远程服务或访问共享资源（如果此操作很可能失败）。</li>
+</ul>
+<p>不推荐使用此模式：</p>
+<ul>
+<li>用于处理对应用程序中的本地私有资源的访问，例如内存中数据结构。 在此环境中，使用断路器会增加系统开销。</li>
+<li>作为处理应用程序的业务逻辑中的异常的替代。</li>
+</ul>
+<h1 id="舱壁模式-熔断器的相同点"><a class="markdownIt-Anchor" href="#舱壁模式-熔断器的相同点"></a> 舱壁模式、熔断器的相同点</h1>
+<blockquote>
+<p>从设计原则、采取措施、实现效果、异常回退四个维度</p>
+</blockquote>
+<h2 id="设计原则"><a class="markdownIt-Anchor" href="#设计原则"></a> 设计原则</h2>
+<p>遵循服务容错的基本原则： “Design for Failure”</p>
+<p>服务容错的设计有个基本原则，就是“Design for Failure”。为了避免出现“千里之堤溃于蚁穴”这种情况，在设计上需要<strong>考虑到各种边界场景和对于服务间调用出现的异常或延迟情况</strong>。这一切都是为了达到以下目标：</p>
+<blockquote>
+<p>1）一个依赖服务的故障不会严重破坏用户的体验。</p>
+<p>2）系统能自动或半自动处理故障，具备自我恢复能力。</p>
+</blockquote>
+<p>基于这个原则和目标，衍生出一些模式（舱壁模式、熔断器、超时与重试、回退等），能够解决分布式服务调用中的一些问题，提高系统在故障发生时的存活能力。</p>
+<h2 id="采取措施"><a class="markdownIt-Anchor" href="#采取措施"></a> 采取措施</h2>
+<p>保护性机制：服务降级</p>
+<p>服务降级的措施包括:</p>
+<blockquote>
+<ol>
+<li>资源隔离</li>
+<li>对依赖服务进行分类</li>
+<li>不可用服务的调用快速失败</li>
+</ol>
+</blockquote>
+<p><strong>资源隔离</strong>主要是对调用服务的线程池进行隔离，是舱壁模式的一种实现</p>
+<p><strong>对依赖服务进行分类</strong>–我们根据具体业务,将依赖服务分为: 强依赖和若依赖. 强依赖服务不可用会导致当前业务中止,而弱依赖服务的不可用不会导致当前业务的中止.</p>
+<p><strong>不可用服务的调用快速失败</strong>一般通过 超时机制, 熔断器 和熔断后的 降级方法 来实现.</p>
+<p>在Hystrix组件中，为了使得故障隔离，它提供的解决方案就包含：舱壁隔离（线程隔离）、超时控制和服务降级、熔断机制的处理</p>
+<h2 id="3-实现效果"><a class="markdownIt-Anchor" href="#3-实现效果"></a> 3. 实现效果</h2>
+<p>降低依赖服务对整个系统的影响，避免了单个服务故障消耗掉所有资源</p>
+<p>熔断、舱壁(bulkhead)实现都能够降低依赖服务对整个系统的影响，帮助我们提高系统的可用性</p>
+<p>由于服务之间是互相依赖，因此任何组件都可能出错导致用户不能访问。为尽可能减少部分中断带来的影响，我们需要构建容错能力强的服务，以从容应对发生的某些中断。</p>
+<h2 id="异常回退"><a class="markdownIt-Anchor" href="#异常回退"></a> 异常回退</h2>
+<p>无论是熔断器，还是舱壁隔离模式，它们在使用过程中都会出现异常情况，异常情况的处理方式间接影响到用户的体验，针对异常情况的处理，需要有回退(fallback)策略支撑。</p>
+<h1 id="舱壁模式-熔断器的不同点"><a class="markdownIt-Anchor" href="#舱壁模式-熔断器的不同点"></a> 舱壁模式、熔断器的不同点</h1>
+<h2 id="使用场景不一样"><a class="markdownIt-Anchor" href="#使用场景不一样"></a> 使用场景不一样</h2>
+<blockquote>
+<p>考虑使用舱壁模式，尤其是共享服务模式下。如：kubernetes的pod资源对象具有自身的 CPU 和内存资源与限制。</p>
+<p>当外部依赖比较严重，要考虑熔断器的使用</p>
+</blockquote>
+<h2 id="是否增加线程数"><a class="markdownIt-Anchor" href="#是否增加线程数"></a> 是否增加线程数</h2>
+<p>使用舱壁隔离模式，会为依赖服务调用维护一个小的线程池，当一个依赖服务由于响应慢导致线程池任务满的时候，不会影响到其他依赖服务的调用，它的缺点就是会增加线程数。</p>
+<p>熔断器在在调用异常服务时，能够快速返回结果，避免线程等待，不会增加线程数。</p>
+<h2 id="是否提供恢复服务调用的可能"><a class="markdownIt-Anchor" href="#是否提供恢复服务调用的可能"></a> 是否提供恢复服务调用的可能</h2>
+<p>熔断器模式定义了熔断器开关相互转换的逻辑（断路器打开一段时间后，会自动进入半开状态，<strong>断路器打开、关闭、半开的逻辑转换</strong>）。熔断器的开关能保证服务调用者在调用异常服务时，快速返回结果，避免大量的同步等待，并且熔断器能在一段时间后继续侦测请求执行结果，提供恢复服务调用的可能。</p>
+<p>熔断器模式可以使我们系统能够检测错误是否已经修正，如果已经修正，系统会再次尝试调用操作。</p>
+<p>舱壁模式则不会有恢复服务调用的可能</p>
+<p>参考链接：</p>
+<p><a href="https://mozillazg.com/2019/06/release-it-design-and-deploy-production-ready-software-second-edition-2th-read-note-2" target="_blank" rel="noopener">https://mozillazg.com/2019/06/release-it-design-and-deploy-production-ready-software-second-edition-2th-read-note-2</a></p>
+<p><a href="https://tech.meituan.com/2016/11/11/service-fault-tolerant-pattern.html" target="_blank" rel="noopener">https://tech.meituan.com/2016/11/11/service-fault-tolerant-pattern.html</a></p>
+<p><a href="https://docs.microsoft.com/zh-cn/azure/architecture/patterns/bulkhead" target="_blank" rel="noopener">https://docs.microsoft.com/zh-cn/azure/architecture/patterns/bulkhead</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2022/05/分布式事务解决方案详解/" rel="prev" title="分布式事务解决方案详解">
+      <i class="fa fa-chevron-left"></i> 分布式事务解决方案详解
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2022/10/设计模式之美-开篇词/" rel="next" title="设计模式之美-开篇词">
+      设计模式之美-开篇词 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#舱壁模式-熔断器的基本定义"><span class="nav-number">1.</span> <span class="nav-text"> 舱壁模式、熔断器的基本定义</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#舱壁隔离bulkhead-isolation"><span class="nav-number">1.1.</span> <span class="nav-text"> 舱壁隔离(Bulkhead Isolation)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#熔断器circuit-breaker"><span class="nav-number">1.2.</span> <span class="nav-text"> 熔断器(Circuit Breaker)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#舱壁模式-熔断器的相同点"><span class="nav-number">2.</span> <span class="nav-text"> 舱壁模式、熔断器的相同点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计原则"><span class="nav-number">2.1.</span> <span class="nav-text"> 设计原则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#采取措施"><span class="nav-number">2.2.</span> <span class="nav-text"> 采取措施</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-实现效果"><span class="nav-number">2.3.</span> <span class="nav-text"> 3. 实现效果</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#异常回退"><span class="nav-number">2.4.</span> <span class="nav-text"> 异常回退</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#舱壁模式-熔断器的不同点"><span class="nav-number">3.</span> <span class="nav-text"> 舱壁模式、熔断器的不同点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用场景不一样"><span class="nav-number">3.1.</span> <span class="nav-text"> 使用场景不一样</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#是否增加线程数"><span class="nav-number">3.2.</span> <span class="nav-text"> 是否增加线程数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#是否提供恢复服务调用的可能"><span class="nav-number">3.3.</span> <span class="nav-text"> 是否提供恢复服务调用的可能</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">531</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : 'a47b0de75d2cfefa37652d4da9e9b400',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo2.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.zhaolq.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="从今天开始，我们就正式地进入到实战环节。实战环节包括两部分，一部分是开源项目实战，另一部分是项目实战。 在开源项目实战部分，我会带你剖析几个经典的开源项目中用到的设计原则、思想和模式，这其中就包括对Java JDK、Unix、Google Guava、Spring、MyBatis这样五个开源项目的分析。在项目实战部分，我们精心挑选了几个实战项目，手把手地带你利用之前学过的设计原则、思想、模式，来对">
+<meta name="keywords" content="设计模式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="76开源与项目实战之开源实战-开源实战一（上）：通过剖析Java JDK源码学习灵活应用设计模式">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/12/76开源与项目实战之开源实战-开源实战一（上）：通过剖析Java JDK源码学习灵活应用设计模式/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="从今天开始，我们就正式地进入到实战环节。实战环节包括两部分，一部分是开源项目实战，另一部分是项目实战。 在开源项目实战部分，我会带你剖析几个经典的开源项目中用到的设计原则、思想和模式，这其中就包括对Java JDK、Unix、Google Guava、Spring、MyBatis这样五个开源项目的分析。在项目实战部分，我们精心挑选了几个实战项目，手把手地带你利用之前学过的设计原则、思想、模式，来对">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-12-16T00:00:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="76开源与项目实战之开源实战-开源实战一（上）：通过剖析Java JDK源码学习灵活应用设计模式">
+<meta name="twitter:description" content="从今天开始，我们就正式地进入到实战环节。实战环节包括两部分，一部分是开源项目实战，另一部分是项目实战。 在开源项目实战部分，我会带你剖析几个经典的开源项目中用到的设计原则、思想和模式，这其中就包括对Java JDK、Unix、Google Guava、Spring、MyBatis这样五个开源项目的分析。在项目实战部分，我们精心挑选了几个实战项目，手把手地带你利用之前学过的设计原则、思想、模式，来对">
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/12/76开源与项目实战之开源实战-开源实战一（上）：通过剖析Java JDK源码学习灵活应用设计模式/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>76开源与项目实战之开源实战-开源实战一（上）：通过剖析Java JDK源码学习灵活应用设计模式 | 洋蔥</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152746926-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-152746926-1');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8d21fde76c62d630cc1e527ece726dda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">洋蔥</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-something">
+
+    <a href="/something/" rel="section"><i class="fa fa-fw fa-envira"></i>有料</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/12/76开源与项目实战之开源实战-开源实战一（上）：通过剖析Java JDK源码学习灵活应用设计模式/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/resource/image/avatar.png">
+      <meta itemprop="name" content="zhaolq">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          76开源与项目实战之开源实战-开源实战一（上）：通过剖析Java JDK源码学习灵活应用设计模式
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-12-16 08:00:00" itemprop="dateCreated datePublished" datetime="2022-12-16T08:00:00+08:00">2022-12-16</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/设计模式/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>从今天开始，我们就正式地进入到实战环节。实战环节包括两部分，一部分是开源项目实战，另一部分是项目实战。</p>
+<p>在开源项目实战部分，我会带你剖析几个经典的开源项目中用到的设计原则、思想和模式，这其中就包括对Java JDK、Unix、Google Guava、Spring、MyBatis这样五个开源项目的分析。在项目实战部分，我们精心挑选了几个实战项目，手把手地带你利用之前学过的设计原则、思想、模式，来对它们进行分析、设计和代码实现，这其中就包括鉴权限流、幂等重试、灰度发布这样三个项目。</p>
+<p>接下来的两节课，我们重点剖析Java JDK中用到的几种常见的设计模式。学习的目的是让你体会，在真实的项目开发中，要学会活学活用，切不可过于死板，生搬硬套设计模式的设计与实现。除此之外，针对每个模式，我们不可能像前面学习理论知识那样，分析得细致入微，很多都是点到为止。在已经具备之前理论知识的前提下，我想你可以跟着我的指引自己去研究，有哪里不懂的话，也可以再回过头去看下之前的理论讲解。</p>
+<p>话不多说，让我们正式开始今天的学习吧！</p>
+<a id="more"></a>
+<h1 id="工厂模式在calendar类中的应用"><a class="markdownIt-Anchor" href="#工厂模式在calendar类中的应用"></a> 工厂模式在Calendar类中的应用</h1>
+<p>在前面讲到工厂模式的时候，大部分工厂类都是以Factory作为后缀来命名，并且工厂类主要负责创建对象这样一件事情。但在实际的项目开发中，工厂类的设计更加灵活。那我们就来看下，工厂模式在Java JDK中的一个应用：java.util.Calendar。从命名上，我们无法看出它是一个工厂类。</p>
+<p>Calendar类提供了大量跟日期相关的功能代码，同时，又提供了一个getInstance()工厂方法，用来根据不同的TimeZone和Locale创建不同的Calendar子类对象。也就是说，功能代码和工厂方法代码耦合在了一个类中。所以，即便我们去查看它的源码，如果不细心的话，也很难发现它用到了工厂模式。同时，因为它不单单是一个工厂类，所以，它并没有以Factory作为后缀来命名。</p>
+<p>Calendar类的相关代码如下所示，大部分代码都已经省略，我只给出了getInstance()工厂方法的代码实现。从代码中，我们可以看出，getInstance()方法可以根据不同TimeZone和Locale，创建不同的Calendar子类对象，比如BuddhistCalendar、JapaneseImperialCalendar、GregorianCalendar，这些细节完全封装在工厂方法中，使用者只需要传递当前的时区和地址，就能够获得一个Calendar类对象来使用，而获得的对象具体是哪个Calendar子类的对象，使用者在使用的时候并不关心。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Calendar</span> <span class="keyword">implements</span> <span class="title">Serializable</span>, <span class="title">Cloneable</span>, <span class="title">Comparable</span>&lt;<span class="title">Calendar</span>&gt; </span>&#123;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Calendar <span class="title">getInstance</span><span class="params">(TimeZone zone, Locale aLocale)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> createCalendar(zone, aLocale);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> Calendar <span class="title">createCalendar</span><span class="params">(TimeZone zone,Locale aLocale)</span> </span>&#123;</span><br><span class="line">    CalendarProvider provider = LocaleProviderAdapter.getAdapter(</span><br><span class="line">        CalendarProvider<span class="class">.<span class="keyword">class</span>, <span class="title">aLocale</span>).<span class="title">getCalendarProvider</span>()</span>;</span><br><span class="line">    <span class="keyword">if</span> (provider != <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> provider.getInstance(zone, aLocale);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (IllegalArgumentException iae) &#123;</span><br><span class="line">        <span class="comment">// fall back to the default instantiation</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Calendar cal = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (aLocale.hasExtensions()) &#123;</span><br><span class="line">      String caltype = aLocale.getUnicodeLocaleType(<span class="string">"ca"</span>);</span><br><span class="line">      <span class="keyword">if</span> (caltype != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">switch</span> (caltype) &#123;</span><br><span class="line">          <span class="keyword">case</span> <span class="string">"buddhist"</span>:</span><br><span class="line">            cal = <span class="keyword">new</span> BuddhistCalendar(zone, aLocale);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">          <span class="keyword">case</span> <span class="string">"japanese"</span>:</span><br><span class="line">            cal = <span class="keyword">new</span> JapaneseImperialCalendar(zone, aLocale);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">          <span class="keyword">case</span> <span class="string">"gregory"</span>:</span><br><span class="line">            cal = <span class="keyword">new</span> GregorianCalendar(zone, aLocale);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (cal == <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">if</span> (aLocale.getLanguage() == <span class="string">"th"</span> &amp;&amp; aLocale.getCountry() == <span class="string">"TH"</span>) &#123;</span><br><span class="line">        cal = <span class="keyword">new</span> BuddhistCalendar(zone, aLocale);</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (aLocale.getVariant() == <span class="string">"JP"</span> &amp;&amp; aLocale.getLanguage() == <span class="string">"ja"</span> &amp;&amp; aLocale.getCountry() == <span class="string">"JP"</span>) &#123;</span><br><span class="line">        cal = <span class="keyword">new</span> JapaneseImperialCalendar(zone, aLocale);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        cal = <span class="keyword">new</span> GregorianCalendar(zone, aLocale);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> cal;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="建造者模式在calendar类中的应用"><a class="markdownIt-Anchor" href="#建造者模式在calendar类中的应用"></a> 建造者模式在Calendar类中的应用</h1>
+<p>还是刚刚的Calendar类，它不仅仅用到了工厂模式，还用到了建造者模式。我们知道，建造者模式有两种实现方法，一种是单独定义一个Builder类，另一种是将Builder实现为原始类的内部类。Calendar就采用了第二种实现思路。我们先来看代码再讲解，相关代码我贴在了下面。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Calendar</span> <span class="keyword">implements</span> <span class="title">Serializable</span>, <span class="title">Cloneable</span>, <span class="title">Comparable</span>&lt;<span class="title">Calendar</span>&gt; </span>&#123;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Builder</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> NFIELDS = FIELD_COUNT + <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> WEEK_YEAR = FIELD_COUNT;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> instant;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span>[] fields;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> nextStamp;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> maxFieldIndex;</span><br><span class="line">    <span class="keyword">private</span> String type;</span><br><span class="line">    <span class="keyword">private</span> TimeZone zone;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">boolean</span> lenient = <span class="keyword">true</span>;</span><br><span class="line">    <span class="keyword">private</span> Locale locale;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> firstDayOfWeek, minimalDaysInFirstWeek;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Builder</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> Builder <span class="title">setInstant</span><span class="params">(<span class="keyword">long</span> instant)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (fields != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.instant = instant;</span><br><span class="line">        nextStamp = COMPUTED;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//...省略n多set()方法</span></span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> Calendar <span class="title">build</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (locale == <span class="keyword">null</span>) &#123;</span><br><span class="line">        locale = Locale.getDefault();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (zone == <span class="keyword">null</span>) &#123;</span><br><span class="line">        zone = TimeZone.getDefault();</span><br><span class="line">      &#125;</span><br><span class="line">      Calendar cal;</span><br><span class="line">      <span class="keyword">if</span> (type == <span class="keyword">null</span>) &#123;</span><br><span class="line">        type = locale.getUnicodeLocaleType(<span class="string">"ca"</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (type == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (locale.getCountry() == <span class="string">"TH"</span> &amp;&amp; locale.getLanguage() == <span class="string">"th"</span>) &#123;</span><br><span class="line">          type = <span class="string">"buddhist"</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          type = <span class="string">"gregory"</span>;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">switch</span> (type) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">"gregory"</span>:</span><br><span class="line">          cal = <span class="keyword">new</span> GregorianCalendar(zone, locale, <span class="keyword">true</span>);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">"iso8601"</span>:</span><br><span class="line">          GregorianCalendar gcal = <span class="keyword">new</span> GregorianCalendar(zone, locale, <span class="keyword">true</span>);</span><br><span class="line">          <span class="comment">// make gcal a proleptic Gregorian</span></span><br><span class="line">          gcal.setGregorianChange(<span class="keyword">new</span> Date(Long.MIN_VALUE));</span><br><span class="line">          <span class="comment">// and week definition to be compatible with ISO 8601</span></span><br><span class="line">          setWeekDefinition(MONDAY, <span class="number">4</span>);</span><br><span class="line">          cal = gcal;</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">"buddhist"</span>:</span><br><span class="line">          cal = <span class="keyword">new</span> BuddhistCalendar(zone, locale);</span><br><span class="line">          cal.clear();</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">"japanese"</span>:</span><br><span class="line">          cal = <span class="keyword">new</span> JapaneseImperialCalendar(zone, locale, <span class="keyword">true</span>);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"unknown calendar type: "</span> + type);</span><br><span class="line">      &#125;</span><br><span class="line">      cal.setLenient(lenient);</span><br><span class="line">      <span class="keyword">if</span> (firstDayOfWeek != <span class="number">0</span>) &#123;</span><br><span class="line">        cal.setFirstDayOfWeek(firstDayOfWeek);</span><br><span class="line">        cal.setMinimalDaysInFirstWeek(minimalDaysInFirstWeek);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (isInstantSet()) &#123;</span><br><span class="line">        cal.setTimeInMillis(instant);</span><br><span class="line">        cal.complete();</span><br><span class="line">        <span class="keyword">return</span> cal;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (fields != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">boolean</span> weekDate = isSet(WEEK_YEAR) &amp;&amp; fields[WEEK_YEAR] &gt; fields[YEAR];</span><br><span class="line">        <span class="keyword">if</span> (weekDate &amp;&amp; !cal.isWeekDateSupported()) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"week date is unsupported by "</span> + type);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> stamp = MINIMUM_USER_STAMP; stamp &lt; nextStamp; stamp++) &#123;</span><br><span class="line">          <span class="keyword">for</span> (<span class="keyword">int</span> index = <span class="number">0</span>; index &lt;= maxFieldIndex; index++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (fields[index] == stamp) &#123;</span><br><span class="line">              cal.set(index, fields[NFIELDS + index]);</span><br><span class="line">              <span class="keyword">break</span>;</span><br><span class="line">             &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (weekDate) &#123;</span><br><span class="line">          <span class="keyword">int</span> weekOfYear = isSet(WEEK_OF_YEAR) ? fields[NFIELDS + WEEK_OF_YEAR] : <span class="number">1</span>;</span><br><span class="line">          <span class="keyword">int</span> dayOfWeek = isSet(DAY_OF_WEEK) ? fields[NFIELDS + DAY_OF_WEEK] : cal.getFirstDayOfWeek();</span><br><span class="line">          cal.setWeekDate(fields[NFIELDS + WEEK_YEAR], weekOfYear, dayOfWeek);</span><br><span class="line">        &#125;</span><br><span class="line">        cal.complete();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> cal;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>看了上面的代码，我有一个问题请你思考一下：既然已经有了getInstance()工厂方法来创建Calendar类对象，为什么还要用Builder来创建Calendar类对象呢？这两者之间的区别在哪里呢？</p>
+<p>实际上，在前面讲到这两种模式的时候，我们对它们之间的区别做了详细的对比，现在，我们再来一块回顾一下。工厂模式是用来创建不同但是相关类型的对象（继承同一父类或者接口的一组子类），由给定的参数来决定创建哪种类型的对象。建造者模式用来创建一种类型的复杂对象，通过设置不同的可选参数，“定制化”地创建不同的对象。</p>
+<p>网上有一个经典的例子很好地解释了两者的区别。</p>
+<blockquote>
+<p>顾客走进一家餐馆点餐，我们利用工厂模式，根据用户不同的选择，来制作不同的食物，比如披萨、汉堡、沙拉。对于披萨来说，用户又有各种配料可以定制，比如奶酪、西红柿、起司，我们通过建造者模式根据用户选择的不同配料来制作不同的披萨。</p>
+</blockquote>
+<p>粗看Calendar的Builder类的build()方法，你可能会觉得它有点像工厂模式。你的感觉没错，前面一半代码确实跟getInstance()工厂方法类似，根据不同的type创建了不同的Calendar子类。实际上，后面一半代码才属于标准的建造者模式，根据setXXX()方法设置的参数，来定制化刚刚创建的Calendar子类对象。</p>
+<p>你可能会说，这还能算是建造者模式吗？我用<a href="https://time.geekbang.org/column/article/199674" target="_blank" rel="noopener">第46讲</a>的一段话来回答你：</p>
+<blockquote>
+<p>我们也不要太学院派，非得把工厂模式、建造者模式分得那么清楚，我们需要知道的是，每个模式为什么这么设计，能解决什么问题。只有了解了这些最本质的东西，我们才能不生搬硬套，才能灵活应用，甚至可以混用各种模式，创造出新的模式来解决特定场景的问题。</p>
+</blockquote>
+<p>实际上，从Calendar这个例子，我们也能学到，不要过于死板地套用各种模式的原理和实现，不要不敢做丝毫的改动。模式是死的，用的人是活的。在实际上的项目开发中，不仅各种模式可以混合在一起使用，而且具体的代码实现，也可以根据具体的功能需求做灵活的调整。</p>
+<h1 id="装饰器模式在collections类中的应用"><a class="markdownIt-Anchor" href="#装饰器模式在collections类中的应用"></a> 装饰器模式在Collections类中的应用</h1>
+<p>我们前面讲到，Java IO类库是装饰器模式的非常经典的应用。实际上，Java的Collections类也用到了装饰器模式。</p>
+<p>Collections类是一个集合容器的工具类，提供了很多静态方法，用来创建各种集合容器，比如通过unmodifiableColletion()静态方法，来创建UnmodifiableCollection类对象。而这些容器类中的UnmodifiableCollection类、CheckedCollection和SynchronizedCollection类，就是针对Collection类的装饰器类。</p>
+<p>因为刚刚提到的这三个装饰器类，在代码结构上几乎一样，所以，我们这里只拿其中的UnmodifiableCollection类来举例讲解一下。UnmodifiableCollection类是Collections类的一个内部类，相关代码我摘抄到了下面，你可以先看下。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Collections</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="title">Collections</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">    </span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Collection&lt;T&gt; <span class="title">unmodifiableCollection</span><span class="params">(Collection&lt;? extends T&gt; c)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> UnmodifiableCollection&lt;&gt;(c);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">UnmodifiableCollection</span>&lt;<span class="title">E</span>&gt; <span class="keyword">implements</span> <span class="title">Collection</span>&lt;<span class="title">E</span>&gt;,   <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1820017752578914078L</span>;</span><br><span class="line">    <span class="keyword">final</span> Collection&lt;? extends E&gt; c;</span><br><span class="line"></span><br><span class="line">    UnmodifiableCollection(Collection&lt;? extends E&gt; c) &#123;</span><br><span class="line">      <span class="keyword">if</span> (c==<span class="keyword">null</span>)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</span><br><span class="line">      <span class="keyword">this</span>.c = c;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">size</span><span class="params">()</span>                   </span>&#123;<span class="keyword">return</span> c.size();&#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isEmpty</span><span class="params">()</span>            </span>&#123;<span class="keyword">return</span> c.isEmpty();&#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">contains</span><span class="params">(Object o)</span>   </span>&#123;<span class="keyword">return</span> c.contains(o);&#125;</span><br><span class="line">    <span class="keyword">public</span> Object[] toArray()           &#123;<span class="keyword">return</span> c.toArray();&#125;</span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; T[] toArray(T[] a)       &#123;<span class="keyword">return</span> c.toArray(a);&#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span>            </span>&#123;<span class="keyword">return</span> c.toString();&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Iterator&lt;E&gt; <span class="title">iterator</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">new</span> Iterator&lt;E&gt;() &#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> Iterator&lt;? extends E&gt; i = c.iterator();</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">hasNext</span><span class="params">()</span> </span>&#123;<span class="keyword">return</span> i.hasNext();&#125;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> E <span class="title">next</span><span class="params">()</span>          </span>&#123;<span class="keyword">return</span> i.next();&#125;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">remove</span><span class="params">()</span> </span>&#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">forEachRemaining</span><span class="params">(Consumer&lt;? <span class="keyword">super</span> E&gt; action)</span> </span>&#123;</span><br><span class="line">          <span class="comment">// Use backing collection version</span></span><br><span class="line">          i.forEachRemaining(action);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">add</span><span class="params">(E e)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">remove</span><span class="params">(Object o)</span> </span>&#123;</span><br><span class="line">       <span class="function">hrow new <span class="title">UnsupportedOperationException</span><span class="params">()</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">containsAll</span><span class="params">(Collection&lt;?&gt; coll)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> c.containsAll(coll);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">addAll</span><span class="params">(Collection&lt;? extends E&gt; coll)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">removeAll</span><span class="params">(Collection&lt;?&gt; coll)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">retainAll</span><span class="params">(Collection&lt;?&gt; coll)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">clear</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Override default methods in Collection</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">forEach</span><span class="params">(Consumer&lt;? <span class="keyword">super</span> E&gt; action)</span> </span>&#123;</span><br><span class="line">      c.forEach(action);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">removeIf</span><span class="params">(Predicate&lt;? <span class="keyword">super</span> E&gt; filter)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Spliterator&lt;E&gt; <span class="title">spliterator</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> (Spliterator&lt;E&gt;)c.spliterator();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Stream&lt;E&gt; <span class="title">stream</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> (Stream&lt;E&gt;)c.stream();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Stream&lt;E&gt; <span class="title">parallelStream</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> (Stream&lt;E&gt;)c.parallelStream();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>看了上面的代码，请你思考一下，为什么说UnmodifiableCollection类是Collection类的装饰器类呢？这两者之间可以看作简单的接口实现关系或者类继承关系吗？</p>
+<p>我们前面讲过，装饰器模式中的装饰器类是对原始类功能的增强。尽管UnmodifiableCollection类可以算是对Collection类的一种功能增强，但这点还不具备足够的说服力来断定UnmodifiableCollection就是Collection类的装饰器类。</p>
+<p>实际上，最关键的一点是，UnmodifiableCollection的构造函数接收一个Collection类对象，然后对其所有的函数进行了包裹（Wrap）：重新实现（比如add()函数）或者简单封装（比如stream()函数）。而简单的接口实现或者继承，并不会如此来实现UnmodifiableCollection类。所以，从代码实现的角度来说，UnmodifiableCollection类是典型的装饰器类。</p>
+<h1 id="适配器模式在collections类中的应用"><a class="markdownIt-Anchor" href="#适配器模式在collections类中的应用"></a> 适配器模式在Collections类中的应用</h1>
+<p>在<a href="https://time.geekbang.org/column/article/205912" target="_blank" rel="noopener">第51讲</a>中我们讲到，适配器模式可以用来兼容老的版本接口。当时我们举了一个JDK的例子，这里我们再重新仔细看一下。</p>
+<p>老版本的JDK提供了Enumeration类来遍历容器。新版本的JDK用Iterator类替代Enumeration类来遍历容器。为了兼容老的客户端代码（使用老版本JDK的代码），我们保留了Enumeration类，并且在Collections类中，仍然保留了enumaration()静态方法（因为我们一般都是通过这个静态函数来创建一个容器的Enumeration类对象）。</p>
+<p>不过，保留Enumeration类和enumeration()函数，都只是为了兼容，实际上，跟适配器没有一点关系。那到底哪一部分才是适配器呢？</p>
+<p>在新版本的JDK中，Enumeration类是适配器类。它适配的是客户端代码（使用Enumeration类）和新版本JDK中新的迭代器Iterator类。不过，从代码实现的角度来说，这个适配器模式的代码实现，跟经典的适配器模式的代码实现，差别稍微有点大。enumeration()静态函数的逻辑和Enumeration适配器类的代码耦合在一起，enumeration()静态函数直接通过new的方式创建了匿名类对象。具体的代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Returns an enumeration over the specified collection.  This provides</span></span><br><span class="line"><span class="comment"> * interoperability with legacy APIs that require an enumeration</span></span><br><span class="line"><span class="comment"> * as input.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span>  &lt;T&gt; the class of the objects in the collection</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> c the collection for which an enumeration is to be returned.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> an enumeration over the specified collection.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> Enumeration</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Enumeration&lt;T&gt; <span class="title">enumeration</span><span class="params">(<span class="keyword">final</span> Collection&lt;T&gt; c)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> Enumeration&lt;T&gt;() &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Iterator&lt;T&gt; i = c.iterator();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">hasMoreElements</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> i.hasNext();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">nextElement</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> i.next();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="重点回顾"><a class="markdownIt-Anchor" href="#重点回顾"></a> 重点回顾</h1>
+<p>好了，今天的内容到此就讲完了。我们一块来总结回顾一下，你需要重点掌握的内容。</p>
+<p>今天，我重点讲了工厂模式、建造者模式、装饰器模式、适配器模式，这四种模式在Java JDK中的应用，主要目的是给你展示真实项目中是如何灵活应用设计模式的。</p>
+<p>从今天的讲解中，我们可以学习到，尽管在之前的理论讲解中，我们都有讲到每个模式的经典代码实现，但是，在真实的项目开发中，这些模式的应用更加灵活，代码实现更加自由，可以根据具体的业务场景、功能需求，对代码实现做很大的调整，甚至还可能会对模式本身的设计思路做调整。</p>
+<p>比如，Java JDK中的Calendar类，就耦合了业务功能代码、工厂方法、建造者类三种类型的代码，而且，在建造者类的build()方法中，前半部分是工厂方法的代码实现，后半部分才是真正的建造者模式的代码实现。这也告诉我们，在项目中应用设计模式，切不可生搬硬套，过于学院派，要学会结合实际情况做灵活调整，做到心中无剑胜有剑。</p>
+<h1 id="课堂讨论"><a class="markdownIt-Anchor" href="#课堂讨论"></a> 课堂讨论</h1>
+<p>在Java中，经常用到的StringBuilder类是否是建造者模式的应用呢？你可以试着像我一样从源码的角度去剖析一下。</p>
+<p>欢迎留言和我分享你的想法。如果有收获，也欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/wechatpay.png" alt="zhaolq 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/resource/image/alipay.png" alt="zhaolq 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/设计模式/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/2022/12/75设计模式与范式之总结课-在实际的项目开发中，如何避免过度设计？又如何避免设计不足？/" rel="prev" title="75设计模式与范式之总结课-在实际的项目开发中，如何避免过度设计？又如何避免设计不足？">
+      <i class="fa fa-chevron-left"></i> 75设计模式与范式之总结课-在实际的项目开发中，如何避免过度设计？又如何避免设计不足？
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/2022/12/77开源与项目实战之开源实战-开源实战一（下）：通过剖析Java JDK源码学习灵活应用设计模式/" rel="next" title="77开源与项目实战之开源实战-开源实战一（下）：通过剖析Java JDK源码学习灵活应用设计模式">
+      77开源与项目实战之开源实战-开源实战一（下）：通过剖析Java JDK源码学习灵活应用设计模式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#工厂模式在calendar类中的应用"><span class="nav-number">1.</span> <span class="nav-text"> 工厂模式在Calendar类中的应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#建造者模式在calendar类中的应用"><span class="nav-number">2.</span> <span class="nav-text"> 建造者模式在Calendar类中的应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#装饰器模式在collections类中的应用"><span class="nav-number">3.</span> <span class="nav-text"> 装饰器模式在Collections类中的应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#适配器模式在collections类中的应用"><span class="nav-number">4.</span> <span class="nav-text"> 适配器模式在Collections类中的应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#重点回顾"><span class="nav-number">5.</span> <span class="nav-text"> 重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#课堂讨论"><span class="nav-number">6.</span> <span class="nav-text"> 课堂讨论</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/resource/image/avatar.png">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">531</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https://github.com/hellozhaolq" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello@zhaolq.com" title="E-Mail → mailto:hello@zhaolq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhaolq</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'f5445c337612cb2413e6',
+      clientSecret: '675afafd6b6e0ad7a4957034d45958eaca93238e',
+      repo        : 'GitalkComments',
+      owner       : 'hellozhaolq',
+      admin       : ['hellozhaolq'],
+      id          : '782db8af0e3214e657584f206afe76cb',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
