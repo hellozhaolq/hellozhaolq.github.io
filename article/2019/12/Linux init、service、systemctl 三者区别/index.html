@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha256-5eIC48iZUHmSlSUz9XtjRyK2mzQkHScZY1WdMaoz74E=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.21.1","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="在接触到Linux 的服务之后，我所知道的管理服务的方式有三种，分别是init、service、systemctl。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux init、service、systemctl 三者区别">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/12/Linux%20init%E3%80%81service%E3%80%81systemctl%20%E4%B8%89%E8%80%85%E5%8C%BA%E5%88%AB/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="在接触到Linux 的服务之后，我所知道的管理服务的方式有三种，分别是init、service、systemctl。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-12-04T09:49:48.000Z">
+<meta property="article:modified_time" content="2019-12-04T09:49:48.000Z">
+<meta property="article:author" content="zhaolq">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/12/Linux%20init%E3%80%81service%E3%80%81systemctl%20%E4%B8%89%E8%80%85%E5%8C%BA%E5%88%AB/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2019/12/Linux%20init%E3%80%81service%E3%80%81systemctl%20%E4%B8%89%E8%80%85%E5%8C%BA%E5%88%AB/","path":"article/2019/12/Linux init、service、systemctl 三者区别/","title":"Linux init、service、systemctl 三者区别"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Linux init、service、systemctl 三者区别 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">贪婪，找不到比这更好的词了，是件好事。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#init"><span class="nav-number">1.</span> <span class="nav-text">init</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#service"><span class="nav-number">2.</span> <span class="nav-text">service</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#systemd"><span class="nav-number">3.</span> <span class="nav-text">systemd</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#systemd-Linux%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80%E7%BB%84%E4%BB%B6%E9%9B%86%E5%90%88"><span class="nav-number">4.</span> <span class="nav-text">systemd-Linux系统基础组件集合</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#systemd%E8%AE%BE%E8%AE%A1"><span class="nav-number">4.1.</span> <span class="nav-text">systemd设计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#systemd-service-%E5%8D%95%E5%85%83%E6%96%87%E4%BB%B6"><span class="nav-number">4.2.</span> <span class="nav-text">systemd.service(单元文件)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#systemctl"><span class="nav-number">4.3.</span> <span class="nav-text">systemctl</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%96%E5%86%99%E5%8D%95%E5%85%83%E6%96%87%E4%BB%B6"><span class="nav-number">4.3.1.</span> <span class="nav-text">编写单元文件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B%E4%B8%80"><span class="nav-number">4.3.1.1.</span> <span class="nav-text">示例一</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B%E4%BA%8C"><span class="nav-number">4.3.1.2.</span> <span class="nav-text">示例二</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%8D%95%E5%85%83"><span class="nav-number">4.3.2.</span> <span class="nav-text">使用单元</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">550</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:260731000@qq.com" title="E-Mail → mailto:260731000@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/12/Linux%20init%E3%80%81service%E3%80%81systemctl%20%E4%B8%89%E8%80%85%E5%8C%BA%E5%88%AB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Linux init、service、systemctl 三者区别 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux init、service、systemctl 三者区别
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-12-04 17:49:48" itemprop="dateCreated datePublished" datetime="2019-12-04T17:49:48+08:00">2019-12-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>在接触到Linux 的服务之后，我所知道的管理服务的方式有三种，分别是<code>init</code>、<code>service</code>、<code>systemctl</code>。</p>
+<span id="more"></span>
+
+<h1 id="init"><a href="#init" class="headerlink" title="init"></a>init</h1><p>历史上，Linux 的启动一直采用init 进程。</p>
+<p>在类Unix 的计算机操作系统中，Init（初始化的简称）是在启动计算机系统期间启动的第一个进程。</p>
+<p>Init 是一个守护进程，它将持续运行，直到系统关闭。它是所有其他进程的直接或间接的父进程。</p>
+<p>init 的参数全在<code>/etc/init.d</code>目录下，init.d 目录中存放的是一系列系统服务的管理（启动与停止）脚本。<code>/etc/init.d</code> 是指向 <code>/etc/rc.d/init.d</code> 的软连接。</p>
+<p>init.d 初始化脚本称之为System V风格初始化，是System V系统传统之一，后来成为一些Unix系统的共同特性的源头。值得一提的是，在 &#x2F;etc 目录下可能还包含 rc#.d 目录，这也是System V风格，#为数字0到6，为系统的运行级别runlevel。可见System V风格影响深远。</p>
+<p><font color="red">用 <a target="_blank" rel="noopener" href="https://wangchujiang.com/linux-command/c/service.html">service 命令</a> 可执行 init.d 目录中相应服务的脚本。service 是控制系统服务的实用工具。</font> </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">sudo</span> /etc/init.d/nginx start</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="service"><a href="#service" class="headerlink" title="service"></a>service</h1><p>通过查看man 手册页可以得知，service是一个运行<code>System V init</code>的脚本命令。</p>
+<blockquote>
+<p>那么什么是 System V init 呢？</p>
+</blockquote>
+<p>也就是<code>/etc/init.d</code> 目录下的参数。</p>
+<p>所以分析可知service 是去<code>/etc/init.d</code>目录下执行相关程序，服务配置文件的存放目录就是<code>/etc/init.d</code>.</p>
+<p>使用 service 启动一个服务</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">service nginx start</span></span><br></pre></td></tr></table></figure>
+
+<p>可以理解成 service 就是<code>init.d</code> 的一种实现方式。<br>所以这两者启动方式（或者是停止、重启）并没有什么区别。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">sudo</span> /etc/init.d/nginx start</span></span><br><span class="line">// 等价于</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">service nginx start</span></span><br></pre></td></tr></table></figure>
+
+<p>但是这两种方式均有如下缺点：</p>
+<ol>
+<li>启动时间长。init 进程是串行启动，只有前一个进程启动完，才会启动下一个进程。</li>
+<li>启动脚本复杂。init进程只是执行启动脚本，不管其他事情。脚本需要自己处理各种情况，这往往使得脚本变得很长。</li>
+</ol>
+<h1 id="systemd"><a href="#systemd" class="headerlink" title="systemd"></a>systemd</h1><p>Systemd 就是为了解决这些问题而诞生的。它包括 System and Service Manager，为系统的启动和管理提供一套完整的解决方案。<br>Systemd 是Linux 系统中最新的初始化系统（init），它主要的设计目的是克服 <code>System V init </code>固有的缺点，提高系统的启动速度。</p>
+<p>根据 Linux 惯例，字母d是守护进程（daemon）的缩写。 Systemd 这个名字的含义，就是它要守护整个系统。</p>
+<p>使用了 Systemd，就不需要再用init 了。Systemd 取代了initd（Initd 的PID 是0） ，成为系统的第一个进程（Systemd 的PID 等于 1），其他进程都是它的子进程。</p>
+<p>Systemd 的优点是功能强大，使用方便，缺点是体系庞大，非常复杂。</p>
+<p>查看Systemd 的版本信息</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">systemctl --version</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="systemd-Linux系统基础组件集合"><a href="#systemd-Linux系统基础组件集合" class="headerlink" title="systemd-Linux系统基础组件集合"></a>systemd-Linux系统基础组件集合</h1><p>相关链接： <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Systemd">systemd维基</a> 、 <a target="_blank" rel="noopener" href="https://wiki.archlinux.org/index.php/Systemd_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">ArchLinux-systemd</a> 、 <a target="_blank" rel="noopener" href="https://linux.cn/article-5926-1.html">systemctl 命令完全指南</a> 、 <a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2016/03/systemd-tutorial-commands.html">Systemd 入门教程 - 阮一峰</a></p>
+<p>Systemd 并不是一个命令，而是一组命令，涉及到系统管理的方方面面。</p>
+<h2 id="systemd设计"><a href="#systemd设计" class="headerlink" title="systemd设计"></a>systemd设计</h2><p> <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Systemd#%E8%AE%BE%E8%AE%A1">https://zh.wikipedia.org/wiki/Systemd#%E8%AE%BE%E8%AE%A1</a> </p>
+<h2 id="systemd-service-单元文件"><a href="#systemd-service-单元文件" class="headerlink" title="systemd.service(单元文件)"></a>systemd.service(单元文件)</h2><p><font color="red"><strong>systemd.service 中文手册：<a target="_blank" rel="noopener" href="https://www.jinbuguo.com/systemd/systemd.service.html">https://www.jinbuguo.com/systemd/systemd.service.html</a></strong></font></p>
+<p>在一般的使用场景下，每一个 Unit（即服务） 都有一个配置文件，告诉 Systemd 怎么启动这个 Unit 。</p>
+<p>所有可用的 unit 文件位置，<font color="red">优先级从高到低</font>：</p>
+<ul>
+<li><p><code>/etc/systemd/system/</code> ：Local configuration。大部分文件都是符号链接，指向目录 <code>/usr/lib/systemd/system/</code>。 <code>systemctl enable</code> 命令用于在两个目录之间建立符号链接关系；<code>systemctl disable</code> 命令用于在两个目录之间撤销符号链接关系；例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">systemctl <span class="built_in">enable</span> rabbitmq</span></span><br><span class="line">Created symlink /etc/systemd/system/multi-user.target.wants/rabbitmq.service → /usr/lib/systemd/system/rabbitmq.service.</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>/run/systemd/system/</code> ：Runtime units。一般是进程在运行时动态创建unit文件的目录，一般很少修改，除非是修改程序运行时的一些参数时，即Session级别的，才在这里做修改。</p>
+</li>
+<li><p><code>/usr/lib/systemd</code> ：Units of installed packages。等同于 <code>/lib/systemd/</code>，有系统（<code>/usr/lib/systemd/system/</code>）和用户（<code>/usr/lib/systemd/user/</code>）之分。供发行版打包者使用。</p>
+</li>
+</ul>
+<h2 id="systemctl"><a href="#systemctl" class="headerlink" title="systemctl"></a>systemctl</h2><p>监视和控制 systemd 的主要命令是 <code>systemctl</code> 。该命令可用于查看系统状态和管理系统及服务。详见<a target="_blank" rel="noopener" href="https://jlk.fjfi.cvut.cz/arch/manpages/man/systemctl.1">systemctl(1)</a>。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看所有可用的单元文件</span></span><br><span class="line">[root@localhost ~]# systemctl list-unit-files | grep &#x27;&#x27;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看所有已安装服务</span></span><br><span class="line">[root@localhost ~]# systemctl list-unit-files --type=service | grep &#x27;&#x27;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">输出激活的unit，下面两个命令等效</span></span><br><span class="line">[root@localhost ~]# systemctl | grep &#x27;&#x27;</span><br><span class="line">[root@localhost ~]# systemctl list-units | grep &#x27;&#x27;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">输出激活的类型为service的unit</span></span><br><span class="line">[root@localhost ~]# systemctl list-units --type=service | grep &#x27;&#x27;</span><br><span class="line">[root@localhost ~]# systemctl list-units --type=service | grep nginx</span><br></pre></td></tr></table></figure>
+
+<h3 id="编写单元文件"><a href="#编写单元文件" class="headerlink" title="编写单元文件"></a>编写单元文件</h3><p> <a target="_blank" rel="noopener" href="https://wiki.archlinux.org/index.php/Systemd_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)#%E7%BC%96%E5%86%99%E5%8D%95%E5%85%83%E6%96%87%E4%BB%B6">systemd - 编写单元文件</a> </p>
+<p>推荐链接：</p>
+<p> <a target="_blank" rel="noopener" href="https://linux.cn/article-9700-1.html">1、编写有趣且有价值的 Systemd 服务</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://linux.cn/article-9703-1.html">2、Systemd 服务：比启动停止服务更进一步</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.linuxidc.com/Linux/2019-08/159995.htm">systemctl启动服务脚本编写使用</a> </p>
+<h4 id="示例一"><a href="#示例一" class="headerlink" title="示例一"></a>示例一</h4><p> <code>vim /etc/systemd/system/demo.service</code> </p>
+<p><font color="red"><strong>注意：单元文件的注释必须独占一行，可以包含中文</strong></font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">demo.service</span></span><br><span class="line">[Unit]</span><br><span class="line">Description= demo server</span><br><span class="line">Documentation= https://zh.wikipedia.org/wiki/Systemd</span><br><span class="line">After=syslog.target network.target network-online.target # 表示服务需要在***服务启动之后执行</span><br><span class="line">Before= # 表示服务需要在***服务启动之前执行</span><br><span class="line">Wants= # 弱依赖关系</span><br><span class="line">Requires= # 强依赖关系,***服务停止之后本服务也必须停止</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">EnvironmentFile=/etc/sysconfig/sshd # 环境参数文件</span><br><span class="line">Type= simple # 默认simple:</span><br><span class="line">             # forking:</span><br><span class="line">             # notify：</span><br><span class="line">User=&lt;user&gt;</span><br><span class="line">Group=&lt;group&gt;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">UMask=0027</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">NotifyAccess=all</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">TimeoutStartSec=600</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">LimitNOFILE=65536</span></span><br><span class="line">WorkingDirectory=&lt;WorkingDirectory&gt;</span><br><span class="line">Restart=on-failure # no, on-success, on-failure, on-abnormal, on-watchdog, on-abort, always 之一，always 表示会被无条件的重启。 on-failure 表示 仅在服务进程异常退出时重启， 所谓&quot;异常退出&quot; 是指： 退出码不为&quot;0&quot;</span><br><span class="line">RestartSec=10</span><br><span class="line"></span><br><span class="line">SuccessExitStatus= # 额外定义其他的进程&quot;正常退出&quot;状态。 也就是，在退出码&quot;0&quot;、以及表示&quot;正常退出&quot;的 SIGHUP, SIGINT, SIGTERM, SIGPIPE 信号之外， 再额外添加一组表示&quot;正常退出&quot;的退出码或信号。 可以设为一系列 以空格分隔的数字退出码或者信号名称， 例如：SuccessExitStatus=1 2 8 SIGKILL，表示当进程的退出码是 1, 2, 8 或被 SIGKILL 信号终止时， 都可以视为&quot;正常退出&quot;。如果多次使用此选项， 那么最终的结果将是多个列表的合并。 如果将此选项设为空， 那么先前设置的列表 将被清空。</span><br><span class="line">PrivateTmp=true # 开启安全Tmp系统功能。1、/tmp目录以及/var/tmp目录所有进程都在公用，不够安全，使用PrivateTmp后，进程用于自己的独立的目录以及相应的权限。2、关于目录的管理托管于systemd，即当systemd进程启动时会建立相应的目录（目录会在两个地方建立，/tmp以及/var/tmp/下建立两个目录），当通用systemd进程关闭时会删除相应的目录，不用程序单独处理。</span><br><span class="line"></span><br><span class="line">ExecStartPre= # 启动服务之前执行的命令</span><br><span class="line">ExecStart= # 启动进程时执行的命令</span><br><span class="line">ExecStartPost= # 启动服务之后执行的命令</span><br><span class="line"></span><br><span class="line">ExecReload= # 重启服务时执行的命令</span><br><span class="line">ExecStop= /bin/sleep 10 # 停止服务时执行的命令，多个ExecStop按顺序执行。</span><br><span class="line">ExecStop= /bin/sleep 20</span><br><span class="line">ExecStop= </span><br><span class="line">ExecStopPost= # 停止服务之后执行的命令</span><br><span class="line"></span><br><span class="line">TimeoutStopSec= 180 # 1、设置每个 ExecStop= 的超时时长；2、设置该服务自身停止的超时时长</span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br></pre></td></tr></table></figure>
+
+<p>重新加载配置文件：<code>systemctl daemon-reload</code> </p>
+<h4 id="示例二"><a href="#示例二" class="headerlink" title="示例二"></a>示例二</h4><p>见 <a href="/article/2019/11/Nginx%E6%95%99%E7%A8%8B/#%E5%BC%80%E6%9C%BA%E8%87%AA%E5%90%AF%E5%8A%A8">Nginx教程</a> 章节的 <code>开机自启动</code>。</p>
+<h3 id="使用单元"><a href="#使用单元" class="headerlink" title="使用单元"></a>使用单元</h3><p>推荐链接： <a target="_blank" rel="noopener" href="https://wiki.archlinux.org/index.php/Systemd_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)#%E4%BD%BF%E7%94%A8%E5%8D%95%E5%85%83">使用unit</a> </p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2019/12/Bash%E4%B8%AD%E7%9A%84%E7%89%B9%E6%AE%8A%E5%AD%97%E7%AC%A6%E5%A4%A7%E5%85%A8/" rel="prev" title="Bash中的特殊字符大全">
+                  <i class="fa fa-angle-left"></i> Bash中的特殊字符大全
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2019/12/%E6%A0%B9%E8%AF%81%E4%B9%A6%E3%80%81%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%AF%81%E4%B9%A6%E3%80%81%E7%94%A8%E6%88%B7%E8%AF%81%E4%B9%A6%E7%9A%84%E5%8C%BA%E5%88%AB/" rel="next" title="根证书、服务器证书、用户证书的区别">
+                  根证书、服务器证书、用户证书的区别 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
