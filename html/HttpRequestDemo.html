@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!-- <base href="http://127.0.0.1/" target="_blank"> -->
+    <title>Http Request</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="description" content="这是一个描述" />
+    <meta name="theme-color" content="#ffffff">
+
+    <!-- 深入解读前端框架：jQuery、VueJS、React.JS、Node.JS与Bootstrap，https://cloud.baidu.com/article/2919545 -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script>
+        var token = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpYXQiOjE3MjQ2MDE1OTYsImV4cCI6MjEwMzAzMzU5NiwidXNlcklkIjoiaU9Ja1dlM2tXWTRhU0ordjRDejBiZz09In0.ffFC2R9jqjU-8gnm_LAZYVYVk7Oh9WVzt0a97whLws5qQmnd3Qsl0wK3S7y41iJ649OJOHLjZTDiEanEs9dM3A";
+    </script>
+    
+    <noscript>抱歉，你的浏览器不支持 JavaScript!</noscript>
+    
+    <style>
+        body {
+            background-image: linear-gradient( #d6fffe, #d7ffd6, #fffcd6, #fff4f4, #d6fffe);
+        }
+        
+        /* 现代浏览器only */
+        hr {
+            border: 0;
+            padding: 3px;
+            background: linear-gradient(135deg, red, orange,green, blue, purple);
+            --mask-image: repeating-linear-gradient(135deg, #000 0px, #000 1px, transparent 1px, transparent 6px);
+            -webkit-mask-image: var(--mask-image);
+            mask-image: var(--mask-image);
+        }
+        
+        .div-container {
+            /* display: inline-grid;  默认情况下，容器元素都是块级元素，但也可以设成行内元素。*/
+            display: grid;
+            justify-content: center;
+            grid-column-gap: 0px; /*列间距*/
+            grid-row-gap: 0px; /*行间距*/
+            grid-template-columns: 600px 0px;
+            grid-template-rows: auto;
+            padding: 10px;
+        }
+        
+        .div-border {
+            border: 0px dashed #ababab;
+        }
+        
+        .div-load {
+            border: 1px dashed #ababab;
+            min-height:100px;
+            width: 100%;
+        }
+        
+        table {
+            table-layout: auto;
+            border-style: none;
+            width: 100%;
+            margin: 0px;
+            margin-left: 0px;
+            padding: 0px;
+            background: ;
+        }
+        
+        td, th {
+            border: 1px solid #59bde8;
+            height: 30px;
+            /*
+            overflow: visible;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            */
+        }
+        
+        .td-left {
+            text-align: right; /* 内容水平对齐方式 */
+            width: 17%;
+            /*
+            vertical-align: middle; /* 垂直对齐方式 */
+            */
+        }
+        
+        .td-right {
+            text-align: left;
+            width: 83%;
+            vertical-align: middle;
+            padding-left: 5px;
+        }
+        
+        .input-css {
+            height: 25px;
+            width: 50%;
+            margin: 0px;
+            padding: 0px;
+            padding-left: 5px;
+            outline: none;
+        }
+        
+        .input-css-2 {
+            height: 25px;
+            width: 80%;
+            margin: 0px;
+            padding: 0px;
+            padding-left: 5px;
+            outline: none;
+        }
+        
+        .label-css {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        .vertical-align {
+            vertical-align: middle;
+            height: 25px;
+            width: 20px;
+            margin: 5px;
+            outline: none;
+        }
+        
+        .span-style {
+            display: inline-block;
+            width: 120px;
+            text-align: right;
+        }
+        
+        .textarea {
+            width: 96%;
+            height: 80%;
+            padding: 5px 5px 5px 5px;
+            border: 1px solid #b95555;
+            border-radius: 5px;
+            margin: 3px 0px 0px 0px;
+            resize: none;
+            outline: none;
+        }
+        
+        .textareaInfo {
+            width: 100%;
+            height: 100%;
+            padding:5px 5px 5px 5px;
+            border: 1px solid #b95555;
+            border-radius: 5px;
+            background-color: rgb(248,248,248,0.5);
+            resize: auto;
+            white-space:nowrap;
+            outline: none;
+        }
+        
+        #colorPicker {
+            width: 90px;
+            height: 40px;
+            float: left; /* 为了使两个不同type的input在同一行 */
+        }
+        
+        #inputButton {
+            background-image: url(./image/add-button-capitalized-blue-hi.png);
+            background-size: cover;
+            border-style: none;
+            height: 35px;
+            max-width: 90px;
+        }
+        
+        .button-css {
+            vertical-align: middle;
+            border: 1px solid #006eff;
+            border-radius: 20px;
+            background-color: #008CBA;
+            color: white;
+            width: fit-content; /* width: 100%; */
+            min-width: 90px;
+            height: 30px;
+            margin-top: 0px;
+            margin-left: 10px;
+            font-size:15px;
+            opacity: 0.8; /* 透明度 */
+            cursor: pointer;
+            /* cursor: not-allowed; */
+            -webkit-transition-duration: 0.4s; /* Safari */
+            transition-duration: 0.4s;
+            box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19); /* 阴影按钮 */
+        }
+        .button-css:hover {
+            background-color: #ffffff;
+            color: black;
+            box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19); /* 鼠标悬停后显示阴影 */
+        }
+        .button-css:active {
+            background-color: #3e8e41;
+            box-shadow: 0 5px #666;
+            transform: translateY(1px);
+        }
+        
+        #fileSelectButton {
+            padding: 0px 0px;
+            text-align: center;
+            text-decoration: wavy overline lime;
+            margin: 0px;
+        }
+        
+    </style>
+</head>
+
+<body>
+
+<!-- <div class="div-container div-border"> -->
+    <div class="grid-item">
+        <div style="display:flex;justify-content:center;">
+            <textarea class="textareaInfo" id="textareaInfo" name="textareaInfo" rows="20" spellcheck="false">我是一个文本框，用来显示请求的结果！</textarea>
+        </div>
+    </div>
+<!-- </div> -->
+
+<hr>
+
+<div class="div-container div-border">
+    <div class="grid-item">
+        <table cellspacing="2" cellpadding="1">
+            <tbody>
+                <tr>
+                    <td class="td-left">API：</td>
+                    <td class="td-right"><input class="input-css-2" type="text" id="requestAddress_250326" name="requestAddress" placeholder="请输入API地址" value="http://zhaolanqi.baidu.com/bd/health"></td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="display:flex;justify-content:center;">
+            <button class="button-css" type="button" id="AjaxGet_250326_login">AjaxGet测试单点登录</button>
+            <button class="button-css" type="button" id="AjaxGet_250326_logout">AjaxGetOrPost测试单点登出</button>
+        </div>
+    </div>
+</div>
+
+<hr>
+
+<div class="div-container div-border">
+    <div class="grid-item">
+        <table cellspacing="2" cellpadding="1">
+            <tbody>
+                <tr>
+                    <td class="td-left">API：</td>
+                    <td class="td-right"><input class="input-css-2" type="text" id="requestAddress" name="requestAddress" placeholder="请输入API地址" value="http://10.25.65.162:8011/admin/login"></td>
+                </tr>
+                <tr>
+                    <td class="td-left">账号：</td>
+                    <td class="td-right"><input class="input-css-2" type="text" width="100%" id="acc" name="acc" value="admin"></td>
+                </tr>
+                <tr>
+                    <td class="td-left">密码：</td>
+                    <td class="td-right"><input class="input-css-2" type="password" id="pwd" name="pwd" value="888888"></td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="display:flex;justify-content:center;">
+            <button class="button-css" type="button" id="AjaxGet">AjaxGet</button>
+            <button class="button-css" type="button" id="AjaxPost">AjaxPost</button>
+        </div>
+    </div>
+</div>
+
+<hr>
+
+<div class="div-container div-border">
+    <div class="grid-item">
+        <!-- <legend>Personal information:</legend> -->
+        <!-- 只有 method="post" 时才使用 enctype 属性 -->
+        <form name="input" action="http://127.0.0.1:8001/" method="post" enctype="multipart/form-data" accept-charset="UTF-8" target="_blank" autocomplete="off">
+            <table cellspacing="2" cellpadding="1">
+                <!-- <thead> -->
+                    <!-- <tr><th colspan="2">Personal information</th></tr> -->
+                <!-- </thead> -->
+                <!-- <tfoot> -->
+                    <!-- <tr> -->
+                        <!-- <td>Footer content 1</td> -->
+                        <!-- <td>Footer content 2</td> -->
+                    <!-- </tr> -->
+                <!-- </tfoot> -->
+                <tbody>
+                    <tr style="display:none;">
+                        <td class="td-left">隐身：</td>
+                        <td class="td-right"><input class="input-css" type="hidden" id="hidden" name="hidden" value="我会隐身"></td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">搜索：</td>
+                        <td class="td-right"><input class="input-css" type="search" id="search" name="search" placeholder="search..."></td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">账号：</td>
+                        <td class="td-right"><input class="input-css" type="text" id="account" name="account" value="张三"></td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">密码：</td>
+                        <td class="td-right"><input class="input-css" type="password" id="password" name="password" value="123456789"></td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">性别：</td>
+                        <td class="td-right">
+                            <div>
+                                <label for="male" class="label-css">男</label>
+                                <input class="vertical-align" type="radio" name="sex" id="male" value="male" checked="checked">
+                                <label for="female" class="label-css">女</label>
+                                <input class="vertical-align" type="radio" name="sex" id="female" value="female">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">交通(多选)：</td>
+                        <td class="td-right">
+                            <input class="vertical-align" type="checkbox" name="vehicle" id="walk" value="walk" checked="checked">
+                            <label for="walk" class="label-css">步行</label>
+                            <input class="vertical-align" type="checkbox" name="vehicle" id="bike" value="bike">
+                            <label for="bike" class="label-css">自行车</label>
+                            <input class="vertical-align" type="checkbox" name="vehicle" id="motorcycle" value="motorcycle" checked="checked">
+                            <label for="motorcycle" class="label-css">摩托车</label>
+                            <input class="vertical-align" type="checkbox" name="vehicle" id="car" value="car">
+                            <label for="car" class="label-css">汽车</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">年龄：</td>
+                        <td class="td-right"><input class="input-css" type="number" id="age" name="age" placeholder="年龄"></td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">电话：</td>
+                        <td class="td-right"><input class="input-css" type="tel" id="telephone" name="telephone" placeholder="电话号码"></td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">邮件：</td>
+                        <td class="td-right"><input class="input-css" type="email" id="email" name="email" placeholder="E-mail" size="32" maxlength="64" autocomplete="on" required></td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">博客：</td>
+                        <td class="td-right"><input class="input-css" type="url" id="blogAddress" name="blogAddress" placeholder="博客地址"></td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">出生日期：</td>
+                        <td class="td-right">
+                            <span class="span-style">年月：</span><input class="input-css" type="month" id="month" name="month"><br>
+                            <span class="span-style">年月日：</span><input class="input-css" type="date" id="date" name="date"><br>
+                            <span class="span-style">时分：</span><input class="input-css" type="time" id="time" name="time"><br>
+                            <span class="span-style">年月日时分秒：</span><input class="input-css" type="datetime-local" id="datetimeLocal" name="datetimeLocal"><br>
+                            <span class="span-style">年周：</span><input class="input-css" type="week" id="week" name="week">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">cars：</td>
+                        <td class="td-right">
+                            <select name="cars" style="outline: none;">
+                                <optgroup label="大众集团 德国沃尔夫斯堡 上市公司">
+                                    <option value="Bentley">Bentley 宾利 英国克鲁 私人企业</option>
+                                    <option value="Lamborghini">Lamborghini 兰博基尼 意大利圣亚加塔·波隆尼 奥迪旗下子公司</option>
+                                    <option value="Porsche" selected>Porsche 保时捷 德国斯图加特</option>
+                                    <option value="Volkswagen">Volkswagen 大众汽车</option>
+                                    <option value="Audi AG">Audi AG 奥迪</option>
+                                    <option value="SEAT">SEAT 西亚特</option>
+                                    <option value="Škoda Auto">Škoda Auto 斯柯达</option>
+                                    <option value="Bugatti">Bugatti 布加迪</option>
+                                    <option value="Ducati Motor Holding S.p.A.">Ducati Motor Holding S.p.A. 杜卡迪</option>
+                                    <option value="Volkswagen Jetta">Volkswagen Jetta 捷达/速腾/宝来</option>
+                                </optgroup>
+                                <optgroup label="宝马集团 德国巴伐利亚邦慕尼黑 上市公司">
+                                    <option value="Rolls-Royce">Rolls-Royce 劳斯莱斯 英国英格兰西萨塞克斯郡 全资子公司</option>
+                                    <option value="Bavarian Motor Works">BMW 宝马 德国巴伐利亚邦慕尼黑</option>
+                                    <option value="BMW MINI">BMW MINI 宝马迷你</option>
+                                    <option value="BMW Brilliance Automotive Ltd.">BBA 华晨宝马 中国大陆辽宁省沈阳市 合资公司(中德合资)</option>
+                                </optgroup>
+                                <optgroup label="捷豹路虎 英国考文垂怀特利 公共有限公司">
+                                    <option value="Land Rover">Land Rover 路虎 英国英格兰西密德兰西密德兰郡考文垂怀特利 子公司</option>
+                                </optgroup>
+                                <optgroup label=""></optgroup>
+                                <option value="Ferrari">Ferrari 法拉利 意大利马拉内罗(实际)/荷兰阿姆斯特丹(法定)</option>
+                                <option value="Aston Martin">Aston Martin 阿斯顿·马丁 英国华威郡盖登 公众有限公司</option>
+                                <option value="Maserati">Maserati 玛莎拉蒂 意大利波隆那</option>
+                                <option value="Mercedes-Benz">Benz 奔驰 德国巴登-符腾堡州斯图加特/美国乔治亚州亚特兰大 戴姆勒分公司</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">数据列表：</td>
+                        <td class="td-right">
+                            <input class="input-css" name="browsers" list="browsers">
+                            <datalist id="browsers" name="browsers" style="outline: none;">
+                                <option value="Internet Explorer">
+                                <option value="Firefox">
+                                <option value="Chrome">
+                                <option value="Opera">
+                                <option value="Safari">
+                            </datalist>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">拾色器：</td>
+                        <td class="td-right">
+                            <input class="input-css" type="color" id="colorPicker" name="colorPicker" value="#ff0000">
+                            <!-- 两个复制按钮垂直居中的方式不同 -->
+                            <div style="height: 40px;width: 260px;display: flex;align-items: center;float: left;">
+                                <input class="button-css" type="button" id="copyColorPicker" name="copyColorPicker" value="复制"><span id="copyColorPickerResultHint" style="display: none;"></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">文本框：</td>
+                        <td class="td-right"><textarea class="textarea" id="textarea" name="textarea" rows="5">我是一个文本框。</textarea></td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">文件操作：</td>
+                        <td class="td-right">
+                            <label for="docpicker_single_file">单选</label>
+                            <input class="input-css" type="file" id="docpicker_single_file" name="docpicker_single_file">
+                            <br>
+                            
+                            <label for="docpicker_multiple_files">多选</label>
+                            <input class="input-css" type="file" id="docpicker_multiple_files" name="docpicker_multiple_files" multiple>
+                            <br>
+                            
+                            <label for="image_uploads_1">图片</label>
+                            <input class="input-css" type="file" id="image_uploads_1" name="image_uploads_1" accept=".jpg, .jpeg, .png" multiple>限定后缀(.jpg .jpeg .png)
+                            <br>
+                            
+                            <label for="image_uploads_2">图片</label>
+                            <input class="input-css" type="file" id="image_uploads_2" name="image_uploads_2" accept="image/*" multiple>未限定后缀
+                            <br>
+                            
+                            <div>
+                                <input class="input-css" type="file" id="hideFileInput" name="hideFileInput" accept="image/*" onchange="updateSize();" style="display:none" multiple>
+                                <button class="button-css" type="button" id="fileSelectButton">隐藏</button>
+                                <span style="margin-left: 7px;">selected files: <span id="fileNum">0</span></span>
+                                ;
+                                <span style="margin-left: 7px;">total size: <span id="fileSize">0</span></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="td-left">普通按钮：</td>
+                        <td class="td-right">
+                            <input class="button-css" type="button" style="cursor: pointer;" id="inputButton" name="inputButton" alt="点我+1">
+                            <span id="inputButtonClicks">
+                                <span style="color:#ff0000;">0</span>
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+
+            <div style="display:flex;justify-content:center;">
+                <input class="button-css" type="image" src="./image/submit-small.png" alt="图像提交按钮">
+                <input class="button-css" type="submit"  value="submit">
+                <input class="button-css" type="reset"  value="reset">
+                <button class="button-css" type="submit" value="提交">提交</button>
+                <button class="button-css" type="reset" value="重置">重置</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+</body>
+
+<script>
+$('#AjaxGet_250326_login').click(function(){
+    var requestUrl = $('#requestAddress_250326').val();
+    var originalUrl = window.location.href;
+    $.ajax({
+        headers: {
+            "Authorization": token,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "originalUrl": originalUrl
+        },
+        url: requestUrl,          // 向服务器发送的请求地址
+        type: 'get',              // GET方式传输
+        xhrFields: {
+            withCredentials: true
+        },
+        //crossDomain: true,
+        success: function(data, textStatus, xhr){ // 回调函数
+            console.log('回调函数success');
+            console.log('data', data);
+            console.log('textStatus', textStatus);
+            console.log('xhr', xhr);
+            console.log(xhr.getAllResponseHeaders());
+            console.log(xhr.getResponseHeader("access-control-allow-origin"));
+            $('#textareaInfo').val(JSON.stringify(data, null, 4));
+
+            redirectAction(data);
+        },
+        error: function(data){
+            document.getElementById("textareaInfo").value = JSON.stringify(data, null, 4);
+            console.log('回调函数error');
+        }
+        
+    });
+});
+
+$('#AjaxGet_250326_logout').click(function(){
+    var requestUrl = 'http://zhaolanqi.baidu.com/bd/uuap_single_logout';
+    var originalUrl = window.location.href;
+    $.ajax({
+        headers: {
+            "Authorization": token,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "originalUrl": originalUrl
+        },
+        url: requestUrl,          // 向服务器发送的请求地址
+        type: 'post',              // GET方式传输
+        xhrFields: {
+            withCredentials: true
+        },
+        //crossDomain: true,
+        success: function(data, textStatus, xhr){ // 回调函数
+            console.log('回调函数success');
+            console.log('data', data);
+            console.log('textStatus', textStatus);
+            console.log('xhr', xhr);
+            console.log(xhr.getAllResponseHeaders());
+            console.log(xhr.getResponseHeader("access-control-allow-origin"));
+            $('#textareaInfo').val(JSON.stringify(data, null, 4));
+
+            redirectAction(data);
+        },
+        error: function(data){
+            document.getElementById("textareaInfo").value = JSON.stringify(data, null, 4);
+            console.log('回调函数error');
+        }
+        
+    });
+});
+</script>
+
+
+
+
+
+
+<script>
+$('#AjaxGet').click(function(){
+    var requestUrl = $('#requestAddress').val();
+    // 拼接JSON对象
+    var sendData = {
+        account: $('#acc').val(),
+        password: $('#pwd').val(),
+        verifycode: $('#verifycode').val()
+        };
+    $.ajax({
+        headers: {
+            "Authorization": token,
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        url: requestUrl,                 // 向服务器发送的请求地址
+        type: 'get',                     // GET方式传输
+        dataType: 'json',                // 数据类型
+        data: sendData,                  // 发送的数据
+        xhrFields: {
+            withCredentials: true
+        },
+        //crossDomain: true,
+        success: function(data, textStatus, xhr){ // 回调函数
+            console.log('回调函数success');
+            console.log('data', data);
+            console.log('textStatus', textStatus);
+            console.log('xhr', xhr);
+            console.log(xhr.getAllResponseHeaders());
+            console.log(xhr.getResponseHeader("access-control-allow-origin"));
+            $('#textareaInfo').val(JSON.stringify(data, null, 4));
+
+            redirectAction(data);
+        },
+        error: function(data){
+            document.getElementById("textareaInfo").value = JSON.stringify(data, null, 4);
+            console.log('回调函数error');
+        }
+        
+    });
+});
+
+
+$('#AjaxPost').click(function(){
+    var requestUrl = $('#requestAddress').val();
+    // 拼接JSON对象
+    var sendData = {
+        account: $('#acc').val(),
+        password: $('#pwd').val(),
+        verifycode: $('#verifycode').val()
+        };
+    $.ajax({
+        headers: {
+            "Authorization": token,
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        url: requestUrl,                 // 向服务器发送的请求地址
+        type: 'post',                    // POST方式传输
+        dataType: 'json',                // 数据类型
+        data: JSON.stringify(sendData),  // 发送的数据。JSON.stringify(obj)函数可以把json对象转换为json字符串
+        xhrFields: {
+            withCredentials: true
+        },
+        //crossDomain: true,
+        success: function(data, textStatus, xhr){ // 回调函数
+            console.log('回调函数success');
+            console.log('data', data);
+            console.log('textStatus', textStatus);
+            console.log('xhr', xhr);
+            console.log(xhr.getAllResponseHeaders());
+            console.log(xhr.getResponseHeader("access-control-allow-origin"));
+            $('#textareaInfo').val(JSON.stringify(data, null, 4));
+
+            redirectAction(data);
+        },
+        error: function(data){
+            document.getElementById("textareaInfo").value = JSON.stringify(data, null, 4);
+            console.log('回调函数error');
+        }
+        
+    });
+});
+
+
+
+
+
+
+
+function redirectAction(data){
+    // 10001为自定义的重定向代码。标准的302重定向是由浏览器自动透明的完成的，服务器将302响应返回给浏览器且Response Headers包含'location'时，就会自动跳转到Location所指定的URL地址，并不会处理ajax的回调，而是先执行302重定向。
+    if (data.code == 30001){ // mars项目自定义的重定向状态码
+        window.location.href = data.data;
+    } else if (data.code == 40001){ // 公司项目自定义的重定向状态码
+        window.location.href = data.redirectUrl;
+    }
+}
+
+function getTimestamp(){
+    // 时间戳或随机数解决URL缓存
+    var timestamp = new Date().getTime();
+    var random = Math.round(Math.random() * 100000000);
+    return timestamp + '' + random;
+}
+function testBrowserCache(){
+    window.localStorage.setItem("test", "test");
+    window.sessionStorage.setItem("test", "test");
+    setCookie("token","token",1)
+    checkCookie();
+}
+function setCookie(cname,cvalue,exdays){
+    var d = new Date();
+    d.setTime(d.getTime()+(exdays*24*60*60*1000));
+    var expires = "expires="+d.toGMTString();
+    document.cookie = cname+"="+cvalue+"; "+expires;
+}
+function getCookie(cname){
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i].trim();
+        if (c.indexOf(name)==0) {
+            return c.substring(name.length,c.length);
+        }
+    }
+    return "";
+}
+function checkCookie(){
+    var token = getCookie("token");
+    if (token == "" || token == null) {
+        alert("请登录后访问，或手动输入token");
+        token = prompt("请输入你的token:","");
+        if (token != "" && token != null){
+            setCookie("token", token, 30);
+        }
+    }
+}
+function isEmpty(e) {
+  switch (e) {
+    case "":
+    // case 0:
+    // case "0":
+    case null:
+    case false:
+    case undefined:
+      return true;
+    default:
+      return false;
+  }
+}
+</script>
+
+
+<script>
+    function updateSize() {
+      let nBytes = 0,
+          oFiles = document.getElementById("hideFileInput").files,
+          nFiles = oFiles.length;
+      for (let nFileId = 0; nFileId < nFiles; nFileId++) {
+        nBytes += oFiles[nFileId].size;
+      }
+      let sOutput = nBytes + " bytes";
+      // optional code for multiples approximation
+      const aMultiples = ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
+      for (nMultiple = 0, nApprox = nBytes / 1024; nApprox > 1; nApprox /= 1024, nMultiple++) {
+        sOutput = nApprox.toFixed(3) + " " + aMultiples[nMultiple] + " (" + nBytes + " bytes)";
+      }
+      // end of optional code
+      document.getElementById("fileNum").innerHTML = nFiles;
+      document.getElementById("fileSize").innerHTML = sOutput;
+    }
+    
+    // 通过click()方法使用隐藏的file input元素
+    $('#fileSelectButton').click(function(){
+        $('#hideFileInput').click();
+    });
+
+    var inputButtonClickNum = 0;
+    $('#inputButton').click(function(){
+        $('#inputButtonClicks').html(++inputButtonClickNum);
+        // $('#inputButtonClicks').text(++inputButtonClickNum);
+    });
+    
+    $('#copyColorPicker2').click(function(){
+        $('#copyColorPicker').click();
+    });
+    $('#copyColorPicker').click(function(){
+        var colorHexCode = $('#colorPicker').val();
+        var inputEle = document.createElement('input');
+        inputEle.setAttribute('value', colorHexCode);
+        document.body.appendChild(inputEle);
+        inputEle.select();
+        document.execCommand("copy");
+        document.body.removeChild(inputEle);
+        
+        $('#copyColorPickerResultHint').html(' ' + colorHexCode + '复制成功！');
+        $('#copyColorPickerResultHint').show();
+        setTimeout(function(){
+            $('#copyColorPickerResultHint').hide();
+        }, 1000); // 1秒后隐藏
+    });
+</script>
+</html>
