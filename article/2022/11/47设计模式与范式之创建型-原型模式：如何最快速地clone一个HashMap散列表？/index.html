@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="对于创建型模式，前面我们已经讲了单例模式、工厂模式、建造者模式，今天我们来讲最后一个：原型模式。 对于熟悉JavaScript语言的前端程序员来说，原型模式是一种比较常用的开发模式。这是因为，有别于Java、C++等基于类的面向对象编程语言，JavaScript是一种基于原型的面向对象编程语言。即便JavaScript现在也引入了类的概念，但它也只是基于原型的语法糖而已。不过，如果你熟悉的是Jav">
+<meta property="og:type" content="article">
+<meta property="og:title" content="47设计模式与范式之创建型-原型模式：如何最快速地clone一个HashMap散列表？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/11/47%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E6%9C%80%E5%BF%AB%E9%80%9F%E5%9C%B0clone%E4%B8%80%E4%B8%AAHashMap%E6%95%A3%E5%88%97%E8%A1%A8%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="对于创建型模式，前面我们已经讲了单例模式、工厂模式、建造者模式，今天我们来讲最后一个：原型模式。 对于熟悉JavaScript语言的前端程序员来说，原型模式是一种比较常用的开发模式。这是因为，有别于Java、C++等基于类的面向对象编程语言，JavaScript是一种基于原型的面向对象编程语言。即便JavaScript现在也引入了类的概念，但它也只是基于原型的语法糖而已。不过，如果你熟悉的是Jav">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/11/47%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E6%9C%80%E5%BF%AB%E9%80%9F%E5%9C%B0clone%E4%B8%80%E4%B8%AAHashMap%E6%95%A3%E5%88%97%E8%A1%A8%EF%BC%9F/20201201185926335.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/11/47%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E6%9C%80%E5%BF%AB%E9%80%9F%E5%9C%B0clone%E4%B8%80%E4%B8%AAHashMap%E6%95%A3%E5%88%97%E8%A1%A8%EF%BC%9F/20201201190421399.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/11/47%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E6%9C%80%E5%BF%AB%E9%80%9F%E5%9C%B0clone%E4%B8%80%E4%B8%AAHashMap%E6%95%A3%E5%88%97%E8%A1%A8%EF%BC%9F/20201201190512765.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/11/47%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E6%9C%80%E5%BF%AB%E9%80%9F%E5%9C%B0clone%E4%B8%80%E4%B8%AAHashMap%E6%95%A3%E5%88%97%E8%A1%A8%EF%BC%9F/20201201190512884.jpg">
+<meta property="article:published_time" content="2022-11-17T00:00:00.000Z">
+<meta property="article:modified_time" content="2022-11-17T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2022/11/47%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E6%9C%80%E5%BF%AB%E9%80%9F%E5%9C%B0clone%E4%B8%80%E4%B8%AAHashMap%E6%95%A3%E5%88%97%E8%A1%A8%EF%BC%9F/20201201185926335.jpg">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/11/47%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E6%9C%80%E5%BF%AB%E9%80%9F%E5%9C%B0clone%E4%B8%80%E4%B8%AAHashMap%E6%95%A3%E5%88%97%E8%A1%A8%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/11/47%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E6%9C%80%E5%BF%AB%E9%80%9F%E5%9C%B0clone%E4%B8%80%E4%B8%AAHashMap%E6%95%A3%E5%88%97%E8%A1%A8%EF%BC%9F/","path":"article/2022/11/47设计模式与范式之创建型-原型模式：如何最快速地clone一个HashMap散列表？/","title":"47设计模式与范式之创建型-原型模式：如何最快速地clone一个HashMap散列表？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>47设计模式与范式之创建型-原型模式：如何最快速地clone一个HashMap散列表？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%E7%9A%84%E5%8E%9F%E7%90%86%E4%B8%8E%E5%BA%94%E7%94%A8"><span class="nav-number">1.</span> <span class="nav-text">原型模式的原理与应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%EF%BC%9A%E6%B7%B1%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B5%85%E6%8B%B7%E8%B4%9D"><span class="nav-number">2.</span> <span class="nav-text">原型模式的实现方式：深拷贝和浅拷贝</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE"><span class="nav-number">3.</span> <span class="nav-text">重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%A0%82%E8%AE%A8%E8%AE%BA"><span class="nav-number">4.</span> <span class="nav-text">课堂讨论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/11/47%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E6%9C%80%E5%BF%AB%E9%80%9F%E5%9C%B0clone%E4%B8%80%E4%B8%AAHashMap%E6%95%A3%E5%88%97%E8%A1%A8%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="47设计模式与范式之创建型-原型模式：如何最快速地clone一个HashMap散列表？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          47设计模式与范式之创建型-原型模式：如何最快速地clone一个HashMap散列表？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-11-17 08:00:00" itemprop="dateCreated datePublished" datetime="2022-11-17T08:00:00+08:00">2022-11-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>对于创建型模式，前面我们已经讲了单例模式、工厂模式、建造者模式，今天我们来讲最后一个：原型模式。</p>
+<p>对于熟悉JavaScript语言的前端程序员来说，原型模式是一种比较常用的开发模式。这是因为，有别于Java、C++等基于类的面向对象编程语言，JavaScript是一种基于原型的面向对象编程语言。即便JavaScript现在也引入了类的概念，但它也只是基于原型的语法糖而已。不过，如果你熟悉的是Java、C++等这些编程语言，那在实际的开发中，就很少用到原型模式了。</p>
+<p>今天的讲解跟具体某一语言的语法机制无关，而是通过一个clone散列表的例子带你搞清楚：原型模式的应用场景，以及它的两种实现方式：深拷贝和浅拷贝。虽然原型模式的原理和代码实现非常简单，但今天举的例子还是稍微有点复杂的，你要跟上我的思路，多动脑思考一下。</p>
+<p>话不多说，让我们正式开始今天的学习吧！</p>
+<span id="more"></span>
+
+<h1 id="原型模式的原理与应用"><a href="#原型模式的原理与应用" class="headerlink" title="原型模式的原理与应用"></a>原型模式的原理与应用</h1><p><font color="blue"><strong>如果对象的创建成本比较大，而同一个类的不同对象之间差别不大（大部分字段都相同）</strong></font>，在这种情况下，我们可以<font color="red"><strong>利用对已有对象（原型）进行复制（或者叫拷贝）的方式来创建新对象，以达到节省创建时间的目的。</strong></font>这种<font color="blue"><strong>基于原型来创建对象</strong></font>的方式就叫作<strong>原型设计模式</strong>（Prototype Design Pattern），简称<strong>原型模式</strong>。</p>
+<p><strong>那何为“对象的创建成本比较大”？</strong></p>
+<p>实际上，创建对象包含的申请内存、给成员变量赋值这一过程，本身并不会花费太多时间，或者说对于大部分业务系统来说，这点时间完全是可以忽略的。应用一个复杂的模式，只得到一点点的性能提升，这就是所谓的过度设计，得不偿失。</p>
+<p>但是，如果<font color="blue">对象中的数据需要经过复杂的计算才能得到（比如排序、计算哈希值），或者需要从RPC、网络、数据库、文件系统等非常慢速的IO中读取，这种情况下，我们就可以利用原型模式，从其他已有对象中直接拷贝得到，而不用每次在创建新对象的时候，都重复执行这些耗时的操作。</font> </p>
+<p><strong>这么说还是比较理论，接下来，我们通过一个例子来解释一下刚刚这段话。</strong></p>
+<p>假设数据库中存储了大约10万条“搜索关键词”信息，每条信息包含关键词、关键词被搜索的次数、信息最近被更新的时间等。系统A在启动的时候会加载这份数据到内存中，用于处理某些其他的业务需求。为了方便快速地查找某个关键词对应的信息，我们给关键词建立一个散列表索引。</p>
+<p>如果你熟悉的是Java语言，可以直接使用语言中提供的HashMap容器来实现。其中，HashMap的key为搜索关键词，value为关键词详细信息（比如搜索次数）。我们只需要将数据从数据库中读取出来，放入HashMap就可以了。</p>
+<p>不过，我们还有另外一个系统B，专门用来分析搜索日志，定期（比如间隔10分钟）批量地更新数据库中的数据，并且标记为新的数据版本。比如，在下面的示例图中，我们对v2版本的数据进行更新，得到v3版本的数据。这里我们假设只有更新和新添关键词，没有删除关键词的行为。</p>
+<p><img src="/article/2022/11/47%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E6%9C%80%E5%BF%AB%E9%80%9F%E5%9C%B0clone%E4%B8%80%E4%B8%AAHashMap%E6%95%A3%E5%88%97%E8%A1%A8%EF%BC%9F/20201201185926335.jpg" alt="img"></p>
+<p>为了保证系统A中数据的实时性（不一定非常实时，但数据也不能太旧），系统A需要定期根据数据库中的数据，更新内存中的索引和数据。</p>
+<p>我们该如何实现这个需求呢？</p>
+<p>实际上，也不难。我们只需要在系统A中，记录当前数据的版本Va对应的更新时间Ta，从数据库中捞出更新时间大于Ta的所有搜索关键词，也就是找出Va版本与最新版本数据的“差集”，然后针对差集中的每个关键词进行处理。如果它已经在散列表中存在了，我们就更新相应的搜索次数、更新时间等信息；如果它在散列表中不存在，我们就将它插入到散列表中。</p>
+<p>按照这个设计思路，我给出的示例代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Demo</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> ConcurrentHashMap&lt;String, SearchWord&gt; currentKeywords = <span class="keyword">new</span> <span class="title class_">ConcurrentHashMap</span>&lt;&gt;();</span><br><span class="line">  <span class="keyword">private</span> <span class="type">long</span> <span class="variable">lastUpdateTime</span> <span class="operator">=</span> -<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">refresh</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">// 从数据库中取出更新时间&gt;lastUpdateTime的数据，放入到currentKeywords中</span></span><br><span class="line">    List&lt;SearchWord&gt; toBeUpdatedSearchWords = getSearchWords(lastUpdateTime);</span><br><span class="line">    <span class="type">long</span> <span class="variable">maxNewUpdatedTime</span> <span class="operator">=</span> lastUpdateTime;</span><br><span class="line">    <span class="keyword">for</span> (SearchWord searchWord : toBeUpdatedSearchWords) &#123;</span><br><span class="line">      <span class="keyword">if</span> (searchWord.getLastUpdateTime() &gt; maxNewUpdatedTime) &#123;</span><br><span class="line">        maxNewUpdatedTime = searchWord.getLastUpdateTime();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (currentKeywords.containsKey(searchWord.getKeyword())) &#123;</span><br><span class="line">        currentKeywords.replace(searchWord.getKeyword(), searchWord);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        currentKeywords.put(searchWord.getKeyword(), searchWord);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    lastUpdateTime = maxNewUpdatedTime;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> List&lt;SearchWord&gt; <span class="title function_">getSearchWords</span><span class="params">(<span class="type">long</span> lastUpdateTime)</span> &#123;</span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> 从数据库中取出更新时间&gt;lastUpdateTime的数据</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不过，现在，我们有一个特殊的要求：任何时刻，系统A中的所有数据都必须是同一个版本的，要么都是版本a，要么都是版本b，不能有的是版本a，有的是版本b。那刚刚的更新方式就不能满足这个要求了。除此之外，我们还要求：在更新内存数据的时候，系统A不能处于不可用状态，也就是不能停机更新数据。</p>
+<p>那我们该如何实现现在这个需求呢？</p>
+<p>实际上，也不难。我们把正在使用的数据的版本定义为“服务版本”，当我们要更新内存中的数据的时候，我们并不是直接在服务版本（假设是版本a数据）上更新，而是重新创建另一个版本数据（假设是版本b数据），等新的版本数据建好之后，再一次性地将服务版本从版本a切换到版本b。这样既保证了数据一直可用，又避免了中间状态的存在。</p>
+<p>按照这个设计思路，我给出的示例代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Demo</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> HashMap&lt;String, SearchWord&gt; currentKeywords=<span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">refresh</span><span class="params">()</span> &#123;</span><br><span class="line">    HashMap&lt;String, SearchWord&gt; newKeywords = <span class="keyword">new</span> <span class="title class_">LinkedHashMap</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 从数据库中取出所有的数据，放入到newKeywords中</span></span><br><span class="line">    List&lt;SearchWord&gt; toBeUpdatedSearchWords = getSearchWords();</span><br><span class="line">    <span class="keyword">for</span> (SearchWord searchWord : toBeUpdatedSearchWords) &#123;</span><br><span class="line">      newKeywords.put(searchWord.getKeyword(), searchWord);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    currentKeywords = newKeywords;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> List&lt;SearchWord&gt; <span class="title function_">getSearchWords</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> 从数据库中取出所有的数据</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不过，在上面的代码实现中，newKeywords构建的成本比较高。我们需要将这10万条数据从数据库中读出，然后计算哈希值，构建newKeywords。这个过程显然是比较耗时。为了提高效率，原型模式就派上用场了。</p>
+<p><font color="red">我们拷贝currentKeywords数据到newKeywords中，然后从数据库中只捞出新增或者有更新的关键词，更新到newKeywords中。</font>而相对于10万条数据来说，每次新增或者更新的关键词个数是比较少的，所以，这种策略大大提高了数据更新的效率。</p>
+<p>按照这个设计思路，我给出的示例代码如下所示（<font color="red"><strong>浅拷贝</strong></font>）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Demo</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> HashMap&lt;String, SearchWord&gt; currentKeywords=<span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">  <span class="keyword">private</span> <span class="type">long</span> <span class="variable">lastUpdateTime</span> <span class="operator">=</span> -<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">refresh</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">// 原型模式就这么简单，拷贝已有对象的数据，更新少量差值</span></span><br><span class="line">    HashMap&lt;String, SearchWord&gt; newKeywords = (HashMap&lt;String, SearchWord&gt;) currentKeywords.clone();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 从数据库中取出更新时间&gt;lastUpdateTime的数据，放入到newKeywords中</span></span><br><span class="line">    List&lt;SearchWord&gt; toBeUpdatedSearchWords = getSearchWords(lastUpdateTime);</span><br><span class="line">    <span class="type">long</span> <span class="variable">maxNewUpdatedTime</span> <span class="operator">=</span> lastUpdateTime;</span><br><span class="line">    <span class="keyword">for</span> (SearchWord searchWord : toBeUpdatedSearchWords) &#123;</span><br><span class="line">      <span class="keyword">if</span> (searchWord.getLastUpdateTime() &gt; maxNewUpdatedTime) &#123;</span><br><span class="line">        maxNewUpdatedTime = searchWord.getLastUpdateTime();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (newKeywords.containsKey(searchWord.getKeyword())) &#123;</span><br><span class="line">        <span class="type">SearchWord</span> <span class="variable">oldSearchWord</span> <span class="operator">=</span> newKeywords.get(searchWord.getKeyword());</span><br><span class="line">        oldSearchWord.setCount(searchWord.getCount());</span><br><span class="line">        oldSearchWord.setLastUpdateTime(searchWord.getLastUpdateTime());</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        newKeywords.put(searchWord.getKeyword(), searchWord);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    lastUpdateTime = maxNewUpdatedTime;</span><br><span class="line">    currentKeywords = newKeywords;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> List&lt;SearchWord&gt; <span class="title function_">getSearchWords</span><span class="params">(<span class="type">long</span> lastUpdateTime)</span> &#123;</span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> 从数据库中取出更新时间&gt;lastUpdateTime的数据</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里我们利用了Java中的clone()语法来复制一个对象。如果你熟悉的语言没有这个语法，那把数据从currentKeywords中一个个取出来，然后再重新计算哈希值，放入到newKeywords中也是可以接受的。毕竟，最耗时的还是从数据库中取数据的操作。相对于数据库的IO操作来说，内存操作和CPU计算的耗时都是可以忽略的。</p>
+<p>不过，不知道你有没有发现，实际上，刚刚的代码实现是有问题的。要弄明白到底有什么问题，我们需要先了解另外两个概念：深拷贝（Deep Copy）和浅拷贝（Shallow Copy）。</p>
+<h1 id="原型模式的实现方式：深拷贝和浅拷贝"><a href="#原型模式的实现方式：深拷贝和浅拷贝" class="headerlink" title="原型模式的实现方式：深拷贝和浅拷贝"></a>原型模式的实现方式：深拷贝和浅拷贝</h1><p>我们来看，在内存中，用散列表组织的搜索关键词信息是如何存储的。我画了一张示意图，大致结构如下所示。从图中我们可以发现，散列表索引中，每个结点存储的key是搜索关键词，value是SearchWord对象的内存地址。SearchWord对象本身存储在散列表之外的内存空间中。</p>
+<p><img src="/article/2022/11/47%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E6%9C%80%E5%BF%AB%E9%80%9F%E5%9C%B0clone%E4%B8%80%E4%B8%AAHashMap%E6%95%A3%E5%88%97%E8%A1%A8%EF%BC%9F/20201201190421399.jpg" alt="img"></p>
+<p>浅拷贝和深拷贝的区别在于，浅拷贝只会复制图中的索引（散列表），不会复制数据（SearchWord对象）本身。相反，深拷贝不仅仅会复制索引，还会复制数据本身。浅拷贝得到的对象（newKeywords）跟原始对象（currentKeywords）共享数据（SearchWord对象），而深拷贝得到的是一份完完全全独立的对象。具体的对比如下图所示：</p>
+<p><img src="/article/2022/11/47%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E6%9C%80%E5%BF%AB%E9%80%9F%E5%9C%B0clone%E4%B8%80%E4%B8%AAHashMap%E6%95%A3%E5%88%97%E8%A1%A8%EF%BC%9F/20201201190512765.jpg" alt="img"></p>
+<p><img src="/article/2022/11/47%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E6%9C%80%E5%BF%AB%E9%80%9F%E5%9C%B0clone%E4%B8%80%E4%B8%AAHashMap%E6%95%A3%E5%88%97%E8%A1%A8%EF%BC%9F/20201201190512884.jpg" alt="img"></p>
+<p>在Java语言中，Object类的clone()方法执行的就是我们刚刚说的浅拷贝。它只会拷贝对象中的基本数据类型的数据（比如，int、long），以及引用对象（SearchWord）的内存地址，不会递归地拷贝引用对象本身。</p>
+<p>在上面的代码中，我们通过调用HashMap上的clone()浅拷贝方法来实现原型模式。当我们通过newKeywords更新SearchWord对象的时候（比如，更新“设计模式”这个搜索关键词的访问次数），newKeywords和currentKeywords因为指向相同的一组SearchWord对象，就会导致currentKeywords中指向的SearchWord，有的是老版本的，有的是新版本的，就没法满足我们之前的需求：currentKeywords中的数据在任何时刻都是同一个版本的，不存在介于老版本与新版本之间的中间状态。</p>
+<p>现在，我们又该如何来解决这个问题呢？</p>
+<p>我们可以将浅拷贝替换为深拷贝。newKeywords不仅仅复制currentKeywords的索引，还把SearchWord对象也复制一份出来，这样newKeywords和currentKeywords就指向不同的SearchWord对象，也就不存在更新newKeywords的数据会导致currentKeywords的数据也被更新的问题了。</p>
+<p>那如何实现深拷贝呢？总结一下的话，有下面两种方法。</p>
+<p><font color="red"><strong>第一种方法：递归拷贝对象、对象的引用对象以及引用对象的引用对象……直到要拷贝的对象只包含基本数据类型数据，没有引用对象为止。</strong></font>根据这个思路对之前的代码进行重构。重构之后的代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Demo</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> HashMap&lt;String, SearchWord&gt; currentKeywords=<span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">  <span class="keyword">private</span> <span class="type">long</span> <span class="variable">lastUpdateTime</span> <span class="operator">=</span> -<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">refresh</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">// Deep copy</span></span><br><span class="line">    HashMap&lt;String, SearchWord&gt; newKeywords = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    <span class="keyword">for</span> (HashMap.Entry&lt;String, SearchWord&gt; e : currentKeywords.entrySet()) &#123;</span><br><span class="line">      <span class="type">SearchWord</span> <span class="variable">searchWord</span> <span class="operator">=</span> e.getValue();</span><br><span class="line">      <span class="type">SearchWord</span> <span class="variable">newSearchWord</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SearchWord</span>(</span><br><span class="line">              searchWord.getKeyword(), searchWord.getCount(), searchWord.getLastUpdateTime());</span><br><span class="line">      newKeywords.put(e.getKey(), newSearchWord);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 从数据库中取出更新时间&gt;lastUpdateTime的数据，放入到newKeywords中</span></span><br><span class="line">    List&lt;SearchWord&gt; toBeUpdatedSearchWords = getSearchWords(lastUpdateTime);</span><br><span class="line">    <span class="type">long</span> <span class="variable">maxNewUpdatedTime</span> <span class="operator">=</span> lastUpdateTime;</span><br><span class="line">    <span class="keyword">for</span> (SearchWord searchWord : toBeUpdatedSearchWords) &#123;</span><br><span class="line">      <span class="keyword">if</span> (searchWord.getLastUpdateTime() &gt; maxNewUpdatedTime) &#123;</span><br><span class="line">        maxNewUpdatedTime = searchWord.getLastUpdateTime();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (newKeywords.containsKey(searchWord.getKeyword())) &#123;</span><br><span class="line">        <span class="type">SearchWord</span> <span class="variable">oldSearchWord</span> <span class="operator">=</span> newKeywords.get(searchWord.getKeyword());</span><br><span class="line">        oldSearchWord.setCount(searchWord.getCount());</span><br><span class="line">        oldSearchWord.setLastUpdateTime(searchWord.getLastUpdateTime());</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        newKeywords.put(searchWord.getKeyword(), searchWord);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    lastUpdateTime = maxNewUpdatedTime;</span><br><span class="line">    currentKeywords = newKeywords;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> List&lt;SearchWord&gt; <span class="title function_">getSearchWords</span><span class="params">(<span class="type">long</span> lastUpdateTime)</span> &#123;</span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> 从数据库中取出更新时间&gt;lastUpdateTime的数据</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><font color="red"><strong>第二种方法：先将对象序列化，然后再反序列化成新的对象。</strong></font>具体的示例代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Object <span class="title function_">deepCopy</span><span class="params">(Object object)</span> &#123;</span><br><span class="line">  <span class="type">ByteArrayOutputStream</span> <span class="variable">bo</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayOutputStream</span>();</span><br><span class="line">  <span class="type">ObjectOutputStream</span> <span class="variable">oo</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(bo);</span><br><span class="line">  oo.writeObject(object);</span><br><span class="line">  </span><br><span class="line">  <span class="type">ByteArrayInputStream</span> <span class="variable">bi</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayInputStream</span>(bo.toByteArray());</span><br><span class="line">  <span class="type">ObjectInputStream</span> <span class="variable">oi</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(bi);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> oi.readObject();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>刚刚的<font color="red"><strong>两种实现方法，不管采用哪种，深拷贝都要比浅拷贝耗时、耗内存空间。</strong></font>针对我们这个应用场景，有没有更快、更省内存的实现方式呢？</p>
+<p>我们可以先采用浅拷贝的方式创建newKeywords。<font color="blue"><strong>对于需要更新的SearchWord对象，我们再使用深度拷贝的方式创建一份新的对象，</strong></font>替换newKeywords中的老对象。毕竟需要更新的数据是很少的。这种方式即利用了浅拷贝节省时间、空间的优点，又能保证currentKeywords中的中数据都是老版本的数据。具体的代码实现如下所示。这也是标题中讲到的，在我们这个应用场景下，最快速clone散列表的方式。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Demo</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> HashMap&lt;String, SearchWord&gt; currentKeywords=<span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">  <span class="keyword">private</span> <span class="type">long</span> <span class="variable">lastUpdateTime</span> <span class="operator">=</span> -<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">refresh</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">// Shallow copy</span></span><br><span class="line">    HashMap&lt;String, SearchWord&gt; newKeywords = (HashMap&lt;String, SearchWord&gt;) currentKeywords.clone();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 从数据库中取出更新时间&gt;lastUpdateTime的数据，放入到newKeywords中</span></span><br><span class="line">    List&lt;SearchWord&gt; toBeUpdatedSearchWords = getSearchWords(lastUpdateTime);</span><br><span class="line">    <span class="type">long</span> <span class="variable">maxNewUpdatedTime</span> <span class="operator">=</span> lastUpdateTime;</span><br><span class="line">    <span class="keyword">for</span> (SearchWord searchWord : toBeUpdatedSearchWords) &#123;</span><br><span class="line">      <span class="keyword">if</span> (searchWord.getLastUpdateTime() &gt; maxNewUpdatedTime) &#123;</span><br><span class="line">        maxNewUpdatedTime = searchWord.getLastUpdateTime();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (newKeywords.containsKey(searchWord.getKeyword())) &#123;</span><br><span class="line">        <span class="comment">// 若浅拷贝的map中包含增量信息，则重新put。这里先移除感觉有些多余了，但是代码更清晰。</span></span><br><span class="line">        newKeywords.remove(searchWord.getKeyword());</span><br><span class="line">      &#125;</span><br><span class="line">      newKeywords.put(searchWord.getKeyword(), searchWord);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    lastUpdateTime = maxNewUpdatedTime;</span><br><span class="line">    currentKeywords = newKeywords;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> List&lt;SearchWord&gt; <span class="title function_">getSearchWords</span><span class="params">(<span class="type">long</span> lastUpdateTime)</span> &#123;</span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> 从数据库中取出更新时间&gt;lastUpdateTime的数据</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="重点回顾"><a href="#重点回顾" class="headerlink" title="重点回顾"></a>重点回顾</h1><p>好了，今天的内容到此就讲完了。我们一块来总结回顾一下，你需要重点掌握的内容。</p>
+<p><strong>1.什么是原型模式？</strong></p>
+<p>如果对象的创建成本比较大，而同一个类的不同对象之间差别不大（大部分字段都相同），在这种情况下，我们可以利用对已有对象（原型）进行复制（或者叫拷贝）的方式，来创建新对象，以达到节省创建时间的目的。这种基于原型来创建对象的方式就叫作原型设计模式，简称原型模式。</p>
+<p><strong>2.原型模式的两种实现方法</strong></p>
+<p>原型模式有两种实现方法，深拷贝和浅拷贝。浅拷贝只会复制对象中基本数据类型数据和引用对象的内存地址，不会递归地复制引用对象，以及引用对象的引用对象……而深拷贝得到的是一份完完全全独立的对象。所以，深拷贝比起浅拷贝来说，更加耗时，更加耗内存空间。</p>
+<p>如果要拷贝的对象是不可变对象，浅拷贝共享不可变对象是没问题的，但对于可变对象来说，浅拷贝得到的对象和原始对象会共享部分数据，就有可能出现数据被修改的风险，也就变得复杂多了。除非像我们今天实战中举的那个例子，需要从数据库中加载10万条数据并构建散列表索引，<font color="red"><strong>操作非常耗时，这种情况下比较推荐使用浅拷贝，否则，没有充分的理由，不要为了一点点的性能提升而使用浅拷贝。</strong></font></p>
+<h1 id="课堂讨论"><a href="#课堂讨论" class="headerlink" title="课堂讨论"></a>课堂讨论</h1><ol>
+<li>在今天的应用场景中，如果不仅往数据库中添加和更新关键词，还删除关键词，这种情况下，又该如何实现呢？</li>
+<li>在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/164907">第7讲</a>中，为了让ShoppingCart的getItems()方法返回不可变对象，我们如下来实现代码。当时，我们指出这样的实现思路还是有点问题。因为当调用者通过ShoppingCart的getItems()获取到items之后，我们还是可以修改容器中每个对象（ShoppingCartItem）的数据。学完本节课之后，现在你有没有解决方法了呢？</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ShoppingCart</span> &#123;</span><br><span class="line">  <span class="comment">// ...省略其他代码...</span></span><br><span class="line">  <span class="keyword">public</span> List&lt;ShoppingCartItem&gt; <span class="title function_">getItems</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> Collections.unmodifiableList(<span class="built_in">this</span>.items);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Testing Code in main method:</span></span><br><span class="line"><span class="type">ShoppingCart</span> <span class="variable">cart</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ShoppingCart</span>();</span><br><span class="line">List&lt;ShoppingCartItem&gt; items = cart.getItems();</span><br><span class="line">items.clear();<span class="comment">//try to modify the list</span></span><br><span class="line"><span class="comment">// Exception in thread &quot;main&quot; java.lang.UnsupportedOperationExceptio </span></span><br><span class="line"></span><br><span class="line"><span class="type">ShoppingCart</span> <span class="variable">cart</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ShoppingCart</span>();</span><br><span class="line">cart.add(<span class="keyword">new</span> <span class="title class_">ShoppingCartItem</span>(...));</span><br><span class="line">List&lt;ShoppingCartItem&gt; items = cart.getItems();</span><br><span class="line"><span class="type">ShoppingCartItem</span> <span class="variable">item</span> <span class="operator">=</span> items.get(<span class="number">0</span>);</span><br><span class="line">item.setPrice(<span class="number">19.0</span>); <span class="comment">// 这里修改了item的价格属性</span></span><br></pre></td></tr></table></figure>
+
+<p>欢迎留言和我分享你的疑惑和见解，如果有收获，也欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/11/46%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F%EF%BC%9A%E8%AF%A6%E8%A7%A3%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E3%80%81set%E6%96%B9%E6%B3%95%E3%80%81%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F%E4%B8%89%E7%A7%8D%E5%AF%B9%E8%B1%A1%E5%88%9B%E5%BB%BA%E6%96%B9%E5%BC%8F/" rel="prev" title="46设计模式与范式之创建型-建造者模式：详解构造函数、set方法、建造者模式三种对象创建方式">
+                  <i class="fa fa-angle-left"></i> 46设计模式与范式之创建型-建造者模式：详解构造函数、set方法、建造者模式三种对象创建方式
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/11/48%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E7%BB%93%E6%9E%84%E5%9E%8B-%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F%EF%BC%9A%E4%BB%A3%E7%90%86%E5%9C%A8RPC%E3%80%81%E7%BC%93%E5%AD%98%E3%80%81%E7%9B%91%E6%8E%A7%E7%AD%89%E5%9C%BA%E6%99%AF%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/" rel="next" title="48设计模式与范式之结构型-代理模式：代理在RPC、缓存、监控等场景中的应用">
+                  48设计模式与范式之结构型-代理模式：代理在RPC、缓存、监控等场景中的应用 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

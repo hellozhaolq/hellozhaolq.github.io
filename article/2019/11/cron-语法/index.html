@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="相关链接：  维基百科   Quartz cron 语法   Quartz-CronTrigger解读   Linux&#x2F;UNIX 定时任务 cron 详解   crontab命令   如何使用 cron 任务在 Linux 中计划和自动化任务   Quartz Cron 和 UNIX CronQuartz Cron 表达式的格式十分类似于 UNIX Cron 格式，但还是有明显的区别：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Cron 语法">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/11/cron-%E8%AF%AD%E6%B3%95/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="相关链接：  维基百科   Quartz cron 语法   Quartz-CronTrigger解读   Linux&#x2F;UNIX 定时任务 cron 详解   crontab命令   如何使用 cron 任务在 Linux 中计划和自动化任务   Quartz Cron 和 UNIX CronQuartz Cron 表达式的格式十分类似于 UNIX Cron 格式，但还是有明显的区别：">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-11-11T03:25:14.000Z">
+<meta property="article:modified_time" content="2019-11-11T03:25:14.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Cron">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/11/cron-%E8%AF%AD%E6%B3%95/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2019/11/cron-%E8%AF%AD%E6%B3%95/","path":"article/2019/11/cron-语法/","title":"Cron 语法"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Cron 语法 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Quartz-Cron-%E5%92%8C-UNIX-Cron"><span class="nav-number">1.</span> <span class="nav-text">Quartz Cron 和 UNIX Cron</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%93%8D%E4%BD%9C%E7%AC%A6%E5%8F%B7"><span class="nav-number">2.</span> <span class="nav-text">操作符号</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B1%E6%9C%89"><span class="nav-number">2.1.</span> <span class="nav-text">共有</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E5%8C%BA%E5%9F%9F%E5%A4%9A%E4%B8%AA%E6%95%B0%E5%80%BC"><span class="nav-number">2.1.1.</span> <span class="nav-text">一个区域多个数值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%9C%E6%9D%A0"><span class="nav-number">2.1.2.</span> <span class="nav-text">&#x2F; 斜杠</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Quartz-Cron-%E7%89%B9%E6%9C%89"><span class="nav-number">2.2.</span> <span class="nav-text">Quartz Cron 特有</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%97%AE%E5%8F%B7"><span class="nav-number">2.2.1.</span> <span class="nav-text">? 问号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#L-%E5%AD%97%E6%AF%8D"><span class="nav-number">2.2.2.</span> <span class="nav-text">L 字母</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%94%A8%E5%9C%A8-%E6%97%A5-%E5%9F%9F%E4%B8%8A"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">用在 日 域上</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%94%A8%E5%9C%A8-%E5%91%A8-%E5%9F%9F%E4%B8%8A"><span class="nav-number">2.2.2.2.</span> <span class="nav-text">用在 周 域上</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#W-%E5%AD%97%E6%AF%8D"><span class="nav-number">2.2.3.</span> <span class="nav-text">W 字母</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%95%E5%8F%B7"><span class="nav-number">2.2.4.</span> <span class="nav-text"># 井号</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%97%A5-%E5%92%8C-%E5%91%A8-%E5%9F%9F"><span class="nav-number">3.</span> <span class="nav-text">日 和 周 域</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8-Cron-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%88%97%E8%A1%A8"><span class="nav-number">4.</span> <span class="nav-text">常用 Cron 表达式列表</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/11/cron-%E8%AF%AD%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Cron 语法 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Cron 语法
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-11-11 11:25:14" itemprop="dateCreated datePublished" datetime="2019-11-11T11:25:14+08:00">2019-11-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">定时任务</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>相关链接：</p>
+<p> <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Cron">维基百科</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://blog.csdn.net/liuyukuan/article/details/6709554">Quartz cron 语法</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://blog.csdn.net/yangshangwei/article/details/78172982">Quartz-CronTrigger解读</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://linux.cn/article-7513-1.html">Linux&#x2F;UNIX 定时任务 cron 详解</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://man.linuxde.net/crontab">crontab命令</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://linux.cn/article-11571-1.html">如何使用 cron 任务在 Linux 中计划和自动化任务</a>  </p>
+<h1 id="Quartz-Cron-和-UNIX-Cron"><a href="#Quartz-Cron-和-UNIX-Cron" class="headerlink" title="Quartz Cron 和 UNIX Cron"></a>Quartz Cron 和 UNIX Cron</h1><p>Quartz Cron 表达式的格式十分类似于 UNIX Cron 格式，但还是有明显的区别：</p>
+<span id="more"></span>
+
+<p>​		一：Quartz 的格式向下支持到秒级别的计划，而 UNIX Cron 计划仅支持至分钟级。许多我们的触发计划要基于秒级递增的(例如，每45秒)，因此这是一个非常好的差异。</p>
+<p>​		二：在 UNIX Cron 里，要执行的命令是存放在 Cron 表达式中的，在第六个域位置上。Quartz 用 Cron 表达式存放执行计划。引用了 Cron 表达式的 CronTrigger 在计划的时间里会与 job 关联上。</p>
+<p>​		三：表达式中支持域的数目不同。UNIX 给出五个域(分、时、日、月和周)，Quartz 提供七个域。下表列出了 Quartz Cron 表达式支持的七个域。</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>是否必须</th>
+<th>允许值</th>
+<th>特殊字符</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>秒</td>
+<td>是</td>
+<td>0-59</td>
+<td>, - * &#x2F;</td>
+</tr>
+<tr>
+<td>分</td>
+<td>是</td>
+<td>0-59</td>
+<td>, - * &#x2F;</td>
+</tr>
+<tr>
+<td>时</td>
+<td>是</td>
+<td>0-23</td>
+<td>, - * &#x2F;</td>
+</tr>
+<tr>
+<td>日</td>
+<td>是</td>
+<td>1-31</td>
+<td>, - * ? &#x2F; L W C</td>
+</tr>
+<tr>
+<td>月</td>
+<td>是</td>
+<td>1-12 或 JAN-DEC</td>
+<td>, - * &#x2F;</td>
+</tr>
+<tr>
+<td>周</td>
+<td>是</td>
+<td>1-7 或 SUN-SAT</td>
+<td>, - * ? &#x2F; L C #</td>
+</tr>
+<tr>
+<td>年</td>
+<td>否</td>
+<td>空 或 1970-2099</td>
+<td>, - * &#x2F;</td>
+</tr>
+</tbody></table>
+<h1 id="操作符号"><a href="#操作符号" class="headerlink" title="操作符号"></a>操作符号</h1><p>同 UNIX Cron 一样，Quartz Cron 表达式支持用特殊字符来创建更为复杂的执行计划。然而，Quartz 在特殊字符的支持上比标准 UNIX Cron 表达式更丰富了。</p>
+<h2 id="共有"><a href="#共有" class="headerlink" title="共有"></a>共有</h2><h3 id="一个区域多个数值"><a href="#一个区域多个数值" class="headerlink" title="一个区域多个数值"></a>一个区域多个数值</h3><p>​		<code>,</code> 逗号、<code>-</code>  连词符 、<code>*</code>  星号，同 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Cron">Unix Cron</a> 。</p>
+<h3 id="斜杠"><a href="#斜杠" class="headerlink" title="/ 斜杠"></a><code>/</code> 斜杠</h3><p>同 Unix Cron ，用于表示跳过某些给定的数。</p>
+<p>例如：</p>
+<p>1、 <code>*/3</code> 在小时域中等于 <code>0,3,6,9,12,15,18,21</code> (被3整除的数)，跳过了给定 <code>*</code> 当中的其他数。</p>
+<p>2、在整点和半点时每15秒触发一次：</p>
+<p>​	 <code>0/15 /30 * * * ? *</code> 、 <code>0/15 */30 * * * ? *</code> 、 <code>0/15 0/30 * * * ? *</code> 或 <code>0/15 0-30/30 * * * ? *</code> </p>
+<h2 id="Quartz-Cron-特有"><a href="#Quartz-Cron-特有" class="headerlink" title="Quartz Cron 特有"></a>Quartz Cron 特有</h2><h3 id="问号"><a href="#问号" class="headerlink" title="? 问号"></a><code>?</code> 问号</h3><p> <code>?</code> 号只能用在 <code>日</code> 和 <code>周</code> 域上，<strong>不能在这两个域上同时使用，也不能不用</strong>，该符号<strong>用且仅用一次</strong>，代表 “并不关心该域上的值”。 </p>
+<p><code>*</code> 代表该域上任何可能的值。<code>?</code> 代表不为该域指定值。</p>
+<h3 id="L-字母"><a href="#L-字母" class="headerlink" title="L 字母"></a><code>L</code> 字母</h3><p> <code>L</code> 说明了某域上允许的最后一个值，仅被 <code>日</code> 和 <code>周</code> 域支持。</p>
+<h4 id="用在-日-域上"><a href="#用在-日-域上" class="headerlink" title="用在 日 域上"></a>用在 <code>日</code> 域上</h4><p>​		表示在月域上指定的月份的最后一天。</p>
+<p>例如：</p>
+<p>​		 <code>0 0 8 L FEB ? *</code> ：每年二月份最后一天的上午 8:00 触发 trigger 。</p>
+<p>​		 <code>0 0 8 L * ? *</code> ：每个月最后一天的上午 8:00 触发 trigger 。</p>
+<h4 id="用在-周-域上"><a href="#用在-周-域上" class="headerlink" title="用在 周 域上"></a>用在 <code>周</code> 域上</h4><p>1、表示周的最后一天，就是星期六（即数字7）。</p>
+<p>例如：</p>
+<p>​		 <code>0 0 8 ? * L *</code> ：每周最后一天（即星期六或数字7）上午 8:00 触发 trigger。</p>
+<p>2、一个<font color="red">数字 与 L</font>连用，表示<font color="red"><strong>月份的最后一个星期的第 X 天</strong></font></p>
+<p>例如：</p>
+<p>​		 <code>0 0 8 ? * 1L *</code> ：每个月的最后一个星期的第一天，即星期日。</p>
+<p>​		 <code>0 0 8 ? * 7L *</code> ：每个月的最后一个星期的第七天，即星期六。</p>
+<p>3、不能让范围和列表值与 <code>L</code> 连用</p>
+<p>以下是错误的：</p>
+<p>​		 <code>0 0 8 ? * 1,2,3L *</code> 、 <code>0 0 8 ? * 1-3L *</code> </p>
+<h3 id="W-字母"><a href="#W-字母" class="headerlink" title="W 字母"></a><code>W</code> 字母</h3><p><code>W</code> 表示离<strong>指定日</strong>最近的一个<strong>平日 (Mon-Fri)</strong>，并且<strong>仅能用于日域</strong>中，且指定日必须为<strong>单天</strong>，不能是范围或列表值。</p>
+<p><strong>如果指定日为平日，那么当日触发；如果指定日为星期六或星期日，那么在离指定日最近一个平日触发。</strong></p>
+<p>大部分商业相关的处理都是基于工作周的，所以 <code>W</code> 字符可能是非常重要的。</p>
+<p>例如：</p>
+<p>​		 <code>0 0 8 15 * ? *</code> ：每个月的15号上午 8:00 触发 trigger。</p>
+<p>​		 <code>0 0 8 15W * ? *</code> ：每个月离15号最近的一个平日的上午 8:00 触发 trigger，利用生成器观察结果。</p>
+<h3 id="井号"><a href="#井号" class="headerlink" title="# 井号"></a><code>#</code> 井号</h3><p><code>#</code> 表示<strong>月份中第几周的第几天</strong>，并且<strong>仅能用于周域</strong>中。</p>
+<p>例子：</p>
+<p>​		 <code>0 0 8 ? * 1#1 *</code> ：每个月的第一周的第一天（星期日）的上午 8:00 触发 trigger。</p>
+<p>​		 <code>0 0 8 ? * 7#1 *</code> ：每个月的第一周的第七天（星期六）的上午 8:00 触发 trigger。</p>
+<p>假如指定#5，然而月份中没有第 5 周，那么该月就不会触发，例如：</p>
+<p>​		 <code>0 0 8 ? * 1#5 *</code> ：每个月的第五周的第一天（星期日）的上午 8:00 触发 trigger。</p>
+<p>​		 <code>0 0 8 ? * 7#5 *</code> ：每个月的第五周的第七天（星期六）的上午 8:00 触发 trigger。</p>
+<h1 id="日-和-周-域"><a href="#日-和-周-域" class="headerlink" title="日 和 周 域"></a><code>日</code> 和 <code>周</code> 域</h1><p><code>日</code> 域上值是 25，<code>周</code> 域上值是 WED，那么是在每个月的 25 号且为星期三的那天触发 trigger，还是每个月的 25 号和每个月的星期三都会触发 trigger？</p>
+<p>​		Quartz cron 表达式不能同时在 <code>日</code> 和 <code>周</code> 域上指定值，一定有一个 <code>?</code> 号，所以不会出现这种情况。</p>
+<p>​		UNIX cron 表达式如果 <code>日</code> 和 <code>周</code> 同时被设置，那么其中的一个条件被满足时，指令便会被运行。</p>
+<h1 id="常用-Cron-表达式列表"><a href="#常用-Cron-表达式列表" class="headerlink" title="常用 Cron 表达式列表"></a>常用 Cron 表达式列表</h1><table>
+<thead>
+<tr>
+<th>说明</th>
+<th>表达式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>每天中午 12:00 触发</td>
+<td>0 0 12 * * ?</td>
+</tr>
+<tr>
+<td>每天上午 10:15 触发</td>
+<td>0 15 10 * * ?</td>
+</tr>
+<tr>
+<td>每天上午 10:15 触发</td>
+<td>0 15 10 ? * *</td>
+</tr>
+<tr>
+<td>每天上午 10:15 触发</td>
+<td>0 15 10 ? * * *</td>
+</tr>
+<tr>
+<td>2005年每天上午 10:15 触发</td>
+<td>0 15 10 * * ? 2005</td>
+</tr>
+<tr>
+<td>每天下午 2:00 到下午 2:59 期间的每一分钟触发</td>
+<td>0 * 14 * * ?</td>
+</tr>
+<tr>
+<td>每天下午 2:00 到下午 2:55 期间的每五分钟触发</td>
+<td>0 0&#x2F;5 14 * * ?</td>
+</tr>
+<tr>
+<td>每天下午 2:00 到下午 2:55 期间和下午 6:00 到 6:55 期间的每五分钟触发</td>
+<td>0 0&#x2F;5 14,18 * * ?</td>
+</tr>
+<tr>
+<td>每天下午 2:00 到下午 2:05 期间的每]一分钟触发</td>
+<td>0 0-5 14 * * ?</td>
+</tr>
+<tr>
+<td>每年三月份的每个周三的下午 2:10 和下午 2:44 触发</td>
+<td>0 10,44 14 ? 3 WED</td>
+</tr>
+<tr>
+<td>每周从周一到周五的上午 10:15 触发</td>
+<td>0 15 10 ? * MON-FRI</td>
+</tr>
+<tr>
+<td>每月15号上午 10:15 触发</td>
+<td>0 15 10 15 * ?</td>
+</tr>
+<tr>
+<td>每月最后一天的上午 10:15 触发</td>
+<td>0 15 10 L * ?</td>
+</tr>
+<tr>
+<td>每月最后一个周五的上午 10:15 触发</td>
+<td>0 15 10 ? * 6L</td>
+</tr>
+<tr>
+<td>2002年至2005年的每月最后一个周五的上午 10:15 触发</td>
+<td>0 15 10 ? * 6L 2002-2005</td>
+</tr>
+<tr>
+<td>每月第三个星期的第六天（星期五）的上午 10:15 触发</td>
+<td>0 15 10 ? * 6#3</td>
+</tr>
+<tr>
+<td>每月从第一天算起每五天的中午 12:00 触发</td>
+<td>0 0 12 1&#x2F;5 * ?</td>
+</tr>
+</tbody></table>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Cron/" rel="tag"># Cron</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2019/11/GitHub-Actions/" rel="prev" title="GitHub Actions">
+                  <i class="fa fa-angle-left"></i> GitHub Actions
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2019/11/%E5%9F%BA%E4%BA%8E-Spring-Boot-2-x-Mybatis-%E7%9A%84%E5%A4%9A%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE/" rel="next" title="基于 Spring Boot 2.x + Mybatis 的多数据源配置">
+                  基于 Spring Boot 2.x + Mybatis 的多数据源配置 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

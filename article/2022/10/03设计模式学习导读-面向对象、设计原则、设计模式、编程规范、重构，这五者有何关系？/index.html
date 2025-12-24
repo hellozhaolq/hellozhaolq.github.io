@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="在上一节课中，我们讲到，要具备编写高质量代码的能力，你需要学习一些编程方法论，其中就包含面向对象（我们可以把它看成一种设计思想）、设计原则、设计模式、编程规范、重构技巧等。而我们整个专栏的内容也是围绕着这几块展开讲解的。所以，今天我就先来简单介绍一下这几个概念，并且说一说它们之间的联系。 今天的内容相当于专栏的一个教学大纲，或者说学习框架。它能让你对整个专栏所涉及的知识点，有一个全局性的了解，能帮">
+<meta property="og:type" content="article">
+<meta property="og:title" content="03设计模式学习导读-面向对象、设计原则、设计模式、编程规范、重构，这五者有何关系？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/10/03%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%AD%A6%E4%B9%A0%E5%AF%BC%E8%AF%BB-%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E3%80%81%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E3%80%81%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E3%80%81%E7%BC%96%E7%A8%8B%E8%A7%84%E8%8C%83%E3%80%81%E9%87%8D%E6%9E%84%EF%BC%8C%E8%BF%99%E4%BA%94%E8%80%85%E6%9C%89%E4%BD%95%E5%85%B3%E7%B3%BB%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="在上一节课中，我们讲到，要具备编写高质量代码的能力，你需要学习一些编程方法论，其中就包含面向对象（我们可以把它看成一种设计思想）、设计原则、设计模式、编程规范、重构技巧等。而我们整个专栏的内容也是围绕着这几块展开讲解的。所以，今天我就先来简单介绍一下这几个概念，并且说一说它们之间的联系。 今天的内容相当于专栏的一个教学大纲，或者说学习框架。它能让你对整个专栏所涉及的知识点，有一个全局性的了解，能帮">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/10/03%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%AD%A6%E4%B9%A0%E5%AF%BC%E8%AF%BB-%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E3%80%81%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E3%80%81%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E3%80%81%E7%BC%96%E7%A8%8B%E8%A7%84%E8%8C%83%E3%80%81%E9%87%8D%E6%9E%84%EF%BC%8C%E8%BF%99%E4%BA%94%E8%80%85%E6%9C%89%E4%BD%95%E5%85%B3%E7%B3%BB%EF%BC%9F/3907b93e7a01f9469ec4db0339fb65bf.jpeg">
+<meta property="article:published_time" content="2022-10-04T00:00:00.000Z">
+<meta property="article:modified_time" content="2022-10-04T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2022/10/03%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%AD%A6%E4%B9%A0%E5%AF%BC%E8%AF%BB-%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E3%80%81%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E3%80%81%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E3%80%81%E7%BC%96%E7%A8%8B%E8%A7%84%E8%8C%83%E3%80%81%E9%87%8D%E6%9E%84%EF%BC%8C%E8%BF%99%E4%BA%94%E8%80%85%E6%9C%89%E4%BD%95%E5%85%B3%E7%B3%BB%EF%BC%9F/3907b93e7a01f9469ec4db0339fb65bf.jpeg">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/10/03%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%AD%A6%E4%B9%A0%E5%AF%BC%E8%AF%BB-%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E3%80%81%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E3%80%81%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E3%80%81%E7%BC%96%E7%A8%8B%E8%A7%84%E8%8C%83%E3%80%81%E9%87%8D%E6%9E%84%EF%BC%8C%E8%BF%99%E4%BA%94%E8%80%85%E6%9C%89%E4%BD%95%E5%85%B3%E7%B3%BB%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/10/03%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%AD%A6%E4%B9%A0%E5%AF%BC%E8%AF%BB-%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E3%80%81%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E3%80%81%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E3%80%81%E7%BC%96%E7%A8%8B%E8%A7%84%E8%8C%83%E3%80%81%E9%87%8D%E6%9E%84%EF%BC%8C%E8%BF%99%E4%BA%94%E8%80%85%E6%9C%89%E4%BD%95%E5%85%B3%E7%B3%BB%EF%BC%9F/","path":"article/2022/10/03设计模式学习导读-面向对象、设计原则、设计模式、编程规范、重构，这五者有何关系？/","title":"03设计模式学习导读-面向对象、设计原则、设计模式、编程规范、重构，这五者有何关系？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>03设计模式学习导读-面向对象、设计原则、设计模式、编程规范、重构，这五者有何关系？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1"><span class="nav-number">1.</span> <span class="nav-text">面向对象</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99"><span class="nav-number">2.</span> <span class="nav-text">设计原则</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.</span> <span class="nav-text">设计模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%88%9B%E5%BB%BA%E5%9E%8B"><span class="nav-number">3.1.</span> <span class="nav-text">1.创建型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E7%BB%93%E6%9E%84%E5%9E%8B"><span class="nav-number">3.2.</span> <span class="nav-text">2.结构型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E8%A1%8C%E4%B8%BA%E5%9E%8B"><span class="nav-number">3.3.</span> <span class="nav-text">3.行为型</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%96%E7%A8%8B%E8%A7%84%E8%8C%83"><span class="nav-number">4.</span> <span class="nav-text">编程规范</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E9%87%8D%E6%9E%84"><span class="nav-number">5.</span> <span class="nav-text">代码重构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%94%E8%80%85%E4%B9%8B%E9%97%B4%E7%9A%84%E8%81%94%E7%B3%BB"><span class="nav-number">6.</span> <span class="nav-text">五者之间的联系</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE"><span class="nav-number">7.</span> <span class="nav-text">重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%A0%82%E8%AE%A8%E8%AE%BA"><span class="nav-number">8.</span> <span class="nav-text">课堂讨论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/10/03%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%AD%A6%E4%B9%A0%E5%AF%BC%E8%AF%BB-%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E3%80%81%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E3%80%81%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E3%80%81%E7%BC%96%E7%A8%8B%E8%A7%84%E8%8C%83%E3%80%81%E9%87%8D%E6%9E%84%EF%BC%8C%E8%BF%99%E4%BA%94%E8%80%85%E6%9C%89%E4%BD%95%E5%85%B3%E7%B3%BB%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="03设计模式学习导读-面向对象、设计原则、设计模式、编程规范、重构，这五者有何关系？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          03设计模式学习导读-面向对象、设计原则、设计模式、编程规范、重构，这五者有何关系？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-10-04 08:00:00" itemprop="dateCreated datePublished" datetime="2022-10-04T08:00:00+08:00">2022-10-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>在上一节课中，我们讲到，要具备编写高质量代码的能力，你需要学习一些编程方法论，其中就包含面向对象（我们可以把它看成一种设计思想）、设计原则、设计模式、编程规范、重构技巧等。而我们整个专栏的内容也是围绕着这几块展开讲解的。所以，今天我就先来简单介绍一下这几个概念，并且说一说它们之间的联系。</p>
+<p>今天的内容相当于专栏的一个教学大纲，或者说学习框架。它能让你对整个专栏所涉及的知识点，有一个全局性的了解，能帮你将后面零散的知识更系统地组织在大脑里。</p>
+<p>话不多说，我们就一块来看一下，接下来的这8个月我们到底要学习哪些内容吧！</p>
+<span id="more"></span>
+
+<h1 id="面向对象"><a href="#面向对象" class="headerlink" title="面向对象"></a>面向对象</h1><p>现在，主流的编程范式或者是编程风格有三种，它们分别是面向过程、面向对象和函数式编程。面向对象这种编程风格又是这其中最主流的。现在比较流行的编程语言大部分都是面向对象编程语言。大部分项目也都是基于面向对象编程风格开发的。面向对象编程因为其具有丰富的特性（封装、抽象、继承、多态），可以实现很多复杂的设计思路，是很多设计原则、设计模式编码实现的基础。</p>
+<p>所以，在专栏的最开始，我们会详细地讲解面向对象编程的相关的知识，为学习后面的内容做铺垫。对于这部分内容，你需要掌握下面这7个大的知识点。</p>
+<ul>
+<li>面向对象的四大特性：封装、抽象、继承、多态</li>
+<li>面向对象编程与面向过程编程的区别和联系</li>
+<li>面向对象分析、面向对象设计、面向对象编程</li>
+<li>接口和抽象类的区别以及各自的应用场景</li>
+<li>基于接口而非实现编程的设计思想</li>
+<li>多用组合少用继承的设计思想</li>
+<li>面向过程的贫血模型和面向对象的充血模型</li>
+</ul>
+<h1 id="设计原则"><a href="#设计原则" class="headerlink" title="设计原则"></a>设计原则</h1><p>设计原则是指导我们代码设计的一些经验总结。设计原则这块儿的知识有一个非常大的特点，那就是这些原则听起来都比较抽象，定义描述都比较模糊，不同的人会有不同的解读。所以，如果单纯地去记忆定义，对于编程、设计能力的提高，意义并不大。对于每一种设计原则，我们需要掌握它的设计初衷，能解决哪些编程问题，有哪些应用场景。只有这样，我们才能在项目中灵活恰当地应用这些原则。</p>
+<p>对于这一部分内容，你需要透彻理解并且掌握，如何应用下面这样几个常用的设计原则。</p>
+<ul>
+<li>SOLID原则-SRP单一职责原则</li>
+<li>SOLID原则-OCP开闭原则</li>
+<li>SOLID原则-LSP里式替换原则</li>
+<li>SOLID原则-ISP接口隔离原则</li>
+<li>SOLID原则-DIP依赖倒置原则</li>
+<li>DRY原则、KISS原则、YAGNI原则、LOD法则</li>
+</ul>
+<h1 id="设计模式"><a href="#设计模式" class="headerlink" title="设计模式"></a>设计模式</h1><p>设计模式是针对软件开发中经常遇到的一些设计问题，总结出来的一套解决方案或者设计思路。大部分设计模式要解决的都是代码的可扩展性问题。设计模式相对于设计原则来说，没有那么抽象，而且大部分都不难理解，代码实现也并不复杂。这一块的学习难点是了解它们都能解决哪些问题，掌握典型的应用场景，并且懂得不过度应用。</p>
+<p>经典的设计模式有23种。随着编程语言的演进，一些设计模式（比如Singleton）也随之过时，甚至成了反模式，一些则被内置在编程语言中（比如Iterator），另外还有一些新的模式诞生（比如Monostate）。</p>
+<p>在专栏中，我们会重点讲解23种经典的设计模式。它们又可以分为三大类：创建型、结构型、行为型。对于这23种设计模式的学习，我们要有侧重点，因为有些模式是比较常用的，有些模式是很少被用到的。对于常用的设计模式，我们要花多点时间理解掌握。对于不常用的设计模式，我们只需要稍微了解即可。</p>
+<p>我按照类型和是否常用，对专栏中讲到的这些设计模式，进行了简单的分类，具体如下所示。</p>
+<h2 id="1-创建型"><a href="#1-创建型" class="headerlink" title="1.创建型"></a>1.创建型</h2><p>常用的有：单例模式、工厂模式（工厂方法和抽象工厂）、建造者模式。</p>
+<p>不常用的有：原型模式。</p>
+<h2 id="2-结构型"><a href="#2-结构型" class="headerlink" title="2.结构型"></a>2.结构型</h2><p>常用的有：代理模式、桥接模式、装饰者模式、适配器模式。</p>
+<p>不常用的有：门面模式、组合模式、享元模式。</p>
+<h2 id="3-行为型"><a href="#3-行为型" class="headerlink" title="3.行为型"></a>3.行为型</h2><p>常用的有：观察者模式、模板模式、策略模式、职责链模式、迭代器模式、状态模式。</p>
+<p>不常用的有：访问者模式、备忘录模式、命令模式、解释器模式、中介模式。</p>
+<h1 id="编程规范"><a href="#编程规范" class="headerlink" title="编程规范"></a>编程规范</h1><p>编程规范主要解决的是代码的可读性问题。编码规范相对于设计原则、设计模式，更加具体、更加偏重代码细节。即便你可能对设计原则不熟悉、对设计模式不了解，但你最起码要掌握基本的编码规范，比如，如何给变量、类、函数命名，如何写代码注释，函数不宜过长、参数不能过多等等。</p>
+<p>对于编码规范，考虑到很多书籍已经讲得很好了（比如《重构》《代码大全》《代码整洁之道》等）。而且，每条编码规范都非常简单、非常明确，比较偏向于记忆，你只要照着来做可以。它不像设计原则，需要融入很多个人的理解和思考。所以，在这个专栏中，我并没有花太多的篇幅来讲解所有的编码规范，而是总结了我认为的最能改善代码质量的20条规范。如果你暂时没有时间去看那些经典的书籍，看我这些就够了。</p>
+<p>除此之外，专栏并没有将编码规范单独作为一个模块来讲解，而是跟重构放到了一起。之所以这样做，那是因为我把重构分为大重构和小重构两种类型，而小重构利用的知识基本上就是编码规范。</p>
+<p>除了编码规范，我们还会介绍一些代码的坏味道，让你知道什么样的代码是不符合规范的，应该如何优化。参照编码规范，你可以写出可读性好的代码；参照代码的坏味道，你可以找出代码存在的可读性问题。</p>
+<h1 id="代码重构"><a href="#代码重构" class="headerlink" title="代码重构"></a>代码重构</h1><p>在软件开发中，只要软件在不停地迭代，就没有一劳永逸的设计。随着需求的变化，代码的不停堆砌，原有的设计必定会存在这样那样的问题。针对这些问题，我们就需要进行代码重构。重构是软件开发中非常重要的一个环节。持续重构是保持代码质量不下降的有效手段，能有效避免代码腐化到无可救药的地步。</p>
+<p>而重构的工具就是我们前面罗列的那些面向对象设计思想、设计原则、设计模式、编码规范。实际上，设计思想、设计原则、设计模式一个最重要的应用场景就是在重构的时候。我们前面讲过，虽然使用设计模式可以提高代码的可扩展性，但过度不恰当地使用，也会增加代码的复杂度，影响代码的可读性。在开发初期，除非特别必须，我们一定不要过度设计，应用复杂的设计模式。而是当代码出现问题的时候，我们再针对问题，应用原则和模式进行重构。这样就能有效避免前期的过度设计。</p>
+<p>对于重构这部分内容，你需要掌握以下几个知识点：</p>
+<ul>
+<li>重构的目的（why）、对象（what）、时机（when）、方法（how）；</li>
+<li>保证重构不出错的技术手段：单元测试和代码的可测试性；</li>
+<li>两种不同规模的重构：大重构（大规模高层次）和小重构（小规模低层次）。</li>
+</ul>
+<p>希望你学完这部分内容之后，不仅仅是掌握一些重构技巧、套路，更重要的是建立持续重构意识，把重构当作开发的一部分，融入到日常的开发中。</p>
+<h1 id="五者之间的联系"><a href="#五者之间的联系" class="headerlink" title="五者之间的联系"></a>五者之间的联系</h1><p>关于面向对象、设计原则、设计模式、编程规范和代码重构，这五者的关系我们前面稍微提到了一些，我这里再总结梳理一下。</p>
+<ul>
+<li>面向对象编程因为其具有丰富的特性（封装、抽象、继承、多态），可以实现很多复杂的设计思路，是很多设计原则、设计模式等编码实现的基础。</li>
+<li>设计原则是指导我们代码设计的一些经验总结，对于某些场景下，是否应该应用某种设计模式，具有指导意义。比如，“开闭原则”是很多设计模式（策略、模板等）的指导原则。</li>
+<li>设计模式是针对软件开发中经常遇到的一些设计问题，总结出来的一套解决方案或者设计思路。应用设计模式的主要目的是提高代码的可扩展性。从抽象程度上来讲，设计原则比设计模式更抽象。设计模式更加具体、更加可执行。</li>
+<li>编程规范主要解决的是代码的可读性问题。编码规范相对于设计原则、设计模式，更加具体、更加偏重代码细节、更加能落地。持续的小重构依赖的理论基础主要就是编程规范。</li>
+<li>重构作为保持代码质量不下降的有效手段，利用的就是面向对象、设计原则、设计模式、编码规范这些理论。</li>
+</ul>
+<p>实际上，面向对象、设计原则、设计模式、编程规范、代码重构，这五者都是保持或者提高代码质量的方法论，本质上都是服务于编写高质量代码这一件事的。当我们追本逐源，看清这个本质之后，很多事情怎么做就清楚了，很多选择怎么选也清楚了。比如，在某个场景下，该不该用这个设计模式，那就看能不能提高代码的可扩展性；要不要重构，那就看重代码是否存在可读、可维护问题等。</p>
+<h1 id="重点回顾"><a href="#重点回顾" class="headerlink" title="重点回顾"></a>重点回顾</h1><p>今天的内容到此就讲完了。我画了一张图，总结了专栏中所涉及的知识点。在学习后面的课程的时候，你可以经常翻出来看一下，建立全局意识，不至于迷失在零碎的知识点中。</p>
+<p><img src="/article/2022/10/03%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%AD%A6%E4%B9%A0%E5%AF%BC%E8%AF%BB-%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E3%80%81%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E3%80%81%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E3%80%81%E7%BC%96%E7%A8%8B%E8%A7%84%E8%8C%83%E3%80%81%E9%87%8D%E6%9E%84%EF%BC%8C%E8%BF%99%E4%BA%94%E8%80%85%E6%9C%89%E4%BD%95%E5%85%B3%E7%B3%BB%EF%BC%9F/3907b93e7a01f9469ec4db0339fb65bf.jpeg" alt="img"></p>
+<h1 id="课堂讨论"><a href="#课堂讨论" class="headerlink" title="课堂讨论"></a>课堂讨论</h1><p>今天课堂讨论的话题有两个。</p>
+<ol>
+<li>在今天讲到的内容中，你觉得哪一部分内容对提高代码质量最有效？为什么？除了我罗列的这些内容之外，你还知道哪些可以提高代码质量的方法？</li>
+<li>我们知道，最经典的设计模式书籍是GoF的《设计模式》，它的中文全称是《设计模式：可复用面向对象软件的基础》，英文全称是“Design Patterns: Elements of Reusable Object-Oriented Software”。为什么它在标题中会特意提到“面向对象”呢？</li>
+</ol>
+<p>欢迎在留言区写下你的想法，和同学一起交流和分享。如果有收获，也欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/10/02%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%AD%A6%E4%B9%A0%E5%AF%BC%E8%AF%BB-%E4%BB%8E%E5%93%AA%E4%BA%9B%E7%BB%B4%E5%BA%A6%E8%AF%84%E5%88%A4%E4%BB%A3%E7%A0%81%E8%B4%A8%E9%87%8F%E7%9A%84%E5%A5%BD%E5%9D%8F%EF%BC%9F%E5%A6%82%E4%BD%95%E5%85%B7%E5%A4%87%E5%86%99%E5%87%BA%E9%AB%98%E8%B4%A8%E9%87%8F%E4%BB%A3%E7%A0%81%E7%9A%84%E8%83%BD%E5%8A%9B%EF%BC%9F/" rel="prev" title="02设计模式学习导读-从哪些维度评判代码质量的好坏？如何具备写出高质量代码的能力？">
+                  <i class="fa fa-angle-left"></i> 02设计模式学习导读-从哪些维度评判代码质量的好坏？如何具备写出高质量代码的能力？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/10/04%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1-%E7%90%86%E8%AE%BA%E4%B8%80%EF%BC%9A%E5%BD%93%E8%B0%88%E8%AE%BA%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%97%B6%E5%80%99%EF%BC%8C%E6%88%91%E4%BB%AC%E5%88%B0%E5%BA%95%E5%9C%A8%E8%B0%88%E8%AE%BA%E4%BB%80%E4%B9%88%EF%BC%9F/" rel="next" title="04设计原则与思想之面向对象-理论一：当谈论面向对象的时候，我们到底在谈论什么？">
+                  04设计原则与思想之面向对象-理论一：当谈论面向对象的时候，我们到底在谈论什么？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

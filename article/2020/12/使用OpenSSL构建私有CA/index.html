@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="参考链接： https:&#x2F;&#x2F;blog.51cto.com&#x2F;1inux&#x2F;1638154  什么是CA数字证书认证机构（英语：Certificate Authority，缩写为CA），是指发放、管理、废除数字证书的机构。CA的作用是检查证书持有者身份的合法性，并签发证书（在证书上签字），以防证书被伪造或篡改，以及对证书和密钥进行管理。 为什么使用CACA 是PKI（Public Key Infrast">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用OpenSSL构建私有CA">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2020/12/%E4%BD%BF%E7%94%A8OpenSSL%E6%9E%84%E5%BB%BA%E7%A7%81%E6%9C%89CA/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="参考链接： https:&#x2F;&#x2F;blog.51cto.com&#x2F;1inux&#x2F;1638154  什么是CA数字证书认证机构（英语：Certificate Authority，缩写为CA），是指发放、管理、废除数字证书的机构。CA的作用是检查证书持有者身份的合法性，并签发证书（在证书上签字），以防证书被伪造或篡改，以及对证书和密钥进行管理。 为什么使用CACA 是PKI（Public Key Infrast">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/%E4%BD%BF%E7%94%A8OpenSSL%E6%9E%84%E5%BB%BA%E7%A7%81%E6%9C%89CA/image-20210120103436410.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/%E4%BD%BF%E7%94%A8OpenSSL%E6%9E%84%E5%BB%BA%E7%A7%81%E6%9C%89CA/image-20210120103601102.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/%E4%BD%BF%E7%94%A8OpenSSL%E6%9E%84%E5%BB%BA%E7%A7%81%E6%9C%89CA/image-20210120103721991.png">
+<meta property="article:published_time" content="2020-12-08T01:15:35.000Z">
+<meta property="article:modified_time" content="2020-12-08T01:15:35.000Z">
+<meta property="article:author" content="zhaolq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2020/12/%E4%BD%BF%E7%94%A8OpenSSL%E6%9E%84%E5%BB%BA%E7%A7%81%E6%9C%89CA/image-20210120103436410.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2020/12/%E4%BD%BF%E7%94%A8OpenSSL%E6%9E%84%E5%BB%BA%E7%A7%81%E6%9C%89CA/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2020/12/%E4%BD%BF%E7%94%A8OpenSSL%E6%9E%84%E5%BB%BA%E7%A7%81%E6%9C%89CA/","path":"article/2020/12/使用OpenSSL构建私有CA/","title":"使用OpenSSL构建私有CA"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>使用OpenSSL构建私有CA | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFCA"><span class="nav-number">1.</span> <span class="nav-text">什么是CA</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8CA"><span class="nav-number">2.</span> <span class="nav-text">为什么使用CA</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CA%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">3.</span> <span class="nav-text">CA配置文件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CA%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E5%BB%BA%E7%AB%8B"><span class="nav-number">4.</span> <span class="nav-text">CA服务器的建立</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E7%A7%81%E9%92%A5%E6%96%87%E4%BB%B6"><span class="nav-number">4.1.</span> <span class="nav-text">生成私钥文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E8%87%AA%E7%AD%BE%E8%AF%81%E4%B9%A6"><span class="nav-number">4.2.</span> <span class="nav-text">生成自签证书</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E4%B8%A4%E4%B8%AA%E6%96%87%E4%BB%B6"><span class="nav-number">4.3.</span> <span class="nav-text">创建两个文件</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E8%AF%81%E4%B9%A6%E7%AD%BE%E7%BD%B2%E8%AF%B7%E6%B1%82"><span class="nav-number">5.</span> <span class="nav-text">生成证书签署请求</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E7%A7%81%E9%92%A5"><span class="nav-number">5.1.</span> <span class="nav-text">生成私钥</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E6%88%90CSR-%E8%AF%81%E4%B9%A6%E7%AD%BE%E7%BD%B2%E8%AF%B7%E6%B1%82"><span class="nav-number">5.2.</span> <span class="nav-text">生成CSR(证书签署请求)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AD%BE%E7%BD%B2%E8%AF%81%E4%B9%A6"><span class="nav-number">6.</span> <span class="nav-text">签署证书</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%8A%E9%94%80%E8%AF%81%E4%B9%A6"><span class="nav-number">7.</span> <span class="nav-text">吊销证书</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Openssl%E8%AF%81%E4%B9%A6%E6%96%87%E4%BB%B6%E7%B1%BB%E5%9E%8B%E5%8F%8A%E6%A6%82%E5%BF%B5"><span class="nav-number">8.</span> <span class="nav-text">Openssl证书文件类型及概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AF%BC%E5%87%BA%E8%AF%81%E4%B9%A6"><span class="nav-number">9.</span> <span class="nav-text">导出证书</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Windows%E5%AF%BC%E5%87%BA%E6%A0%B9%E8%AF%81%E4%B9%A6"><span class="nav-number">9.1.</span> <span class="nav-text">Windows导出根证书</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2020/12/%E4%BD%BF%E7%94%A8OpenSSL%E6%9E%84%E5%BB%BA%E7%A7%81%E6%9C%89CA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="使用OpenSSL构建私有CA | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          使用OpenSSL构建私有CA
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-08 09:15:35" itemprop="dateCreated datePublished" datetime="2020-12-08T09:15:35+08:00">2020-12-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Security/" itemprop="url" rel="index"><span itemprop="name">Security</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>参考链接： <a target="_blank" rel="noopener" href="https://blog.51cto.com/1inux/1638154">https://blog.51cto.com/1inux/1638154</a> </p>
+<h1 id="什么是CA"><a href="#什么是CA" class="headerlink" title="什么是CA"></a>什么是CA</h1><p>数字证书认证机构（英语：Certificate Authority，缩写为CA），是指发放、管理、废除数字证书的机构。CA的作用是检查证书持有者身份的合法性，并签发证书（在证书上签字），以防证书被伪造或篡改，以及对证书和密钥进行管理。</p>
+<h1 id="为什么使用CA"><a href="#为什么使用CA" class="headerlink" title="为什么使用CA"></a>为什么使用CA</h1><p>CA 是PKI（Public Key Infrastructure）体系的核心。它为客户的公开密钥签发公钥证书、发放证书和管理证书，并提供一系列密钥生命周期内的管理服务。它将客户的公 钥与客户的名称及其他属性关联起来，为客户之间电子身份进行认证。证书中心是一个具有权威性、可信赖性和公证性的第三方机构。它是电子商务存在和发展的基础。</p>
+<p>简单的说，使用CA不仅能保证数据的安全传输，还能保证目标的可信赖性。</p>
+<span id="more"></span>
+
+<h1 id="CA配置文件"><a href="#CA配置文件" class="headerlink" title="CA配置文件"></a>CA配置文件</h1><p>CA 配置文件位置：<code>/etc/pki/tls/openssl.cnf</code> </p>
+<p>推荐链接： <a target="_blank" rel="noopener" href="https://www.cnblogs.com/f-ck-need-u/p/6091027.html">OpenSSL主配置文件openssl.cnf</a> </p>
+<h1 id="CA服务器的建立"><a href="#CA服务器的建立" class="headerlink" title="CA服务器的建立"></a>CA服务器的建立</h1><h2 id="生成私钥文件"><a href="#生成私钥文件" class="headerlink" title="生成私钥文件"></a>生成私钥文件</h2><p><font color="red"><strong>注</strong></font>：文件位置及名称在配置文件 <code>/etc/pki/tls/openssl.cnf</code> 中已经定义：<code>/etc/pki/CA/private/cakey.pem</code> </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">生成私钥到CA目录，做为CA私钥</span></span><br><span class="line">openssl genpkey \</span><br><span class="line">       -algorithm RSA \</span><br><span class="line">       -out /etc/pki/CA/private/cakey.pem \</span><br><span class="line">       -pkeyopt rsa_keygen_bits:2048</span><br></pre></td></tr></table></figure>
+
+<p>由于私钥文件被篡改后将会导致无法估计的灾难，所以一般都会对其进行权限的限制可以使用两种方法</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">一、</span></span><br><span class="line">openssl genrsa -out /etc/pki/CA/private/cakey.pem 2048</span><br><span class="line">chmod 400 /etc/pki/CA/private/cakey.pem</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">二、</span></span><br><span class="line">(umask 077;openssl genrsa -out /etc/pki/CA/private/cakey.pem 2048)</span><br></pre></td></tr></table></figure>
+
+<h2 id="生成自签证书"><a href="#生成自签证书" class="headerlink" title="生成自签证书"></a>生成自签证书</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">生成自签证书到CA目录，做为CA证书，后缀通常为crt</span></span><br><span class="line">openssl req \</span><br><span class="line">       -x509 \</span><br><span class="line">       -days 3650 \</span><br><span class="line">       -new \</span><br><span class="line">       -key /etc/pki/CA/private/cakey.pem \</span><br><span class="line">       -out /etc/pki/CA/cacert.pem \</span><br><span class="line">       -subj &quot;/C=CN/ST=ShanXi/L=XiAn/O=mars/CN=www.zhaolq.com/emailAddress=hello@zhaolq.com&quot;</span><br></pre></td></tr></table></figure>
+
+<p><strong>【参数中带 <code>-x509</code> 表示直接生成自签证书，不带则表示生成证书签署请求】</strong> </p>
+<p>在线解码 CRT 证书，查看 CRT 证书内容能对 <code>-subj</code> 属性内容一目了然。</p>
+<p> <a target="_blank" rel="noopener" href="https://www.getssl.cn/decode_crt.php">https://www.getssl.cn/decode_crt.php</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.ssleye.com/cer_check.html">https://www.ssleye.com/cer_check.html</a> </p>
+<h2 id="创建两个文件"><a href="#创建两个文件" class="headerlink" title="创建两个文件"></a>创建两个文件</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">为了能使证书可以工作还需要创建两个文件</span></span><br><span class="line">touch /etc/pki/CA/index.txt  # 证书索引数据库文件（默认没有需要创建）</span><br><span class="line">echo 01 &gt; /etc/pki/CA/serial # 记录过去签发的所有证书的序列号【每签发一个证书 自动+1】 （文本文件 需要创建）</span><br></pre></td></tr></table></figure>
+
+<h1 id="生成证书签署请求"><a href="#生成证书签署请求" class="headerlink" title="生成证书签署请求"></a>生成证书签署请求</h1><h2 id="生成私钥"><a href="#生成私钥" class="headerlink" title="生成私钥"></a>生成私钥</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">生成一个新私钥</span></span><br><span class="line">openssl genpkey \</span><br><span class="line">       -algorithm RSA \</span><br><span class="line">       -out /home/privatekey.pem \</span><br><span class="line">       -pkeyopt rsa_keygen_bits:2048</span><br></pre></td></tr></table></figure>
+
+<h2 id="生成CSR-证书签署请求"><a href="#生成CSR-证书签署请求" class="headerlink" title="生成CSR(证书签署请求)"></a>生成CSR(证书签署请求)</h2><p>CA 配置文件中：</p>
+<ul>
+<li>ca相关段，定义了 CSR 被 CA 签署时和 CA 证书的 DN 信息匹配规则。默认证书匹配策略是 [ policy_match ] 策略，要求CSR 中的 <strong>国家（Country缩写C）</strong>、<strong>州&#x2F;省份（State&#x2F;Province缩写ST）</strong>、<strong>组织&#x2F;公司名称（Organization缩写O）</strong> 不可缺少且必须与CA证书一致，否则无法签署成功。</li>
+<li>req相关段，定义了 CA 签署 CSR 时能够识别的 DN 信息及限制。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">利用新私钥生成证书签署请求</span></span><br><span class="line">openssl req \</span><br><span class="line">       -new \</span><br><span class="line">       -key /home/privatekey.pem \</span><br><span class="line">       -out /home/req1.csr \</span><br><span class="line">       -subj &quot;/C=CN/ST=ShanXi/O=mars/CN=www.zhaolq2.com/emailAddress=hello@zhaolq.com&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">利用新私钥生成证书签署请求，和上一个CSR的DN信息不同</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">若想成功签署该CSR，需将CA配置文件中的证书匹配策略改为policy=policy_anything</span></span><br><span class="line">openssl req \</span><br><span class="line">       -new \</span><br><span class="line">       -key /home/privatekey.pem \</span><br><span class="line">       -out /home/req2.csr \</span><br><span class="line">       -subj &quot;/C=US/ST=beijing/L=beijing/O=Beijing Baidu Netcom Science Technology Co., Ltd/OU=service operation department/CN=baidu.com/emailAddress=hello@zhaolq.com&quot;</span><br></pre></td></tr></table></figure>
+
+<p> <font color="blue"><strong>注：CSR 文件后缀通常为：csr 。</strong></font> </p>
+<p>在线解码 CSR ，查看 CSR 内容能对 <code>-subj</code> 属性内容一目了然：</p>
+<p> <a target="_blank" rel="noopener" href="https://www.getssl.cn/decode_csr.php">https://www.getssl.cn/decode_csr.php</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.ssleye.com/csr_check.html">https://www.ssleye.com/csr_check.html</a> </p>
+<h1 id="签署证书"><a href="#签署证书" class="headerlink" title="签署证书"></a>签署证书</h1><p>用 CA 证书对 CSR 进行签名，为用户签发证书。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">利用自建CA的私钥和自签的CA证书，签署证书请求</span></span><br><span class="line">openssl ca \</span><br><span class="line">       -keyfile /etc/pki/CA/private/cakey.pem \</span><br><span class="line">       -cert /etc/pki/CA/cacert.pem \</span><br><span class="line">       -days 3650 \</span><br><span class="line">       -in /home/req1.csr \</span><br><span class="line">       -out /home/cert1.pem</span><br><span class="line">openssl ca \</span><br><span class="line">       -keyfile /etc/pki/CA/private/cakey.pem \</span><br><span class="line">       -cert /etc/pki/CA/cacert.pem \</span><br><span class="line">       -days 3650 \</span><br><span class="line">       -in /home/req2.csr \</span><br><span class="line">       -out /home/cert2.pem</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cat</span> /etc/pki/CA/serial</span></span><br><span class="line">03</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cat</span> /etc/pki/CA/index.txt <span class="comment"># 证书索引数据库文件</span></span></span><br><span class="line">V       310119094423Z           01      unknown /C=CN/ST=ShanXi/O=mars/CN=www.zhaolq2.com/emailAddress=hello@zhaolq.com</span><br><span class="line">V       310119094430Z           02      unknown /C=US/ST=beijing/L=beijing/O=Beijing Baidu Netcom Science Technology Co., Ltd/OU=service operation department/CN=baidu.com/emailAddress=hello@zhaolq.com</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">ls</span> /etc/pki/CA/newcerts/      <span class="comment"># 查看所有签署的证书，名称为证书序列号</span></span></span><br><span class="line">01.pem  02.pem</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">02.pem与CA证书的国家、州、组织不同，证书匹配策略：policy=policy_anything</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cat</span> /etc/pki/CA/newcerts/02.pem</span></span><br><span class="line">......忽略前面内容......</span><br><span class="line">-----BEGIN CERTIFICATE-----</span><br><span class="line">MIIENTCCAx2gAwIBAgIBAjANBgkqhkiG9w0BAQsFADB2MQswCQYDVQQGEwJDTjEP</span><br><span class="line">MA0GA1UECAwGU2hhblhpMQ0wCwYDVQQHDARYaUFuMQ0wCwYDVQQKDARtYXJzMRcw</span><br><span class="line">FQYDVQQDDA53d3cuemhhb2xxLmNvbTEfMB0GCSqGSIb3DQEJARYQaGVsbG9Aemhh</span><br><span class="line">b2xxLmNvbTAeFw0yMTAxMjAwNjA4NDVaFw0zMTAxMTgwNjA4NDVaMIHIMQswCQYD</span><br><span class="line">VQQGEwJVUzEQMA4GA1UECAwHYmVpamluZzEQMA4GA1UEBwwHYmVpamluZzE5MDcG</span><br><span class="line">A1UECgwwQmVpamluZyBCYWlkdSBOZXRjb20gU2NpZW5jZSBUZWNobm9sb2d5IENv</span><br><span class="line">LiwgTHRkMSUwIwYDVQQLDBxzZXJ2aWNlIG9wZXJhdGlvbiBkZXBhcnRtZW50MRIw</span><br><span class="line">EAYDVQQDDAliYWlkdS5jb20xHzAdBgkqhkiG9w0BCQEWEGhlbGxvQHpoYW9scS5j</span><br><span class="line">b20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDBhYEbAIvtkOe3CCsN</span><br><span class="line">AJv7wdu7z30hRuAaojNkNDkH7VXqJjig+KVthujPoj6INCWb1dkNYnO+55VlN+YD</span><br><span class="line">lAFiOKSfHiu/UO3UuFVClNB0bXSiE4bPb+PrHUsm5eayJRueSR93RGVHLvWB0wV+</span><br><span class="line">BXiUvcGKmOno0jBLQC8lh9WZP2xtH1J2tH9rxmL5zetbYQ8f5QNzABQTRz4Xuc1Z</span><br><span class="line">NKQdeJIqR0GWuyRAPi6/EJKqfrrIUgwkkrhAGQgnaKqqm0ZF4QVvZ2gnSW8FpEUw</span><br><span class="line">OF8TAM+b49e4s9wJuvOM31darwYzC3xDn62MNv0iWq7/v4neDxG0kAZdLiCMSlTc</span><br><span class="line">XsedAgMBAAGjezB5MAkGA1UdEwQCMAAwLAYJYIZIAYb4QgENBB8WHU9wZW5TU0wg</span><br><span class="line">R2VuZXJhdGVkIENlcnRpZmljYXRlMB0GA1UdDgQWBBS0i8yeDgPVK/LEX9CJ21in</span><br><span class="line">WrEFdjAfBgNVHSMEGDAWgBRoJUyVwxYy1XL0JfIBHXZLne763DANBgkqhkiG9w0B</span><br><span class="line">AQsFAAOCAQEAYx3mfWo55YaGYU7HemNfDYIK8Jv2QS9nF/7pxRipdYU+X9E8e7Fh</span><br><span class="line">S6wmalIYH8CZhNYvJh9guUfmxA9faZSMyzcvyOaTPtf/Cf43LGhz1cf/52C6p2LJ</span><br><span class="line">kew7JAV4G++Rg25tpT9LCZQEML5eE6OeHYZmMjzCbLk5/pRhn/dawHGGojfbtAI8</span><br><span class="line">2Gkmu9jI6kN1NtOshaaGDWMm0Lrw/CwFgXLc+tHBrMqPPG0y0XB8FDjpY+dGE7Mc</span><br><span class="line">OnpInE1vDic4V3v0ASCtuPjLwl2ygxApejM16QYheEzlsvYqahsFSZTy5OyH9OFw</span><br><span class="line">XIUSfX2XXAYS9g4G7HRDaeY7Gp68+B3nPQ==</span><br><span class="line">-----END CERTIFICATE-----</span><br></pre></td></tr></table></figure>
+
+<p><font color="blue"><strong>注：CA 证书后缀通常为：crt 。</strong></font> </p>
+<h1 id="吊销证书"><a href="#吊销证书" class="headerlink" title="吊销证书"></a>吊销证书</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">获取吊销证书的序列号</span></span><br><span class="line">openssl x509 -in /home/cert2.pem -noout -serial -subject</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">新建吊销证书编号文件，这个吊销编号与证书序列号无关，每次更新CRL都会+1</span></span><br><span class="line">echo 01 &gt; /etc/pki/CA/crlnumber</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">吊销证书</span></span><br><span class="line">openssl ca -revoke /home/cert2.pem</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cat</span> /etc/pki/CA/index.txt <span class="comment"># 证书索引数据库文件有变化</span></span></span><br><span class="line">V       310119094423Z           01      unknown /C=CN/ST=ShanXi/O=mars/CN=www.zhaolq2.com/emailAddress=hello@zhaolq.com</span><br><span class="line">R       310119094430Z   210121094520Z   02      unknown /C=US/ST=beijing/L=beijing/O=Beijing Baidu Netcom Science Technology Co., Ltd/OU=service operation department/CN=baidu.com/emailAddress=hello@zhaolq.com</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">根据index.txt(索引文件)中的信息 生成/更新 CRL。</span></span><br><span class="line">openssl ca -gencrl -out /home/crl.pem # 此时crlnumber文件内容+1</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">获取PEM格式证书的crl文本内容</span></span><br><span class="line">openssl crl -in /home/crl.pem -text -noout</span><br><span class="line">Certificate Revocation List (CRL):</span><br><span class="line">        Version 2 (0x1)</span><br><span class="line">    Signature Algorithm: sha256WithRSAEncryption</span><br><span class="line">        Issuer: /C=CN/ST=ShanXi/L=XiAn/O=mars/CN=www.zhaolq.com/emailAddress=hello@zhaolq.com</span><br><span class="line">        Last Update: Jan 21 09:53:52 2021 GMT</span><br><span class="line">        Next Update: Feb 20 09:53:52 2021 GMT</span><br><span class="line">        CRL extensions:</span><br><span class="line">            X509v3 CRL Number:</span><br><span class="line">                3</span><br><span class="line">Revoked Certificates:</span><br><span class="line">    Serial Number: 01</span><br><span class="line">        Revocation Date: Jan 21 09:53:39 2021 GMT</span><br><span class="line">    Serial Number: 02</span><br><span class="line">        Revocation Date: Jan 21 09:45:20 2021 GMT</span><br><span class="line">    Signature Algorithm: sha256WithRSAEncryption</span><br><span class="line">         91:78:41:65:a6:3b:7d:38:1c:9a:b8:2d:76:da:8f:9a:2b:a9:</span><br><span class="line">         32:82:e9:b9:ee:66:ad:30:8b:47:ba:59:1b:de:e6:1e:01:85:</span><br><span class="line">         06:8a:b8:f3:82:fa:ed:7d:ee:3b:95:b1:28:60:4b:7c:0a:e1:</span><br><span class="line">         0b:3a:b3:77:8a:7e:7c:96:c8:4a:be:d2:a7:47:93:5e:00:14:</span><br><span class="line">         c6:df:9e:04:ac:5d:1a:1f:54:bd:31:b3:80:30:0d:84:89:ce:</span><br><span class="line">         9e:76:a3:1c:a4:1b:f6:39:71:32:57:68:15:fd:ae:f7:d6:4a:</span><br><span class="line">         d3:53:66:7c:70:12:ad:54:66:66:9c:50:70:e0:a6:67:9e:87:</span><br><span class="line">         ab:88:d1:72:0d:61:0d:03:2c:75:8d:2b:87:08:5a:26:c6:77:</span><br><span class="line">         6a:d2:38:0f:29:f9:03:3b:26:4d:39:4c:d1:91:41:c9:ae:86:</span><br><span class="line">         a7:9b:85:10:10:dd:e8:fa:07:37:2e:92:91:8e:c7:57:1c:ba:</span><br><span class="line">         96:0e:43:a1:c3:c5:e6:60:59:fb:a8:b7:af:bd:cd:c9:b2:59:</span><br><span class="line">         f8:41:fa:ba:da:3a:dd:9e:04:06:c8:95:a2:68:e9:33:43:1c:</span><br><span class="line">         8f:3f:c7:e8:1e:ee:a3:e4:e7:e3:91:25:44:cc:bb:71:b3:ee:</span><br><span class="line">         5a:29:0b:f5:1c:74:d7:7f:64:12:5b:b1:d6:6d:e3:c6:3c:49:</span><br><span class="line">         31:49:8d:2a</span><br></pre></td></tr></table></figure>
+
+<h1 id="Openssl证书文件类型及概念"><a href="#Openssl证书文件类型及概念" class="headerlink" title="Openssl证书文件类型及概念"></a>Openssl证书文件类型及概念</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">Openssl 证书文件类型及概念</span><br><span class="line">    证书主要的文件类型和协议有: PEM、DER、PFX、JKS、KDB、CER、KEY、CSR、CRT、CRL 、OCSP、SCEP等。</span><br><span class="line">PEM – Openssl使用 PEM(Privacy Enhanced Mail)格式来存放各种信息,它是 openssl 默认采用的信息存放方式。Openssl 中的 PEM 文件一般包含如下信息:</span><br><span class="line">内容类型:表明本文件存放的是什么信息内容,它的形式为“——-BEGIN XXXX ——”,与结尾的“——END XXXX——”对应。</span><br><span class="line">头信息:表明数据是如果被处理后存放,openssl 中用的最多的是加密信息,比如加密算法以及初始化向量 iv。</span><br><span class="line">信息体:为 BASE64 编码的数据。可以包括所有私钥（RSA 和 DSA）、公钥（RSA 和 DSA）和 (x509) 证书。它存储用 Base64 编码的 DER 格式数据，用 ascii 报头包围，因此适合系统之间的文本模式传输。</span><br><span class="line">使用PEM格式存储的证书：</span><br><span class="line">—–BEGIN CERTIFICATE—–</span><br><span class="line">MIICJjCCAdCgAwIBAgIBITANBgkqhkiG9w0BAQQFADCBqTELMAkGA1UEBhMCVVMx</span><br><span class="line">………</span><br><span class="line">1p8h5vkHVbMu1frD1UgGnPlOO/K7Ig/KrsU=</span><br><span class="line">—–END CERTIFICATE—–</span><br><span class="line">使用PEM格式存储的私钥：</span><br><span class="line">—–BEGIN RSA PRIVATE KEY—–</span><br><span class="line">MIICJjCCAdCgAwIBAgIBITANBgkqhkiG9w0BAQQFADCBqTELMAkGA1UEBhMCVVMx</span><br><span class="line">………</span><br><span class="line">1p8h5vkHVbMu1frD1UgGnPlOO/K7Ig/KrsU=</span><br><span class="line">—–END RSA PRIVATE KEY—–</span><br><span class="line">使用PEM格式存储的证书请求文件：</span><br><span class="line">—–BEGIN CERTIFICATE REQUEST—–</span><br><span class="line">MIICJjCCAdCgAwIBAgIBITANBgkqhkiG9w0BAQQFADCBqTELMAkGA1UEBhMCVVMx</span><br><span class="line">………</span><br><span class="line">1p8h5vkHVbMu1frD1UgGnPlOO/K7Ig/KrsU=</span><br><span class="line">—–END CERTIFICATE REQUEST—–</span><br><span class="line">DER – 辨别编码规则 (DER) 可包含所有私钥、公钥和证书。它是大多数浏览器的缺省格式，并按 ASN1 DER 格式存储。它是无报头的 － PEM 是用文本报头包围的 DER。</span><br><span class="line">PFX 或 P12 – 公钥加密标准 #12 (PKCS#12) 可包含所有私钥、公钥和证书。其以二进制格式存储，也称为 PFX 文件。通常可以将Apache/OpenSSL使用的“KEY文件 + CRT文件”格式合并转换为标准的PFX文件，你可以将PFX文件格式导入到微软IIS 5/6、微软ISA、微软Exchange Server等软件。转换时需要输入PFX文件的加密密码。</span><br><span class="line">JKS – 通常可以将Apache/OpenSSL使用的“KEY文件 + CRT文件”格式”转换为标准的Java Key Store(JKS)文件。JKS文件格式被广泛的应用在基于JAVA的WEB服务器、应用服务器、中间件。你可以将JKS文件导入到TOMCAT、 WEBLOGIC 等软件。</span><br><span class="line">KDB – 通常可以将Apache/OpenSSL使用的“KEY文件 + CRT文件”格式转换为标准的IBM KDB文件。KDB文件格式被广泛的应用在IBM的WEB服务器、应用服务器、中间件。你可以将KDB文件导入到IBM HTTP Server、IBM Websphere 等软件。</span><br><span class="line">CSR － 证书请求文件(Certificate Signing Request)。生成 X509 数字证书前,一般先由用户提交证书申请文件,然后由 CA 来签发证书。大致过程如下(X509 证书申请的格式标准为 pkcs#10 和 rfc2314):</span><br><span class="line">用户生成自己的公私钥对;</span><br><span class="line">构造自己的证书申请文件,符合 PKCS#10 标准。该文件主要包括了用户信息、公钥以及一些可选的属性信息,并用自己的私钥给该内容签名;</span><br><span class="line">用户将证书申请文件提交给 CA;</span><br><span class="line">CA 验证签名,提取用户信息,并加上其他信息(比如颁发者等信息),用 CA 的私钥签发数字证书;</span><br><span class="line">说 明:数字证书(如x.509)是将用户(或其他实体)身份与公钥绑定的信息载体。一个合法的数字证书不仅要符合 X509 </span><br><span class="line">格式规范,还必须有 CA 的签名。用户不仅有自己的数字证书,还必须有对应的私钥。X509v3 </span><br><span class="line">数字证书主要包含的内容有:证书版本、证书序列号、签名算法、颁发者信息、有效时间、持有者信息、公钥信息、颁发者 ID、持有者 ID 和扩展项。</span><br><span class="line">OCSP – 在线证书状态协议(OCSP,Online Certificate Status </span><br><span class="line">Protocol,rfc2560)用于实时表明证书状态。OCSP 客户端通过查询 OCSP </span><br><span class="line">服务来确定一个证书的状态,可以提供给使用者一个或多个数字证书的有效性资料，它建立一个可实时响应的机制，让用户可以实时确认每一张证书的有效性，解决</span><br><span class="line"> 由CRL引发的安全问题。。OCSP 可以通过 HTTP协议来实现。rfc2560 定义了 OCSP 客户端和服务端的消息格式。</span><br><span class="line">CER  － 一般指使用DER格式的证书。</span><br><span class="line">CRT － 证书文件。可以是PEM格式。</span><br><span class="line">KEY   － 一般指PEM格式的私钥文件。</span><br><span class="line">CRL －</span><br><span class="line"> 证书吊销列表 (Certification Revocation List) 是一种包含撤销的证书列表的签名数据结构。CRL </span><br><span class="line">是证书撤销状态的公布形式,CRL 就像信用卡的黑名单,用于公布某些数字证书不再有效。CRL </span><br><span class="line">是一种离线的证书状态信息。它以一定的周期进行更新。CRL 可以分为完全 CRL和增量 CRL。在完全 CRL 中包含了所有的被撤销证书信息,增量</span><br><span class="line"> CRL 由一系列的 CRL 来表明被撤销的证书信息,它每次发布的 CRL 是对前面发布 CRL 的增量扩充。基本的 CRL </span><br><span class="line">信息有:被撤销证书序列号、撤销时间、撤销原因、签名者以及 CRL 签名等信息。基于 CRL 的验证是一种不严格的证书认证。CRL 能证明在 </span><br><span class="line">CRL 中被撤销的证书是无效的。但是,它不能给出不在 CRL 中的证书的状态。如果执行严格的认证,需要采用在线方式进行认证,即 OCSP </span><br><span class="line">认证。一般是由CA签名的一组电子文档，包括了被废除证书的唯一标识（证书序列号）， CRL用来列出已经过期或废除的数字证书。它每隔一段时间就会更新，因此必须定期下载该清单，才会取得最新信息。</span><br><span class="line">SCEP － 简单证书注册协议。基于文件的证书登记方式需要从您的本地计算机将文本文件复制和粘贴到证书发布中心，和从证书发布中心复制和粘贴到您的本地计算机。 SCEP可以自动处理这个过程但是CRLs仍然需要手工的在本地计算机和CA发布中心之间进行复制和粘贴。</span><br><span class="line">PKCS7 – 加密消息语法(pkcs7),是各种消息存放的格式标准。这些消息包括:数据、签名数据、数字信封、签名数字信封、摘要数据和加密数据。</span><br><span class="line">PKCS12 – pkcs12 (个人数字证书标准)用于存放用户证书、crl、用户私钥以及证书链。pkcs12 中的私钥是加密存放的</span><br></pre></td></tr></table></figure>
+
+<h1 id="导出证书"><a href="#导出证书" class="headerlink" title="导出证书"></a>导出证书</h1><h2 id="Windows导出根证书"><a href="#Windows导出根证书" class="headerlink" title="Windows导出根证书"></a>Windows导出根证书</h2><p>cmd：<code>certmgr.msc</code> </p>
+<p><img src="/article/2020/12/%E4%BD%BF%E7%94%A8OpenSSL%E6%9E%84%E5%BB%BA%E7%A7%81%E6%9C%89CA/image-20210120103436410.png" alt="image-20210120103436410"></p>
+<p><img src="/article/2020/12/%E4%BD%BF%E7%94%A8OpenSSL%E6%9E%84%E5%BB%BA%E7%A7%81%E6%9C%89CA/image-20210120103601102.png" alt="image-20210120103601102"></p>
+<p><img src="/article/2020/12/%E4%BD%BF%E7%94%A8OpenSSL%E6%9E%84%E5%BB%BA%E7%A7%81%E6%9C%89CA/image-20210120103721991.png" alt="image-20210120103721991"></p>
+<p>内容如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">-----BEGIN CERTIFICATE-----</span><br><span class="line">MIIEMjCCAxqgAwIBAgIBATANBgkqhkiG9w0BAQUFADB7MQswCQYDVQQGEwJHQjEb</span><br><span class="line">MBkGA1UECAwSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHDAdTYWxmb3JkMRow</span><br><span class="line">GAYDVQQKDBFDb21vZG8gQ0EgTGltaXRlZDEhMB8GA1UEAwwYQUFBIENlcnRpZmlj</span><br><span class="line">YXRlIFNlcnZpY2VzMB4XDTA0MDEwMTAwMDAwMFoXDTI4MTIzMTIzNTk1OVowezEL</span><br><span class="line">MAkGA1UEBhMCR0IxGzAZBgNVBAgMEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UE</span><br><span class="line">BwwHU2FsZm9yZDEaMBgGA1UECgwRQ29tb2RvIENBIExpbWl0ZWQxITAfBgNVBAMM</span><br><span class="line">GEFBQSBDZXJ0aWZpY2F0ZSBTZXJ2aWNlczCCASIwDQYJKoZIhvcNAQEBBQADggEP</span><br><span class="line">ADCCAQoCggEBAL5AnfRu4ep2hxxNRUSOvkbIgwadwSr+GB+O5AL686tdUIoWMQua</span><br><span class="line">BtDFcCLNSS1UY8y2bmhGC1Pqy0wkwLxyTurxFa70VJoSCsN6sjNg4tqJVfMiWPPe</span><br><span class="line">3M/vg4aijJRPn2jymJBGhCfHdr/jzDUsi14HZGWCwEiwqJH5YZ92IFCokcdmtet4</span><br><span class="line">YgNW8IoaE+oxox6gmf049vYnMlhvB/VruPsUK6+3qszWY19zjNoFmag4qMsXeDZR</span><br><span class="line">rOme9Hg6jc8P2ULimAyrL58OAd7vn5lJ8S3frHRNG5i1R8XlKdH5kBjHYpy+g8cm</span><br><span class="line">ez6KJcfA3Z3mNWgQIJ2P2N7Sw4ScDV7oL8kCAwEAAaOBwDCBvTAdBgNVHQ4EFgQU</span><br><span class="line">oBEKIz6W8Qfs4q8p74Klf9AwpLQwDgYDVR0PAQH/BAQDAgEGMA8GA1UdEwEB/wQF</span><br><span class="line">MAMBAf8wewYDVR0fBHQwcjA4oDagNIYyaHR0cDovL2NybC5jb21vZG9jYS5jb20v</span><br><span class="line">QUFBQ2VydGlmaWNhdGVTZXJ2aWNlcy5jcmwwNqA0oDKGMGh0dHA6Ly9jcmwuY29t</span><br><span class="line">b2RvLm5ldC9BQUFDZXJ0aWZpY2F0ZVNlcnZpY2VzLmNybDANBgkqhkiG9w0BAQUF</span><br><span class="line">AAOCAQEACFb8AvCb6P+k+tZ7xkSAzk/ExfYAWMymtrwUSWgEdujm7l3sAg9g1o1Q</span><br><span class="line">GE8mTgHj5rCl7r+8dFRBv/38ErjHT1r0iWAFf2C3BUrz9vHCv8S5dIa2LX1rzNLz</span><br><span class="line">Rt0vxuBqw8M0Ayx9lt1awg6nCpnBBYurDC/zXDrPbDdVCYfeU0BsWO/8tqtlbgT2</span><br><span class="line">G9w84FoVxp7Z8VlIMCFlA2zs6SFz7JsDoeA3raAVGI/6ugLOpyypEBMs1OUIJqsi</span><br><span class="line">l2D4kF501KKaU73yqWjgom7C12yxow+ev+to51byrvLjKzg6CYG1a4XXvi3tPxq3</span><br><span class="line">smPi9WIsgtRqAEFQ8TmDn5XpNpaYbg==</span><br><span class="line">-----END CERTIFICATE-----</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2020/12/%E5%85%AC%E7%A7%81%E9%92%A5%E5%92%8C%E8%AF%81%E4%B9%A6%E7%9A%84%E7%94%9F%E6%88%90%E4%B8%8E%E7%AE%A1%E7%90%86/" rel="prev" title="公私钥和证书的生成与管理">
+                  <i class="fa fa-angle-left"></i> 公私钥和证书的生成与管理
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2021/01/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81/" rel="next" title="字符编码">
+                  字符编码 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="在上一节课我们讲到，当创建对象是一个“大工程”的时候，我们一般会选择使用工厂模式，来封装对象复杂的创建过程，将对象的创建和使用分离，让代码更加清晰。那何为“大工程”呢？上一节课中我们讲了两种情况，一种是创建过程涉及复杂的if-else分支判断，另一种是对象创建需要组装多个其他类对象或者需要复杂的初始化过程。 今天，我们再来讲一个创建对象的“大工程”，依赖注入框架，或者叫依赖注入容器（Depende">
+<meta property="og:type" content="article">
+<meta property="og:title" content="45设计模式与范式之创建型-工厂模式（下）：如何设计实现一个Dependency Injection框架？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/11/45%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AADependency%20Injection%E6%A1%86%E6%9E%B6%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="在上一节课我们讲到，当创建对象是一个“大工程”的时候，我们一般会选择使用工厂模式，来封装对象复杂的创建过程，将对象的创建和使用分离，让代码更加清晰。那何为“大工程”呢？上一节课中我们讲了两种情况，一种是创建过程涉及复杂的if-else分支判断，另一种是对象创建需要组装多个其他类对象或者需要复杂的初始化过程。 今天，我们再来讲一个创建对象的“大工程”，依赖注入框架，或者叫依赖注入容器（Depende">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-11-15T00:00:00.000Z">
+<meta property="article:modified_time" content="2022-11-15T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/11/45%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AADependency%20Injection%E6%A1%86%E6%9E%B6%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/11/45%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AADependency%20Injection%E6%A1%86%E6%9E%B6%EF%BC%9F/","path":"article/2022/11/45设计模式与范式之创建型-工厂模式（下）：如何设计实现一个Dependency Injection框架？/","title":"45设计模式与范式之创建型-工厂模式（下）：如何设计实现一个Dependency Injection框架？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>45设计模式与范式之创建型-工厂模式（下）：如何设计实现一个Dependency Injection框架？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%E5%92%8CDI%E5%AE%B9%E5%99%A8%E6%9C%89%E4%BD%95%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">工厂模式和DI容器有何区别？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DI%E5%AE%B9%E5%99%A8%E7%9A%84%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD%E6%9C%89%E5%93%AA%E4%BA%9B%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">DI容器的核心功能有哪些？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84DI%E5%AE%B9%E5%99%A8%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">如何实现一个简单的DI容器？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E6%9C%80%E5%B0%8F%E5%8E%9F%E5%9E%8B%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.1.</span> <span class="nav-text">1.最小原型设计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E6%8F%90%E4%BE%9B%E6%89%A7%E8%A1%8C%E5%85%A5%E5%8F%A3"><span class="nav-number">3.2.</span> <span class="nav-text">2.提供执行入口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90"><span class="nav-number">3.3.</span> <span class="nav-text">3.配置文件解析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E6%A0%B8%E5%BF%83%E5%B7%A5%E5%8E%82%E7%B1%BB%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.4.</span> <span class="nav-text">4.核心工厂类设计</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE"><span class="nav-number">4.</span> <span class="nav-text">重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%A0%82%E8%AE%A8%E8%AE%BA"><span class="nav-number">5.</span> <span class="nav-text">课堂讨论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/11/45%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AADependency%20Injection%E6%A1%86%E6%9E%B6%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="45设计模式与范式之创建型-工厂模式（下）：如何设计实现一个Dependency Injection框架？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          45设计模式与范式之创建型-工厂模式（下）：如何设计实现一个Dependency Injection框架？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-11-15 08:00:00" itemprop="dateCreated datePublished" datetime="2022-11-15T08:00:00+08:00">2022-11-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>在上一节课我们讲到，当创建对象是一个“大工程”的时候，我们一般会选择使用工厂模式，来封装对象复杂的创建过程，将对象的创建和使用分离，让代码更加清晰。那何为“大工程”呢？上一节课中我们讲了两种情况，一种是创建过程涉及复杂的if-else分支判断，另一种是对象创建需要组装多个其他类对象或者需要复杂的初始化过程。</p>
+<p>今天，我们再来讲一个创建对象的“大工程”，依赖注入框架，或者叫依赖注入容器（Dependency Injection Container），简称DI容器。在今天的讲解中，我会带你一块搞清楚这样几个问题：DI容器跟我们讲的工厂模式又有何区别和联系？DI容器的核心功能有哪些，以及如何实现一个简单的DI容器？</p>
+<p>话不多说，让我们正式开始今天的学习吧！</p>
+<span id="more"></span>
+
+<h1 id="工厂模式和DI容器有何区别？"><a href="#工厂模式和DI容器有何区别？" class="headerlink" title="工厂模式和DI容器有何区别？"></a>工厂模式和DI容器有何区别？</h1><p>实际上，<font color="red"><strong>DI容器底层最基本的设计思路就是基于工厂模式的</strong></font>。<strong>DI容器相当于一个大的工厂类，负责在程序启动的时候，根据配置（要创建哪些类对象，每个类对象的创建需要依赖哪些其他类对象）事先创建好对象。当应用程序需要使用某个类对象的时候，直接从容器中获取即可。正是因为它持有一堆对象，所以这个框架才被称为“容器”。</strong></p>
+<p>DI容器相对于我们上节课讲的工厂模式的例子来说，它处理的是更大的对象创建工程。上节课讲的工厂模式中，一个工厂类只负责某个类对象或者某一组相关类对象（继承自同一抽象类或者接口的子类）的创建，而DI容器负责的是整个应用中所有类对象的创建。</p>
+<p>除此之外，DI容器负责的事情要比单纯的工厂模式要多。比如，它还包括配置的解析、对象生命周期的管理。接下来，我们就详细讲讲，一个简单的DI容器应该包含哪些核心功能。</p>
+<h1 id="DI容器的核心功能有哪些？"><a href="#DI容器的核心功能有哪些？" class="headerlink" title="DI容器的核心功能有哪些？"></a>DI容器的核心功能有哪些？</h1><p>总结一下，一个简单的DI容器的核心功能一般有三个：配置解析、对象创建和对象生命周期管理。</p>
+<p><strong>首先，我们来看配置解析。</strong></p>
+<p>在上节课讲的工厂模式中，工厂类要创建哪个类对象是事先确定好的，并且是写死在工厂类代码中的。作为一个通用的框架来说，框架代码跟应用代码应该是高度解耦的，DI容器事先并不知道应用会创建哪些对象，不可能把某个应用要创建的对象写死在框架代码中。所以，我们需要通过一种形式，让应用告知DI容器要创建哪些对象。这种形式就是我们要讲的配置。</p>
+<p>我们将需要由DI容器来创建的类对象和创建类对象的必要信息（使用哪个构造函数以及对应的构造函数参数都是什么等等），放到配置文件中。容器读取配置文件，根据配置文件提供的信息来创建对象。</p>
+<p>下面是一个典型的Spring容器的配置文件。Spring容器读取这个配置文件，解析出要创建的两个对象：rateLimiter和redisCounter，并且得到两者的依赖关系：rateLimiter依赖redisCounter。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RateLimiter</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> RedisCounter redisCounter;</span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">RateLimiter</span><span class="params">(RedisCounter redisCounter)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.redisCounter = redisCounter;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">test</span><span class="params">()</span> &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;Hello World!&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RedisCounter</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> String ipAddress;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">int</span> port;</span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">RedisCounter</span><span class="params">(String ipAddress, <span class="type">int</span> port)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.ipAddress = ipAddress;</span><br><span class="line">    <span class="built_in">this</span>.port = port;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">配置文件beans.xml：</span><br><span class="line">&lt;beans&gt;</span><br><span class="line">   &lt;bean id=<span class="string">&quot;rateLimiter&quot;</span> class=<span class="string">&quot;com.xzg.RateLimiter&quot;</span>&gt;</span><br><span class="line">      &lt;constructor-arg ref=<span class="string">&quot;redisCounter&quot;</span>/&gt;</span><br><span class="line">   &lt;/bean&gt;</span><br><span class="line"> </span><br><span class="line">   &lt;bean id=<span class="string">&quot;redisCounter&quot;</span> class=<span class="string">&quot;com.xzg.redisCounter&quot;</span>&gt;</span><br><span class="line">     &lt;constructor-arg type=<span class="string">&quot;String&quot;</span> value=<span class="string">&quot;127.0.0.1&quot;</span>&gt;</span><br><span class="line">     &lt;constructor-arg type=<span class="string">&quot;int&quot;</span> value=<span class="number">1234</span>&gt;</span><br><span class="line">   &lt;/bean&gt;</span><br><span class="line">&lt;/beans&gt;</span><br></pre></td></tr></table></figure>
+
+<p><strong>其次，我们再来看对象创建。</strong></p>
+<p>在DI容器中，如果我们给每个类都对应创建一个工厂类，那项目中类的个数会成倍增加，这会增加代码的维护成本。要解决这个问题并不难。我们只需要将所有类对象的创建都放到一个工厂类中完成就可以了，比如BeansFactory。</p>
+<p>你可能会说，如果要创建的类对象非常多，BeansFactory中的代码会不会线性膨胀（代码量跟创建对象的个数成正比）呢？实际上并不会。待会讲到DI容器的具体实现的时候，我们会讲“反射”这种机制，它能在程序运行的过程中，动态地加载类、创建对象，不需要事先在代码中写死要创建哪些对象。所以，不管是创建一个对象还是十个对象，BeansFactory工厂类代码都是一样的。</p>
+<p><strong>最后，我们来看对象的生命周期管理。</strong></p>
+<p>上一节课我们讲到，简单工厂模式有两种实现方式，一种是每次都返回新创建的对象，另一种是每次都返回同一个事先创建好的对象，也就是所谓的单例对象。在Spring框架中，我们可以通过配置scope属性，来区分这两种不同类型的对象。scope&#x3D;prototype表示返回新创建的对象，scope&#x3D;singleton表示返回单例对象。</p>
+<p>除此之外，我们还可以配置对象是否支持懒加载。如果lazy-init&#x3D;true，对象在真正被使用到的时候（比如：BeansFactory.getBean(“userService”)）才被被创建；如果lazy-init&#x3D;false，对象在应用启动的时候就事先创建好。</p>
+<p>不仅如此，我们还可以配置对象的init-method和destroy-method方法，比如init-method&#x3D;loadProperties()，destroy-method&#x3D;updateConfigFile()。DI容器在创建好对象之后，会主动调用init-method属性指定的方法来初始化对象。在对象被最终销毁之前，DI容器会主动调用destroy-method属性指定的方法来做一些清理工作，比如释放数据库连接池、关闭文件。</p>
+<h1 id="如何实现一个简单的DI容器？"><a href="#如何实现一个简单的DI容器？" class="headerlink" title="如何实现一个简单的DI容器？"></a>如何实现一个简单的DI容器？</h1><p>实际上，用Java语言来实现一个简单的DI容器，核心逻辑只需要包括这样两个部分：配置文件解析、根据配置文件通过“反射”语法来创建对象。</p>
+<h2 id="1-最小原型设计"><a href="#1-最小原型设计" class="headerlink" title="1.最小原型设计"></a>1.最小原型设计</h2><p>因为我们主要是讲解设计模式，所以，在今天的讲解中，我们只实现一个DI容器的最小原型。像Spring框架这样的DI容器，它支持的配置格式非常灵活和复杂。为了简化代码实现，重点讲解原理，在最小原型中，我们只支持下面配置文件中涉及的配置语法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">配置文件beans.xml</span><br><span class="line">&lt;beans&gt;</span><br><span class="line">   &lt;bean id=<span class="string">&quot;rateLimiter&quot;</span> class=<span class="string">&quot;com.xzg.RateLimiter&quot;</span>&gt;</span><br><span class="line">      &lt;constructor-arg ref=<span class="string">&quot;redisCounter&quot;</span>/&gt;</span><br><span class="line">   &lt;/bean&gt;</span><br><span class="line"> </span><br><span class="line">   &lt;bean id=<span class="string">&quot;redisCounter&quot;</span> class=<span class="string">&quot;com.xzg.redisCounter&quot;</span> scope=<span class="string">&quot;singleton&quot;</span> lazy-init=<span class="string">&quot;true&quot;</span>&gt;</span><br><span class="line">     &lt;constructor-arg type=<span class="string">&quot;String&quot;</span> value=<span class="string">&quot;127.0.0.1&quot;</span>&gt;</span><br><span class="line">     &lt;constructor-arg type=<span class="string">&quot;int&quot;</span> value=<span class="number">1234</span>&gt;</span><br><span class="line">   &lt;/bean&gt;</span><br><span class="line">&lt;/bean</span><br></pre></td></tr></table></figure>
+
+<p>最小原型的使用方式跟Spring框架非常类似，示例代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Demo</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="type">ApplicationContext</span> <span class="variable">applicationContext</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ClassPathXmlApplicationContext</span>(</span><br><span class="line">            <span class="string">&quot;beans.xml&quot;</span>);</span><br><span class="line">    <span class="type">RateLimiter</span> <span class="variable">rateLimiter</span> <span class="operator">=</span> (RateLimiter) applicationContext.getBean(<span class="string">&quot;rateLimiter&quot;</span>);</span><br><span class="line">    rateLimiter.test();</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-提供执行入口"><a href="#2-提供执行入口" class="headerlink" title="2.提供执行入口"></a>2.提供执行入口</h2><p>前面我们讲到，面向对象设计的最后一步是：组装类并提供执行入口。在这里，执行入口就是一组暴露给外部使用的接口和类。</p>
+<p>通过刚刚的最小原型使用示例代码，我们可以看出，执行入口主要包含两部分：ApplicationContext和ClassPathXmlApplicationContext。其中，ApplicationContext是接口，ClassPathXmlApplicationContext是接口的实现类。两个类具体实现如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ApplicationContext</span> &#123;</span><br><span class="line">  Object <span class="title function_">getBean</span><span class="params">(String beanId)</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ClassPathXmlApplicationContext</span> <span class="keyword">implements</span> <span class="title class_">ApplicationContext</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> BeansFactory beansFactory;</span><br><span class="line">  <span class="keyword">private</span> BeanConfigParser beanConfigParser;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">ClassPathXmlApplicationContext</span><span class="params">(String configLocation)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.beansFactory = <span class="keyword">new</span> <span class="title class_">BeansFactory</span>();</span><br><span class="line">    <span class="built_in">this</span>.beanConfigParser = <span class="keyword">new</span> <span class="title class_">XmlBeanConfigParser</span>();</span><br><span class="line">    loadBeanDefinitions(configLocation);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">loadBeanDefinitions</span><span class="params">(String configLocation)</span> &#123;</span><br><span class="line">    <span class="type">InputStream</span> <span class="variable">in</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      in = <span class="built_in">this</span>.getClass().getResourceAsStream(<span class="string">&quot;/&quot;</span> + configLocation);</span><br><span class="line">      <span class="keyword">if</span> (in == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;Can not find config file: &quot;</span> + configLocation);</span><br><span class="line">      &#125;</span><br><span class="line">      List&lt;BeanDefinition&gt; beanDefinitions = beanConfigParser.parse(in);</span><br><span class="line">      beansFactory.addBeanDefinitions(beanDefinitions);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (in != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          in.close();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">          <span class="comment">// <span class="doctag">TODO:</span> log error</span></span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> Object <span class="title function_">getBean</span><span class="params">(String beanId)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> beansFactory.getBean(beanId);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从上面的代码中，我们可以看出，ClassPathXmlApplicationContext负责组装BeansFactory和BeanConfigParser两个类，串联执行流程：从classpath中加载XML格式的配置文件，通过BeanConfigParser解析为统一的BeanDefinition格式，然后，BeansFactory根据BeanDefinition来创建对象。</p>
+<h2 id="3-配置文件解析"><a href="#3-配置文件解析" class="headerlink" title="3.配置文件解析"></a>3.配置文件解析</h2><p>配置文件解析主要包含BeanConfigParser接口和XmlBeanConfigParser实现类，负责将配置文件解析为BeanDefinition结构，以便BeansFactory根据这个结构来创建对象。</p>
+<p>配置文件的解析比较繁琐，不涉及我们专栏要讲的理论知识，不是我们讲解的重点，所以这里我只给出两个类的大致设计思路，并未给出具体的实现代码。如果感兴趣的话，你可以自行补充完整。具体的代码框架如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">BeanConfigParser</span> &#123;</span><br><span class="line">  List&lt;BeanDefinition&gt; <span class="title function_">parse</span><span class="params">(InputStream inputStream)</span>;</span><br><span class="line">  List&lt;BeanDefinition&gt; <span class="title function_">parse</span><span class="params">(String configContent)</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">XmlBeanConfigParser</span> <span class="keyword">implements</span> <span class="title class_">BeanConfigParser</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> List&lt;BeanDefinition&gt; <span class="title function_">parse</span><span class="params">(InputStream inputStream)</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">content</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span>...</span></span><br><span class="line">    <span class="keyword">return</span> parse(content);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> List&lt;BeanDefinition&gt; <span class="title function_">parse</span><span class="params">(String configContent)</span> &#123;</span><br><span class="line">    List&lt;BeanDefinition&gt; beanDefinitions = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span>...</span></span><br><span class="line">    <span class="keyword">return</span> beanDefinitions;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BeanDefinition</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> String id;</span><br><span class="line">  <span class="keyword">private</span> String className;</span><br><span class="line">  <span class="keyword">private</span> List&lt;ConstructorArg&gt; constructorArgs = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">  <span class="keyword">private</span> <span class="type">Scope</span> <span class="variable">scope</span> <span class="operator">=</span> Scope.SINGLETON;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">boolean</span> <span class="variable">lazyInit</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">  <span class="comment">// 省略必要的getter/setter/constructors</span></span><br><span class="line"> </span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isSingleton</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> scope.equals(Scope.SINGLETON);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">enum</span> <span class="title class_">Scope</span> &#123;</span><br><span class="line">    SINGLETON,</span><br><span class="line">    PROTOTYPE</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">ConstructorArg</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">boolean</span> isRef;</span><br><span class="line">    <span class="keyword">private</span> Class type;</span><br><span class="line">    <span class="keyword">private</span> Object arg;</span><br><span class="line">    <span class="comment">// 省略必要的getter/setter/constructors</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-核心工厂类设计"><a href="#4-核心工厂类设计" class="headerlink" title="4.核心工厂类设计"></a>4.核心工厂类设计</h2><p>最后，我们来看，BeansFactory是如何设计和实现的。这也是我们这个DI容器最核心的一个类了。它负责根据从配置文件解析得到的BeanDefinition来创建对象。</p>
+<p>如果对象的scope属性是singleton，那对象创建之后会缓存在singletonObjects这样一个map中，下次再请求此对象的时候，直接从map中取出返回，不需要重新创建。如果对象的scope属性是prototype，那每次请求对象，BeansFactory都会创建一个新的对象返回。</p>
+<p>实际上，BeansFactory创建对象用到的主要技术点就是Java中的反射语法：一种动态加载类和创建对象的机制。我们知道，JVM在启动的时候会根据代码自动地加载类、创建对象。至于都要加载哪些类、创建哪些对象，这些都是在代码中写死的，或者说提前写好的。但是，如果某个对象的创建并不是写死在代码中，而是放到配置文件中，我们需要在程序运行期间，动态地根据配置文件来加载类、创建对象，那这部分工作就没法让JVM帮我们自动完成了，我们需要利用Java提供的反射语法自己去编写代码。</p>
+<p>搞清楚了反射的原理，BeansFactory的代码就不难看懂了。具体代码实现如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BeansFactory</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> ConcurrentHashMap&lt;String, Object&gt; singletonObjects = <span class="keyword">new</span> <span class="title class_">ConcurrentHashMap</span>&lt;&gt;();</span><br><span class="line">  <span class="keyword">private</span> ConcurrentHashMap&lt;String, BeanDefinition&gt; beanDefinitions = <span class="keyword">new</span> <span class="title class_">ConcurrentHashMap</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addBeanDefinitions</span><span class="params">(List&lt;BeanDefinition&gt; beanDefinitionList)</span> &#123;</span><br><span class="line">    <span class="keyword">for</span> (BeanDefinition beanDefinition : beanDefinitionList) &#123;</span><br><span class="line">      <span class="built_in">this</span>.beanDefinitions.putIfAbsent(beanDefinition.getId(), beanDefinition);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (BeanDefinition beanDefinition : beanDefinitionList) &#123;</span><br><span class="line">      <span class="keyword">if</span> (beanDefinition.isLazyInit() == <span class="literal">false</span> &amp;&amp; beanDefinition.isSingleton()) &#123;</span><br><span class="line">        createBean(beanDefinition);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> Object <span class="title function_">getBean</span><span class="params">(String beanId)</span> &#123;</span><br><span class="line">    <span class="type">BeanDefinition</span> <span class="variable">beanDefinition</span> <span class="operator">=</span> beanDefinitions.get(beanId);</span><br><span class="line">    <span class="keyword">if</span> (beanDefinition == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">NoSuchBeanDefinitionException</span>(<span class="string">&quot;Bean is not defined: &quot;</span> + beanId);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> createBean(beanDefinition);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@VisibleForTesting</span></span><br><span class="line">  <span class="keyword">protected</span> Object <span class="title function_">createBean</span><span class="params">(BeanDefinition beanDefinition)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (beanDefinition.isSingleton() &amp;&amp; singletonObjects.contains(beanDefinition.getId())) &#123;</span><br><span class="line">      <span class="keyword">return</span> singletonObjects.get(beanDefinition.getId());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">Object</span> <span class="variable">bean</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="type">Class</span> <span class="variable">beanClass</span> <span class="operator">=</span> Class.forName(beanDefinition.getClassName());</span><br><span class="line">      List&lt;BeanDefinition.ConstructorArg&gt; args = beanDefinition.getConstructorArgs();</span><br><span class="line">      <span class="keyword">if</span> (args.isEmpty()) &#123;</span><br><span class="line">        bean = beanClass.newInstance();</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Class[] argClasses = <span class="keyword">new</span> <span class="title class_">Class</span>[args.size()];</span><br><span class="line">        Object[] argObjects = <span class="keyword">new</span> <span class="title class_">Object</span>[args.size()];</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; args.size(); ++i) &#123;</span><br><span class="line">          BeanDefinition.<span class="type">ConstructorArg</span> <span class="variable">arg</span> <span class="operator">=</span> args.get(i);</span><br><span class="line">          <span class="keyword">if</span> (!arg.getIsRef()) &#123;</span><br><span class="line">            argClasses[i] = arg.getType();</span><br><span class="line">            argObjects[i] = arg.getArg();</span><br><span class="line">          &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="type">BeanDefinition</span> <span class="variable">refBeanDefinition</span> <span class="operator">=</span> beanDefinitions.get(arg.getArg());</span><br><span class="line">            <span class="keyword">if</span> (refBeanDefinition == <span class="literal">null</span>) &#123;</span><br><span class="line">              <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">NoSuchBeanDefinitionException</span>(<span class="string">&quot;Bean is not defined: &quot;</span> + arg.getArg());</span><br><span class="line">            &#125;</span><br><span class="line">            argClasses[i] = Class.forName(refBeanDefinition.getClassName());</span><br><span class="line">            argObjects[i] = createBean(refBeanDefinition);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        bean = beanClass.getConstructor(argClasses).newInstance(argObjects);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (ClassNotFoundException | IllegalAccessException</span><br><span class="line">            | InstantiationException | NoSuchMethodException | InvocationTargetException e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BeanCreationFailureException</span>(<span class="string">&quot;&quot;</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (bean != <span class="literal">null</span> &amp;&amp; beanDefinition.isSingleton()) &#123;</span><br><span class="line">      singletonObjects.putIfAbsent(beanDefinition.getId(), bean);</span><br><span class="line">      <span class="keyword">return</span> singletonObjects.get(beanDefinition.getId());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> bean;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="重点回顾"><a href="#重点回顾" class="headerlink" title="重点回顾"></a>重点回顾</h1><p>好了，今天的内容到此就讲完了。我们来一块总结回顾一下，你需要重点掌握的内容。</p>
+<p>DI容器在一些软件开发中已经成为了标配，比如Spring IOC、Google Guice。但是，大部分人可能只是把它当作一个黑盒子来使用，并未真正去了解它的底层是如何实现的。当然，如果只是做一些简单的小项目，简单会用就足够了，但是，如果我们面对的是非常复杂的系统，当系统出现问题的时候，对底层原理的掌握程度，决定了我们排查问题的能力，直接影响到我们排查问题的效率。</p>
+<p>今天，我们讲解了一个简单的DI容器的实现原理，其核心逻辑主要包括：配置文件解析，以及根据配置文件通过“反射”语法来创建对象。其中，创建对象的过程就应用到了我们在学的工厂模式。对象创建、组装、管理完全有DI容器来负责，跟具体业务代码解耦，让程序员聚焦在业务代码的开发上。</p>
+<h1 id="课堂讨论"><a href="#课堂讨论" class="headerlink" title="课堂讨论"></a>课堂讨论</h1><p>BeansFactory类中的createBean()函数是一个递归函数。当构造函数的参数是ref类型时，会递归地创建ref属性指向的对象。<font color="red">如果我们在配置文件中错误地配置了对象之间的依赖关系，导致存在循环依赖，那BeansFactory的createBean()函数是否会出现堆栈溢出？又该如何解决这个问题呢？</font></p>
+<p>你可以可以在留言区说一说，和同学一起交流和分享。如果有收获，也欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/11/44%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E6%88%91%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AF%B4%E6%B2%A1%E4%BA%8B%E4%B8%8D%E8%A6%81%E9%9A%8F%E4%BE%BF%E7%94%A8%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%E5%88%9B%E5%BB%BA%E5%AF%B9%E8%B1%A1%EF%BC%9F/" rel="prev" title="44设计模式与范式之创建型-工厂模式（上）：我为什么说没事不要随便用工厂模式创建对象？">
+                  <i class="fa fa-angle-left"></i> 44设计模式与范式之创建型-工厂模式（上）：我为什么说没事不要随便用工厂模式创建对象？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/11/46%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E5%88%9B%E5%BB%BA%E5%9E%8B-%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F%EF%BC%9A%E8%AF%A6%E8%A7%A3%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E3%80%81set%E6%96%B9%E6%B3%95%E3%80%81%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F%E4%B8%89%E7%A7%8D%E5%AF%B9%E8%B1%A1%E5%88%9B%E5%BB%BA%E6%96%B9%E5%BC%8F/" rel="next" title="46设计模式与范式之创建型-建造者模式：详解构造函数、set方法、建造者模式三种对象创建方式">
+                  46设计模式与范式之创建型-建造者模式：详解构造函数、set方法、建造者模式三种对象创建方式 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

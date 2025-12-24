@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="在Java领域，实现并发程序的主要手段就是多线程。线程是操作系统里的一个概念，虽然各种不同的开发语言如Java、C#等都对其进行了封装，但是万变不离操作系统。Java语言里的线程本质上就是操作系统的线程，它们是一一对应的。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="09并发理论基础-Java线程（上）：Java线程的生命周期">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/07/09%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-Java%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9AJava%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="在Java领域，实现并发程序的主要手段就是多线程。线程是操作系统里的一个概念，虽然各种不同的开发语言如Java、C#等都对其进行了封装，但是万变不离操作系统。Java语言里的线程本质上就是操作系统的线程，它们是一一对应的。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/07/09%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-Java%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9AJava%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/a1414e595153b29e2dcb03d3dbd795b0.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/07/09%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-Java%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9AJava%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/2fdf5da1842382aead614d3d7ac2289f.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/07/09%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-Java%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9AJava%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/91bbf35ebadae1a43d8923018e87e032.png">
+<meta property="article:published_time" content="2023-07-09T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-07-09T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Java并发编程实战">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/07/09%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-Java%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9AJava%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/a1414e595153b29e2dcb03d3dbd795b0.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/07/09%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-Java%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9AJava%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/07/09%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-Java%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9AJava%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/","path":"article/2023/07/09并发理论基础-Java线程（上）：Java线程的生命周期/","title":"09并发理论基础-Java线程（上）：Java线程的生命周期"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>09并发理论基础-Java线程（上）：Java线程的生命周期 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E7%9A%84%E7%BA%BF%E7%A8%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">1.</span> <span class="nav-text">通用的线程生命周期</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Java%E4%B8%AD%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">2.</span> <span class="nav-text">Java中线程的生命周期</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-RUNNABLE%E4%B8%8EBLOCKED%E7%9A%84%E7%8A%B6%E6%80%81%E8%BD%AC%E6%8D%A2"><span class="nav-number">2.1.</span> <span class="nav-text">1. RUNNABLE与BLOCKED的状态转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-RUNNABLE%E4%B8%8EWAITING%E7%9A%84%E7%8A%B6%E6%80%81%E8%BD%AC%E6%8D%A2"><span class="nav-number">2.2.</span> <span class="nav-text">2. RUNNABLE与WAITING的状态转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-RUNNABLE%E4%B8%8ETIMED-WAITING%E7%9A%84%E7%8A%B6%E6%80%81%E8%BD%AC%E6%8D%A2"><span class="nav-number">2.3.</span> <span class="nav-text">3. RUNNABLE与TIMED_WAITING的状态转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E4%BB%8ENEW%E5%88%B0RUNNABLE%E7%8A%B6%E6%80%81"><span class="nav-number">2.4.</span> <span class="nav-text">4. 从NEW到RUNNABLE状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E4%BB%8ERUNNABLE%E5%88%B0TERMINATED%E7%8A%B6%E6%80%81"><span class="nav-number">2.5.</span> <span class="nav-text">5. 从RUNNABLE到TERMINATED状态</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%90%8E%E6%80%9D%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">课后思考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/07/09%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-Java%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9AJava%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="09并发理论基础-Java线程（上）：Java线程的生命周期 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          09并发理论基础-Java线程（上）：Java线程的生命周期
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-07-09 08:00:00" itemprop="dateCreated datePublished" datetime="2023-07-09T08:00:00+08:00">2023-07-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">Java并发编程实战</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>在Java领域，实现并发程序的主要手段就是多线程。线程是操作系统里的一个概念，虽然各种不同的开发语言如Java、C#等都对其进行了封装，但是万变不离操作系统。Java语言里的线程本质上就是操作系统的线程，它们是一一对应的。</p>
+<span id="more"></span>
+
+<p>在操作系统层面，线程也有“生老病死”，专业的说法叫有生命周期。对于有生命周期的事物，要学好它，思路非常简单，只要能搞懂<strong>生命周期中各个节点的状态转换机制</strong>就可以了。</p>
+<p>虽然不同的开发语言对于操作系统线程进行了不同的封装，但是对于线程的生命周期这部分，基本上是雷同的。所以，我们可以先来了解一下通用的线程生命周期模型，这部分内容也适用于很多其他编程语言；然后再详细有针对性地学习一下Java中线程的生命周期。</p>
+<h1 id="通用的线程生命周期"><a href="#通用的线程生命周期" class="headerlink" title="通用的线程生命周期"></a>通用的线程生命周期</h1><p>通用的线程生命周期基本上可以用下图这个“五态模型”来描述。这五态分别是：<strong>初始状态、可运行状态、运行状态、休眠状态</strong>和<strong>终止状态</strong>。</p>
+<p><img src="/article/2023/07/09%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-Java%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9AJava%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/a1414e595153b29e2dcb03d3dbd795b0.png" alt="img"></p>
+<p>通用线程状态转换图——五态模型</p>
+<p>这“五态模型”的详细情况如下所示。</p>
+<ol>
+<li><strong>初始状态</strong>，指的是线程已经被创建，但是还不允许分配CPU执行。这个状态属于编程语言特有的，不过这里所谓的被创建，仅仅是在编程语言层面被创建，而在操作系统层面，真正的线程还没有创建。</li>
+<li><strong>可运行状态</strong>，指的是线程可以分配CPU执行。在这种状态下，真正的操作系统线程已经被成功创建了，所以可以分配CPU执行。</li>
+<li>当有空闲的CPU时，操作系统会将其分配给一个处于可运行状态的线程，被分配到CPU的线程的状态就转换成了<strong>运行状态</strong>。</li>
+<li>运行状态的线程如果调用一个阻塞的API（例如以阻塞方式读文件）或者等待某个事件（例如条件变量），那么线程的状态就会转换到<strong>休眠状态</strong>，同时释放CPU使用权，休眠状态的线程永远没有机会获得CPU使用权。当等待的事件出现了，线程就会从休眠状态转换到可运行状态。</li>
+<li>线程执行完或者出现异常就会进入<strong>终止状态</strong>，终止状态的线程不会切换到其他任何状态，进入终止状态也就意味着线程的生命周期结束了。</li>
+</ol>
+<p>这五种状态在不同编程语言里会有简化合并。例如，C语言的POSIX Threads规范，就把初始状态和可运行状态合并了；Java语言里则把可运行状态和运行状态合并了，这两个状态在操作系统调度层面有用，而JVM层面不关心这两个状态，因为JVM把线程调度交给操作系统处理了。</p>
+<p>除了简化合并，这五种状态也有可能被细化，比如，Java语言里就细化了休眠状态（这个下面我们会详细讲解）。</p>
+<h1 id="Java中线程的生命周期"><a href="#Java中线程的生命周期" class="headerlink" title="Java中线程的生命周期"></a>Java中线程的生命周期</h1><p>介绍完通用的线程生命周期模型，想必你已经对线程的“生老病死”有了一个大致的了解。那接下来我们就来详细看看Java语言里的线程生命周期是什么样的。</p>
+<p>Java语言中线程共有六种状态，分别是：</p>
+<ol>
+<li>NEW（初始化状态）</li>
+<li>RUNNABLE（可运行&#x2F;运行状态）</li>
+<li>BLOCKED（阻塞状态）</li>
+<li>WAITING（无时限等待）</li>
+<li>TIMED_WAITING（有时限等待）</li>
+<li>TERMINATED（终止状态）</li>
+</ol>
+<p>这看上去挺复杂的，状态类型也比较多。但其实在操作系统层面，Java线程中的BLOCKED、WAITING、TIMED_WAITING是一种状态，即前面我们提到的休眠状态。也就是说<strong>只要Java线程处于这三种状态之一，那么这个线程就永远没有CPU的使用权</strong>。</p>
+<p>所以Java线程的生命周期可以简化为下图：</p>
+<p><img src="/article/2023/07/09%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-Java%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9AJava%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/2fdf5da1842382aead614d3d7ac2289f.png" alt="img"></p>
+<p>Java中的线程状态转换图</p>
+<p>其中，BLOCKED、WAITING、TIMED_WAITING可以理解为线程导致休眠状态的三种原因。那具体是哪些情形会导致线程从RUNNABLE状态转换到这三种状态呢？而这三种状态又是何时转换回RUNNABLE的呢？以及NEW、TERMINATED和RUNNABLE状态是如何转换的？</p>
+<h2 id="1-RUNNABLE与BLOCKED的状态转换"><a href="#1-RUNNABLE与BLOCKED的状态转换" class="headerlink" title="1. RUNNABLE与BLOCKED的状态转换"></a>1. RUNNABLE与BLOCKED的状态转换</h2><p>只有一种场景会触发这种转换，就是线程等待synchronized的隐式锁。synchronized修饰的方法、代码块同一时刻只允许一个线程执行，其他线程只能等待，这种情况下，等待的线程就会从RUNNABLE转换到BLOCKED状态。而当等待的线程获得synchronized隐式锁时，就又会从BLOCKED转换到RUNNABLE状态。</p>
+<p>如果你熟悉操作系统线程的生命周期的话，可能会有个疑问：线程调用阻塞式API时，是否会转换到BLOCKED状态呢？在操作系统层面，线程是会转换到休眠状态的，但是在JVM层面，Java线程的状态不会发生变化，也就是说Java线程的状态会依然保持RUNNABLE状态。<strong>JVM层面并不关心操作系统调度相关的状态</strong>，因为在JVM看来，等待CPU使用权（操作系统层面此时处于可执行状态）与等待I&#x2F;O（操作系统层面此时处于休眠状态）没有区别，都是在等待某个资源，所以都归入了RUNNABLE状态。</p>
+<p>而我们平时所谓的Java在调用阻塞式API时，线程会阻塞，指的是操作系统线程的状态，并不是Java线程的状态。</p>
+<h2 id="2-RUNNABLE与WAITING的状态转换"><a href="#2-RUNNABLE与WAITING的状态转换" class="headerlink" title="2. RUNNABLE与WAITING的状态转换"></a>2. RUNNABLE与WAITING的状态转换</h2><p>总体来说，有三种场景会触发这种转换。</p>
+<p>第一种场景，获得synchronized隐式锁的线程，调用无参数的Object.wait()方法。其中，wait()方法我们在上一篇讲解管程的时候已经深入介绍过了，这里就不再赘述。</p>
+<p>第二种场景，调用无参数的Thread.join()方法。其中的join()是一种线程同步方法，例如有一个线程对象thread A，当调用A.join()的时候，执行这条语句的线程会等待thread A执行完，而等待中的这个线程，其状态会从RUNNABLE转换到WAITING。当线程thread A执行完，原来等待它的线程又会从WAITING状态转换到RUNNABLE。</p>
+<p>第三种场景，调用LockSupport.park()方法。其中的LockSupport对象，也许你有点陌生，其实Java并发包中的锁，都是基于它实现的。调用LockSupport.park()方法，当前线程会阻塞，线程的状态会从RUNNABLE转换到WAITING。调用LockSupport.unpark(Thread thread)可唤醒目标线程，目标线程的状态又会从WAITING状态转换到RUNNABLE。</p>
+<h2 id="3-RUNNABLE与TIMED-WAITING的状态转换"><a href="#3-RUNNABLE与TIMED-WAITING的状态转换" class="headerlink" title="3. RUNNABLE与TIMED_WAITING的状态转换"></a>3. RUNNABLE与TIMED_WAITING的状态转换</h2><p>有五种场景会触发这种转换：</p>
+<ol>
+<li>调用<strong>带超时参数</strong>的Thread.sleep(long millis)方法；</li>
+<li>获得synchronized隐式锁的线程，调用<strong>带超时参数</strong>的Object.wait(long timeout)方法；</li>
+<li>调用<strong>带超时参数</strong>的Thread.join(long millis)方法；</li>
+<li>调用<strong>带超时参数</strong>的LockSupport.parkNanos(Object blocker, long deadline)方法；</li>
+<li>调用<strong>带超时参数</strong>的LockSupport.parkUntil(long deadline)方法。</li>
+</ol>
+<p>这里你会发现TIMED_WAITING和WAITING状态的区别，仅仅是触发条件多了<strong>超时参数</strong>。</p>
+<h2 id="4-从NEW到RUNNABLE状态"><a href="#4-从NEW到RUNNABLE状态" class="headerlink" title="4. 从NEW到RUNNABLE状态"></a>4. 从NEW到RUNNABLE状态</h2><p>Java刚创建出来的Thread对象就是NEW状态，而创建Thread对象主要有两种方法。一种是继承Thread对象，重写run()方法。示例代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 自定义线程对象</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MyThread</span> <span class="keyword">extends</span> <span class="title class_">Thread</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">// 线程需要执行的代码</span></span><br><span class="line">    ......</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 创建线程对象</span></span><br><span class="line"><span class="type">MyThread</span> <span class="variable">myThread</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MyThread</span>();</span><br></pre></td></tr></table></figure>
+
+<p>另一种是实现Runnable接口，重写run()方法，并将该实现类作为创建Thread对象的参数。示例代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 实现Runnable接口</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Runner</span> <span class="keyword">implements</span> <span class="title class_">Runnable</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">// 线程需要执行的代码</span></span><br><span class="line">    ......</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 创建线程对象</span></span><br><span class="line"><span class="type">Thread</span> <span class="variable">thread</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(<span class="keyword">new</span> <span class="title class_">Runner</span>());</span><br></pre></td></tr></table></figure>
+
+<p>NEW状态的线程，不会被操作系统调度，因此不会执行。Java线程要执行，就必须转换到RUNNABLE状态。从NEW状态转换到RUNNABLE状态很简单，只要调用线程对象的start()方法就可以了，示例代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">MyThread</span> <span class="variable">myThread</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MyThread</span>();</span><br><span class="line"><span class="comment">// 从NEW状态转换到RUNNABLE状态</span></span><br><span class="line">myThread.start()；</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-从RUNNABLE到TERMINATED状态"><a href="#5-从RUNNABLE到TERMINATED状态" class="headerlink" title="5. 从RUNNABLE到TERMINATED状态"></a>5. 从RUNNABLE到TERMINATED状态</h2><p>线程执行完 run() 方法后，会自动转换到TERMINATED状态，当然如果执行run()方法的时候异常抛出，也会导致线程终止。有时候我们需要强制中断run()方法的执行，例如 run()方法访问一个很慢的网络，我们等不下去了，想终止怎么办呢？Java的Thread类里面倒是有个stop()方法，不过已经标记为@Deprecated，所以不建议使用了。正确的姿势其实是调用interrupt()方法。</p>
+<p><strong>那stop()和interrupt()方法的主要区别是什么呢？</strong></p>
+<p>stop()方法会真的杀死线程，不给线程喘息的机会，如果线程持有ReentrantLock锁，被stop()的线程并不会自动调用ReentrantLock的unlock()去释放锁，那其他线程就再也没机会获得ReentrantLock锁，这实在是太危险了。所以该方法就不建议使用了，类似的方法还有suspend() 和 resume()方法，这两个方法同样也都不建议使用了，所以这里也就不多介绍了。</p>
+<p>而interrupt()方法就温柔多了，interrupt()方法仅仅是通知线程，线程有机会执行一些后续操作，同时也可以无视这个通知。被interrupt的线程，是怎么收到通知的呢？一种是异常，另一种是主动检测。</p>
+<p>当线程A处于WAITING、TIMED_WAITING状态时，如果其他线程调用线程A的interrupt()方法，会使线程A返回到RUNNABLE状态，同时线程A的代码会触发InterruptedException异常。上面我们提到转换到WAITING、TIMED_WAITING状态的触发条件，都是调用了类似wait()、join()、sleep()这样的方法，我们看这些方法的签名，发现都会throws InterruptedException这个异常。这个异常的触发条件就是：其他线程调用了该线程的interrupt()方法。</p>
+<p>当线程A处于RUNNABLE状态时，并且阻塞在java.nio.channels.InterruptibleChannel上时，如果其他线程调用线程A的interrupt()方法，线程A会触发java.nio.channels.ClosedByInterruptException这个异常；而阻塞在java.nio.channels.Selector上时，如果其他线程调用线程A的interrupt()方法，线程A的java.nio.channels.Selector会立即返回。</p>
+<p>上面这两种情况属于被中断的线程通过异常的方式获得了通知。还有一种是主动检测，如果线程处于RUNNABLE状态，并且没有阻塞在某个I&#x2F;O操作上，例如中断计算圆周率的线程A，这时就得依赖线程A主动检测中断状态了。如果其他线程调用线程A的interrupt()方法，那么线程A可以通过isInterrupted()方法，检测是不是自己被中断了。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>理解Java线程的各种状态以及生命周期对于诊断多线程Bug非常有帮助，多线程程序很难调试，出了Bug基本上都是靠日志，靠线程dump来跟踪问题，分析线程dump的一个基本功就是分析线程状态，大部分的死锁、饥饿、活锁问题都需要跟踪分析线程的状态。同时，本文介绍的线程生命周期具备很强的通用性，对于学习其他语言的多线程编程也有很大的帮助。</p>
+<p>你可以通过 <code>jstack</code> 命令或者<code>Java VisualVM</code>这个可视化工具将JVM所有的线程栈信息导出来，完整的线程栈信息不仅包括线程的当前状态、调用栈，还包括了锁的信息。例如，我曾经写过一个死锁的程序，导出的线程栈明确告诉我发生了死锁，并且将死锁线程的调用栈信息清晰地显示出来了（如下图）。导出线程栈，分析线程状态是诊断并发问题的一个重要工具。</p>
+<p><img src="/article/2023/07/09%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-Java%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9AJava%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/91bbf35ebadae1a43d8923018e87e032.png" alt="img"></p>
+<p>发生死锁的线程栈</p>
+<h1 id="课后思考"><a href="#课后思考" class="headerlink" title="课后思考"></a>课后思考</h1><p>下面代码的本意是当前线程被中断之后，退出<code>while(true)</code>，你觉得这段代码是否正确呢？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Thread</span> <span class="variable">th</span> <span class="operator">=</span> Thread.currentThread();</span><br><span class="line"><span class="keyword">while</span>(<span class="literal">true</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span>(th.isInterrupted()) &#123;</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 省略业务代码无数</span></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    Thread.sleep(<span class="number">100</span>);</span><br><span class="line">  &#125;<span class="keyword">catch</span> (InterruptedException e)&#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" rel="tag"># Java并发编程实战</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/07/08%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E7%AE%A1%E7%A8%8B%EF%BC%9A%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E7%9A%84%E4%B8%87%E8%83%BD%E9%92%A5%E5%8C%99/" rel="prev" title="08并发理论基础-管程：并发编程的万能钥匙">
+                  <i class="fa fa-angle-left"></i> 08并发理论基础-管程：并发编程的万能钥匙
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/07/10%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-Java%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%AD%EF%BC%89%EF%BC%9A%E5%88%9B%E5%BB%BA%E5%A4%9A%E5%B0%91%E7%BA%BF%E7%A8%8B%E6%89%8D%E6%98%AF%E5%90%88%E9%80%82%E7%9A%84%EF%BC%9F/" rel="next" title="10并发理论基础-Java线程（中）：创建多少线程才是合适的？">
+                  10并发理论基础-Java线程（中）：创建多少线程才是合适的？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

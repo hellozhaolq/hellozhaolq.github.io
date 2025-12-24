@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="本文 oracle 版本 12.2.0.1.0 。 推荐链接：  https:&#x2F;&#x2F;www.cnblogs.com&#x2F;xqzt&#x2F;p&#x2F;4832597.html   https:&#x2F;&#x2F;www.cnblogs.com&#x2F;kerrycode&#x2F;p&#x2F;3254154.html  参数文件pfile和spfileOracle中的参数文件是一个包含一系列参数以及参数对应值的操作系统文件。它们是在数据库实例启动时候加载的，决">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Oracle的spfile与pfile">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/11/Oracle%E7%9A%84spfile%E4%B8%8Epfile/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="本文 oracle 版本 12.2.0.1.0 。 推荐链接：  https:&#x2F;&#x2F;www.cnblogs.com&#x2F;xqzt&#x2F;p&#x2F;4832597.html   https:&#x2F;&#x2F;www.cnblogs.com&#x2F;kerrycode&#x2F;p&#x2F;3254154.html  参数文件pfile和spfileOracle中的参数文件是一个包含一系列参数以及参数对应值的操作系统文件。它们是在数据库实例启动时候加载的，决">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-11-29T21:00:00.000Z">
+<meta property="article:modified_time" content="2019-11-29T21:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Oracle">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/11/Oracle%E7%9A%84spfile%E4%B8%8Epfile/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2019/11/Oracle%E7%9A%84spfile%E4%B8%8Epfile/","path":"article/2019/11/Oracle的spfile与pfile/","title":"Oracle的spfile与pfile"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Oracle的spfile与pfile | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E6%96%87%E4%BB%B6pfile%E5%92%8Cspfile"><span class="nav-number">1.</span> <span class="nav-text">参数文件pfile和spfile</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#pfile-%E5%92%8C-spfile-%E4%BA%92%E7%9B%B8%E5%88%9B%E5%BB%BA"><span class="nav-number">2.</span> <span class="nav-text">pfile 和 spfile 互相创建</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-pfile-spfile-%E5%90%AF%E5%8A%A8%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">3.</span> <span class="nav-text">使用 pfile&#x2F;spfile 启动数据库</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%A4%E6%96%AD%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">4.</span> <span class="nav-text">判断数据库的启动方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#scope%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E"><span class="nav-number">5.</span> <span class="nav-text">scope参数说明</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E5%88%97%E8%A1%A8"><span class="nav-number">6.</span> <span class="nav-text">参数列表</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/11/Oracle%E7%9A%84spfile%E4%B8%8Epfile/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Oracle的spfile与pfile | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Oracle的spfile与pfile
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-11-30 05:00:00" itemprop="dateCreated datePublished" datetime="2019-11-30T05:00:00+08:00">2019-11-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>本文 oracle 版本 12.2.0.1.0 。</p>
+<p>推荐链接：</p>
+<p> <a target="_blank" rel="noopener" href="https://www.cnblogs.com/xqzt/p/4832597.html">https://www.cnblogs.com/xqzt/p/4832597.html</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.cnblogs.com/kerrycode/p/3254154.html">https://www.cnblogs.com/kerrycode/p/3254154.html</a> </p>
+<h1 id="参数文件pfile和spfile"><a href="#参数文件pfile和spfile" class="headerlink" title="参数文件pfile和spfile"></a>参数文件pfile和spfile</h1><p>Oracle中的参数文件是一个包含一系列参数以及参数对应值的操作系统文件。它们是在数据库实例启动时候加载的，决定了数据库的物理 结构、内存、数据库的限制及系统大量的默认值、数据库的各种物理属性、指定数据库控制文件名和路径等信息，是进行数据库设计和性能调优的重要文件。可以分为两种类型:</p>
+<p><strong>pfile</strong>: 初始化参数文件（Initialization Parameters Files）</p>
+<pre><code>	在Oracle 9i之前，Oracle 一直采用 pfile 方式存储初始化参数，该文件为文本文件，可手工修改。一般都是备份 pfile 后再来做参数的修改，而且修改后必须重启实例才能生效。
+
+	**从Oracle 9i开始，该文件可做为 spfile 的备份使用，pfile 和 spfile 可以互相创建。**
+
+	**文件目录（pfile 目录）**：`D:\oracle12c\admin\orcl\pfile\init.ora.10242019173728`
+</code></pre>
+<p><strong>spfile</strong>: 服务器参数文件（Server Parameter Files）</p>
+<pre><code>	从Oracle 9i开始，Oracle 引入了 spfile 文件，该文件为二进制格式，不可手工修改。可以使用命令修改参数，而且有很多参数修改后都不用重启数据库，能够立即生效；&lt;font color=&quot;red&quot;&gt;如果参数修改有问题导致数据库无法启动，可以利用 pfile 文件恢复。&lt;/font&gt;
+
+	**文件目录（database 目录）**：`D:\oracle12c\product\12.2.0\dbhome_1\database\SPFILEORCL.ORA`
+</code></pre>
+<h1 id="pfile-和-spfile-互相创建"><a href="#pfile-和-spfile-互相创建" class="headerlink" title="pfile 和 spfile 互相创建"></a>pfile 和 spfile 互相创建</h1><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># create spfile[=&#x27;xxxxx&#x27;] from pfile[=&#x27;xxxx&#x27;];</span></span><br><span class="line"><span class="comment"># create pfile[=&#x27;xxxxx&#x27;] from spfile[=&#x27;xxxx&#x27;];</span></span><br><span class="line"></span><br><span class="line">SQL&gt; create spfile from pfile ; <span class="comment"># 通过pfile文件创建/恢复spfile文件到 database 目录。由于未指定pfile位置，不知使用的是哪个pfile，所以不应该使用此命令，除非清楚使用的pfile。</span></span><br><span class="line"></span><br><span class="line">File created.</span><br><span class="line"></span><br><span class="line"><span class="comment"># 恢复spfile文件</span></span><br><span class="line">SQL&gt; create spfile from pfile=<span class="string">&#x27;D:\oracle12c\admin\orcl\pfile\init.ora.XXXXXXX&#x27;</span>;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="使用-pfile-spfile-启动数据库"><a href="#使用-pfile-spfile-启动数据库" class="headerlink" title="使用 pfile&#x2F;spfile 启动数据库"></a>使用 pfile&#x2F;spfile 启动数据库</h1><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; startup <span class="comment"># 默认使用优先级最高的 spfileSID.ora 文件启动</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用初始化参数文件（pfile）启动当前数据库，指定 pfile 文件启动</span></span><br><span class="line">SQL&gt; startup pfile=<span class="string">&#x27;pfile文件全路径名&#x27;</span></span><br><span class="line">SQL&gt; startup pfile=<span class="string">&#x27;D:\oracle12c\admin\orcl\pfile\init.ora.XXXXXXX&#x27;</span></span><br><span class="line"><span class="comment"># 虽然可以显式指定具体pfile作为启动数据库的参数文件，但这里需要注意的是，不可以显式指定某个spfile作为启动的参数文件。下面的用法是不正确的</span></span><br><span class="line">SQL&gt; startup spfile=<span class="string">&#x27;D:\oracle12c\product\12.2.0\dbhome_1\database\SPFILEORCL.ORA&#x27;</span></span><br><span class="line">SP2-0714: 无效的        STARTUP 选项组合</span><br></pre></td></tr></table></figure>
+
+<p><font color="red"> <strong>spfile优先于pfile： spfileSID.ora &gt; spfile.ora &gt; initSID.ora &gt; init.ora</strong></font> ，如果这些参数文件都不再 database 目录下 ，则无法启动。</p>
+<h1 id="判断数据库的启动方式"><a href="#判断数据库的启动方式" class="headerlink" title="判断数据库的启动方式"></a>判断数据库的启动方式</h1><p>判断是 <code>SPFILE</code> 还是 <code>PFILE</code> 方式启动数据库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#1、通过查看spfile、pfile参数。</span></span><br><span class="line">SQL&gt; show parameter spfile <span class="comment"># 显示spfile参数文件的路径，即为spfile启动，否则为pfile方式启动</span></span><br><span class="line">SQL&gt; show parameter pfile  <span class="comment"># 显示spfile参数文件的路径，即为spfile启动，否则为pfile方式启动</span></span><br><span class="line"><span class="comment">#2、通过v$spparameter视图：</span></span><br><span class="line">SQL&gt; <span class="keyword">select</span> decode(count(*),1,<span class="string">&#x27;spfile&#x27;</span>,<span class="string">&#x27;pfile&#x27;</span>) from v<span class="variable">$spparameter</span> <span class="built_in">where</span> rownum=1 and isspecified =<span class="string">&#x27;TRUE&#x27;</span>;</span><br><span class="line"></span><br><span class="line">DECODE</span><br><span class="line">------</span><br><span class="line">spfile</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="scope参数说明"><a href="#scope参数说明" class="headerlink" title="scope参数说明"></a>scope参数说明</h1><p>1、<strong>scope&#x3D;spfile</strong>: 对参数的修改记录在**服务器初始化参数文件（spfile）**中，修改后的参数在下次启动DB时生效。适用于动态和静态初始化参数。</p>
+<p>2、<strong>scope&#x3D;memory</strong>: 对参数的修改记录在<strong>內存</strong>中，对于动态初始化参数的修改立即生效。在重启DB后会丟失,会复原为修改前的参数值。</p>
+<p>3、<strong>scope&#x3D;both</strong>: 对参数的修改会同时记录在<strong>服务器参数文件（spfile）和內存</strong>中，对于动态参数立即生效，对静态参数不能用这个选项</p>
+<table>
+<thead>
+<tr>
+<th><strong>参数类型</strong></th>
+<th><strong>spfile</strong></th>
+<th><strong>memory</strong></th>
+<th><strong>both</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>静态参数</td>
+<td>可以,重启服务器生效</td>
+<td>不可以</td>
+<td>不可以</td>
+</tr>
+<tr>
+<td>动态参数</td>
+<td>可以,重启服务器生效</td>
+<td>可以,立即生效,重启服务失效</td>
+<td>可以,立即生效,重启服务器仍然有效果</td>
+</tr>
+</tbody></table>
+<p><strong>修改参数例子</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; show parameter sga; <span class="comment"># 显示sga(系统全局区)内存分配情况</span></span><br><span class="line"></span><br><span class="line">NAME                                 TYPE        VALUE</span><br><span class="line">------------------------------------ ----------- ------------------------------</span><br><span class="line">allow_group_access_to_sga            boolean     FALSE</span><br><span class="line">lock_sga                             boolean     FALSE</span><br><span class="line">pre_page_sga                         boolean     TRUE</span><br><span class="line">sga_max_size                         big <span class="built_in">integer</span> 4880M</span><br><span class="line">sga_min_size                         big <span class="built_in">integer</span> 0</span><br><span class="line">sga_target                           big <span class="built_in">integer</span> 4880M</span><br><span class="line">unified_audit_sga_queue_size         <span class="built_in">integer</span>     1048576</span><br><span class="line"></span><br><span class="line">SQL&gt; alter system <span class="built_in">set</span> sga_max_size=200m scope=spfile; <span class="comment"># 修改sga占用内存大小</span></span><br><span class="line"></span><br><span class="line">系统已更改。</span><br><span class="line"></span><br><span class="line">SQL&gt;</span><br></pre></td></tr></table></figure>
+
+<h1 id="参数列表"><a href="#参数列表" class="headerlink" title="参数列表"></a>参数列表</h1><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Cache and I/O     高速缓存和 I/O</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">db_block_size=8192 <span class="comment"># 指定数据块大小为8KB</span></span><br><span class="line">db_cache_size=33554432 <span class="comment"># 指定数据缓冲区为32MB，该值越大，可以减少对数据库文件的I/O次数，提高效率</span></span><br><span class="line">db_file_multiblock_read_count=16</span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Cursors and Library Cache   游标和库高速缓存</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">open_cursors=300 <span class="comment"># 指定一个会话一次可以打开的游标的最大数量为300，应将该值设置得足够高，这样才能防止应用程序耗尽打开的游标</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Database Identification   数据库标识</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">db_domain=<span class="string">&quot;&quot;</span> <span class="comment"># 数据库域名为mynet，加上数据库名称db_name构成全局数据库名称</span></span><br><span class="line">db_name=cicro <span class="comment"># 数据库名称为myoracle</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Diagnostics and Statistics    诊断和统计</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">background_dump_dest=/opt/oracle/admin/cicro/bdump <span class="comment"># 后台进程跟踪文件目录</span></span><br><span class="line">core_dump_dest=/opt/oracle/admin/cicro/cdump       <span class="comment"># 核心转储跟踪文件目录</span></span><br><span class="line">timed_statistics=TRUE                              <span class="comment"># 收集操作系统的计时信息，这些信息可被用来优化数据库和 SQL 语句</span></span><br><span class="line">user_dump_dest=/opt/oracle/admin/cicro/udump       <span class="comment"># 用户进程跟踪文件目录</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"><span class="comment"># File Configuration</span></span><br><span class="line">control_files=(<span class="string">&quot;/opt/oracle/oradata/cicro/control01.ctl&quot;</span>, <span class="string">&quot;/opt/oracle/oradata/cicro/control02.ctl&quot;</span>, </span><br><span class="line"></span><br><span class="line"><span class="string">&quot;/opt/oracle/oradata/cicro/control03.ctl&quot;</span>) <span class="comment"># 指定控制文件的路径及文件名</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"><span class="comment"># Instance Identification   网络注册</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">instance_name=<span class="built_in">test</span>   例程名称为<span class="built_in">test</span></span><br><span class="line"></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"><span class="comment"># Job Queues</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">job_queue_processes=10</span><br><span class="line"></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"><span class="comment"># MTS 多线程服务器配置标识，在Oracle 9i里称为共享服务器配置</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">dispatchers=<span class="string">&quot;(PROTOCOL=TCP) (SERVICE=testXDB)&quot;</span> <span class="comment"># 多线程服务器配置</span></span><br><span class="line"></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"><span class="comment"># Miscellaneous   其他</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">aq_tm_processes=1</span><br><span class="line">compatible=9.2.0.0.0   兼容版本9.2.0</span><br><span class="line"></span><br><span class="line"><span class="comment">########################################### </span></span><br><span class="line"><span class="comment"># Optimizer</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">hash_join_enabled=TRUE</span><br><span class="line">query_rewrite_enabled=FALSE</span><br><span class="line">star_transformation_enabled=FALSE</span><br><span class="line">db_name=cicro</span><br><span class="line"></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"><span class="comment"># Pools 池</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">java_pool_size=83886080   <span class="comment"># 指定Java存储池的大小为32MB，用于存储 Java 的方法、类定义和Java对象。</span></span><br><span class="line">large_pool_size=16777216  <span class="comment"># 指定大型池的大小为1MB， 用于共享服务器的会话内存、并行执行的消息缓冲区以及RMAN备份和恢复的磁盘 I/O 缓冲区。</span></span><br><span class="line">shared_pool_size=83886080 <span class="comment"># 指定共享池的大小为32MB，用于存储共享游标、存储的过程、控制结构和并行执行消息缓冲区等对象。较大的值能改善多用户系统的性能.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"><span class="comment"># Processes and Sessions 进程和会话</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">processes=150 <span class="comment"># 指定可同时连接到一个Oracle Server上的操作系统用户进程的最大数量为150</span></span><br><span class="line"></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"><span class="comment"># Redo Log and Recovery   重做日志和恢复</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">fast_start_mttr_target=300 <span class="comment"># 指定从单个数据库例程崩溃中恢复所需的时间为300秒</span></span><br><span class="line"></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"><span class="comment"># Security and Auditing 安全与验证</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">remote_login_passwordfile=EXCLUSIVE <span class="comment"># 指定操作系统或口令文件是否具有检查用户口令的权限。设置为EXCLUSIVE, 将使用数据库的口令文件对每个具有权限的用户进.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"><span class="comment"># Sort, Hash Joins, Bitmap Indexes   排序, 散列联接, 位图索引</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">pga_aggregate_target=25165824</span><br><span class="line">sort_area_size=524288 <span class="comment"># 指定排序区使用的最大内存量为512KB。排序完成后, 各行将返回, 并且内存将释放。增大该值可以提高大型排序的效率。</span></span><br><span class="line"></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line"><span class="comment"># System Managed Undo and Rollback Segments   系统管理的撤消和回退段</span></span><br><span class="line"><span class="comment">###########################################</span></span><br><span class="line">undo_management=AUTO <span class="comment"># 指定系统使用的撤消空间管理方式为SMU 方式，在SMU方式下, 撤消空间会像撤消表空间一样在外部分配.</span></span><br><span class="line">undo_retention=10800   </span><br><span class="line">undo_tablespace=UNDOTBS1 <span class="comment"># 指定回滚表空间为UNDOTBS</span></span><br></pre></td></tr></table></figure>
+
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Oracle/" rel="tag"># Oracle</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2019/11/%E5%9B%9B%E5%B1%82%E3%80%81%E4%B8%83%E5%B1%82%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%9A%84%E5%8C%BA%E5%88%AB/" rel="prev" title="四层、七层负载均衡的区别">
+                  <i class="fa fa-angle-left"></i> 四层、七层负载均衡的区别
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2019/11/CDB%E5%92%8CPDB/" rel="next" title="CDB和PDB">
+                  CDB和PDB <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

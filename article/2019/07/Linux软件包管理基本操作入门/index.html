@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="大多数现代类 Unix 操作系统都提供了一个集中的软件包管理机制，以帮助用户搜索、安装和管理软件。而软件通常以「包」的形式存储在仓库「repository」中，对软件包的使用和管理被称为包管理。而 Linux 包的基本组成部分通常有：共享库、应用程序、服务和文档。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux软件包管理基本操作入门">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/07/Linux%E8%BD%AF%E4%BB%B6%E5%8C%85%E7%AE%A1%E7%90%86%E5%9F%BA%E6%9C%AC%E6%93%8D%E4%BD%9C%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="大多数现代类 Unix 操作系统都提供了一个集中的软件包管理机制，以帮助用户搜索、安装和管理软件。而软件通常以「包」的形式存储在仓库「repository」中，对软件包的使用和管理被称为包管理。而 Linux 包的基本组成部分通常有：共享库、应用程序、服务和文档。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-07-20T01:28:54.000Z">
+<meta property="article:modified_time" content="2019-07-20T01:28:54.000Z">
+<meta property="article:author" content="zhaolq">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/07/Linux%E8%BD%AF%E4%BB%B6%E5%8C%85%E7%AE%A1%E7%90%86%E5%9F%BA%E6%9C%AC%E6%93%8D%E4%BD%9C%E5%85%A5%E9%97%A8/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2019/07/Linux%E8%BD%AF%E4%BB%B6%E5%8C%85%E7%AE%A1%E7%90%86%E5%9F%BA%E6%9C%AC%E6%93%8D%E4%BD%9C%E5%85%A5%E9%97%A8/","path":"article/2019/07/Linux软件包管理基本操作入门/","title":"Linux软件包管理基本操作入门"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Linux软件包管理基本操作入门 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BD%AF%E4%BB%B6%E5%8C%85%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F%EF%BC%9A%E7%AE%80%E8%A6%81%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">软件包管理系统：简要介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E6%9C%AC%E5%9C%B0%E5%8C%85%E6%95%B0%E6%8D%AE%E5%BA%93%E5%88%97%E8%A1%A8"><span class="nav-number">2.</span> <span class="nav-text">更新本地包数据库列表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%87%E7%BA%A7%E5%B7%B2%E5%AE%89%E8%A3%85%E7%9A%84%E5%8C%85"><span class="nav-number">3.</span> <span class="nav-text">升级已安装的包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E6%89%BE-%E6%90%9C%E7%B4%A2%E8%BD%AF%E4%BB%B6%E5%8C%85"><span class="nav-number">4.</span> <span class="nav-text">查找&#x2F;搜索软件包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E6%9F%90%E4%B8%AA%E8%BD%AF%E4%BB%B6%E5%8C%85%E4%BF%A1%E6%81%AF"><span class="nav-number">5.</span> <span class="nav-text">查看某个软件包信息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E%E8%BD%AF%E4%BB%B6%E4%BB%93%E5%BA%93%E5%AE%89%E8%A3%85%E5%8C%85"><span class="nav-number">6.</span> <span class="nav-text">从软件仓库安装包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E%E6%9C%AC%E5%9C%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9B%B4%E6%8E%A5%E5%AE%89%E8%A3%85%E5%8C%85"><span class="nav-number">7.</span> <span class="nav-text">从本地文件系统直接安装包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A7%BB%E9%99%A4%E5%B7%B2%E5%AE%89%E8%A3%85%E7%9A%84%E5%8C%85"><span class="nav-number">8.</span> <span class="nav-text">移除已安装的包</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/07/Linux%E8%BD%AF%E4%BB%B6%E5%8C%85%E7%AE%A1%E7%90%86%E5%9F%BA%E6%9C%AC%E6%93%8D%E4%BD%9C%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Linux软件包管理基本操作入门 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux软件包管理基本操作入门
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-07-20 09:28:54" itemprop="dateCreated datePublished" datetime="2019-07-20T09:28:54+08:00">2019-07-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>大多数现代类 Unix 操作系统都提供了一个集中的软件包管理机制，以帮助用户搜索、安装和管理软件。而软件通常以「包」的形式存储在仓库「repository」中，对软件包的使用和管理被称为包管理。而 Linux 包的基本组成部分通常有：共享库、应用程序、服务和文档。</p>
+<span id="more"></span>
+
+<p>包管理通常不仅限于软件的一次性安装，还包括了对已安装软件包进行升级的工具。「包仓库」有助于确保代码已经在你使用的系统上进行了审核，并由软件开发者或包维护者进行管理。</p>
+<p>在配置 Linux 服务器或开发环境时，通常都不仅限于使用官方源。相较于现如今软件版本快速更新迭代而言，虽然官方源所使用的稳定版软件包很可能已过时，但对于系统管理员和开发人员来说，掌握常见 Linux 包管理基本操作还是一项必备的常用技能。</p>
+<p>本文将介绍常用 Linux 发行版对：搜索、安装和升级等包管理方面的基本方式和快速参考，可以帮助你快速了解不同 Linux 包管理基本操作与技巧。</p>
+<h2 id="软件包管理系统：简要介绍"><a href="#软件包管理系统：简要介绍" class="headerlink" title="软件包管理系统：简要介绍"></a>软件包管理系统：简要介绍</h2><p>大多数包管理系统是建立在包文件上的集合，包文件通常包含编译好的二进制文件和其它资源组成的：软件、安装脚本、元数据及其所需的依赖列表。</p>
+<p>虽然大多数流行的 Linux 发行版在包管理工具、方式和形式都大同小异，但却还是有平台差异：</p>
+<table>
+<thead>
+<tr>
+<th align="center">系统</th>
+<th align="center">格式</th>
+<th align="center">工具</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Debian</td>
+<td align="center">.deb</td>
+<td align="center">apt, apt-cache、apt-get、dpkg</td>
+</tr>
+<tr>
+<td align="center">Ubuntu</td>
+<td align="center">.deb</td>
+<td align="center">apt、apt-cache、apt-get、dpkg</td>
+</tr>
+<tr>
+<td align="center">CentOS</td>
+<td align="center">.rpm</td>
+<td align="center">yum</td>
+</tr>
+<tr>
+<td align="center">Fedora</td>
+<td align="center">.rpm</td>
+<td align="center">dnf</td>
+</tr>
+</tbody></table>
+<p>Debian 及其衍生产品如：Ubuntu、Linux Mint 和 Raspbian 的包格式为.deb文件，APT 是最常见包操作命令，可：搜索库、安装包及其依赖和管理升级。而要直接安装现成.deb包时需要使用dpkg命令。</p>
+<p>CentOS、Fedora 及 Red Hat 系列 Linux 使用RPM包文件，并使用yum命令管理包文件及与软件库交互。</p>
+<p>在最新的 Fedora 版本中，yum命令已被dnf取代进行包管理。</p>
+<h2 id="更新本地包数据库列表"><a href="#更新本地包数据库列表" class="headerlink" title="更新本地包数据库列表"></a>更新本地包数据库列表</h2><p>大多数 Linux 都使用本地数据库来存储远程可用的包仓库列表，所以在安装或升级包之前最好更新一下这个数据库。</p>
+<table>
+<thead>
+<tr>
+<th align="center">系统</th>
+<th align="center">命令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Debian &#x2F; Ubuntu</td>
+<td align="center">sudo apt-get update</td>
+</tr>
+<tr>
+<td align="center">CentOS</td>
+<td align="center">yum check-update</td>
+</tr>
+<tr>
+<td align="center">Fedora</td>
+<td align="center">dnf check-update</td>
+</tr>
+</tbody></table>
+<h2 id="升级已安装的包"><a href="#升级已安装的包" class="headerlink" title="升级已安装的包"></a>升级已安装的包</h2><p>在没有包管理方式时，要升级并保持 Linux 已装软件处在最新版本是一个巨大的工程，管理员和用户不得不手动跟踪上游软件版本变化及安全警告。在有了包管理系统之后，只需几条命令便可保持软件最新。</p>
+<table>
+<thead>
+<tr>
+<th align="center">系统</th>
+<th align="center">命令</th>
+<th align="center">备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Debian &#x2F; Ubuntu</td>
+<td align="center">sudo apt-get upgrade</td>
+<td align="center">仅升级已安装的软件包</td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">sudo apt-get dist-upgrade</td>
+<td align="center">可添加或删除程序包，以满足新的依赖。</td>
+</tr>
+<tr>
+<td align="center">CentOS</td>
+<td align="center">sudo yum update</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">Fedora</td>
+<td align="center">sudo dnf upgrade</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<h2 id="查找-搜索软件包"><a href="#查找-搜索软件包" class="headerlink" title="查找&#x2F;搜索软件包"></a>查找&#x2F;搜索软件包</h2><p>大多数 Linux 桌面版本都提供用户可搜索和安装软包的界面，这是找寻和安装软件的最佳方法。但对于追求效率和服务器管理员来说，使用命令行工具查找&#x2F;搜索软件包才是正途。</p>
+<table>
+<thead>
+<tr>
+<th align="center">系统</th>
+<th align="center">命令</th>
+<th align="center">备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Debian &#x2F; Ubuntu</td>
+<td align="center">apt-cache search 搜索内容</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">CentOS</td>
+<td align="center">yum search 搜索内容</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">yum search all 搜索内容</td>
+<td align="center">搜索所有内容，包括包描述。</td>
+</tr>
+<tr>
+<td align="center">Fedora</td>
+<td align="center">dnf search 搜索内容</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">dnf search all 搜索内容</td>
+<td align="center">搜索所有内容，包括包描述。</td>
+</tr>
+</tbody></table>
+<h2 id="查看某个软件包信息"><a href="#查看某个软件包信息" class="headerlink" title="查看某个软件包信息"></a>查看某个软件包信息</h2><p>在决定安装哪个包之前，我们往往都需要查看该软件包的详细说明。包的说明文件中通常包括：包名、版本号及依赖列表等元数据，可以使用如下命令来查看。</p>
+<table>
+<thead>
+<tr>
+<th align="center">系统</th>
+<th align="center">命令</th>
+<th align="center">备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Debian &#x2F; Ubuntu</td>
+<td align="center">apt-cache show 包名</td>
+<td align="center">显示有关软件包的本地缓存信息</td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">dpkg -s 包名</td>
+<td align="center">显示包的当前安装状态</td>
+</tr>
+<tr>
+<td align="center">CentOS</td>
+<td align="center">yum info 包名</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">yum deplist 包名</td>
+<td align="center">列出包的以来</td>
+</tr>
+<tr>
+<td align="center">Fedora</td>
+<td align="center">dnf info 包名</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">dnf repoquery –requires 包名</td>
+<td align="center">列出包的以来</td>
+</tr>
+</tbody></table>
+<h2 id="从软件仓库安装包"><a href="#从软件仓库安装包" class="headerlink" title="从软件仓库安装包"></a>从软件仓库安装包</h2><p>一旦我们知道某个软件包的名称之后，便可以使用如下命令从软件仓库安装包。</p>
+<table>
+<thead>
+<tr>
+<th align="center">系统</th>
+<th align="center">命令</th>
+<th align="center">备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Debian &#x2F; Ubuntu</td>
+<td align="center">sudo apt-get install 包名</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">sudo apt-get install 包1 包2 …</td>
+<td align="center">安装所有列出的包</td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">sudo apt-get install -y 包名</td>
+<td align="center">无需提示直接安装</td>
+</tr>
+<tr>
+<td align="center">CentOS</td>
+<td align="center">sudo yum install 包名</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">sudo yum install 包1 包2 …</td>
+<td align="center">安装所有列出的包</td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">sudo yum install -y 包名</td>
+<td align="center">无需提示直接安装</td>
+</tr>
+<tr>
+<td align="center">Fedora</td>
+<td align="center">sudo dnf install 包名</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">sudo dnf install 包1 包2 …</td>
+<td align="center">安装所有列出的包</td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">sudo dnf install -y 包名</td>
+<td align="center">无需提示直接安装</td>
+</tr>
+</tbody></table>
+<h2 id="从本地文件系统直接安装包"><a href="#从本地文件系统直接安装包" class="headerlink" title="从本地文件系统直接安装包"></a>从本地文件系统直接安装包</h2><p>很多时候，我们在进行测试或从某个地方直接拿到软件包之后需要从本地文件系统直接安装包。Debian 及衍生系统可以使用 <strong>dpkg</strong> 进行安装，CentOS 和 Fedora 系统使用 <strong>yum</strong> 和 <strong>dnf</strong> 命令进行安装。</p>
+<table>
+<thead>
+<tr>
+<th align="center">系统</th>
+<th align="center">命令</th>
+<th align="center">备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Debian &#x2F; Ubuntu</td>
+<td align="center">sudo dpkg -i 包名.deb</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">sudo apt-get install -y gdebi&amp;&amp; sudo gdebi 包名.deb</td>
+<td align="center">使用gdebi检索缺少的依赖关系</td>
+</tr>
+<tr>
+<td align="center">CentOS</td>
+<td align="center">sudo yum install 包名.rpm</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">Fedora</td>
+<td align="center">sudo dnf install 包名.rpm</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<h2 id="移除已安装的包"><a href="#移除已安装的包" class="headerlink" title="移除已安装的包"></a>移除已安装的包</h2><p>由于包管理器知道哪些文件是由哪个包提供的，所以在卸载不需要的软件包之后通常可以获得一个干净的系统。</p>
+<table>
+<thead>
+<tr>
+<th align="center">系统</th>
+<th align="center">命令</th>
+<th align="center">备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Debian &#x2F; Ubuntu</td>
+<td align="center">sudo apt-get remove 包名</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">sudo apt-get autoremove</td>
+<td align="center">自动移除已知不需要的包</td>
+</tr>
+<tr>
+<td align="center">CentOS</td>
+<td align="center">sudo yum remove 包名</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">Fedora</td>
+<td align="center">sudo dnf erase 包名</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<p>本文算是对常见的 Linux 发行版包管理基本操作进行了介绍，以帮助新手更快入门及在切换 Linux 发行版时更快上手。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2019/07/Linux%E4%B8%ADapt%E4%B8%8Eapt-get%E5%91%BD%E4%BB%A4%E7%9A%84%E5%8C%BA%E5%88%AB%E4%B8%8E%E8%A7%A3%E9%87%8A/" rel="prev" title="Linux中apt与apt-get命令的区别与解释">
+                  <i class="fa fa-angle-left"></i> Linux中apt与apt-get命令的区别与解释
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2019/07/curl%E3%80%81wget%E3%80%81ab/" rel="next" title="curl、wget、ab">
+                  curl、wget、ab <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

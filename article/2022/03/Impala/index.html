@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="https:&#x2F;&#x2F;impala.apache.org&#x2F;docs&#x2F;build&#x2F;   https:&#x2F;&#x2F;impala.apache.org&#x2F;docs&#x2F;build&#x2F;topics&#x2F;   https:&#x2F;&#x2F;impala.apache.org&#x2F;docs&#x2F;build&#x2F;html&#x2F;topics&#x2F; Impala 内置函数： https:&#x2F;&#x2F;impala.apache.org&#x2F;docs&#x2F;build&#x2F;html&#x2F;topics&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Impala">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/03/Impala/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="https:&#x2F;&#x2F;impala.apache.org&#x2F;docs&#x2F;build&#x2F;   https:&#x2F;&#x2F;impala.apache.org&#x2F;docs&#x2F;build&#x2F;topics&#x2F;   https:&#x2F;&#x2F;impala.apache.org&#x2F;docs&#x2F;build&#x2F;html&#x2F;topics&#x2F; Impala 内置函数： https:&#x2F;&#x2F;impala.apache.org&#x2F;docs&#x2F;build&#x2F;html&#x2F;topics&#x2F;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-03-15T00:02:00.000Z">
+<meta property="article:modified_time" content="2022-03-15T00:02:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Impala">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/03/Impala/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/03/Impala/","path":"article/2022/03/Impala/","title":"Impala"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Impala | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B0%E5%AD%A6%E5%87%BD%E6%95%B0"><span class="nav-number">1.</span> <span class="nav-text">数学函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2%E5%87%BD%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text">类型转换函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="nav-number">3.</span> <span class="nav-text">数据类型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%97%A5%E6%9C%9F%E5%92%8C%E6%97%B6%E9%97%B4%E5%87%BD%E6%95%B0"><span class="nav-number">4.</span> <span class="nav-text">日期和时间函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9D%A1%E4%BB%B6%E5%87%BD%E6%95%B0"><span class="nav-number">5.</span> <span class="nav-text">条件函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%87%BD%E6%95%B0"><span class="nav-number">6.</span> <span class="nav-text">字符串函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%81%9A%E5%90%88%E5%87%BD%E6%95%B0"><span class="nav-number">7.</span> <span class="nav-text">聚合函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E5%87%BD%E6%95%B0"><span class="nav-number">8.</span> <span class="nav-text">分析函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E5%88%86%E7%B1%BB"><span class="nav-number">8.1.</span> <span class="nav-text">简单分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OVER-%E5%AD%90%E5%8F%A5"><span class="nav-number">8.2.</span> <span class="nav-text">OVER 子句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%90%E5%88%B6"><span class="nav-number">8.3.</span> <span class="nav-text">限制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#window-%E5%AD%90%E5%8F%A5"><span class="nav-number">8.4.</span> <span class="nav-text">window 子句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AA%97%E5%8F%A3%E5%87%BD%E6%95%B0%E5%8F%82%E8%80%83"><span class="nav-number">8.5.</span> <span class="nav-text">窗口函数参考</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%8D%E5%87%BD%E6%95%B0"><span class="nav-number">9.</span> <span class="nav-text">位函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9D%82%E9%A1%B9%E5%8A%9F%E8%83%BD"><span class="nav-number">10.</span> <span class="nav-text">杂项功能</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B3%E8%81%94%E6%9F%A5%E8%AF%A2%E8%AF%AD%E5%8F%A5"><span class="nav-number">11.</span> <span class="nav-text">关联查询语句</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E6%9F%A5%E8%AF%A2%E7%9A%84%E6%80%A7%E8%83%BD%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="nav-number">12.</span> <span class="nav-text">连接查询的性能注意事项</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#EXPLAIN%E8%AF%AD%E5%8F%A5"><span class="nav-number">13.</span> <span class="nav-text">EXPLAIN语句</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ApacheImpala%E4%BC%98%E5%8C%96%E5%BB%BA%E8%AE%AE%E5%AD%90%E9%9B%86"><span class="nav-number">14.</span> <span class="nav-text">ApacheImpala优化建议子集</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A1%8C%E8%BD%AC%E5%88%97"><span class="nav-number">15.</span> <span class="nav-text">行转列</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%9A%E8%A1%8C%E8%81%9A%E5%90%88%E4%B8%80%E8%A1%8C"><span class="nav-number">16.</span> <span class="nav-text">多行聚合一行</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E8%A1%8C%E5%88%87%E5%89%B2%E4%B8%BA%E5%A4%9A%E8%A1%8C"><span class="nav-number">17.</span> <span class="nav-text">一行切割为多行</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%8D%E5%90%8C%E6%8E%92%E5%BA%8F%E7%BB%B4%E5%BA%A6%E6%95%B0%E6%8D%AE%E6%8F%90%E5%8F%96"><span class="nav-number">18.</span> <span class="nav-text">不同排序维度数据提取</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%8F%E7%BA%AC%E5%BA%A6%E8%AE%A1%E7%AE%97%E8%B7%9D%E7%A6%BB"><span class="nav-number">19.</span> <span class="nav-text">经纬度计算距离</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92-%E7%BA%BF%E6%80%A7%E6%8B%9F%E5%90%88"><span class="nav-number">20.</span> <span class="nav-text">线性回归&#x2F;线性拟合</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BE%85%E7%86%9F%E7%BB%83%E5%87%BD%E6%95%B0"><span class="nav-number">21.</span> <span class="nav-text">待熟练函数</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/03/Impala/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Impala | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Impala
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-03-15 08:02:00" itemprop="dateCreated datePublished" datetime="2022-03-15T08:02:00+08:00">2022-03-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/">https://impala.apache.org/docs/build/</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/topics/">https://impala.apache.org/docs/build/topics/</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/">https://impala.apache.org/docs/build/html/topics/</a></p>
+<p>Impala 内置函数： <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_functions.html">https://impala.apache.org/docs/build/html/topics/impala_functions.html</a> </p>
+<span id="more"></span>
+
+<h1 id="数学函数"><a href="#数学函数" class="headerlink" title="数学函数"></a>数学函数</h1><p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions">https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions</a> </p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__abs">ABS</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__acos">ACOS</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__asin">ASIN</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__atan">ATAN</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__atan2">ATAN2</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__bin">BIN</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__ceil">CEIL, CEILING, DCEIL</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__conv">CONV(BIGINT n, INT from_base, INT to_base), CONV(STRING s, INT from_base, INT to_base)</a>：进制转换函数。将16进制的A转换为2进制 <code>select conv(&#39;A&#39;,16,2) as conv;</code> 将16进制的5转换为2进制 <code>select conv(5,16,2) as conv;</code> </li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__cos">COS</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__cosh">COSH</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__cot">COT</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__degrees">DEGREES</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__e">E</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__exp">EXP</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__factorial">FACTORIAL</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__floor">FLOOR, DFLOOR</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__fmod">FMOD</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__fnv_hash">FNV_HASH</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__greatest">GREATEST</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__hex">HEX</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__is_inf">IS_INF</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__is_nan">IS_NAN</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__least">LEAST</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__ln">LN</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__log">LOG</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__log10">LOG10</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__log2">LOG2</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__max_int">MAX_INT, MAX_TINYINT, MAX_SMALLINT, MAX_BIGINT</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__min_int">MIN_INT, MIN_TINYINT, MIN_SMALLINT, MIN_BIGINT</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__mod">MOD</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__murmur_hash">MURMUR_HASH</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__negative">NEGATIVE</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__pi">PI</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__pmod">PMOD</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__positive">POSITIVE</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__pow">POW, POWER, DPOW, FPOW</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__precision">PRECISION</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__quotient">QUOTIENT</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__radians">RADIANS</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__rand">RAND, RANDOM</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__round">ROUND, DROUND</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__scale">SCALE</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__sign">SIGN</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__sin">SIN</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__sinh">SINH</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__sqrt">SQRT</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__tan">TAN</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__tanh">TANH</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__truncate">TRUNCATE, DTRUNC, TRUNC</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__unhex">UNHEX</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_math_functions.html#math_functions__width_bucket">WIDTH_BUCKET</a></li>
+</ul>
+<h1 id="类型转换函数"><a href="#类型转换函数" class="headerlink" title="类型转换函数"></a>类型转换函数</h1><p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conversion_functions.html#conversion_functions">https://impala.apache.org/docs/build/html/topics/impala_conversion_functions.html#conversion_functions</a> </p>
+<p>cast(year(“2017-06-15”) as decimal(8,0)) as date_year,</p>
+<p>cast(‘100’ as int), – 100</p>
+<p>typeof(‘100’), – STRING 查看字段类型</p>
+<h1 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h1><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_datatypes.html">https://impala.apache.org/docs/build/html/topics/impala_datatypes.html</a></p>
+<h1 id="日期和时间函数"><a href="#日期和时间函数" class="headerlink" title="日期和时间函数"></a>日期和时间函数</h1><p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_datetime_functions.html#datetime_functions">https://impala.apache.org/docs/build/html/topics/impala_datetime_functions.html#datetime_functions</a> </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> trunc(<span class="string">&#x27;2022-04-09&#x27;</span>, <span class="string">&#x27;y&#x27;</span>); <span class="comment">-- 当年第一天</span></span><br><span class="line"><span class="keyword">select</span> trunc(<span class="string">&#x27;2022-04-09&#x27;</span>, <span class="string">&#x27;yy&#x27;</span>); <span class="comment">-- 当年第一天</span></span><br><span class="line"><span class="keyword">select</span> trunc(<span class="string">&#x27;2022-04-09&#x27;</span>, <span class="string">&#x27;yyyy&#x27;</span>); <span class="comment">-- 当年第一天</span></span><br><span class="line"><span class="keyword">select</span> trunc(<span class="string">&#x27;2022-04-09&#x27;</span>, <span class="string">&#x27;mm&#x27;</span>); <span class="comment">-- 当月第一天</span></span><br><span class="line"><span class="keyword">select</span> trunc(<span class="string">&#x27;2022-04-09&#x27;</span>, <span class="string">&#x27;dd&#x27;</span>); <span class="comment">-- 当天第一天，即当天</span></span><br><span class="line"><span class="keyword">select</span> trunc(<span class="string">&#x27;2022-04-09&#x27;</span>, <span class="string">&#x27;d&#x27;</span>); <span class="comment">-- 当前星期第一天（具体是周一还是周日要看数据库）</span></span><br><span class="line"><span class="keyword">select</span> trunc(<span class="string">&#x27;2022-04-09&#x27;</span>, <span class="string">&#x27;hh&#x27;</span>); <span class="comment">-- 当年第一天</span></span><br><span class="line"><span class="keyword">select</span> trunc(<span class="string">&#x27;2022-04-09&#x27;</span>, <span class="string">&#x27; mi&#x27;</span>); <span class="comment">-- 当年第一天</span></span><br><span class="line"><span class="keyword">select</span> dayofweek( <span class="built_in">CAST</span>(<span class="string">&#x27;2022-04-09&#x27;</span> <span class="keyword">AS</span> <span class="type">TIMESTAMP</span> )); <span class="comment">-- 返回日期论证的日期字段，对应于一周中的一天。返回值的范围为1（周日）到7（周六）。</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">	trunc ( <span class="string">&#x27;2022-04-09&#x27;</span>, <span class="string">&#x27;d&#x27;</span> ) <span class="keyword">AS</span> week_first_day, <span class="comment">-- 所在周第一天</span></span><br><span class="line">	trunc ( <span class="string">&#x27;2022-04-09&#x27;</span>, <span class="string">&#x27;d&#x27;</span> ) <span class="operator">+</span> <span class="type">INTERVAL</span> <span class="number">6</span> <span class="keyword">DAY</span> <span class="keyword">AS</span> week_last_day; <span class="comment">-- 所在周最后一天</span></span><br><span class="line">	</span><br><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">	date_sub(</span><br><span class="line">		<span class="built_in">cast</span>( <span class="string">&#x27;2022-04-09&#x27;</span> <span class="keyword">AS</span> <span class="type">TIMESTAMP</span> ),</span><br><span class="line">	<span class="type">INTERVAL</span></span><br><span class="line">	IF</span><br><span class="line">		( dayofweek( <span class="built_in">CAST</span>( <span class="string">&#x27;2022-04-09&#x27;</span> <span class="keyword">AS</span> <span class="type">TIMESTAMP</span> ))<span class="operator">-</span> <span class="number">1</span> <span class="operator">=</span> <span class="number">0</span>, <span class="number">6</span>, dayofweek( <span class="built_in">CAST</span>( <span class="string">&#x27;2022-04-09&#x27;</span> <span class="keyword">AS</span> <span class="type">TIMESTAMP</span> ))<span class="operator">-</span> <span class="number">2</span> ) <span class="keyword">DAY</span> </span><br><span class="line">	) <span class="keyword">AS</span> week_first_day, <span class="comment">-- 所在周第一天</span></span><br><span class="line">	date_sub(</span><br><span class="line">		<span class="built_in">cast</span>( <span class="string">&#x27;2022-04-09&#x27;</span> <span class="keyword">AS</span> <span class="type">TIMESTAMP</span> ),</span><br><span class="line">	<span class="type">INTERVAL</span></span><br><span class="line">	IF</span><br><span class="line">	( dayofweek( <span class="built_in">CAST</span>( <span class="string">&#x27;2022-04-09&#x27;</span> <span class="keyword">AS</span> <span class="type">TIMESTAMP</span> ))<span class="operator">-</span> <span class="number">1</span> <span class="operator">=</span> <span class="number">0</span>, <span class="number">0</span>, dayofweek( <span class="built_in">CAST</span>( <span class="string">&#x27;2022-04-09&#x27;</span> <span class="keyword">AS</span> <span class="type">TIMESTAMP</span> ))<span class="operator">-</span> <span class="number">8</span> ) <span class="keyword">DAY</span> </span><br><span class="line">	) <span class="keyword">AS</span> week_last_day; <span class="comment">-- 所在周最后一天</span></span><br></pre></td></tr></table></figure>
+
+<p>查询某一天是当年的第几周，年第一天非周一的日期归属到去年最后一周</p>
+<table>
+<thead>
+<tr>
+<th align="center">输入 data_dt</th>
+<th align="center">输出 dt_week</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">20210103</td>
+<td align="center">2020W53</td>
+</tr>
+<tr>
+<td align="center">20201231</td>
+<td align="center">2020W53</td>
+</tr>
+<tr>
+<td align="center">20190104</td>
+<td align="center">2019W1</td>
+</tr>
+</tbody></table>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">  <span class="keyword">CASE</span> <span class="keyword">WHEN</span></span><br><span class="line">	         substr( data_dt, <span class="number">5</span>, <span class="number">2</span> ) <span class="operator">=</span> <span class="string">&#x27;01&#x27;</span> <span class="keyword">AND</span> <span class="built_in">cast</span>( weekofyear( <span class="built_in">cast</span>( concat( substr( data_dt, <span class="number">1</span>, <span class="number">4</span> ), <span class="string">&#x27;-&#x27;</span>, substr( data_dt, <span class="number">5</span>, <span class="number">2</span> ), <span class="string">&#x27;-&#x27;</span>, substr( data_dt, <span class="number">7</span>, <span class="number">2</span> )) <span class="keyword">AS</span> <span class="type">TIMESTAMP</span> )) <span class="keyword">AS</span> string ) <span class="operator">=</span> <span class="string">&#x27;53&#x27;</span></span><br><span class="line">			   <span class="keyword">THEN</span></span><br><span class="line">			      concat( substr( <span class="built_in">cast</span>( add_months ( <span class="built_in">cast</span>( concat( substr( data_dt, <span class="number">1</span>, <span class="number">4</span> ), <span class="string">&#x27;-&#x27;</span>, substr( data_dt, <span class="number">5</span>, <span class="number">2</span> ), <span class="string">&#x27;-&#x27;</span>, substr( data_dt, <span class="number">7</span>, <span class="number">2</span> )) <span class="keyword">AS</span> <span class="type">TIMESTAMP</span> ), <span class="number">-1</span> ) <span class="keyword">AS</span> string ), <span class="number">1</span>, <span class="number">4</span> ),</span><br><span class="line">			              <span class="string">&#x27;W&#x27;</span>,</span><br><span class="line">				            <span class="built_in">cast</span>( weekofyear( <span class="built_in">cast</span>( concat( substr( data_dt, <span class="number">1</span>, <span class="number">4</span> ), <span class="string">&#x27;-&#x27;</span>, substr( data_dt, <span class="number">5</span>, <span class="number">2</span> ), <span class="string">&#x27;-&#x27;</span>, substr( data_dt, <span class="number">7</span>, <span class="number">2</span> )) <span class="keyword">AS</span> <span class="type">TIMESTAMP</span> )) <span class="keyword">AS</span> string )</span><br><span class="line">									)</span><br><span class="line">			 <span class="keyword">ELSE</span></span><br><span class="line">			   concat( substr( data_dt, <span class="number">1</span>, <span class="number">4</span> ),</span><br><span class="line">				         <span class="string">&#x27;W&#x27;</span>,</span><br><span class="line">				         <span class="built_in">cast</span>( weekofyear( <span class="built_in">cast</span>( concat ( substr( data_dt, <span class="number">1</span>, <span class="number">4</span> ), <span class="string">&#x27;-&#x27;</span>, substr( data_dt, <span class="number">5</span>, <span class="number">2</span> ), <span class="string">&#x27;-&#x27;</span>, substr( data_dt, <span class="number">7</span>, <span class="number">2</span> )) <span class="keyword">AS</span> <span class="type">TIMESTAMP</span> )) <span class="keyword">AS</span> string )</span><br><span class="line">							 )</span><br><span class="line">		<span class="keyword">END</span> <span class="keyword">AS</span> dt_week </span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line">	( <span class="keyword">SELECT</span> <span class="string">&#x27;20210103&#x27;</span> <span class="keyword">AS</span> data_dt <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> <span class="string">&#x27;20201231&#x27;</span> <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> <span class="string">&#x27;20190104&#x27;</span> ) tt</span><br></pre></td></tr></table></figure>
+
+<h1 id="条件函数"><a href="#条件函数" class="headerlink" title="条件函数"></a>条件函数</h1><p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions">https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions</a> </p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__case">CASE</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__case2">CASE2</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__coalesce">COALESCE(type v1, type v2, …)</a> ：返回第一个不为 NULL 的参数，如果都为 NULL 则返回 NULL。</li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__decode">DECODE(type expression, type search1, type result1 [, type search2, type result2 …] [, type default_result] )</a> 同 Oracle 的 decode() 函数。</li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__if">IF</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__ifnull">IFNULL</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__isfalse">ISFALSE</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__isnotfalse">ISNOTFALSE</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__isnottrue">ISNOTTRUE</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__isnull">ISNULL</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__istrue">ISTRUE</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__nonnullvalue">NONNULLVALUE</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__nullif">NULLIF</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__nullifzero">NULLIFZERO</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__nullvalue">NULLVALUE</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__nvl">NVL</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__nvl2">NVL2</a></li>
+<li><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_conditional_functions.html#conditional_functions__zeroifnull">ZEROIFNULL</a></li>
+</ul>
+<h1 id="字符串函数"><a href="#字符串函数" class="headerlink" title="字符串函数"></a>字符串函数</h1><p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions">https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions</a> </p>
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__ascii">ASCII</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__base64decode">BASE64DECODE</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__base64encode">BASE64ENCODE</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__btrim">BTRIM</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__bytes">BYTES</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__char_length">CHAR_LENGTH</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__chr">CHR</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__concat">CONCAT(STRING a, STRING b…)</a>：返回一个字符串，表示连接在一起的所有参数值。如果有任何参数<code>NULL</code>，则返回<code>NULL</code>。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__concat_ws">CONCAT_WS(STRING sep, STRING a, STRING b…)</a>：返回一个字符串，表示连接在一起的第二个和后面的参数值，由指定的分隔符分隔。</p>
+<p><code>concat()</code> 和 <code>concat_ws()</code> 适用于连接同一行中多列的值，同时 <code>group_concat()</code>将来自不同行的值连接在一起。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__find_in_set">FIND_IN_SET</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__group_concat">GROUP_CONCAT(STRING s [, STRING sep])</a> ：字符串分组合并函数。返回一个字符串，表示为结果集的每一行连接在一起的参数值。如果指定了可选的分隔符字符串，则在每对连接值之间添加分隔符。<code>group_concat(distinct city_name, &#39;-&#39;) </code> </p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__initcap">INITCAP</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__instr">INSTR</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__jaro_distance">JARO_DISTANCE, JARO_DIST</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__jaro_similarity">JARO_SIMILARITY, JARO_SIM</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__jaro_winkler_distance">JARO_WINKER_DISTANCE, JW_DST</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__jaro_winkler_similarity">JARO_WINKER_SIMILARITY, JW_SIM</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__left">LEFT</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__length">LENGTH</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__levenshtein">LEVENSHTEIN, LE_DST</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__locate">LOCATE</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__lower">LOWER, LCASE</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__lpad">LPAD</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__ltrim">LTRI</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__parse_url">PARSE_URL</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__regexp_escape">REGEXP_ESCAPE(STRING source)</a> ：该函数返回RE2库中特殊字符的转义字符串，以便特殊字符被按字面解释，而不是被解释为特殊字符。以下特殊字符由函数转义：<code>.\+*?[^]$(){}=!&lt;&gt;|:-</code>。<code>regexp_escape(&#39;Hello.world&#39;)</code> 结果为 <code>Hello\.world </code>。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__regexp_extract">REGEXP_EXTRACT(STRING subject, STRING pattern, INT index)</a> ：根据正则表达式模式从字符串中返回指定的 () 组。第 0 组是指整个提取的字符串，而第 1、2 等组是指第一个、第二个等<code>(...)</code>部分。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__regexp_like">REGEXP_LIKE(STRING source, STRING pattern[, STRING options])</a> ：返回<code>true</code>或<code>false</code>指示源字符串中的任何位置是否包含由模式给出的正则表达式。可选的第三个参数由字母标志组成，这些标志改变了匹配的执行方式，例如 <code>i</code> 不区分大小写的匹配。</p>
+<p>可选的第三个参数：</p>
+<ul>
+<li><code>c</code>：区分大小写的匹配（默认）。</li>
+<li><code>i</code>：不区分大小写的匹配。如果第三个参数中包括 <code>c</code> 和 <code>i</code> 的多个实例，则最后一个此类选项优先。</li>
+<li><code>m</code>: 多行匹配。<code>^</code> 和 <code>$</code> 运算符匹配源字符串中任何行的开始或结束，而不是整个字符串的开始和结束。</li>
+<li><code>n</code>: 换行匹配。<code>.</code> 运算符可以匹配换行符。重复运算符如 <code>.*</code> 可以匹配跨越多行的源字符串的一部分。</li>
+</ul>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__regexp_replace">REGEXP_REPLACE(STRING initial, STRING pattern, STRING replacement)</a> ：返回初始参数，正则表达式模式被最终参数字符串替换。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__repeat">REPEAT</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__replace">REPLACE</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__reverse">REVERSE</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__right">RIGHT</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__rpad">RPAD</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__rtrim">RTRIM</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__space">SPACE</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__split_part">SPLIT_PART(STRING source, STRING delimiter, BIGINT index)</a> ：返回由 delimiter 分割的 source 字符串的 index<strong>th</strong> 部分。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__strleft">STRLEFT</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__strright">STRRIGHT</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__substr">SUBSTR, SUBSTRING</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__translate">TRANSLATE</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__trim">TRIM</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_string_functions.html#string_functions__upper">UPPER, UCASE</a></p>
+</li>
+</ul>
+<h1 id="聚合函数"><a href="#聚合函数" class="headerlink" title="聚合函数"></a>聚合函数</h1><p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_aggregate_functions.html#aggregate_functions">https://impala.apache.org/docs/build/html/topics/impala_aggregate_functions.html#aggregate_functions</a> </p>
+<h1 id="分析函数"><a href="#分析函数" class="headerlink" title="分析函数"></a>分析函数</h1><p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_analytic_functions.html#analytic_functions">https://impala.apache.org/docs/build/html/topics/impala_analytic_functions.html#analytic_functions</a> </p>
+<p>AVG</p>
+<p>COUNT</p>
+<p>CUME_DIST：返回值的累积分布。结果集中每一行的值都大于 0 且小于或等于 1。</p>
+<p>DENSE_RANK：递增不跳跃并列的序列号1,1,2</p>
+<p>FIRST_VALUE：分组的第一个数据</p>
+<p>LAG：分组的后几个数据。Lagging 落后于</p>
+<p>LAST_VALUE：分组的最后一个数据</p>
+<p>LEAD：分组的前几个数据。Leading 领先于</p>
+<p>MAX</p>
+<p>MIN</p>
+<p>NTH_VALUE：返回相对于窗口的第一行的窗口框架的指定行的表达式值。</p>
+<p>NTILE：将分区中已排序的行划分为大小尽可能相等的指定数量的已排名组，并返回给定行所在的组。</p>
+<p>PERCENT_RANK：百分比排名函数。计算公式：(rank - 1) &#x2F; (rows - 1)</p>
+<p>RANK：递增跳跃的序列号1,1,3</p>
+<p>ROW_NUMBER：依次递增的序列号1,2,3</p>
+<p>SUM</p>
+<h2 id="简单分类"><a href="#简单分类" class="headerlink" title="简单分类"></a>简单分类</h2><p>序号函数：row_number() &#x2F; rank() &#x2F; dense_rank()</p>
+<p>分布函数：percent_rank() &#x2F; cume_dist()</p>
+<p>前后函数：lag() &#x2F; lead()</p>
+<p>头尾函数：first_val() &#x2F; last_val()</p>
+<p>其他函数：nth_value() &#x2F; ntile()</p>
+<h2 id="OVER-子句"><a href="#OVER-子句" class="headerlink" title="OVER 子句"></a>OVER 子句</h2><p>analytic functions：分析函数</p>
+<p>aggregate functions：聚合函数</p>
+<p>调用纯分析函数（例如：<code>LEAD()</code> 、<code>RANK()</code> 、<code>FIRST_VALUE()</code>）必须使用 OVER 子句。</p>
+<p>当调用的聚合函数包含 OVER 子句时（例如：<code>MAX()</code>、<code>COUNT()</code> 、<code>SUM()</code>），它们将作为分析函数运行。</p>
+<p><strong>语法:</strong> </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span>(args) <span class="keyword">OVER</span>([partition_by_clause] [order_by_clause [window_clause]])</span><br><span class="line"></span><br><span class="line">partition_by_clause ::<span class="operator">=</span> <span class="keyword">PARTITION</span> <span class="keyword">BY</span> expr [, expr ...]</span><br><span class="line">order_by_clause ::<span class="operator">=</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> expr  [<span class="keyword">ASC</span> <span class="operator">|</span> <span class="keyword">DESC</span>] [<span class="keyword">NULLS FIRST</span> <span class="operator">|</span> <span class="keyword">NULLS LAST</span>] [, expr [<span class="keyword">ASC</span> <span class="operator">|</span> <span class="keyword">DESC</span>] [<span class="keyword">NULLS FIRST</span> <span class="operator">|</span> <span class="keyword">NULLS LAST</span>] ...]</span><br></pre></td></tr></table></figure>
+
+<h2 id="限制"><a href="#限制" class="headerlink" title="限制"></a>限制</h2><p>不能直接将 <code>DISTINCT</code> 运算符与分析函数调用结合起来。可以将分析函数调用放在 <code>WITH</code> 子句或内联视图中，并将 <code>DISTINCT</code>运算符应用于其结果集。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">WITH tt (</span><br><span class="line">	SELECT</span><br><span class="line">		x,</span><br><span class="line">		sum(x) OVER (PARTITION BY x) AS total</span><br><span class="line">	 FROM t1</span><br><span class="line">)</span><br><span class="line">  SELECT DISTINCT x, total FROM tt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="window-子句"><a href="#window-子句" class="headerlink" title="window 子句"></a>window 子句</h2><p>窗口子句仅允许与 ORDER BY 子句组合使用。</p>
+<p>如果指定了ORDER BY子句，但没有指定 window 子句，默认窗口是 <font color="red"><code>RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</code></font>。</p>
+<p>某些分析函数接受可选的 window 子句，该子句使函数仅分析当前行“周围”的某些行，而不是分区中的所有行。例如，您可以通过指定一定数量的前行和后行来获得移动平均数，或者通过指定截至当前位置的所有行来获得运行计数或运行总计。该子句可能导致同一分区内的行的分析结果不同。</p>
+<p>支持窗口子句的函数：<code>AVG()</code> 、<code>COUNT()</code> 、<code>FIRST_VALUE()</code> 、<code>LAST_VALUE()</code> 、<code>SUM()</code> 。</p>
+<p>对于 <code>MAX()</code> 和 <code>MIN()</code>，仅当开始边界为 <code>UNBOUNDED PRECEDING</code> 时才允许使用 window 子句。</p>
+<p><strong>语法:</strong> </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ROWS</span> <span class="keyword">BETWEEN</span> [ &#123; m <span class="operator">|</span> UNBOUNDED &#125; PRECEDING <span class="operator">|</span> <span class="keyword">CURRENT</span> <span class="type">ROW</span>] [ <span class="keyword">AND</span> [<span class="keyword">CURRENT</span> <span class="type">ROW</span> <span class="operator">|</span> &#123; UNBOUNDED <span class="operator">|</span> n &#125; FOLLOWING] ]</span><br><span class="line"><span class="keyword">RANGE</span> <span class="keyword">BETWEEN</span> [ &#123;m <span class="operator">|</span> UNBOUNDED &#125; PRECEDING <span class="operator">|</span> <span class="keyword">CURRENT</span> <span class="type">ROW</span>] [ <span class="keyword">AND</span> [<span class="keyword">CURRENT</span> <span class="type">ROW</span> <span class="operator">|</span> &#123; UNBOUNDED <span class="operator">|</span> n &#125; FOLLOWING] ]</span><br></pre></td></tr></table></figure>
+
+<p><code>ROWS BETWEEN</code> 根据结果集中行的索引定义窗口的大小。窗口的大小是根据结果集中的位置子句预测的。</p>
+<p><code>RANGE BETWEEN</code> 当前不支持使用数字参数来定义可变大小的滑动窗口。</p>
+<p>目前，Impala 仅支持 <code>RANGE</code> 子句的一些参数组合：</p>
+<ul>
+<li><font color="red"><code>RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</code></font>（当指定了 <code>ORDER BY</code> 并且省略了 window子句 时的默认值）</li>
+<li><code>RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING</code></li>
+<li><code>RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING</code></li>
+</ul>
+<p>使用时 <code>RANGE</code>，<code>CURRENT ROW</code>不仅包括当前行，还包括基于 <code>ORDER BY</code> 表达式与当前行关联的所有行。</p>
+<h2 id="窗口函数参考"><a href="#窗口函数参考" class="headerlink" title="窗口函数参考"></a>窗口函数参考</h2><p> <a target="_blank" rel="noopener" href="https://docs.aws.amazon.com/zh_cn/redshift/latest/dg/c_SQL_functions.html">https://docs.aws.amazon.com/zh_cn/redshift/latest/dg/c_SQL_functions.html</a> </p>
+<h1 id="位函数"><a href="#位函数" class="headerlink" title="位函数"></a>位函数</h1><p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_bit_functions.html#bit_functions">https://impala.apache.org/docs/build/html/topics/impala_bit_functions.html#bit_functions</a> </p>
+<h1 id="杂项功能"><a href="#杂项功能" class="headerlink" title="杂项功能"></a>杂项功能</h1><p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_misc_functions.html#misc_functions">https://impala.apache.org/docs/build/html/topics/impala_misc_functions.html#misc_functions</a> </p>
+<p>Impala 支持以下不对特定列或数据类型进行操作的实用程序函数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">CURRENT_DATABASE</span><br><span class="line">EFFECTIVE_USER</span><br><span class="line">GET_JSON_OBJECT</span><br><span class="line">LOGGED_IN_USER</span><br><span class="line">PID</span><br><span class="line">SLEEP</span><br><span class="line">USER</span><br><span class="line">UUID</span><br><span class="line">VERSION</span><br><span class="line">COORDINATOR</span><br></pre></td></tr></table></figure>
+
+<h1 id="关联查询语句"><a href="#关联查询语句" class="headerlink" title="关联查询语句"></a>关联查询语句</h1><p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_joins.html">https://impala.apache.org/docs/build/html/topics/impala_joins.html</a> </p>
+<p>full outer join 	不超过万速度还可以</p>
+<p>cross join		不超过万速度还可以，又称为笛卡尔乘积，实际上是把两个表乘起来，理论上不应该支持on语法</p>
+<p>natural join	自然连接不支持</p>
+<h1 id="连接查询的性能注意事项"><a href="#连接查询的性能注意事项" class="headerlink" title="连接查询的性能注意事项"></a>连接查询的性能注意事项</h1><p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_perf_joins.html">https://impala.apache.org/docs/build/html/topics/impala_perf_joins.html</a> </p>
+<h1 id="EXPLAIN语句"><a href="#EXPLAIN语句" class="headerlink" title="EXPLAIN语句"></a>EXPLAIN语句</h1><p> <a target="_blank" rel="noopener" href="https://impala.apache.org/docs/build/html/topics/impala_explain.html">https://impala.apache.org/docs/build/html/topics/impala_explain.html</a> </p>
+<h1 id="ApacheImpala优化建议子集"><a href="#ApacheImpala优化建议子集" class="headerlink" title="ApacheImpala优化建议子集"></a>ApacheImpala优化建议子集</h1><p>1、尽量使用数字类型</p>
+<p>2、选择字段的字段只选择需要的字段</p>
+<p>3、left join时左边放大表表右边放小表，right join时右大左小</p>
+<p>4、Join 字段最好使用整数类型。</p>
+<h1 id="行转列"><a href="#行转列" class="headerlink" title="行转列"></a>行转列</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">	operator,</span><br><span class="line">	year_1,</span><br><span class="line">	year_2,</span><br><span class="line">	year_3 </span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line">	(</span><br><span class="line">	<span class="keyword">SELECT</span></span><br><span class="line">		operator <span class="keyword">AS</span> operator,</span><br><span class="line">		<span class="keyword">YEAR</span> &quot;year_1&quot;,</span><br><span class="line">		<span class="built_in">lead</span>( <span class="keyword">YEAR</span>, <span class="number">1</span> ) <span class="keyword">over</span> ( <span class="keyword">PARTITION</span> <span class="keyword">BY</span> operator <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="keyword">YEAR</span> ) &quot;year_2&quot;,</span><br><span class="line">		<span class="built_in">lead</span>( <span class="keyword">YEAR</span>, <span class="number">2</span> ) <span class="keyword">over</span> ( <span class="keyword">PARTITION</span> <span class="keyword">BY</span> operator <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="keyword">YEAR</span> ) &quot;year_3&quot;,</span><br><span class="line">		<span class="built_in">row_number</span>() <span class="keyword">over</span> ( <span class="keyword">PARTITION</span> <span class="keyword">BY</span> operator <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="keyword">YEAR</span> ) rn </span><br><span class="line">	<span class="keyword">FROM</span></span><br><span class="line">		( <span class="keyword">SELECT</span> <span class="string">&#x27;65222&#x27;</span> <span class="keyword">AS</span> operator, <span class="string">&#x27;1&#x27;</span> <span class="keyword">AS</span> <span class="keyword">YEAR</span> <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> <span class="string">&#x27;65222&#x27;</span>, <span class="string">&#x27;2&#x27;</span> <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> <span class="string">&#x27;65222&#x27;</span>, <span class="string">&#x27;3&#x27;</span> ) tt </span><br><span class="line">	) a </span><br><span class="line"><span class="keyword">WHERE</span></span><br><span class="line">	rn <span class="operator">=</span> <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="多行聚合一行"><a href="#多行聚合一行" class="headerlink" title="多行聚合一行"></a>多行聚合一行</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">	tt.site,</span><br><span class="line">	group_concat( band SEPARATOR <span class="string">&#x27;+&#x27;</span> ) <span class="keyword">AS</span> band_plus </span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line">	(</span><br><span class="line">	<span class="keyword">SELECT</span></span><br><span class="line">		<span class="string">&#x27;700M&#x27;</span> <span class="keyword">AS</span> band,</span><br><span class="line">		<span class="string">&#x27;b&#x27;</span> <span class="keyword">AS</span> site <span class="keyword">UNION</span> <span class="keyword">ALL</span></span><br><span class="line">	<span class="keyword">SELECT</span></span><br><span class="line">		<span class="string">&#x27;700M&#x27;</span>,</span><br><span class="line">		<span class="string">&#x27;a&#x27;</span> <span class="keyword">UNION</span> <span class="keyword">ALL</span></span><br><span class="line">	<span class="keyword">SELECT</span></span><br><span class="line">		<span class="string">&#x27;2100M&#x27;</span>,</span><br><span class="line">		<span class="string">&#x27;a&#x27;</span> <span class="keyword">UNION</span> <span class="keyword">ALL</span></span><br><span class="line">	<span class="keyword">SELECT</span></span><br><span class="line">		<span class="string">&#x27;2600M&#x27;</span>,</span><br><span class="line">		<span class="string">&#x27;a&#x27;</span> <span class="keyword">UNION</span> <span class="keyword">ALL</span></span><br><span class="line">	<span class="keyword">SELECT</span></span><br><span class="line">		<span class="string">&#x27;850M&#x27;</span>,</span><br><span class="line">		<span class="string">&#x27;b&#x27;</span> </span><br><span class="line">	) tt </span><br><span class="line"><span class="keyword">GROUP</span> <span class="keyword">BY</span></span><br><span class="line">	tt.site</span><br></pre></td></tr></table></figure>
+
+<h1 id="一行切割为多行"><a href="#一行切割为多行" class="headerlink" title="一行切割为多行"></a>一行切割为多行</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 数据表条数必须大于等于字段分割后的最大项数</span></span><br><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">	r1.site,</span><br><span class="line">	r1.union_frequencty,</span><br><span class="line">	split_part ( r1.union_frequencty, <span class="string">&#x27;+&#x27;</span>, item_num ) union_frequencty_split </span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line">	( <span class="keyword">SELECT</span> <span class="string">&#x27;a&#x27;</span> <span class="keyword">AS</span> site, <span class="string">&#x27;700M+2100M+2600M&#x27;</span> <span class="keyword">AS</span> union_frequencty <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;700M+850M&#x27;</span> <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;700M+900M&#x27;</span> <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> <span class="string">&#x27;d&#x27;</span>, <span class="string">&#x27;700M+1800M&#x27;</span> ) r1</span><br><span class="line">	<span class="keyword">CROSS</span> <span class="keyword">JOIN</span> (</span><br><span class="line">	<span class="keyword">SELECT</span></span><br><span class="line">		item_num </span><br><span class="line">	<span class="keyword">FROM</span></span><br><span class="line">		(</span><br><span class="line">		<span class="keyword">SELECT</span></span><br><span class="line">			<span class="built_in">row_number</span>() <span class="keyword">over</span> ( <span class="keyword">ORDER</span> <span class="keyword">BY</span> union_frequencty ) item_num </span><br><span class="line">		<span class="keyword">FROM</span></span><br><span class="line">			( <span class="keyword">SELECT</span> <span class="string">&#x27;a&#x27;</span> <span class="keyword">AS</span> site, <span class="string">&#x27;700M+2100M+2600M&#x27;</span> <span class="keyword">AS</span> union_frequencty <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;700M+850M&#x27;</span> <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;700M+900M&#x27;</span> <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> <span class="string">&#x27;d&#x27;</span>, <span class="string">&#x27;700M+1800M&#x27;</span> ) tt </span><br><span class="line">		) aa </span><br><span class="line">	<span class="keyword">WHERE</span></span><br><span class="line">		item_num <span class="operator">&lt;=</span> <span class="number">10</span> <span class="comment">-- 分割后的最大项数限制为10，这里不一定要这么些，只要查出1-10的序列即可</span></span><br><span class="line">	) r2 </span><br><span class="line"><span class="keyword">WHERE</span></span><br><span class="line">    <span class="comment">-- CROSS JOIN条件，保证笛卡尔积后的条数等于该条数据的项数</span></span><br><span class="line">	item_num <span class="operator">&lt;=</span> (length( r1.union_frequencty ) <span class="operator">-</span> length(REPLACE ( r1.union_frequencty, <span class="string">&#x27;+&#x27;</span>, <span class="string">&#x27;&#x27;</span> )))<span class="operator">+</span> <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+
+<h1 id="不同排序维度数据提取"><a href="#不同排序维度数据提取" class="headerlink" title="不同排序维度数据提取"></a>不同排序维度数据提取</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">	tt.<span class="operator">*</span>,</span><br><span class="line">	<span class="built_in">rank</span>() <span class="keyword">over</span> ( <span class="keyword">PARTITION</span> <span class="keyword">BY</span> part <span class="keyword">ORDER</span> <span class="keyword">BY</span> download ) rank_num,<span class="comment">-- 递增跳跃的序列号 1,2,2,4</span></span><br><span class="line">	<span class="built_in">dense_rank</span>() <span class="keyword">over</span> ( <span class="keyword">PARTITION</span> <span class="keyword">BY</span> part <span class="keyword">ORDER</span> <span class="keyword">BY</span> download ) dense_rank_num,<span class="comment">-- 递增不跳跃并列的序列号 1,2,2,3</span></span><br><span class="line">	<span class="built_in">row_number</span>() <span class="keyword">over</span> ( <span class="keyword">PARTITION</span> <span class="keyword">BY</span> part <span class="keyword">ORDER</span> <span class="keyword">BY</span> download ) row_num <span class="comment">-- 依次递增的序列号 1,2,3,4</span></span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line">	( <span class="keyword">SELECT</span> <span class="string">&#x27;A&#x27;</span> <span class="keyword">AS</span> part, <span class="string">&#x27;3&#x27;</span> <span class="keyword">AS</span> download <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> <span class="string">&#x27;A&#x27;</span>, <span class="string">&#x27;5&#x27;</span> <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> <span class="string">&#x27;A&#x27;</span>, <span class="string">&#x27;2&#x27;</span> <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> <span class="string">&#x27;A&#x27;</span>, <span class="string">&#x27;3&#x27;</span> ) tt</span><br></pre></td></tr></table></figure>
+
+<h1 id="经纬度计算距离"><a href="#经纬度计算距离" class="headerlink" title="经纬度计算距离"></a>经纬度计算距离</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">	round(</span><br><span class="line">		<span class="number">6371004</span> <span class="operator">*</span></span><br><span class="line">		<span class="number">2</span> <span class="operator">*</span></span><br><span class="line">		<span class="built_in">asin</span>(</span><br><span class="line">			<span class="built_in">sqrt</span>(</span><br><span class="line">				<span class="built_in">power</span>( <span class="built_in">sin</span>( (radians(g3latitude)<span class="operator">-</span>radians(g4latitude)) <span class="operator">/</span> <span class="number">2</span> ), <span class="number">2</span> ) <span class="operator">+</span></span><br><span class="line">				<span class="built_in">cos</span>( radians(g3latitude)) <span class="operator">*</span> <span class="built_in">cos</span>(radians(g4latitude)) <span class="operator">*</span> <span class="built_in">power</span>( <span class="built_in">sin</span>( (radians(g3longitude)<span class="operator">-</span>radians(g4longitude)) <span class="operator">/</span> <span class="number">2</span> ), <span class="number">2</span> )</span><br><span class="line">				)</span><br><span class="line">			)</span><br><span class="line">		) <span class="keyword">as</span> distances </span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line">	( <span class="keyword">SELECT</span> <span class="string">&#x27;-31.390778&#x27;</span> <span class="keyword">AS</span> g3latitude, <span class="string">&#x27;-64.253167&#x27;</span> <span class="keyword">AS</span> g3longitude, <span class="string">&#x27;-31.164440&#x27;</span> <span class="keyword">AS</span> g4latitude, <span class="string">&#x27;-64.315277&#x27;</span> <span class="keyword">AS</span> g4longitude ) tt</span><br></pre></td></tr></table></figure>
+
+<h1 id="线性回归-线性拟合"><a href="#线性回归-线性拟合" class="headerlink" title="线性回归&#x2F;线性拟合"></a>线性回归&#x2F;线性拟合</h1><table>
+<thead>
+<tr>
+<th>处理前数据</th>
+<th>month</th>
+<th>xx</th>
+<th>yy</th>
+<th>预期输出</th>
+<th>month</th>
+<th>xx</th>
+<th>yy</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td>2019-09</td>
+<td>2723822.6</td>
+<td>1.44</td>
+<td></td>
+<td>2019-09</td>
+<td>2723822.6</td>
+<td>1.44</td>
+</tr>
+<tr>
+<td></td>
+<td>2019-10</td>
+<td>2740666.4</td>
+<td>1.47</td>
+<td></td>
+<td>2019-10</td>
+<td>2740666.4</td>
+<td>1.47</td>
+</tr>
+<tr>
+<td></td>
+<td>2019-11</td>
+<td>2847629.4</td>
+<td>1.49</td>
+<td></td>
+<td>2019-11</td>
+<td>2847629.4</td>
+<td>1.49</td>
+</tr>
+<tr>
+<td></td>
+<td>2020-01</td>
+<td>2830692.2</td>
+<td>1.51</td>
+<td></td>
+<td>2020-01</td>
+<td>2830692.2</td>
+<td>1.51</td>
+</tr>
+<tr>
+<td></td>
+<td>2020-02</td>
+<td>2751622.5</td>
+<td>1.53</td>
+<td></td>
+<td>2020-02</td>
+<td>2751622.5</td>
+<td>1.53</td>
+</tr>
+<tr>
+<td></td>
+<td>2020-03</td>
+<td>2828788.1</td>
+<td>1.54</td>
+<td></td>
+<td>2020-03</td>
+<td>2828788.1</td>
+<td>1.54</td>
+</tr>
+<tr>
+<td></td>
+<td>2020-04</td>
+<td>3009157.4</td>
+<td>1.58</td>
+<td></td>
+<td>2020-04</td>
+<td>3009157.4</td>
+<td>1.58</td>
+</tr>
+<tr>
+<td></td>
+<td>2020-05</td>
+<td>2870360.3</td>
+<td>1.62</td>
+<td></td>
+<td>2020-05</td>
+<td>2870360.3</td>
+<td>1.62</td>
+</tr>
+<tr>
+<td></td>
+<td>2020-06</td>
+<td>2958902.3</td>
+<td>1.66</td>
+<td></td>
+<td>2020-06</td>
+<td>2958902.3</td>
+<td>1.66</td>
+</tr>
+<tr>
+<td></td>
+<td>2020-07</td>
+<td>3023999.5</td>
+<td></td>
+<td></td>
+<td>2020-07</td>
+<td>3023999.5</td>
+<td>1.64</td>
+</tr>
+<tr>
+<td></td>
+<td>2020-08</td>
+<td>3136022.3</td>
+<td></td>
+<td></td>
+<td>2020-08</td>
+<td>3136022.3</td>
+<td>1.70</td>
+</tr>
+<tr>
+<td></td>
+<td>2020-09</td>
+<td>3265788.6</td>
+<td></td>
+<td></td>
+<td>2020-09</td>
+<td>3265788.6</td>
+<td>1.78</td>
+</tr>
+<tr>
+<td></td>
+<td>2020-10</td>
+<td>3348522.8</td>
+<td></td>
+<td></td>
+<td>2020-10</td>
+<td>3348522.8</td>
+<td>1.82</td>
+</tr>
+<tr>
+<td></td>
+<td>2020-11</td>
+<td>3439811.7</td>
+<td></td>
+<td></td>
+<td>2020-11</td>
+<td>3439811.7</td>
+<td>1.87</td>
+</tr>
+<tr>
+<td></td>
+<td>2020-12</td>
+<td>3532455.9</td>
+<td></td>
+<td></td>
+<td>2020-12</td>
+<td>3532455.9</td>
+<td>1.93</td>
+</tr>
+</tbody></table>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> IF <span class="keyword">EXISTS</span> base_table;</span><br><span class="line"><span class="keyword">CREATE TABLE</span> base_table <span class="keyword">as</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2019-09&#x27;</span> <span class="keyword">as</span> <span class="keyword">month</span>, <span class="number">2723822.6</span> <span class="keyword">as</span> xx, <span class="number">1.44</span> <span class="keyword">as</span> yy <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2019-10&#x27;</span>, <span class="number">2740666.4</span>, <span class="number">1.47</span> <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2019-11&#x27;</span>, <span class="number">2847629.4</span>, <span class="number">1.49</span> <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2020-01&#x27;</span>, <span class="number">2830692.2</span>, <span class="number">1.51</span> <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2020-02&#x27;</span>, <span class="number">2751622.5</span>, <span class="number">1.53</span> <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2020-03&#x27;</span>, <span class="number">2828788.1</span>, <span class="number">1.54</span> <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2020-04&#x27;</span>, <span class="number">3009157.4</span>, <span class="number">1.58</span> <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2020-05&#x27;</span>, <span class="number">2870360.3</span>, <span class="number">1.62</span> <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2020-06&#x27;</span>, <span class="number">2958902.3</span>, <span class="number">1.66</span> <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2020-07&#x27;</span>, <span class="number">3023999.5</span>, <span class="keyword">null</span> <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2020-08&#x27;</span>, <span class="number">3136022.3</span>, <span class="keyword">null</span> <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2020-09&#x27;</span>, <span class="number">3265788.6</span>, <span class="keyword">null</span> <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2020-10&#x27;</span>, <span class="number">3348522.8</span>, <span class="keyword">null</span> <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2020-11&#x27;</span>, <span class="number">3439811.7</span>, <span class="keyword">null</span> <span class="keyword">from</span> dual <span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;2020-12&#x27;</span>, <span class="number">3532455.9</span>, <span class="keyword">null</span> <span class="keyword">from</span> dual;</span><br><span class="line"></span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> IF <span class="keyword">EXISTS</span> middle_table_1;</span><br><span class="line"><span class="keyword">CREATE TABLE</span> middle_table_1 <span class="keyword">AS</span></span><br><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">	tt.<span class="operator">*</span>,</span><br><span class="line">	<span class="keyword">CASE</span></span><br><span class="line">		<span class="keyword">WHEN</span> yy <span class="keyword">IS</span> <span class="keyword">NOT NULL</span> <span class="keyword">THEN</span> <span class="number">1</span></span><br><span class="line">		<span class="keyword">ELSE</span> <span class="number">6</span></span><br><span class="line">	<span class="keyword">END</span> <span class="keyword">AS</span> mark,</span><br><span class="line">	<span class="built_in">row_number</span>() <span class="keyword">over</span> ( <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="keyword">MONTH</span> ) <span class="keyword">AS</span> row_num</span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line">	base_table tt;</span><br><span class="line"></span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> IF <span class="keyword">EXISTS</span> middle_table_2;</span><br><span class="line"><span class="keyword">CREATE TABLE</span> middle_table_2 <span class="keyword">AS</span></span><br><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">	<span class="built_in">avg</span>( xx ) <span class="keyword">AS</span> x_avg,</span><br><span class="line">	<span class="built_in">avg</span>( yy ) <span class="keyword">AS</span> y_avg </span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line">	middle_table_1 tt </span><br><span class="line"><span class="keyword">WHERE</span></span><br><span class="line">	mark <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> IF <span class="keyword">EXISTS</span> middle_table_3;</span><br><span class="line"><span class="keyword">CREATE TABLE</span> middle_table_3 <span class="keyword">AS</span></span><br><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">	aa.<span class="operator">*</span>,</span><br><span class="line">	bb.<span class="operator">*</span>,</span><br><span class="line">	( xx <span class="operator">-</span> x_avg ) <span class="operator">*</span> ( yy <span class="operator">-</span> y_avg ) <span class="keyword">AS</span> b_numerator,</span><br><span class="line">	<span class="built_in">power</span>( ( xx <span class="operator">-</span> x_avg ), <span class="number">2</span> ) <span class="keyword">AS</span> b_denominator</span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line">	middle_table_1 aa</span><br><span class="line">	<span class="keyword">CROSS</span> <span class="keyword">JOIN</span> middle_table_2 bb;</span><br><span class="line"></span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> IF <span class="keyword">EXISTS</span> middle_table_4;</span><br><span class="line"><span class="keyword">CREATE TABLE</span> middle_table_4 <span class="keyword">AS</span></span><br><span class="line"><span class="comment">-- (2) 、参数表1关联系数b,算出系数a</span></span><br><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">	aa.<span class="operator">*</span>,</span><br><span class="line">	bb.b,</span><br><span class="line">	aa.y_avg <span class="operator">-</span> bb.b <span class="operator">*</span> aa.x_avg <span class="keyword">AS</span> a </span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line">	middle_table_2 aa</span><br><span class="line">	<span class="keyword">CROSS</span> <span class="keyword">JOIN</span></span><br><span class="line">	<span class="comment">-- (1) 、通过标记行算出b_numerator和b_denominator各自的和,相除之后就是</span></span><br><span class="line">	( <span class="keyword">SELECT</span> <span class="built_in">sum</span>( b_numerator )<span class="operator">/</span> <span class="built_in">sum</span>( b_denominator ) <span class="keyword">AS</span> b <span class="keyword">FROM</span> middle_table_3 <span class="keyword">WHERE</span> mark <span class="operator">=</span> <span class="number">1</span> ) bb;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 最终</span></span><br><span class="line"><span class="keyword">SELECT</span> </span><br><span class="line">	<span class="keyword">month</span>,</span><br><span class="line">	xx,</span><br><span class="line">	<span class="keyword">CASE</span></span><br><span class="line">		<span class="keyword">WHEN</span> mark <span class="operator">=</span> <span class="number">1</span> <span class="keyword">THEN</span> yy</span><br><span class="line">		<span class="keyword">ELSE</span> b <span class="operator">*</span> xx <span class="operator">+</span> a</span><br><span class="line">	<span class="keyword">END</span> <span class="keyword">AS</span> y_new <span class="comment">-- 算出来的值</span></span><br><span class="line">	<span class="keyword">FROM</span></span><br><span class="line">	<span class="comment">-- 将主表2和参数表2进行全关联 ,获取a，b</span></span><br><span class="line">	( <span class="keyword">SELECT</span> aa.<span class="operator">*</span>, a, b <span class="keyword">FROM</span> middle_table_3 aa <span class="keyword">CROSS</span> <span class="keyword">JOIN</span> middle_table_4 bb ) cc;</span><br></pre></td></tr></table></figure>
+
+<h1 id="待熟练函数"><a href="#待熟练函数" class="headerlink" title="待熟练函数"></a>待熟练函数</h1><pre><code>	获取数值的对应的百分位数值percentile
+</code></pre>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Impala/" rel="tag"># Impala</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/03/HTTP%E3%80%81HTTPS%E5%92%8CHTTP2/" rel="prev" title="HTTP、HTTPS和HTTP2">
+                  <i class="fa fa-angle-left"></i> HTTP、HTTPS和HTTP2
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/03/Web%E5%BC%80%E5%8F%91%E8%BF%87%E7%A8%8B%E4%B8%AD%E5%A6%82%E4%BD%95%E7%BB%9F%E4%B8%80%E6%97%B6%E5%8C%BA/" rel="next" title="Web开发过程中如何统一时区">
+                  Web开发过程中如何统一时区 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

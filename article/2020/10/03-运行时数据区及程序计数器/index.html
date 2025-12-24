@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="[toc] 3. 运行时数据区及程序计数器3.1. 运行时数据区3.1.1. 概述本节主要讲的是运行时数据区，也就是下图这部分，它是在类加载完成后的阶段  当我们通过前面的：类的加载-&gt; 验证 -&gt; 准备 -&gt; 解析 -&gt; 初始化 这几个阶段完成后，就会用到执行引擎对我们的类进行使用，同时执行引擎将会使用到我们运行时数据区  内存是非常重要的系统资源，是硬盘和 CP">
+<meta property="og:type" content="article">
+<meta property="og:title" content="03-运行时数据区及程序计数器">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="[toc] 3. 运行时数据区及程序计数器3.1. 运行时数据区3.1.1. 概述本节主要讲的是运行时数据区，也就是下图这部分，它是在类加载完成后的阶段  当我们通过前面的：类的加载-&gt; 验证 -&gt; 准备 -&gt; 解析 -&gt; 初始化 这几个阶段完成后，就会用到执行引擎对我们的类进行使用，同时执行引擎将会使用到我们运行时数据区  内存是非常重要的系统资源，是硬盘和 CP">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/b5d91ce04cfef9a681bbed216732511a.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/b3cd82be688254afd263db9094e004a7.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/d6f0aac226ebab0c435b8fe79995eddc.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/bbf59f2544890b06cdb69b2d7719c060.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/d9139f792f2d10eb03fb827da25b3b28.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/0f0cce71a35c12ef13e6482d0663dc21.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/efc4643bdd550c6ecacb9d764e71890e.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/e6785d89d74d694f7cfe22ba74a164d9.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/998d864c026e5d6b565d1cfaecda2bb0.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/68aa12d47725e4559e6b71489d91122e.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/bbab7cdab74c493af70b423f06e6ff86.png">
+<meta property="article:published_time" content="2020-10-03T01:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-03T01:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="JVM上篇：内存与垃圾回收篇">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/b5d91ce04cfef9a681bbed216732511a.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/","path":"article/2020/10/03-运行时数据区及程序计数器/","title":"03-运行时数据区及程序计数器"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>03-运行时数据区及程序计数器 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8"><span class="nav-number">1.</span> <span class="nav-text">3. 运行时数据区及程序计数器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA"><span class="nav-number">1.1.</span> <span class="nav-text">3.1. 运行时数据区</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-1-%E6%A6%82%E8%BF%B0"><span class="nav-number">1.1.1.</span> <span class="nav-text">3.1.1. 概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-2-%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.1.2.</span> <span class="nav-text">3.1.2. 线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-3-JVM-%E7%B3%BB%E7%BB%9F%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.1.3.</span> <span class="nav-text">3.1.3. JVM 系统线程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8-PC-%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">1.2.</span> <span class="nav-text">3.2. 程序计数器(PC 寄存器)</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="03-运行时数据区及程序计数器 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          03-运行时数据区及程序计数器
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-10-03 09:00:00" itemprop="dateCreated datePublished" datetime="2020-10-03T09:00:00+08:00">2020-10-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><span id="more"></span>
+
+
+
+<p>[toc]</p>
+<h1 id="3-运行时数据区及程序计数器"><a href="#3-运行时数据区及程序计数器" class="headerlink" title="3. 运行时数据区及程序计数器"></a>3. 运行时数据区及程序计数器</h1><h2 id="3-1-运行时数据区"><a href="#3-1-运行时数据区" class="headerlink" title="3.1. 运行时数据区"></a>3.1. 运行时数据区</h2><h3 id="3-1-1-概述"><a href="#3-1-1-概述" class="headerlink" title="3.1.1. 概述"></a>3.1.1. 概述</h3><p>本节主要讲的是运行时数据区，也就是下图这部分，它是在类加载完成后的阶段</p>
+<p><img src="/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/b5d91ce04cfef9a681bbed216732511a.png" alt="image-20200705111640511"></p>
+<p>当我们通过前面的：类的加载-&gt; 验证 -&gt; 准备 -&gt; 解析 -&gt; 初始化 这几个阶段完成后，就会用到执行引擎对我们的类进行使用，同时执行引擎将会使用到我们运行时数据区</p>
+<p><img src="/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/b3cd82be688254afd263db9094e004a7.png" alt="image-20200705111843003"></p>
+<p>内存是非常重要的系统资源，是硬盘和 CPU 的中间仓库及桥梁，承载着操作系统和应用程序的实时运行 JVM 内存布局规定了 Java 在运行过程中内存申请、分配、管理的策略，保证了 JVM 的高效稳定运行。不同的 JVM 对于内存的划分方式和管理机制存在着部分差异。结合 JVM 虚拟机规范，来探讨一下经典的 JVM 内存布局。</p>
+<p><img src="/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/d6f0aac226ebab0c435b8fe79995eddc.png" alt="image-20210509174724223"></p>
+<p>我们把大厨后面的东西（切好的菜，刀，调料），比作是运行时数据区。而厨师可以类比于执行引擎，将通过准备的东西进行制作成精美的菜品</p>
+<p><img src="/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/bbf59f2544890b06cdb69b2d7719c060.png" alt="image-20210509174543026"></p>
+<p>我们通过磁盘或者网络 IO 得到的数据，都需要先加载到内存中，然后 CPU 从内存中获取数据进行读取，也就是说内存充当了 CPU 和磁盘之间的桥梁</p>
+<p><img src="/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/d9139f792f2d10eb03fb827da25b3b28.png" alt="image-20200705112416101"></p>
+<p>Java 虚拟机定义了若干种程序运行期间会使用到的运行时数据区，其中有一些会随着虚拟机启动而创建，随着虚拟机退出而销毁。另外一些则是与线程一一对应的，这些与线程对应的数据区域会随着线程开始和结束而创建和销毁。</p>
+<p>灰色的为单独线程私有的，红色的为多个线程共享的。即：</p>
+<ul>
+<li>每个线程：独立包括程序计数器、栈、本地栈。</li>
+<li>线程间共享：堆、堆外内存（永久代或元空间、代码缓存）</li>
+</ul>
+<p><img src="/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/0f0cce71a35c12ef13e6482d0663dc21.png" alt="image-20200705112601211"></p>
+<p>每个 JVM 只有一个 Runtime 实例。即为运行时环境，相当于内存结构的中间的那个框框：运行时环境。</p>
+<p><img src="/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/efc4643bdd550c6ecacb9d764e71890e.png" alt="image-20210509173410373"></p>
+<h3 id="3-1-2-线程"><a href="#3-1-2-线程" class="headerlink" title="3.1.2. 线程"></a>3.1.2. 线程</h3><p>线程是一个程序里的运行单元。JVM 允许一个应用有多个线程并行的执行。 在 Hotspot JVM 里，每个线程都与操作系统的本地线程直接映射。</p>
+<p>当一个 Java 线程准备好执行以后，此时一个操作系统的本地线程也同时创建。Java 线程执行终止后，本地线程也会回收。</p>
+<p>操作系统负责所有线程的安排调度到任何一个可用的 CPU 上。一旦本地线程初始化成功，它就会调用 Java 线程中的 run()方法。</p>
+<h3 id="3-1-3-JVM-系统线程"><a href="#3-1-3-JVM-系统线程" class="headerlink" title="3.1.3. JVM 系统线程"></a>3.1.3. JVM 系统线程</h3><p>如果你使用 console 或者是任何一个调试工具，都能看到在后台有许多线程在运行。这些后台线程不包括调用<code>public static void main(String[] args)</code>的 main 线程以及所有这个 main 线程自己创建的线程。</p>
+<p>这些主要的后台系统线程在 Hotspot JVM 里主要是以下几个：</p>
+<ul>
+<li><mark>虚拟机线程</mark>：这种线程的操作是需要 JVM 达到安全点才会出现。这些操作必须在不同的线程中发生的原因是他们都需要 JVM 达到安全点，这样堆才不会变化。这种线程的执行类型包括”stop-the-world”的垃圾收集，线程栈收集，线程挂起以及偏向锁撤销。</li>
+<li><mark>周期任务线程</mark>：这种线程是时间周期事件的体现（比如中断），他们一般用于周期性操作的调度执行。</li>
+<li><mark>GC 线程</mark>：这种线程对在 JVM 里不同种类的垃圾收集行为提供了支持。</li>
+<li><mark>编译线程</mark>：这种线程在运行时会将字节码编译成到本地代码。</li>
+<li><mark>信号调度线程</mark>：这种线程接收信号并发送给 JVM，在它内部通过调用适当的方法进行处理。</li>
+</ul>
+<h2 id="3-2-程序计数器-PC-寄存器"><a href="#3-2-程序计数器-PC-寄存器" class="headerlink" title="3.2. 程序计数器(PC 寄存器)"></a>3.2. 程序计数器(PC 寄存器)</h2><p>JVM 中的程序计数寄存器（Program Counter Register）中，Register 的命名源于 CPU 的寄存器，寄存器存储指令相关的现场信息。CPU 只有把数据装载到寄存器才能够运行。这里，并非是广义上所指的物理寄存器，或许将其翻译为 PC 计数器（或指令计数器）会更加贴切（也称为程序钩子），并且也不容易引起一些不必要的误会。<mark>JVM 中的 PC 寄存器是对物理 PC 寄存器的一种抽象模拟</mark>。</p>
+<p><img src="/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/e6785d89d74d694f7cfe22ba74a164d9.png" alt="image-20200705155551919"></p>
+<p><strong>作用</strong></p>
+<p>PC 寄存器用来存储指向下一条指令的地址，也即将要执行的指令代码。由执行引擎读取下一条指令。</p>
+<p><img src="/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/998d864c026e5d6b565d1cfaecda2bb0.png" alt="image-20200705155728557"></p>
+<p>它是一块很小的内存空间，几乎可以忽略不记。也是<mark>运行速度最快的存储区域</mark>。</p>
+<p>在 JVM 规范中，<mark>每个线程都有它自己的程序计数器，是线程私有的，生命周期与线程的生命周期保持一致</mark>。</p>
+<p><mark>任何时间一个线程都只有一个方法在执行，也就是所谓的当前方法</mark>。程序计数器会存储当前线程正在执行的 Java 方法的 JVM 指令地址；或者，如果是在执行 native 方法，则是未指定值（undefined）。</p>
+<p>它是程序控制流的指示器，分支、循环、跳转、异常处理、线程恢复等基础功能都需要依赖这个计数器来完成。</p>
+<p>字节码解释器工作时就是通过改变这个计数器的值来选取下一条需要执行的字节码指令。</p>
+<p>它是唯一一个在 Java 虚拟机规范中没有规定任何 OutofMemoryError 情况的区域。</p>
+<p><strong>举例说明</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">minus</span><span class="params">()</span>&#123;</span><br><span class="line">    intc = <span class="number">3</span>;</span><br><span class="line">    intd = <span class="number">4</span>;</span><br><span class="line">    <span class="keyword">return</span> c - d;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>字节码文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">0: iconst_3</span><br><span class="line">1: istore_1</span><br><span class="line">2: iconst_4</span><br><span class="line">3: istore_2</span><br><span class="line">4: iload_1</span><br><span class="line">5: iload_2</span><br><span class="line">6: isub</span><br><span class="line">7: ireturn</span><br></pre></td></tr></table></figure>
+
+<p><strong>使用 PC 寄存器存储字节码指令地址有什么用呢？为什么使用 PC 寄存器记录当前线程的执行地址呢？</strong></p>
+<p>因为 CPU 需要不停的切换各个线程，这时候切换回来以后，就得知道接着从哪开始继续执行。</p>
+<p>JVM 的字节码解释器就需要通过改变 PC 寄存器的值来明确下一条应该执行什么样的字节码指令。</p>
+<p><img src="/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/68aa12d47725e4559e6b71489d91122e.png" alt="image-20200705161409533"></p>
+<p><strong>PC 寄存器为什么被设定为私有的？</strong></p>
+<p>我们都知道所谓的多线程在一个特定的时间段内只会执行其中某一个线程的方法，CPU 会不停地做任务切换，这样必然导致经常中断或恢复，如何保证分毫无差呢？<mark>为了能够准确地记录各个线程正在执行的当前字节码指令地址，最好的办法自然是为每一个线程都分配一个 PC 寄存器</mark>，这样一来各个线程之间便可以进行独立计算，从而不会出现相互干扰的情况。</p>
+<p>由于 CPU 时间片轮限制，众多线程在并发执行过程中，任何一个确定的时刻，一个处理器或者多核处理器中的一个内核，只会执行某个线程中的一条指令。</p>
+<p>这样必然导致经常中断或恢复，如何保证分毫无差呢？每个线程在创建后，都会产生自己的程序计数器和栈帧，程序计数器在各个线程之间互不影响。</p>
+<p><strong>CPU 时间片</strong></p>
+<p>CPU 时间片即 CPU 分配给各个程序的时间，每个线程被分配一个时间段，称作它的时间片。</p>
+<p>在宏观上：俄们可以同时打开多个应用程序，每个程序并行不悖，同时运行。</p>
+<p>但在微观上：由于只有一个 CPU，一次只能处理程序要求的一部分，如何处理公平，一种方法就是引入时间片，每个程序轮流执行。</p>
+<p><img src="/article/2020/10/03-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E5%8F%8A%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8/bbab7cdab74c493af70b423f06e6ff86.png" alt="image-20200705161849557"></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/JVM%E4%B8%8A%E7%AF%87%EF%BC%9A%E5%86%85%E5%AD%98%E4%B8%8E%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%AF%87/" rel="tag"># JVM上篇：内存与垃圾回收篇</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2020/10/02-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%AD%90%E7%B3%BB%E7%BB%9F/" rel="prev" title="02-类加载子系统">
+                  <i class="fa fa-angle-left"></i> 02-类加载子系统
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2020/10/04-%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88/" rel="next" title="04-虚拟机栈">
+                  04-虚拟机栈 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

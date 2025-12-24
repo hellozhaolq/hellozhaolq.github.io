@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="相比于高性能、高可用架构模式在最近几十年的迅猛发展来说，可扩展架构模式的发展可以说是步履蹒跚，最近几年火热的微服务模式算是可扩展模式发展历史中为数不多的亮点，但这也导致了现在谈可扩展的时候必谈微服务，甚至微服务架构都成了架构设计的银弹，高性能也用微服务、高可用也用微服务，很多时候这样的架构设计看起来高大上，实际上是大炮打蚊子，违背了架构设计的“合适原则”和“简单原则”。 为了帮助你在实践中更好的进">
+<meta property="og:type" content="article">
+<meta property="og:title" content="33可扩展架构模式-传统的可扩展架构模式：分层架构和SOA">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="相比于高性能、高可用架构模式在最近几十年的迅猛发展来说，可扩展架构模式的发展可以说是步履蹒跚，最近几年火热的微服务模式算是可扩展模式发展历史中为数不多的亮点，但这也导致了现在谈可扩展的时候必谈微服务，甚至微服务架构都成了架构设计的银弹，高性能也用微服务、高可用也用微服务，很多时候这样的架构设计看起来高大上，实际上是大炮打蚊子，违背了架构设计的“合适原则”和“简单原则”。 为了帮助你在实践中更好的进">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/7471e3ac441d4e1ebde8a1dc799806a8.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/bbed51cfc6f14ce59a1a9d76a6c7436d.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/99dec0a8ca02448e9058dc83c0452e0c.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/820396971e3a4681ac0e68c654a13d22.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/587dda6bfd084999b292cd0a32a4cbac.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/16b11ebcf8a04934b326741184bc11af.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/df7bd415c4fe4f0dbdefb23ae98751c5.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/f7107452d86145d7a2f8e2e8282aae83.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/8fe29236a52749699373858093453418.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/a7daa157a03a4ae2b1edc688c26b0176.png">
+<meta property="article:published_time" content="2023-06-03T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-06-03T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="从零开始学架构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/7471e3ac441d4e1ebde8a1dc799806a8.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/","path":"article/2023/06/33可扩展架构模式-传统的可扩展架构模式：分层架构和SOA/","title":"33可扩展架构模式-传统的可扩展架构模式：分层架构和SOA"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>33可扩展架构模式-传统的可扩展架构模式：分层架构和SOA | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">分层架构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#SOA"><span class="nav-number">2.</span> <span class="nav-text">SOA</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">小结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="33可扩展架构模式-传统的可扩展架构模式：分层架构和SOA | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          33可扩展架构模式-传统的可扩展架构模式：分层架构和SOA
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-06-03 08:00:00" itemprop="dateCreated datePublished" datetime="2023-06-03T08:00:00+08:00">2023-06-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%9E%B6%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">架构</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>相比于高性能、高可用架构模式在最近几十年的迅猛发展来说，可扩展架构模式的发展可以说是步履蹒跚，最近几年火热的微服务模式算是可扩展模式发展历史中为数不多的亮点，但这也导致了现在谈可扩展的时候必谈微服务，甚至微服务架构都成了架构设计的银弹，高性能也用微服务、高可用也用微服务，很多时候这样的架构设计看起来高大上，实际上是大炮打蚊子，违背了架构设计的“合适原则”和“简单原则”。</p>
+<p>为了帮助你在实践中更好的进行可扩展架构设计，我将分别介绍几种可扩展架构模式，指出每种架构模式的关键点和优缺点。今天我来介绍传统的可扩展模式，包括分层架构和SOA，后面还会介绍微服务架构。</p>
+<span id="more"></span>
+
+<h1 id="分层架构"><a href="#分层架构" class="headerlink" title="分层架构"></a>分层架构</h1><p>分层架构是很常见的架构模式，它也叫N层架构，通常情况下，N至少是2层。例如，C&#x2F;S架构、B&#x2F;S架构。常见的是3层架构（例如，MVC、MVP架构）、4层架构，5层架构的比较少见，一般是比较复杂的系统才会达到或者超过5层，比如操作系统内核架构。</p>
+<p>按照分层架构进行设计时，根据不同的划分维度和对象，可以得到多种不同的分层架构。</p>
+<p>1、C&#x2F;S架构、B&#x2F;S架构</p>
+<p>划分的对象是整个业务系统，划分的维度是用户交互，即将和用户交互的部分独立为一层，支撑用户交互的后台作为另外一层。例如，下面是C&#x2F;S架构结构图。</p>
+<p><img src="/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/7471e3ac441d4e1ebde8a1dc799806a8.png" alt="img"></p>
+<p>2、MVC架构、MVP架构</p>
+<p>划分的对象是单个业务子系统，划分的维度是职责，将不同的职责划分到独立层，但各层的依赖关系比较灵活。例如，MVC架构中各层之间是两两交互的：</p>
+<p><img src="/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/bbed51cfc6f14ce59a1a9d76a6c7436d.png" alt="img"></p>
+<p>3、逻辑分层架构</p>
+<p>划分的对象可以是单个业务子系统，也可以是整个业务系统，划分的维度也是职责。虽然都是基于职责划分，但逻辑分层架构和MVC架构、MVP架构的不同点在于，逻辑分层架构中的层是自顶向下依赖的。典型的有操作系统内核架构、TCP&#x2F;IP架构。例如，下面是Android操作系统架构图。</p>
+<p><img src="/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/99dec0a8ca02448e9058dc83c0452e0c.png" alt="img"></p>
+<p>典型的J2EE系统架构也是逻辑分层架构，架构图如下：</p>
+<p><img src="/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/820396971e3a4681ac0e68c654a13d22.png" alt="img"></p>
+<p>针对整个业务系统进行逻辑分层的架构图如下：</p>
+<p><img src="/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/587dda6bfd084999b292cd0a32a4cbac.png" alt="img"></p>
+<p>无论采取何种分层维度，分层架构设计最核心的一点就是<strong>需要保证各层之间的差异足够清晰，边界足够明显，让人看到架构图后就能看懂整个架构</strong>，这也是分层不能分太多层的原因。否则如果两个层的差异不明显，就会出现程序员小明认为某个功能应该放在A层，而程序员老王却认为同样的功能应该放在B层，这样会导致分层混乱。如果这样的架构进入实际开发落地，则A层和B层就会乱成一锅粥，也就失去了分层的意义。</p>
+<p>分层架构之所以能够较好地支撑系统扩展，本质在于<strong>隔离关注点</strong>（separation of concerns），即每个层中的组件只会处理本层的逻辑。比如说，展示层只需要处理展示逻辑，业务层中只需要处理业务逻辑，这样我们在扩展某层时，其他层是不受影响的，通过这种方式可以支撑系统在某层上快速扩展。例如，Linux内核如果要增加一个新的文件系统，则只需要修改文件存储层即可，其他内核层无须变动。</p>
+<p>当然，并不是简单地分层就一定能够实现隔离关注点从而支撑快速扩展，分层时要保证层与层之间的依赖是稳定的，才能真正支撑快速扩展。例如，Linux内核为了支撑不同的文件系统格式，抽象了VFS文件系统接口，架构图如下：</p>
+<p><img src="/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/16b11ebcf8a04934b326741184bc11af.png" alt="img"></p>
+<p>如果没有VFS，只是简单地将ext2、ext3、reiser等文件系统划为“文件系统层”，那么这个分层是达不到支撑可扩展的目的的。因为增加一个新的文件系统后，所有基于文件系统的功能都要适配新的文件系统接口；而有了VFS后，只需要VFS适配新的文件系统接口，其他基于文件系统的功能是依赖VFS的，不会受到影响。</p>
+<p>对于操作系统这类复杂的系统，接口本身也可以成为独立的一层。例如，我们把VFS独立为一层是完全可以的。而对于一个简单的业务系统，接口可能就是Java语言上的几个interface定义，这种情况下如果独立为一层，看起来可能就比较重了。例如，经典的J2EE分层架构中，Presentation Layer和Business Layer之间如果硬要拆分一个独立的接口层，则显得有点多余了。</p>
+<p>分层结构的另外一个特点就是层层传递，也就是说一旦分层确定，整个业务流程是按照层进行依次传递的，不能在层之间进行跳跃。最简单的C&#x2F;S结构，用户必须先使用C层，然后C层再传递到S层，用户是不能直接访问S层的。传统的J2EE 4层架构，收到请求后，必须按照下面的方式传递请求：</p>
+<p><img src="/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/df7bd415c4fe4f0dbdefb23ae98751c5.png" alt="img"></p>
+<p>分层结构的这种约束，好处在于强制将分层依赖限定为两两依赖，降低了整体系统复杂度。例如，Business Layer被Presentation Layer依赖，自己只依赖Persistence Layer。但分层结构的代价就是冗余，也就是说，不管这个业务有多么简单，每层都必须要参与处理，甚至可能每层都写了一个简单的包装函数。我以用户管理系统最简单的一个功能“查看头像”为例。查看头像功能的实现很简单，只是显示一张图片而已，但按照分层分册架构来实现，每层都要写一个简单的函数。比如：</p>
+<p>Presentation Layer：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> layer;</span><br><span class="line">	 </span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Created by Liyh on 2017/9/18.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AvatarView</span> &#123;</span><br><span class="line">	   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">displayAvatar</span><span class="params">(<span class="type">int</span> userId)</span>&#123;</span><br><span class="line">	       <span class="type">String</span> <span class="variable">url</span> <span class="operator">=</span> AvatarBizz.getAvatarUrl(userId);</span><br><span class="line">	 </span><br><span class="line">	       <span class="comment">//此处省略渲染代码</span></span><br><span class="line">	       <span class="keyword">return</span>;</span><br><span class="line">	   &#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Business Layer：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> layer;</span><br><span class="line">	 </span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Created by Liyh on 2017/9/18.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AvatarBizz</span> &#123;</span><br><span class="line">	   <span class="keyword">public</span> <span class="keyword">static</span> String <span class="title function_">getAvatarUrl</span><span class="params">(<span class="type">int</span> userId)</span>&#123;</span><br><span class="line">	       <span class="keyword">return</span> AvatarDao.getAvatarUrl(userId);</span><br><span class="line">	   &#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Persistence Layer：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> layer;</span><br><span class="line">	 </span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Created by Liyh on 2017/9/18.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AvatarDao</span> &#123;</span><br><span class="line">	   <span class="keyword">public</span> <span class="keyword">static</span> String <span class="title function_">getAvatarUrl</span><span class="params">(<span class="type">int</span> userId)</span> &#123;</span><br><span class="line">	     <span class="comment">//此处省略具体实现代码，正常情况下可以从MySQL数据库中通过userId查询头像URL即可</span></span><br><span class="line">	       <span class="keyword">return</span> <span class="string">&quot;http://avatar.csdn.net/B/8/3/1_yah99_wolf.jpg&quot;</span>;</span><br><span class="line">	   &#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看出Business Layer的AvatarBizz类的getAvatarUrl方法和Persistence Layer的AvatarDao类的getAvatarUrl方法，名称和参数都一模一样。</p>
+<p>既然如此，我们是否应该自由选择是否绕过分层的约束呢？例如，“查看头像”的示例中，直接让AvatarView类访问AvatarDao类，不就可以减少AvatarBizz的冗余实现了吗？</p>
+<p>答案是不建议这样做，分层架构的优势就体现在通过分层强制约束两两依赖，一旦自由选择绕过分层，时间一长，架构就会变得混乱。例如，Presentation Layer直接访问Persistence Layer，Business Layer直接访问Database Layer，这样做就失去了分层架构的意义，也导致后续扩展时无法控制受影响范围，牵一发动全身，无法支持快速扩展。除此以外，虽然分层架构的实现在某些场景下看起来有些啰嗦和冗余，但复杂度却很低。例如，样例中AvatarBizz的getAvatarUrl方法，实现起来很简单，不会增加太多工作量。</p>
+<p>分层架构另外一个典型的缺点就是性能，因为每一次业务请求都需要穿越所有的架构分层，有一些事情是多余的，多少都会有一些性能的浪费。当然，这里所谓的性能缺点只是理论上的分析，实际上分层带来的性能损失，如果放到20世纪80年代，可能很明显；但到了现在，硬件和网络的性能有了质的飞越，其实分层模式理论上的这点性能损失，在实际应用中，绝大部分场景下都可以忽略不计。</p>
+<h1 id="SOA"><a href="#SOA" class="headerlink" title="SOA"></a>SOA</h1><p>SOA的全称是Service Oriented Architecture，中文翻译为“面向服务的架构”，诞生于上世纪90年代，1996年Gartner的两位分析师Roy W. Schulte和Yefim V. Natis发表了第一个SOA的报告。</p>
+<p>2005年，Gartner预言：到了2008年，SOA将成为80%的开发项目的基础。历史证明这个预言并不十分靠谱，SOA虽然在很多企业成功推广，但没有达到占有绝对优势的地步。SOA更多是在传统企业（例如，制造业、金融业等）落地和推广，在互联网行业并没有大规模地实践和推广。互联网行业推行SOA最早的应该是亚马逊，得益于杰弗·贝索斯的远见卓识，亚马逊内部的系统都以服务的方式构造，间接地促使了后来的亚马逊云计算技术的出现。</p>
+<p>SOA出现 的背景是企业内部的IT系统重复建设且效率低下，主要体现在：</p>
+<ul>
+<li>企业各部门有独立的IT系统，比如人力资源系统、财务系统、销售系统，这些系统可能都涉及人员管理，各IT系统都需要重复开发人员管理的功能。例如，某个员工离职后，需要分别到上述三个系统中删除员工的权限。</li>
+<li>各个独立的IT系统可能采购于不同的供应商，实现技术不同，企业自己也不太可能基于这些系统进行重构。</li>
+<li>随着业务的发展，复杂度越来越高，更多的流程和业务需要多个IT系统合作完成。由于各个独立的IT系统没有标准的实现方式（例如，人力资源系统用Java开发，对外提供RPC；而财务系统用C#开发，对外提供SOAP协议），每次开发新的流程和业务，都需要协调大量的IT系统，同时定制开发，效率很低。</li>
+</ul>
+<p>为了应对传统IT系统存在的问题，SOA提出了3个关键概念。</p>
+<ol>
+<li>服务</li>
+</ol>
+<p>所有业务功能都是一项服务，服务就意味着要对外提供开放的能力，当其他系统需要使用这项功能时，无须定制化开发。</p>
+<p>服务可大可小，可简单也可复杂。例如，人力资源管理可以是一项服务，包括人员基本信息管理、请假管理、组织结构管理等功能；而人员基本信息管理也可以作为一项独立的服务，组织结构管理也可以作为一项独立的服务。到底是划分为粗粒度的服务，还是划分为细粒度的服务，需要根据企业的实际情况进行判断。</p>
+<ol>
+<li>ESB</li>
+</ol>
+<p>ESB的全称是Enterprise Service Bus，中文翻译为“企业服务总线”。从名字就可以看出，ESB参考了计算机总线的概念。计算机中的总线将各个不同的设备连接在一起，ESB将企业中各个不同的服务连接在一起。因为各个独立的服务是异构的，如果没有统一的标准，则各个异构系统对外提供的接口是各式各样的。SOA使用ESB来屏蔽异构系统对外提供各种不同的接口方式，以此来达到服务间高效的互联互通。</p>
+<ol>
+<li>松耦合</li>
+</ol>
+<p>松耦合的目的是减少各个服务间的依赖和互相影响。因为采用SOA架构后，各个服务是相互独立运行的，甚至都不清楚某个服务到底有多少对其他服务的依赖。如果做不到松耦合，某个服务一升级，依赖它的其他服务全部故障，这样肯定是无法满足业务需求的。</p>
+<p>但实际上真正做到松耦合并没有那么容易，要做到完全后向兼容，是一项复杂的任务。</p>
+<p>典型的SOA架构样例如下：</p>
+<p><img src="/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/f7107452d86145d7a2f8e2e8282aae83.png" alt="img"></p>
+<p>SOA架构是比较高层级的架构设计理念，一般情况下我们可以说某个企业采用了SOA的架构来构建IT系统，但不会说某个独立的系统采用了SOA架构。例如，某企业采用SOA架构，将系统分为“人力资源管理服务”“考勤服务”“财务服务”，但人力资源管理服务本身通常不会再按照SOA的架构拆分更多服务，也不会再使用独立的一套ESB，因为这些系统本身可能就是采购的，ESB本身也是采购的，如果人力资源系统本身重构为多个子服务，再部署独立的ESB系统，成本很高，也没有什么收益。</p>
+<p>SOA解决了传统IT系统重复建设和扩展效率低的问题，但其本身也引入了更多的复杂性。SOA最广为人诟病的就是ESB，ESB需要实现与各种系统间的协议转换、数据转换、透明的动态路由等功能。例如，下图中ESB将JSON转换为Java（摘自《Microservices vs. Service-Oriented Architecture》）。</p>
+<p><img src="/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/8fe29236a52749699373858093453418.png" alt="img"></p>
+<p>下图中ESB将REST协议转换为RMI和AMQP两个不同的协议：</p>
+<p><img src="/article/2023/06/33%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E4%BC%A0%E7%BB%9F%E7%9A%84%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84%E5%92%8CSOA/a7daa157a03a4ae2b1edc688c26b0176.png" alt="img"></p>
+<p>ESB虽然功能强大，但现实中的协议有很多种，如JMS、WS、HTTP、RPC等，数据格式也有很多种，如XML、JSON、二进制、HTML等。ESB要完成这么多协议和数据格式的互相转换，工作量和复杂度都很大，而且这种转换是需要耗费大量计算性能的，当ESB承载的消息太多时，ESB本身会成为整个系统的性能瓶颈。</p>
+<p>当然，SOA的ESB设计也是无奈之举。回想一下SOA的提出背景就可以发现，企业在应用SOA时，各种异构的IT系统都已经存在很多年了，完全重写或者按照统一标准进行改造的成本是非常大的，只能通过ESB方式去适配已经存在的各种异构系统。</p>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>今天我为你讲了传统的可扩展架构模式，包括分层架构和SOA架构，希望对你有所帮助。</p>
+<p>这就是今天的全部内容，留一道思考题给你吧，为什么互联网企业很少采用SOA架构？</p>
+<p>欢迎你把答案写到留言区，和我一起讨论。相信经过深度思考的回答，也会让你对知识的理解更加深刻。（编辑乱入：精彩的留言有机会获得丰厚福利哦！）</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%AD%A6%E6%9E%B6%E6%9E%84/" rel="tag"># 从零开始学架构</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/06/32%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%80%9D%E6%83%B3%E5%92%8C%E6%A8%A1%E5%BC%8F/" rel="prev" title="32可扩展架构模式-可扩展架构的基本思想和模式">
+                  <i class="fa fa-angle-left"></i> 32可扩展架构模式-可扩展架构的基本思想和模式
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/06/34%E5%8F%AF%E6%89%A9%E5%B1%95%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F-%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9E%B6%E6%9E%84%EF%BC%9A%E9%93%B6%E5%BC%B9%20or%20%E7%84%A6%E6%B2%B9%E5%9D%91%EF%BC%9F/" rel="next" title="34可扩展架构模式-深入理解微服务架构：银弹 or 焦油坑？">
+                  34可扩展架构模式-深入理解微服务架构：银弹 or 焦油坑？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="原文：http:&#x2F;&#x2F;blog.csdn.net&#x2F;EdgenHuang&#x2F;article&#x2F;details&#x2F;3587912  Oracle9i引入了MERGE命令,你能够在一个SQL语句中对一个表同时执行inserts和updates操作. MERGE命令从一个或多个数据源中选择行来updating或inserting到一个或多个表. Oracle 10g中MERGE有如下一些改进：  UPDATE或I">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Oracle Merge Into">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/02/Oracle%20Merge%20Into%20%E7%94%A8%E6%B3%95%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="原文：http:&#x2F;&#x2F;blog.csdn.net&#x2F;EdgenHuang&#x2F;article&#x2F;details&#x2F;3587912  Oracle9i引入了MERGE命令,你能够在一个SQL语句中对一个表同时执行inserts和updates操作. MERGE命令从一个或多个数据源中选择行来updating或inserting到一个或多个表. Oracle 10g中MERGE有如下一些改进：  UPDATE或I">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-02-19T00:01:00.000Z">
+<meta property="article:modified_time" content="2022-02-19T00:01:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Oracle">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/02/Oracle%20Merge%20Into%20%E7%94%A8%E6%B3%95%E8%AF%A6%E8%A7%A3/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/02/Oracle%20Merge%20Into%20%E7%94%A8%E6%B3%95%E8%AF%A6%E8%A7%A3/","path":"article/2022/02/Oracle Merge Into 用法详解/","title":"Oracle Merge Into"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Oracle Merge Into | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%AF%E7%9C%81%E7%95%A5%E7%9A%84UPDATE%E6%88%96INSERT%E5%AD%90%E5%8F%A5"><span class="nav-number">1.</span> <span class="nav-text">可省略的UPDATE或INSERT子句</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B8%A6%E6%9D%A1%E4%BB%B6%E7%9A%84Updates%E5%92%8CInserts%E5%AD%90%E5%8F%A5"><span class="nav-number">2.</span> <span class="nav-text">带条件的Updates和Inserts子句</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%97%A0%E6%9D%A1%E4%BB%B6%E7%9A%84Inserts"><span class="nav-number">3.</span> <span class="nav-text">无条件的Inserts</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%96%B0%E5%A2%9E%E5%8A%A0%E7%9A%84DELETE%E5%AD%90%E5%8F%A5"><span class="nav-number">4.</span> <span class="nav-text">新增加的DELETE子句</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/02/Oracle%20Merge%20Into%20%E7%94%A8%E6%B3%95%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Oracle Merge Into | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Oracle Merge Into
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-02-19 08:01:00" itemprop="dateCreated datePublished" datetime="2022-02-19T08:01:00+08:00">2022-02-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>原文：<a target="_blank" rel="noopener" href="http://blog.csdn.net/EdgenHuang/article/details/3587912?spm=a2c6h.12873639.0.0.78af6dbfkU0jiR">http://blog.csdn.net/EdgenHuang/article/details/3587912</a> </p>
+<p>Oracle9i引入了MERGE命令,你能够在一个SQL语句中对一个表同时执行inserts和updates操作. MERGE命令从一个或多个数据源中选择行来updating或inserting到一个或多个表.</p>
+<p>Oracle 10g中MERGE有如下一些改进：</p>
+<ol>
+<li>UPDATE或INSERT子句是可选的</li>
+<li>UPDATE和INSERT子句可以加WHERE子句</li>
+<li>ON条件中使用常量过滤谓词来insert所有的行到目标表中,不需要连接源表和目标表</li>
+<li>UPDATE子句后面可以跟DELETE子句来去除一些不需要的行</li>
+</ol>
+<span id="more"></span>
+
+<p>首先创建示例表:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">create table PRODUCTS</span><br><span class="line">    (</span><br><span class="line">    PRODUCT_ID INTEGER,</span><br><span class="line">    PRODUCT_NAME VARCHAR2(60),</span><br><span class="line">    CATEGORY VARCHAR2(60)</span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">    insert into PRODUCTS values (1501, &#x27;VIVITAR 35MM&#x27;, &#x27;ELECTRNCS&#x27;);</span><br><span class="line">    insert into PRODUCTS values (1502, &#x27;OLYMPUS IS50&#x27;, &#x27;ELECTRNCS&#x27;);</span><br><span class="line">    insert into PRODUCTS values (1600, &#x27;PLAY GYM&#x27;, &#x27;TOYS&#x27;);</span><br><span class="line">    insert into PRODUCTS values (1601, &#x27;LAMAZE&#x27;, &#x27;TOYS&#x27;);</span><br><span class="line">    insert into PRODUCTS values (1666, &#x27;HARRY POTTER&#x27;, &#x27;DVD&#x27;);</span><br><span class="line">    commit;</span><br><span class="line"></span><br><span class="line">    create table NEWPRODUCTS</span><br><span class="line">    (</span><br><span class="line">    PRODUCT_ID INTEGER,</span><br><span class="line">    PRODUCT_NAME VARCHAR2(60),</span><br><span class="line">    CATEGORY VARCHAR2(60)</span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">    insert into NEWPRODUCTS values (1502, &#x27;OLYMPUS CAMERA&#x27;, &#x27;ELECTRNCS&#x27;);</span><br><span class="line">    insert into NEWPRODUCTS values (1601, &#x27;LAMAZE&#x27;, &#x27;TOYS&#x27;);</span><br><span class="line">    insert into NEWPRODUCTS values (1666, &#x27;HARRY POTTER&#x27;, &#x27;TOYS&#x27;);</span><br><span class="line">    insert into NEWPRODUCTS values (1700, &#x27;WAIT INTERFACE&#x27;, &#x27;BOOKS&#x27;);</span><br><span class="line">    commit;</span><br></pre></td></tr></table></figure>
+
+<h1 id="可省略的UPDATE或INSERT子句"><a href="#可省略的UPDATE或INSERT子句" class="headerlink" title="可省略的UPDATE或INSERT子句"></a>可省略的UPDATE或INSERT子句</h1><p>在Oracle 9i, MERGE语句要求你必须同时指定INSERT和UPDATE子句.而在Oracle 10g, 你可以省略UPDATE或INSERT子句中的一个. 下面的例子根据表NEWPRODUCTS的PRODUCT_ID字段是否匹配来updates表PRODUCTS的信息:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; MERGE INTO products p</span><br><span class="line">    2 USING newproducts np</span><br><span class="line">    3 ON (p.product_id = np.product_id)</span><br><span class="line">    4 WHEN MATCHED THEN</span><br><span class="line">    5 UPDATE</span><br><span class="line">    6 SET p.product_name = np.product_name,</span><br><span class="line">    7 p.category = np.category;</span><br><span class="line"></span><br><span class="line">    3 rows merged.</span><br><span class="line"></span><br><span class="line">    SQL&gt; SELECT * FROM products;</span><br><span class="line"></span><br><span class="line">    PRODUCT_ID PRODUCT_NAME CATEGORY</span><br><span class="line">    ---------- -------------------- ----------</span><br><span class="line">    1501 VIVITAR 35MM ELECTRNCS</span><br><span class="line">    1502 OLYMPUS CAMERA ELECTRNCS</span><br><span class="line">    1600 PLAY GYM TOYS</span><br><span class="line">    1601 LAMAZE TOYS</span><br><span class="line">    1666 HARRY POTTER TOYS</span><br><span class="line">    SQL&gt;</span><br><span class="line">    SQL&gt; ROLLBACK;</span><br><span class="line">    Rollback complete.</span><br></pre></td></tr></table></figure>
+
+<p>在上面例子中, MERGE语句影响到是产品id为1502, 1601和1666的行. 它们的产品名字和种 类被更新为表newproducts中的值. 下面例子省略UPDATE子句, 把表NEWPRODUCTS中新的PRODUCT_ID插入到表PRODUCTS中, 对于在两个表中能够匹配上PRODUCT_ID的数据不作任何处理. 从这个例子你能看到PRODUCT_ID&#x3D;1700的行被插入到表PRODUCTS中.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; MERGE INTO products p</span><br><span class="line">    2 USING newproducts np</span><br><span class="line">    3 ON (p.product_id = np.product_id)</span><br><span class="line">    4 WHEN NOT MATCHED THEN</span><br><span class="line">    5 INSERT</span><br><span class="line">    6 VALUES (np.product_id, np.product_name,</span><br><span class="line">    7 np.category);</span><br><span class="line"></span><br><span class="line">    1 row merged.</span><br><span class="line"></span><br><span class="line">    SQL&gt; SELECT * FROM products;</span><br><span class="line"></span><br><span class="line">    PRODUCT_ID PRODUCT_NAME CATEGORY</span><br><span class="line">    ---------- -------------------- ----------</span><br><span class="line">    1501 VIVITAR 35MM ELECTRNCS</span><br><span class="line">    1502 OLYMPUS IS50 ELECTRNCS</span><br><span class="line">    1600 PLAY GYM TOYS</span><br><span class="line">    1601 LAMAZE TOYS</span><br><span class="line">    1666 HARRY POTTER DVD</span><br><span class="line">    1700 WAIT INTERFACE BOOKS</span><br></pre></td></tr></table></figure>
+
+<h1 id="带条件的Updates和Inserts子句"><a href="#带条件的Updates和Inserts子句" class="headerlink" title="带条件的Updates和Inserts子句"></a>带条件的Updates和Inserts子句</h1><p>你能够添加WHERE子句到UPDATE或INSERT子句中去, 来跳过update或insert操作对某些行的处理. 下面例子根据表NEWPRODUCTS来更新表PRODUCTS数据, 但必须字段CATEGORY也得同时匹配上:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; MERGE INTO products p</span><br><span class="line">    2 USING newproducts np</span><br><span class="line">    3 ON (p.product_id = np.product_id)</span><br><span class="line">    4 WHEN MATCHED THEN</span><br><span class="line">    5 UPDATE</span><br><span class="line">    6 SET p.product_name = np.product_name</span><br><span class="line">    7 WHERE p.category = np.category;</span><br><span class="line"></span><br><span class="line">    2 rows merged.</span><br><span class="line"></span><br><span class="line">    SQL&gt; SELECT * FROM products;</span><br><span class="line"></span><br><span class="line">    PRODUCT_ID PRODUCT_NAME CATEGORY</span><br><span class="line">    ---------- -------------------- ----------</span><br><span class="line">    1501 VIVITAR 35MM ELECTRNCS</span><br><span class="line">    1502 OLYMPUS CAMERA ELECTRNCS</span><br><span class="line">    1600 PLAY GYM TOYS</span><br><span class="line">    1601 LAMAZE TOYS</span><br><span class="line">    1666 HARRY POTTER DVD</span><br><span class="line">    SQL&gt;</span><br><span class="line">    SQL&gt; rollback;</span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中, 产品ID为1502,1601和1666匹配ON条件但是1666的category不匹配. 因此MERGE命令只更新两行数据. 下面例子展示了在Updates和Inserts子句都使用WHERE子句:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; MERGE INTO products p</span><br><span class="line"> 2 USING newproducts np</span><br><span class="line"> 3 ON (p.product_id = np.product_id)</span><br><span class="line"> 4 WHEN MATCHED THEN</span><br><span class="line"> 5 UPDATE</span><br><span class="line"> 6 SET p.product_name = np.product_name,</span><br><span class="line"> 7 p.category = np.category</span><br><span class="line"> 8 WHERE p.category = &#x27;DVD&#x27;</span><br><span class="line"> 9 WHEN NOT MATCHED THEN</span><br><span class="line"> 10 INSERT</span><br><span class="line"> 11 VALUES (np.product_id, np.product_name, np.category)</span><br><span class="line"> 12 WHERE np.category != &#x27;BOOKS&#x27;</span><br><span class="line"> SQL&gt; /</span><br><span class="line"></span><br><span class="line"> 1 row merged.</span><br><span class="line"></span><br><span class="line"> SQL&gt; SELECT * FROM products;</span><br><span class="line"></span><br><span class="line"> PRODUCT_ID PRODUCT_NAME CATEGORY</span><br><span class="line"> ---------- -------------------- ----------</span><br><span class="line"> 1501 VIVITAR 35MM ELECTRNCS</span><br><span class="line"> 1502 OLYMPUS IS50 ELECTRNCS</span><br><span class="line"> 1600 PLAY GYM TOYS</span><br><span class="line"> 1601 LAMAZE TOYS</span><br><span class="line"> 1666 HARRY POTTER TOYS</span><br><span class="line"></span><br><span class="line"> SQL&gt;</span><br></pre></td></tr></table></figure>
+
+<p>注意由于有WHERE子句INSERT没有插入所有不匹配ON条件的行到表PRODUCTS.</p>
+<h1 id="无条件的Inserts"><a href="#无条件的Inserts" class="headerlink" title="无条件的Inserts"></a>无条件的Inserts</h1><p>你能够不用连接源表和目标表就把源表的数据插入到目标表中. 这对于你想插入所有行到目标表时是非常有用的. Oracle 10g现在支持在ON条件中使用常量过滤谓词. 举个常量过滤谓词例子ON (1&#x3D;0). 下面例子从源表插入行到表PRODUCTS, 不检查这些行是否在表PRODUCTS中存在:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; MERGE INTO products p</span><br><span class="line">    2 USING newproducts np</span><br><span class="line">    3 ON (1=0)</span><br><span class="line">    4 WHEN NOT MATCHED THEN</span><br><span class="line">    5 INSERT</span><br><span class="line">    6 VALUES (np.product_id, np.product_name, np.category)</span><br><span class="line">    7 WHERE np.category = &#x27;BOOKS&#x27;</span><br><span class="line">    SQL&gt; /</span><br><span class="line"></span><br><span class="line">    1 row merged.</span><br><span class="line"></span><br><span class="line">    SQL&gt; SELECT * FROM products;</span><br><span class="line"></span><br><span class="line">    PRODUCT_ID PRODUCT_NAME CATEGORY</span><br><span class="line">    ---------- -------------------- ----------</span><br><span class="line">    1501 VIVITAR 35MM ELECTRNCS</span><br><span class="line">    1502 OLYMPUS IS50 ELECTRNCS</span><br><span class="line">    1600 PLAY GYM TOYS</span><br><span class="line">    1601 LAMAZE TOYS</span><br><span class="line">    1666 HARRY POTTER DVD</span><br><span class="line">    1700 WAIT INTERFACE BOOKS</span><br><span class="line">    6 rows selected.</span><br><span class="line">    SQL&gt;</span><br></pre></td></tr></table></figure>
+
+<h1 id="新增加的DELETE子句"><a href="#新增加的DELETE子句" class="headerlink" title="新增加的DELETE子句"></a>新增加的DELETE子句</h1><p>Oracle 10g中的MERGE提供了在执行数据操作时清除行的选项. 你能够在WHEN MATCHED THEN UPDATE子句中包含DELETE子句. DELETE子句必须有一个WHERE条件来删除匹配某些条件的行.匹配DELETE WHERE条件但不匹配ON条件的行不会被从表中删除.</p>
+<p>下面例子验证DELETE子句. 我们从表NEWPRODUCTS中合并行到表PRODUCTS中, 但删除category为ELECTRNCS的行.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; MERGE INTO products p</span><br><span class="line">    2 USING newproducts np</span><br><span class="line">    3 ON (p.product_id = np.product_id)</span><br><span class="line">    4 WHEN MATCHED THEN</span><br><span class="line">    5 UPDATE</span><br><span class="line">    6 SET p.product_name = np.product_name,</span><br><span class="line">    7 p.category = np.category</span><br><span class="line">    8 DELETE WHERE (p.category = &#x27;ELECTRNCS&#x27;)</span><br><span class="line">    9 WHEN NOT MATCHED THEN</span><br><span class="line">    10 INSERT</span><br><span class="line">    11 VALUES (np.product_id, np.product_name, np.category)</span><br><span class="line">    SQL&gt; /</span><br><span class="line"></span><br><span class="line">    4 rows merged.</span><br><span class="line"></span><br><span class="line">    SQL&gt; SELECT * FROM products;</span><br><span class="line"></span><br><span class="line">    PRODUCT_ID PRODUCT_NAME CATEGORY</span><br><span class="line">    ---------- -------------------- ----------</span><br><span class="line">    1501 VIVITAR 35MM ELECTRNCS</span><br><span class="line">    1600 PLAY GYM TOYS</span><br><span class="line">    1601 LAMAZE TOYS</span><br><span class="line">    1666 HARRY POTTER TOYS</span><br><span class="line">    1700 WAIT INTERFACE BOOKS</span><br><span class="line">    SQL&gt;</span><br></pre></td></tr></table></figure>
+
+<p>产品ID为1502的行从表PRODUCTS中被删除, 因为它同时匹配ON条件和DELETE WHERE条件. 产品ID为1501的行匹配DELETE WHERE条件但不匹配ON条件, 所以它没有被删除. 产品ID为1700 的行不匹配ON条件, 所以被插入表PRODUCTS. 产品ID为1601和1666的行匹配ON条件但不匹配DELETE WHERE条件, 所以被更新为表NEWPRODUCTS中的值.</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Oracle/" rel="tag"># Oracle</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/02/%E5%88%9B%E5%BB%BA%E7%BB%93%E6%9E%9C%E8%A1%A8%E7%9A%84%E5%AD%98%E5%82%A8%E8%BF%87%E7%A8%8B%E6%89%A7%E8%A1%8C%E6%97%B6%E9%97%B4%E8%BF%87%E9%95%BF%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" rel="prev" title="创建结果表的存储过程执行时间过长解决方案">
+                  <i class="fa fa-angle-left"></i> 创建结果表的存储过程执行时间过长解决方案
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/03/HTTP%E3%80%81HTTPS%E5%92%8CHTTP2/" rel="next" title="HTTP、HTTPS和HTTP2">
+                  HTTP、HTTPS和HTTP2 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

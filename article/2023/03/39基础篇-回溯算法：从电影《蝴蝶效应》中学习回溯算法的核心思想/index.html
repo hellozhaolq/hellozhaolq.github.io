@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="我们在第31节提到，深度优先搜索算法利用的是回溯算法思想。这个算法思想非常简单，但是应用却非常广泛。它除了用来指导像深度优先搜索这种经典的算法设计之外，还可以用在很多实际的软件开发场景中，比如正则表达式匹配、编译原理中的语法分析等。 除此之外，很多经典的数学问题都可以用回溯算法解决，比如数独、八皇后、0-1背包、图的着色、旅行商问题、全排列等等。既然应用如此广泛，我们今天就来学习一下这个算法思想，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="39基础篇-回溯算法：从电影《蝴蝶效应》中学习回溯算法的核心思想">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/03/39%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%EF%BC%9A%E4%BB%8E%E7%94%B5%E5%BD%B1%E3%80%8A%E8%9D%B4%E8%9D%B6%E6%95%88%E5%BA%94%E3%80%8B%E4%B8%AD%E5%AD%A6%E4%B9%A0%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="我们在第31节提到，深度优先搜索算法利用的是回溯算法思想。这个算法思想非常简单，但是应用却非常广泛。它除了用来指导像深度优先搜索这种经典的算法设计之外，还可以用在很多实际的软件开发场景中，比如正则表达式匹配、编译原理中的语法分析等。 除此之外，很多经典的数学问题都可以用回溯算法解决，比如数独、八皇后、0-1背包、图的着色、旅行商问题、全排列等等。既然应用如此广泛，我们今天就来学习一下这个算法思想，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/03/39%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%EF%BC%9A%E4%BB%8E%E7%94%B5%E5%BD%B1%E3%80%8A%E8%9D%B4%E8%9D%B6%E6%95%88%E5%BA%94%E3%80%8B%E4%B8%AD%E5%AD%A6%E4%B9%A0%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3/20190525153029939.png">
+<meta property="article:published_time" content="2023-03-09T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-03-09T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="数据结构与算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/03/39%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%EF%BC%9A%E4%BB%8E%E7%94%B5%E5%BD%B1%E3%80%8A%E8%9D%B4%E8%9D%B6%E6%95%88%E5%BA%94%E3%80%8B%E4%B8%AD%E5%AD%A6%E4%B9%A0%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3/20190525153029939.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/03/39%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%EF%BC%9A%E4%BB%8E%E7%94%B5%E5%BD%B1%E3%80%8A%E8%9D%B4%E8%9D%B6%E6%95%88%E5%BA%94%E3%80%8B%E4%B8%AD%E5%AD%A6%E4%B9%A0%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/03/39%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%EF%BC%9A%E4%BB%8E%E7%94%B5%E5%BD%B1%E3%80%8A%E8%9D%B4%E8%9D%B6%E6%95%88%E5%BA%94%E3%80%8B%E4%B8%AD%E5%AD%A6%E4%B9%A0%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3/","path":"article/2023/03/39基础篇-回溯算法：从电影《蝴蝶效应》中学习回溯算法的核心思想/","title":"39基础篇-回溯算法：从电影《蝴蝶效应》中学习回溯算法的核心思想"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>39基础篇-回溯算法：从电影《蝴蝶效应》中学习回溯算法的核心思想 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3%E2%80%9C%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E2%80%9D%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">如何理解“回溯算法”？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%A4%E4%B8%AA%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E7%BB%8F%E5%85%B8%E5%BA%94%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">两个回溯算法的经典应用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-0-1%E8%83%8C%E5%8C%85"><span class="nav-number">2.1.</span> <span class="nav-text">1.0-1背包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F"><span class="nav-number">2.2.</span> <span class="nav-text">2.正则表达式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E5%AE%B9%E5%B0%8F%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">内容小结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%90%8E%E6%80%9D%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">课后思考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/03/39%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%EF%BC%9A%E4%BB%8E%E7%94%B5%E5%BD%B1%E3%80%8A%E8%9D%B4%E8%9D%B6%E6%95%88%E5%BA%94%E3%80%8B%E4%B8%AD%E5%AD%A6%E4%B9%A0%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="39基础篇-回溯算法：从电影《蝴蝶效应》中学习回溯算法的核心思想 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          39基础篇-回溯算法：从电影《蝴蝶效应》中学习回溯算法的核心思想
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-03-09 08:00:00" itemprop="dateCreated datePublished" datetime="2023-03-09T08:00:00+08:00">2023-03-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">数据结构与算法</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>我们在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/70891">第31节</a>提到，深度优先搜索算法利用的是回溯算法思想。这个算法思想非常简单，但是应用却非常广泛。它除了用来指导像深度优先搜索这种经典的算法设计之外，还可以用在很多实际的软件开发场景中，比如正则表达式匹配、编译原理中的语法分析等。</p>
+<p>除此之外，很多经典的数学问题都可以用回溯算法解决，比如数独、八皇后、0-1背包、图的着色、旅行商问题、全排列等等。既然应用如此广泛，我们今天就来学习一下这个算法思想，看看它是如何指导我们解决问题的。</p>
+<span id="more"></span>
+
+<h1 id="如何理解“回溯算法”？"><a href="#如何理解“回溯算法”？" class="headerlink" title="如何理解“回溯算法”？"></a>如何理解“回溯算法”？</h1><p>在我们的一生中，会遇到很多重要的岔路口。在岔路口上，每个选择都会影响我们今后的人生。有的人在每个岔路口都能做出最正确的选择，最后生活、事业都达到了一个很高的高度；而有的人一路选错，最后碌碌无为。如果人生可以量化，那如何才能在岔路口做出最正确的选择，让自己的人生“最优”呢？</p>
+<p>我们可以借助前面学过的贪心算法，在每次面对岔路口的时候，都做出看起来最优的选择，期望这一组选择可以使得我们的人生达到“最优”。但是，我们前面也讲过，贪心算法并不一定能得到最优解。那有没有什么办法能得到最优解呢？</p>
+<p>2004年上映了一部非常著名的电影《蝴蝶效应》，讲的就是主人公为了达到自己的目标，一直通过回溯的方法，回到童年，在关键的岔路口，重新做选择。当然，这只是科幻电影，我们的人生是无法倒退的，但是这其中蕴含的思想其实就是回溯算法。</p>
+<p>笼统地讲，回溯算法很多时候都应用在“搜索”这类问题上。不过这里说的搜索，并不是狭义的指我们前面讲过的图的搜索算法，而是在一组可能的解中，搜索满足期望的解。</p>
+<p>回溯的处理思想，有点类似枚举搜索。我们枚举所有的解，找到满足期望的解。为了有规律地枚举所有可能的解，避免遗漏和重复，我们把问题求解的过程分为多个阶段。每个阶段，我们都会面对一个岔路口，我们先随意选一条路走，当发现这条路走不通的时候（不符合期望的解），就回退到上一个岔路口，另选一种走法继续走。</p>
+<p>理论的东西还是过于抽象，老规矩，我还是举例说明一下。我举一个经典的回溯例子，我想你可能已经猜到了，那就是八皇后问题。</p>
+<p>我们有一个8x8的棋盘，希望往里放8个棋子（皇后），每个棋子所在的行、列、对角线都不能有另一个棋子。你可以看我画的图，第一幅图是满足条件的一种方法，第二幅图是不满足条件的。八皇后问题就是期望找到所有满足这种要求的放棋子方式。</p>
+<p><img src="/article/2023/03/39%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%EF%BC%9A%E4%BB%8E%E7%94%B5%E5%BD%B1%E3%80%8A%E8%9D%B4%E8%9D%B6%E6%95%88%E5%BA%94%E3%80%8B%E4%B8%AD%E5%AD%A6%E4%B9%A0%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3/20190525153029939.png" alt="img"></p>
+<p>我们把这个问题划分成8个阶段，依次将8个棋子放到第一行、第二行、第三行……第八行。在放置的过程中，我们不停地检查当前放法，是否满足要求。如果满足，则跳到下一行继续放置棋子；如果不满足，那就再换一种放法，继续尝试。</p>
+<p>回溯算法非常适合用递归代码实现，所以，我把八皇后的算法翻译成代码。我在代码里添加了详细的注释，你可以对比着看下。如果你之前没有接触过八皇后问题，建议你自己用熟悉的编程语言实现一遍，这对你理解回溯思想非常有帮助。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span>[] result = <span class="keyword">new</span> <span class="title class_">int</span>[<span class="number">8</span>];<span class="comment">//全局或成员变量,下标表示行,值表示queen存储在哪一列</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">cal8queens</span><span class="params">(<span class="type">int</span> row)</span> &#123; <span class="comment">// 调用方式：cal8queens(0);</span></span><br><span class="line">  <span class="keyword">if</span> (row == <span class="number">8</span>) &#123; <span class="comment">// 8个棋子都放置好了，打印结果</span></span><br><span class="line">    printQueens(result);</span><br><span class="line">    <span class="keyword">return</span>; <span class="comment">// 8行棋子都放好了，已经没法再往下递归了，所以就return</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">column</span> <span class="operator">=</span> <span class="number">0</span>; column &lt; <span class="number">8</span>; ++column) &#123; <span class="comment">// 每一行都有8中放法</span></span><br><span class="line">    <span class="keyword">if</span> (isOk(row, column)) &#123; <span class="comment">// 有些放法不满足要求</span></span><br><span class="line">      result[row] = column; <span class="comment">// 第row行的棋子放到了column列</span></span><br><span class="line">      cal8queens(row+<span class="number">1</span>); <span class="comment">// 考察下一行</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="type">boolean</span> <span class="title function_">isOk</span><span class="params">(<span class="type">int</span> row, <span class="type">int</span> column)</span> &#123;<span class="comment">//判断row行column列放置是否合适</span></span><br><span class="line">  <span class="type">int</span> <span class="variable">leftup</span> <span class="operator">=</span> column - <span class="number">1</span>, rightup = column + <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> row-<span class="number">1</span>; i &gt;= <span class="number">0</span>; --i) &#123; <span class="comment">// 逐行往上考察每一行</span></span><br><span class="line">    <span class="keyword">if</span> (result[i] == column) <span class="keyword">return</span> <span class="literal">false</span>; <span class="comment">// 第i行的column列有棋子吗？</span></span><br><span class="line">    <span class="keyword">if</span> (leftup &gt;= <span class="number">0</span>) &#123; <span class="comment">// 考察左上对角线：第i行leftup列有棋子吗？</span></span><br><span class="line">      <span class="keyword">if</span> (result[i] == leftup) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (rightup &lt; <span class="number">8</span>) &#123; <span class="comment">// 考察右上对角线：第i行rightup列有棋子吗？</span></span><br><span class="line">      <span class="keyword">if</span> (result[i] == rightup) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    --leftup; ++rightup;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">printQueens</span><span class="params">(<span class="type">int</span>[] result)</span> &#123; <span class="comment">// 打印出一个二维矩阵</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">row</span> <span class="operator">=</span> <span class="number">0</span>; row &lt; <span class="number">8</span>; ++row) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">column</span> <span class="operator">=</span> <span class="number">0</span>; column &lt; <span class="number">8</span>; ++column) &#123;</span><br><span class="line">      <span class="keyword">if</span> (result[row] == column) System.out.print(<span class="string">&quot;Q &quot;</span>);</span><br><span class="line">      <span class="keyword">else</span> System.out.print(<span class="string">&quot;* &quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    System.out.println();</span><br><span class="line">  &#125;</span><br><span class="line">  System.out.println();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="两个回溯算法的经典应用"><a href="#两个回溯算法的经典应用" class="headerlink" title="两个回溯算法的经典应用"></a>两个回溯算法的经典应用</h1><p>回溯算法的理论知识很容易弄懂。不过，对于新手来说，比较难的是用递归来实现。所以，我们再通过两个例子，来练习一下回溯算法的应用和实现。</p>
+<h2 id="1-0-1背包"><a href="#1-0-1背包" class="headerlink" title="1.0-1背包"></a>1.0-1背包</h2><p>0-1背包是非常经典的算法问题，很多场景都可以抽象成这个问题模型。这个问题的经典解法是动态规划，不过还有一种简单但没有那么高效的解法，那就是今天讲的回溯算法。动态规划的解法我下一节再讲，我们先来看下，如何用回溯法解决这个问题。</p>
+<p>0-1背包问题有很多变体，我这里介绍一种比较基础的。我们有一个背包，背包总的承载重量是Wkg。现在我们有n个物品，每个物品的重量不等，并且不可分割。我们现在期望选择几件物品，装载到背包中。在不超过背包所能装载重量的前提下，如何让背包中物品的总重量最大？</p>
+<p>实际上，背包问题我们在贪心算法那一节，已经讲过一个了，不过那里讲的物品是可以分割的，我可以装某个物品的一部分到背包里面。今天讲的这个背包问题，物品是不可分割的，要么装要么不装，所以叫0-1背包问题。显然，这个问题已经无法通过贪心算法来解决了。我们现在来看看，用回溯算法如何来解决。</p>
+<p>对于每个物品来说，都有两种选择，装进背包或者不装进背包。对于n个物品来说，总的装法就有2^n种，去掉总重量超过Wkg的，从剩下的装法中选择总重量最接近Wkg的。不过，我们如何才能不重复地穷举出这2^n种装法呢？</p>
+<p>这里就可以用回溯的方法。我们可以把物品依次排列，整个问题就分解为了n个阶段，每个阶段对应一个物品怎么选择。先对第一个物品进行处理，选择装进去或者不装进去，然后再递归地处理剩下的物品。描述起来很费劲，我们直接看代码，反而会更加清晰一些。</p>
+<p>这里还稍微用到了一点搜索剪枝的技巧，就是当发现已经选择的物品的重量超过Wkg之后，我们就停止继续探测剩下的物品。你可以看我写的具体的代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="variable">maxW</span> <span class="operator">=</span> Integer.MIN_VALUE; <span class="comment">//存储背包中物品总重量的最大值</span></span><br><span class="line"><span class="comment">// cw表示当前已经装进去的物品的重量和；i表示考察到哪个物品了；</span></span><br><span class="line"><span class="comment">// w背包重量；items表示每个物品的重量；n表示物品个数</span></span><br><span class="line"><span class="comment">// 假设背包可承受重量100，物品个数10，物品重量存储在数组a中，那可以这样调用函数：</span></span><br><span class="line"><span class="comment">// f(0, 0, a, 10, 100)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">f</span><span class="params">(<span class="type">int</span> i, <span class="type">int</span> cw, <span class="type">int</span>[] items, <span class="type">int</span> n, <span class="type">int</span> w)</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (cw == w || i == n) &#123; <span class="comment">// cw==w表示装满了;i==n表示已经考察完所有的物品</span></span><br><span class="line">    <span class="keyword">if</span> (cw &gt; maxW) maxW = cw;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  f(i+<span class="number">1</span>, cw, items, n, w);</span><br><span class="line">  <span class="keyword">if</span> (cw + items[i] &lt;= w) &#123;<span class="comment">// 已经超过可以背包承受的重量的时候，就不要再装了</span></span><br><span class="line">    f(i+<span class="number">1</span>,cw + items[i], items, n, w);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-正则表达式"><a href="#2-正则表达式" class="headerlink" title="2.正则表达式"></a>2.正则表达式</h2><p>看懂了0-1背包问题，我们再来看另外一个例子，正则表达式匹配。</p>
+<p>对于一个开发工程师来说，正则表达式你应该不陌生吧？在平时的开发中，或多或少都应该用过。实际上，正则表达式里最重要的一种算法思想就是回溯。</p>
+<p>正则表达式中，最重要的就是通配符，通配符结合在一起，可以表达非常丰富的语义。为了方便讲解，我假设正则表达式中只包含“<em>”和“?”这两种通配符，并且对这两个通配符的语义稍微做些改变，其中，“</em>”匹配任意多个（大于等于0个）任意字符，“?”匹配零个或者一个任意字符。基于以上背景假设，我们看下，如何用回溯算法，判断一个给定的文本，能否跟给定的正则表达式匹配？</p>
+<p>我们依次考察正则表达式中的每个字符，当是非通配符时，我们就直接跟文本的字符进行匹配，如果相同，则继续往下处理；如果不同，则回溯。</p>
+<p>如果遇到特殊字符的时候，我们就有多种处理方式了，也就是所谓的岔路口，比如“*”有多种匹配方案，可以匹配任意个文本串中的字符，我们就先随意的选择一种匹配方案，然后继续考察剩下的字符。如果中途发现无法继续匹配下去了，我们就回到这个岔路口，重新选择一种匹配方案，然后再继续匹配剩下的字符。</p>
+<p>有了前面的基础，是不是这个问题就好懂多了呢？我把这个过程翻译成了代码，你可以结合着一块看下，应该有助于你理解。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Pattern</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">boolean</span> <span class="variable">matched</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">char</span>[] pattern; <span class="comment">// 正则表达式</span></span><br><span class="line">  <span class="keyword">private</span> <span class="type">int</span> plen; <span class="comment">// 正则表达式长度</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">Pattern</span><span class="params">(<span class="type">char</span>[] pattern, <span class="type">int</span> plen)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.pattern = pattern;</span><br><span class="line">    <span class="built_in">this</span>.plen = plen;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">match</span><span class="params">(<span class="type">char</span>[] text, <span class="type">int</span> tlen)</span> &#123; <span class="comment">// 文本串及长度</span></span><br><span class="line">    matched = <span class="literal">false</span>;</span><br><span class="line">    rmatch(<span class="number">0</span>, <span class="number">0</span>, text, tlen);</span><br><span class="line">    <span class="keyword">return</span> matched;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">rmatch</span><span class="params">(<span class="type">int</span> ti, <span class="type">int</span> pj, <span class="type">char</span>[] text, <span class="type">int</span> tlen)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (matched) <span class="keyword">return</span>; <span class="comment">// 如果已经匹配了，就不要继续递归了</span></span><br><span class="line">    <span class="keyword">if</span> (pj == plen) &#123; <span class="comment">// 正则表达式到结尾了</span></span><br><span class="line">      <span class="keyword">if</span> (ti == tlen) matched = <span class="literal">true</span>; <span class="comment">// 文本串也到结尾了</span></span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (pattern[pj] == <span class="string">&#x27;*&#x27;</span>) &#123; <span class="comment">// *匹配任意个字符</span></span><br><span class="line">      <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">k</span> <span class="operator">=</span> <span class="number">0</span>; k &lt;= tlen-ti; ++k) &#123;</span><br><span class="line">        rmatch(ti+k, pj+<span class="number">1</span>, text, tlen);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (pattern[pj] == <span class="string">&#x27;?&#x27;</span>) &#123; <span class="comment">// ?匹配0个或者1个字符</span></span><br><span class="line">      rmatch(ti, pj+<span class="number">1</span>, text, tlen);</span><br><span class="line">      rmatch(ti+<span class="number">1</span>, pj+<span class="number">1</span>, text, tlen);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (ti &lt; tlen &amp;&amp; pattern[pj] == text[ti]) &#123; <span class="comment">// 纯字符匹配才行</span></span><br><span class="line">      rmatch(ti+<span class="number">1</span>, pj+<span class="number">1</span>, text, tlen);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="内容小结"><a href="#内容小结" class="headerlink" title="内容小结"></a>内容小结</h1><p>回溯算法的思想非常简单，大部分情况下，都是用来解决广义的搜索问题，也就是，从一组可能的解中，选择出一个满足要求的解。回溯算法非常适合用递归来实现，在实现的过程中，剪枝操作是提高回溯效率的一种技巧。利用剪枝，我们并不需要穷举搜索所有的情况，从而提高搜索效率。</p>
+<p>尽管回溯算法的原理非常简单，但是却可以解决很多问题，比如我们开头提到的深度优先搜索、八皇后、0-1背包问题、图的着色、旅行商问题、数独、全排列、正则表达式匹配等等。如果感兴趣的话，你可以自己搜索研究一下，最好还能用代码实现一下。如果这几个问题都能实现的话，你基本就掌握了回溯算法。</p>
+<h1 id="课后思考"><a href="#课后思考" class="headerlink" title="课后思考"></a>课后思考</h1><p>现在我们对今天讲到的0-1背包问题稍加改造，如果每个物品不仅重量不同，价值也不同。如何在不超过背包重量的情况下，让背包中的总价值最大？</p>
+<p>欢迎留言和我分享，也欢迎点击“请朋友读”，把今天的内容分享给你的好友，和他一起讨论、学习。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/" rel="tag"># 数据结构与算法</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/03/38%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%88%86%E6%B2%BB%E7%AE%97%E6%B3%95%EF%BC%9A%E8%B0%88%E4%B8%80%E8%B0%88%E5%A4%A7%E8%A7%84%E6%A8%A1%E8%AE%A1%E7%AE%97%E6%A1%86%E6%9E%B6MapReduce%E4%B8%AD%E7%9A%84%E5%88%86%E6%B2%BB%E6%80%9D%E6%83%B3/" rel="prev" title="38基础篇-分治算法：谈一谈大规模计算框架MapReduce中的分治思想">
+                  <i class="fa fa-angle-left"></i> 38基础篇-分治算法：谈一谈大规模计算框架MapReduce中的分治思想
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/03/40%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%88%9D%E8%AF%86%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92%EF%BC%9A%E5%A6%82%E4%BD%95%E5%B7%A7%E5%A6%99%E8%A7%A3%E5%86%B3%E2%80%9C%E5%8F%8C%E5%8D%81%E4%B8%80%E2%80%9D%E8%B4%AD%E7%89%A9%E6%97%B6%E7%9A%84%E5%87%91%E5%8D%95%E9%97%AE%E9%A2%98%EF%BC%9F/" rel="next" title="40基础篇-初识动态规划：如何巧妙解决“双十一”购物时的凑单问题？">
+                  40基础篇-初识动态规划：如何巧妙解决“双十一”购物时的凑单问题？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

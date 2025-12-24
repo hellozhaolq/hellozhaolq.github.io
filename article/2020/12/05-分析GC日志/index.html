@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="分析GC日志">
+<meta property="og:type" content="article">
+<meta property="og:title" content="05-分析GC日志">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="分析GC日志">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/ca3975e478fc4b44afaabc4be2b3c10e.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/2de28c88154745349686362d238f935d.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/ef13a505aca34d999165c7970ad6a838.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/4f2142db8a83474bbd472c69b07c1b50.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/09010144999f462a89289544ebf2cb77.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/minor_gc-936bdcfeec147ede8685f279699b3b56.svg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/full-gc-2ccddddbfd2bcb392704af24002c636c.svg">
+<meta property="article:published_time" content="2020-12-05T01:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-05T01:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="JVM下篇：性能监控与调优篇">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/ca3975e478fc4b44afaabc4be2b3c10e.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/","path":"article/2020/12/05-分析GC日志/","title":"05-分析GC日志"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>05-分析GC日志 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#GC-%E6%97%A5%E5%BF%97%E5%8F%82%E6%95%B0"><span class="nav-number">1.</span> <span class="nav-text">GC 日志参数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GC-%E6%97%A5%E5%BF%97%E6%A0%BC%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">GC 日志格式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%8D%E4%B9%A0%EF%BC%9AGC%E5%88%86%E7%B1%BB"><span class="nav-number">2.1.</span> <span class="nav-text">复习：GC分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8D%E5%90%8CGC%E5%88%86%E7%B1%BB%E7%9A%84GC%E7%BB%86%E8%8A%82"><span class="nav-number">2.2.</span> <span class="nav-text">不同GC分类的GC细节</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%80%81%E5%B9%B4%E4%BB%A3%E4%BD%BF%E7%94%A8CMS-GC"><span class="nav-number">2.2.1.</span> <span class="nav-text">老年代使用CMS GC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B0%E7%94%9F%E4%BB%A3%E4%BD%BF%E7%94%A8Serial-GC"><span class="nav-number">2.2.2.</span> <span class="nav-text">新生代使用Serial GC</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GC%E6%97%A5%E5%BF%97%E5%88%86%E7%B1%BB"><span class="nav-number">2.3.</span> <span class="nav-text">GC日志分类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MinorGC"><span class="nav-number">2.3.1.</span> <span class="nav-text">MinorGC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FullGC"><span class="nav-number">2.3.2.</span> <span class="nav-text">FullGC</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GC%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E5%89%96%E6%9E%90"><span class="nav-number">2.4.</span> <span class="nav-text">GC日志结构剖析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">2.4.1.</span> <span class="nav-text">垃圾收集器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%8F%E8%BF%87%E6%97%A5%E5%BF%97%E7%9C%8BGC%E5%8E%9F%E5%9B%A0"><span class="nav-number">2.4.2.</span> <span class="nav-text">透过日志看GC原因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%8F%E8%BF%87%E6%97%A5%E5%BF%97%E7%9C%8BGC%E5%89%8D%E5%90%8E%E6%83%85%E5%86%B5"><span class="nav-number">2.4.3.</span> <span class="nav-text">透过日志看GC前后情况</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%8F%E8%BF%87%E6%97%A5%E5%BF%97%E7%9C%8BGC%E6%97%B6%E9%97%B4"><span class="nav-number">2.4.4.</span> <span class="nav-text">透过日志看GC时间</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Minor-GC-%E6%97%A5%E5%BF%97%E8%A7%A3%E6%9E%90"><span class="nav-number">2.5.</span> <span class="nav-text">Minor GC 日志解析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Full-GC-%E6%97%A5%E5%BF%97%E8%A7%A3%E6%9E%90"><span class="nav-number">2.6.</span> <span class="nav-text">Full GC 日志解析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GC-%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7"><span class="nav-number">3.</span> <span class="nav-text">GC 日志分析工具</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#GCEasy"><span class="nav-number">3.1.</span> <span class="nav-text">GCEasy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GCViewer"><span class="nav-number">3.2.</span> <span class="nav-text">GCViewer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E5%B7%A5%E5%85%B7"><span class="nav-number">3.3.</span> <span class="nav-text">其他工具</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#GChisto"><span class="nav-number">3.3.1.</span> <span class="nav-text">GChisto</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HPjmeter"><span class="nav-number">3.3.2.</span> <span class="nav-text">HPjmeter</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="05-分析GC日志 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          05-分析GC日志
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-05 09:00:00" itemprop="dateCreated datePublished" datetime="2020-12-05T09:00:00+08:00">2020-12-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>分析GC日志</p>
+<span id="more"></span>
+
+<h1 id="GC-日志参数"><a href="#GC-日志参数" class="headerlink" title="GC 日志参数"></a>GC 日志参数</h1><table>
+<thead>
+<tr>
+<th align="left">参数</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>-verbose:gc</code></td>
+<td align="left">输出日志信息，默认输出的标准输出。可以独立使用</td>
+</tr>
+<tr>
+<td align="left"><code>-XX:+PrintGC</code></td>
+<td align="left">等同于 <code>-verbose:gc</code>，表示打开简化的日志。可以独立使用</td>
+</tr>
+<tr>
+<td align="left"><code>-XX:+PrintGCDetails</code></td>
+<td align="left">在发生垃圾回收时打印内存回收详细的日志，并在进程退出时输出当前内存各区域的分配情况。可以独立使用</td>
+</tr>
+<tr>
+<td align="left"><code>-XX:+PrintGCTimeStamps</code></td>
+<td align="left">程序启动到 GC 发生的时间秒数，不可以独立使用，需要配合 <code>-XX:+PrintGCDetails</code> 使用。</td>
+</tr>
+<tr>
+<td align="left"><code>-XX:+PrintGCDateStamps</code></td>
+<td align="left">输出 GC 发生时的时间戳（以日期的形式，例如：<code>2013-05-04T21:53:59.234+0800</code>），不可以独立使用，可以配合 <code>-XX:+PrintGCDetails</code> 使用</td>
+</tr>
+<tr>
+<td align="left"><code>-XX:+PrintHeapAtGC</code></td>
+<td align="left">每一次 GC 前和 GC 后，都打印堆信息。可以独立使用</td>
+</tr>
+<tr>
+<td align="left"><code>-Xloggc:&lt;file&gt;</code></td>
+<td align="left">把 GC 日志写入到一个文件中去，而不是打印到标准输出中</td>
+</tr>
+</tbody></table>
+<h1 id="GC-日志格式"><a href="#GC-日志格式" class="headerlink" title="GC 日志格式"></a>GC 日志格式</h1><h2 id="复习：GC分类"><a href="#复习：GC分类" class="headerlink" title="复习：GC分类"></a>复习：GC分类</h2><p>针对 HotSpot VM 的实现，它里面的 GC 按照回收区域又分为两大种类型：一种是部分收集（Partial GC），一种是整堆收集（Full GC）</p>
+<ul>
+<li>部分收集（Partial GC）：不是完整收集整个 Java 堆的垃圾收集。其中又分为：<ul>
+<li>新生代收集（Minor GC &#x2F; Young GC）：只是新生代（Eden &#x2F; S0, S1）的垃圾收集</li>
+<li>老年代收集（Major GC &#x2F; Old GC）：只是老年代的垃圾收集。<ul>
+<li>目前，只有 CMS GC 会有单独收集老年代的行为。</li>
+<li>注意，很多时候 Major GC 会和 Full GC 混淆使用，需要具体分辨是老年代回收还是整堆回收。</li>
+</ul>
+</li>
+<li>混合收集（Mixed GC）：收集整个新生代以及部分老年代的垃圾收集。</li>
+<li>目前，只有 G1 GC 会有这种行为</li>
+</ul>
+</li>
+<li>整堆收集（Full GC）：收集整个 Java 堆和方法区的垃圾收集。</li>
+</ul>
+<p><img src="/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/ca3975e478fc4b44afaabc4be2b3c10e.png" alt="img"></p>
+<blockquote>
+<p>[!NOTE]</p>
+<ol>
+<li><strong>新生代收集</strong>：当 Eden 区满的时候就会进行新生代收集，所以新生代收集和 S0 区域和 S1 区域无关</li>
+<li><strong>老年代收集和新生代收集的关系</strong>：进行老年代收集之前会先进行一次年轻代的垃圾收集，原因如下：一个比较大的对象无法放入新生代，那它自然会往老年代去放，如果老年代也放不下，那会先进行一次新生代的垃圾收集，之后尝试往新生代放，如果还是放不下，才会进行老年代的垃圾收集，之后在往老年代去放，这是一个过程，我来说明一下为什么需要往老年代放，但是放不下，而进行新生代垃圾收集的原因，这是因为新生代垃圾收集比老年代垃圾收集更加简单，这样做可以节省性能</li>
+<li><strong>进行垃圾收集的时候，堆包含新生代、老年代、元空间&#x2F;永久代</strong>：可以看出 Heap 后面包含着新生代、老年代、元空间，但是我们设置堆空间大小的时候设置的只是新生代、老年代而已，元空间是分开设置的</li>
+<li><strong>哪些情况会触发Full GC</strong>：老年代空间不足、方法区空间不足、显示调用 <code>System.gc()</code>、Minior GC 进入老年代的数据的平均大小 大于 老年代的可用内存、大对象直接进入老年代，而老年代的可用空间不足</li>
+</ol>
+</blockquote>
+<h2 id="不同GC分类的GC细节"><a href="#不同GC分类的GC细节" class="headerlink" title="不同GC分类的GC细节"></a>不同GC分类的GC细节</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * -XX:+PrintCommandLineFlags</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * -XX:+UseSerialGC:表明新生代使用Serial GC ，同时老年代使用Serial Old GC</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * -XX:+UseParNewGC：标明新生代使用ParNew GC</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * -XX:+UseParallelGC:表明新生代使用Parallel GC</span></span><br><span class="line"><span class="comment"> * -XX:+UseParallelOldGC : 表明老年代使用 Parallel Old GC</span></span><br><span class="line"><span class="comment"> * 说明：二者可以相互激活</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * -XX:+UseConcMarkSweepGC：表明老年代使用CMS GC。同时，年轻代会触发对ParNew 的使用</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">GCUseTest</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        ArrayList&lt;<span class="type">byte</span>[]&gt; list = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span>(<span class="literal">true</span>)&#123;</span><br><span class="line">            <span class="type">byte</span>[] arr = <span class="keyword">new</span> <span class="title class_">byte</span>[<span class="number">1024</span> * <span class="number">10</span>];<span class="comment">//10kb</span></span><br><span class="line">            list.add(arr);</span><br><span class="line"><span class="comment">//            try &#123;</span></span><br><span class="line"><span class="comment">//                Thread.sleep(5);</span></span><br><span class="line"><span class="comment">//            &#125; catch (InterruptedException e) &#123;</span></span><br><span class="line"><span class="comment">//                e.printStackTrace();</span></span><br><span class="line"><span class="comment">//            &#125;</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<h3 id="老年代使用CMS-GC"><a href="#老年代使用CMS-GC" class="headerlink" title="老年代使用CMS GC"></a>老年代使用CMS GC</h3><p>GC 设置方法：参数中使用 <code>-XX:+UseConcMarkSweepGC</code>，说明老年代使用 CMS GC，同时年轻代也会触发对 ParNew 的使用，因此添加该参数之后，新生代使用 ParNew GC，而老年代使用 CMS GC，整体是并发垃圾收集，主打低延迟</p>
+<p><strong>打印出来的GC细节：</strong></p>
+<p><img src="/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/2de28c88154745349686362d238f935d.png" alt="img"></p>
+<h3 id="新生代使用Serial-GC"><a href="#新生代使用Serial-GC" class="headerlink" title="新生代使用Serial GC"></a>新生代使用Serial GC</h3><p>GC 设置方法：参数中使用 <code>-XX:+UseSerialGC</code>，说明新生代使用 Serial GC，同时老年代也会触发对 Serial Old GC 的使用，因此添加该参数之后，新生代使用 Serial GC，而老年代使用 Serial Old GC，整体是串行垃圾收集</p>
+<p><strong>打印出来的GC细节：</strong></p>
+<p><img src="/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/ef13a505aca34d999165c7970ad6a838.png" alt="img"></p>
+<p>DefNew 代表新生代使用 Serial GC，然后 Tenured 代表老年代使用 Serial Old GC</p>
+<h2 id="GC日志分类"><a href="#GC日志分类" class="headerlink" title="GC日志分类"></a>GC日志分类</h2><h3 id="MinorGC"><a href="#MinorGC" class="headerlink" title="MinorGC"></a>MinorGC</h3><p>MinorGC（或young GC或YGC）日志：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[GC (Allocation Failure) [PSYoungGen: 31744K-&gt;2192K (36864K) ] 31744K-&gt;2200K (121856K), 0.0139308 secs] [Times: user=0.05 sys=0.01, real=0.01 secs]</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/4f2142db8a83474bbd472c69b07c1b50.png" alt="img"></p>
+<h3 id="FullGC"><a href="#FullGC" class="headerlink" title="FullGC"></a>FullGC</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[Full GC (Metadata GC Threshold) [PSYoungGen: 5104K-&gt;0K (132096K) ] [Par01dGen: 416K-&gt;5453K (50176K) ]5520K-&gt;5453K (182272K), [Metaspace: 20637K-&gt;20637K (1067008K) ], 0.0245883 secs] [Times: user=0.06 sys=0.00, real=0.02 secs]</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/09010144999f462a89289544ebf2cb77.png" alt="img"></p>
+<h2 id="GC日志结构剖析"><a href="#GC日志结构剖析" class="headerlink" title="GC日志结构剖析"></a>GC日志结构剖析</h2><h3 id="垃圾收集器"><a href="#垃圾收集器" class="headerlink" title="垃圾收集器"></a>垃圾收集器</h3><ul>
+<li><strong>Serial 收集器</strong>：新生代显示 “[DefNew”，即 Default New Generation</li>
+<li><strong>ParNew 收集器</strong>：新生代显示 “[ParNew”，即 Parallel New Generation</li>
+<li><strong>Parallel Scavenge 收集器</strong>：新生代显示”[PSYoungGen”，JDK1.7 使用的即 PSYoungGen</li>
+<li><strong>Parallel Old 收集器</strong>：老年代显示 “[ParoldGen”</li>
+<li><strong>G1 收集器</strong>：显示 “garbage-first heap”</li>
+</ul>
+<h3 id="透过日志看GC原因"><a href="#透过日志看GC原因" class="headerlink" title="透过日志看GC原因"></a>透过日志看GC原因</h3><ul>
+<li><strong>Allocation Failure</strong>：表明本次引起 GC 的原因是因为新生代中没有足够的区域存放需要分配的数据</li>
+<li><strong>Metadata GCThreshold</strong>：Metaspace 区不够用了</li>
+<li><strong>FErgonomics</strong>：JVM 自适应调整导致的 GC</li>
+<li><strong>System</strong>：调用了 <code>System.gc()</code> 方法</li>
+</ul>
+<h3 id="透过日志看GC前后情况"><a href="#透过日志看GC前后情况" class="headerlink" title="透过日志看GC前后情况"></a>透过日志看GC前后情况</h3><p>通过图示，我们可以发现GC日志格式的规律一般都是：GC前内存占用-＞GC后内存占用（该区域内存总大小）</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[PSYoungGen: 5986K-&gt;696K (8704K) ] 5986K-&gt;704K (9216K)</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>中括号内：GC 回收前年轻代堆大小，回收后大小，（年轻代堆总大小）</li>
+<li>括号外：GC 回收前年轻代和老年代大小，回收后大小，（年轻代和老年代总大小）</li>
+</ul>
+<p>注意：Minor GC 堆内存总容量 &#x3D; 9&#x2F;10 年轻代 + 老年代。原因是 Survivor 区只计算 from 部分，而 JVM 默认年轻代中 Eden 区和 Survivor 区的比例关系，Eden:S0:S1&#x3D;8:1:1。</p>
+<h3 id="透过日志看GC时间"><a href="#透过日志看GC时间" class="headerlink" title="透过日志看GC时间"></a>透过日志看GC时间</h3><p>GC日志中有三个时间：user，sys和real</p>
+<ul>
+<li><strong>user</strong>：进程执行用户态代码（核心之外）所使用的时间。这是执行此进程所使用的实际 CPU 时间，其他进程和此进程阻塞的时间并不包括在内。在垃圾收集的情况下，表示 GC 线程执行所使用的 CPU 总时间。</li>
+<li><strong>sys</strong>：进程在内核态消耗的 CPU 时间，即在内核执行系统调用或等待系统事件所使用的 CPU 时间</li>
+<li><strong>real</strong>：程序从开始到结束所用的时钟时间。这个时间包括其他进程使用的时间片和进程阻塞的时间（比如等待 I&#x2F;O 完成）。对于并行 gc，这个数字应该接近（用户时间＋系统时间）除以垃圾收集器使用的线程数。</li>
+</ul>
+<p>由于多核的原因，一般的 GC 事件中，real time 是小于 sys time＋user time 的，因为一般是多个线程并发的去做 GC，所以 real time 是要小于 sys＋user time 的。如果 real＞sys＋user 的话，则你的应用可能存在下列问题：IO 负载非常重或 CPU 不够用。</p>
+<h2 id="Minor-GC-日志解析"><a href="#Minor-GC-日志解析" class="headerlink" title="Minor GC 日志解析"></a>Minor GC 日志解析</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">2020-11-20T17:19:43.265-0800: 0.822:[GC (ALLOCATION FAILURE) [PSYOUNGGEN: 76800K-&gt;8433K(89600K)] 76800K-&gt;8449K(294400K), 0.0088371 SECS] [TIMES: USER=0.02 SYS=0.01，REAL=0.01 SECS]</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/minor_gc-936bdcfeec147ede8685f279699b3b56.svg" alt="Minor GC 日志解析"></p>
+<h2 id="Full-GC-日志解析"><a href="#Full-GC-日志解析" class="headerlink" title="Full GC 日志解析"></a>Full GC 日志解析</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">2020-11-20T17:19:43.794-0800:1.351:[FULL GC (METADATA GC THRESHOLD) [PSYOUNGGEN: 10082K-&gt;0K(89600K)] [PAROLDGEN:32K-&gt;9638K(204800K)]10114K-&gt;9638K(294400K)，</span><br><span class="line">[METASPACE: 20158K-&gt;20156K(1067008K)],0.0285388 SECS] [TIMES: USER=0.11SYS=0.00，REAL=0.03 SECS]</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="/article/2020/12/05-%E5%88%86%E6%9E%90GC%E6%97%A5%E5%BF%97/full-gc-2ccddddbfd2bcb392704af24002c636c.svg" alt="Minor GC 日志解析"></p>
+<h1 id="GC-日志分析工具"><a href="#GC-日志分析工具" class="headerlink" title="GC 日志分析工具"></a>GC 日志分析工具</h1><h2 id="GCEasy"><a href="#GCEasy" class="headerlink" title="GCEasy"></a>GCEasy</h2><p>GCEasy – 一款好用的在线分析 GC 日志的网站。</p>
+<p>官网地址：<a target="_blank" rel="noopener" href="https://gceasy.io/">https://gceasy.io/</a></p>
+<p>GCEasy是一款在线的GC日志分析器，可以通过GC日志分析进行内存泄露检测、GC暂停原因分析、JVM配置建议优化等功能，而且是可以免费使用的（有一些服务式收费的）。</p>
+<h2 id="GCViewer"><a href="#GCViewer" class="headerlink" title="GCViewer"></a>GCViewer</h2><p>上面介绍了一款在线的 GC 日志分析器，下面介绍一个离线版的 GcViewer。</p>
+<p>GCViewer 是一个免费的、开源的分析小工具，用于可视化査看由 SUN&#x2F;0racle,IBM,HP 和 BEAJava 虚拟机产生的垃圾收集器的日志。</p>
+<p>GCViewer 用于可视化 Java VM 选项 <code>-verbose:gc</code> 和.NET 生成的数据 <code>-Xloggc:&lt;file&gt;</code>。它还计算与垃圾回收相关的性能指标 (吞吐量, 累积的暂停，最长的暂停等)。当通过更改世代大小或设置初始堆大小来调整特定应用程序的垃圾回收时，此功能非常有用。</p>
+<p><strong>安装</strong></p>
+<ol>
+<li>下载GCViewer工具<ul>
+<li>源码下载:<a target="_blank" rel="noopener" href="https://github.com/chewiebug/GcViewer">https://github.com/chewiebug/GcViewer</a></li>
+<li>运行版本下载:<a target="_blank" rel="noopener" href="https://github.com/chewiebug/GcViewer/wiki/changelog">https://github.com/chewiebug/GcViewer/wiki/changelog</a></li>
+</ul>
+</li>
+<li>只需双击 gcviewer-1.3x.jar 或运行 <code>java -jar gcviewer-1.3x.jar</code> (它需要运行java1.8 vm)，即可启动 GCViewer(gui)</li>
+</ol>
+<h2 id="其他工具"><a href="#其他工具" class="headerlink" title="其他工具"></a>其他工具</h2><h3 id="GChisto"><a href="#GChisto" class="headerlink" title="GChisto"></a>GChisto</h3><p>Gchisto 是一款专业分析 GC 日志的工具，可以通过 GC 日志来分析:MinorGC、Fu11 GC 的次数、频率、持续时间等，通过列表、报表、图表等不同形式来反应 GC 的情况。</p>
+<p>虽然界面略显粗糙，但是功能还是不错的。</p>
+<blockquote>
+<p>[!WARNING]</p>
+<ul>
+<li>官网上没有下载的地方，需要自己从SVN上拉下来编译</li>
+<li>不过这个工具似乎没怎么维护了，存在不少bug</li>
+</ul>
+</blockquote>
+<h3 id="HPjmeter"><a href="#HPjmeter" class="headerlink" title="HPjmeter"></a>HPjmeter</h3><ul>
+<li>工具很强大，但是只能打开由以下参数生成的 GC log，<code>-verbose:gc -Xloggc:gc.log</code>。添加其他参数生成的 gc.log 无法打开</li>
+<li>HPjmeter 集成了以前的 HPjtune 功能，可以分析在 HP 机器上产生的垃圾回收日志文件</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/JVM%E4%B8%8B%E7%AF%87%EF%BC%9A%E6%80%A7%E8%83%BD%E7%9B%91%E6%8E%A7%E4%B8%8E%E8%B0%83%E4%BC%98%E7%AF%87/" rel="tag"># JVM下篇：性能监控与调优篇</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2020/12/04-JVM%20%E8%BF%90%E8%A1%8C%E6%97%B6%E5%8F%82%E6%95%B0/" rel="prev" title="04-JVM 运行时参数">
+                  <i class="fa fa-angle-left"></i> 04-JVM 运行时参数
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2020/12/06-%E8%A1%A5%E5%85%851%EF%BC%9A%E5%86%8D%E8%B0%88%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F/" rel="next" title="06-补充1：再谈内存泄漏">
+                  06-补充1：再谈内存泄漏 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

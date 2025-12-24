@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="上一节课，我们讲解了幂等框架的设计思路。在正常情况下，幂等框架的处理流程是比较简单的。调用方生成幂等号，传递给实现方，实现方记录幂等号或者用幂等号判重。但是，幂等框架要处理的异常情况很多，这也是设计的复杂之处和难点之处。比如，代码运行异常、业务系统宕机、幂等框架异常。 虽然幂等框架要处理的异常很多，但考虑到开发成本以及简单易用性，我们对某些异常的处理在工程上做了妥协，交由业务系统或者人工介入处理。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="95开源与项目实战之项目实战-项目实战二：设计实现一个通用的接口幂等框架（实现）">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/01/95%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98-%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%9A%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E9%80%9A%E7%94%A8%E7%9A%84%E6%8E%A5%E5%8F%A3%E5%B9%82%E7%AD%89%E6%A1%86%E6%9E%B6%EF%BC%88%E5%AE%9E%E7%8E%B0%EF%BC%89/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="上一节课，我们讲解了幂等框架的设计思路。在正常情况下，幂等框架的处理流程是比较简单的。调用方生成幂等号，传递给实现方，实现方记录幂等号或者用幂等号判重。但是，幂等框架要处理的异常情况很多，这也是设计的复杂之处和难点之处。比如，代码运行异常、业务系统宕机、幂等框架异常。 虽然幂等框架要处理的异常很多，但考虑到开发成本以及简单易用性，我们对某些异常的处理在工程上做了妥协，交由业务系统或者人工介入处理。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-01-05T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-01-05T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/01/95%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98-%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%9A%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E9%80%9A%E7%94%A8%E7%9A%84%E6%8E%A5%E5%8F%A3%E5%B9%82%E7%AD%89%E6%A1%86%E6%9E%B6%EF%BC%88%E5%AE%9E%E7%8E%B0%EF%BC%89/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/01/95%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98-%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%9A%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E9%80%9A%E7%94%A8%E7%9A%84%E6%8E%A5%E5%8F%A3%E5%B9%82%E7%AD%89%E6%A1%86%E6%9E%B6%EF%BC%88%E5%AE%9E%E7%8E%B0%EF%BC%89/","path":"article/2023/01/95开源与项目实战之项目实战-项目实战二：设计实现一个通用的接口幂等框架（实现）/","title":"95开源与项目实战之项目实战-项目实战二：设计实现一个通用的接口幂等框架（实现）"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>95开源与项目实战之项目实战-项目实战二：设计实现一个通用的接口幂等框架（实现） | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#V1%E7%89%88%E6%9C%AC%E5%8A%9F%E8%83%BD%E9%9C%80%E6%B1%82"><span class="nav-number">1.</span> <span class="nav-text">V1版本功能需求</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%80%E5%B0%8F%E5%8E%9F%E5%9E%8B%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.</span> <span class="nav-text">最小原型代码实现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Review%E6%9C%80%E5%B0%8F%E5%8E%9F%E5%9E%8B%E4%BB%A3%E7%A0%81"><span class="nav-number">3.</span> <span class="nav-text">Review最小原型代码</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E6%9E%84%E6%9C%80%E5%B0%8F%E5%8E%9F%E5%9E%8B%E4%BB%A3%E7%A0%81"><span class="nav-number">4.</span> <span class="nav-text">重构最小原型代码</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE"><span class="nav-number">5.</span> <span class="nav-text">重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%A0%82%E8%AE%A8%E8%AE%BA"><span class="nav-number">6.</span> <span class="nav-text">课堂讨论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/01/95%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98-%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%9A%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E9%80%9A%E7%94%A8%E7%9A%84%E6%8E%A5%E5%8F%A3%E5%B9%82%E7%AD%89%E6%A1%86%E6%9E%B6%EF%BC%88%E5%AE%9E%E7%8E%B0%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="95开源与项目实战之项目实战-项目实战二：设计实现一个通用的接口幂等框架（实现） | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          95开源与项目实战之项目实战-项目实战二：设计实现一个通用的接口幂等框架（实现）
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-01-05 08:00:00" itemprop="dateCreated datePublished" datetime="2023-01-05T08:00:00+08:00">2023-01-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>上一节课，我们讲解了幂等框架的设计思路。在正常情况下，幂等框架的处理流程是比较简单的。调用方生成幂等号，传递给实现方，实现方记录幂等号或者用幂等号判重。但是，幂等框架要处理的异常情况很多，这也是设计的复杂之处和难点之处。比如，代码运行异常、业务系统宕机、幂等框架异常。</p>
+<p>虽然幂等框架要处理的异常很多，但考虑到开发成本以及简单易用性，我们对某些异常的处理在工程上做了妥协，交由业务系统或者人工介入处理。这样就大大简化了幂等框架开发的复杂度和难度。</p>
+<p>今天，我们针对幂等框架的设计思路，讲解如何编码实现。跟限流框架的讲解相同，对于幂等框架，我们也会还原它的整个开发过程，从V1版本需求、最小原型代码讲起，然后讲解如何review代码发现问题、重构代码解决问题，最终得到一份易读、易扩展、易维护、灵活、可测试的高质量代码实现。</p>
+<p>话不多说，让我们正式开始今天的学习吧！</p>
+<span id="more"></span>
+
+<h1 id="V1版本功能需求"><a href="#V1版本功能需求" class="headerlink" title="V1版本功能需求"></a>V1版本功能需求</h1><p>上一节课给出的设计思路比较零散，重点还是在讲设计的缘由，为什么要这么设计。今天，我们再重新整理一下，经过上一节课的分析梳理最终得到的设计思路。虽然上一节课的分析很复杂、很烧脑，但思从深而行从简，最终得到的幂等框架的设计思路是很简单的，主要包含下面这样两个主要的功能开发点：</p>
+<ul>
+<li>实现生成幂等号的功能；</li>
+<li>实现存储、查询、删除幂等号的功能。</li>
+</ul>
+<p>因为功能非常简单，所以，我们就不再进一步裁剪了。在V1版本中，我们会实现上面罗列的所有功能。针对这两个功能点，我们先来说下实现思路。</p>
+<p><strong>我们先来看，如何生成幂等号。</strong></p>
+<p>幂等号用来标识两个接口请求是否是同一个业务请求，换句话说，两个接口请求是否是重试关系，而非独立的两个请求。接口调用方需要在发送接口请求的同时，将幂等号一块传递给接口实现方。那如何来生成幂等号呢？一般有两种生成方式。一种方式是集中生成并且分派给调用方，另一种方式是直接由调用方生成。</p>
+<p>对于第一种生成方式，我们需要部署一套幂等号的生成系统，并且提供相应的远程接口（Restful或者RPC接口），调用方通过调用远程接口来获取幂等号。这样做的好处是，对调用方完全隐藏了幂等号的实现细节。当我们需要改动幂等号的生成算法时，调用方不需要改动任何代码。</p>
+<p>对于第二种生成方式，调用方按照跟接口实现方预先商量好的算法，自己来生成幂等号。这种实现方式的好处在于，不用像第一种方式那样调用远程接口，所以执行效率更高。但是，一旦需要修改幂等号的生成算法，就需要修改每个调用方的代码。</p>
+<p>并且，每个调用方自己实现幂等号的生成算法也会有问题。一方面，重复开发，违反DRY原则。另一方面，工程师的开发水平层次不齐，代码难免会有bug。除此之外，对于复杂的幂等号生成算法，比如依赖外部系统Redis等，显然更加适合上一种实现方式，可以避免调用方为了使用幂等号引入新的外部系统。</p>
+<p>权衡来讲，既考虑到生成幂等号的效率，又考虑到代码维护的成本，我们选择第二种实现方式，并且在此基础上做些改进，由幂等框架来统一提供幂等号生成算法的代码实现，并封装成开发类库，提供给各个调用方复用。除此之外，我们希望生成幂等号的算法尽可能的简单，不依赖其他外部系统。</p>
+<p>实际上，对于幂等号的唯一要求就是全局唯一。全局唯一ID的生成算法有很多。比如，简单点的有取UUID，复杂点的可以把应用名拼接在UUID上，方便做问题排查。总体上来讲，幂等号的生成算法并不难。</p>
+<p><strong>我们再来看，如何实现幂等号的存储、查询和删除。</strong></p>
+<p>从现在的需求来看，幂等号只是为了判重。在数据库中，我们只需要存储一个幂等号就可以，不需要太复杂的存储结构，所以，我们不选择使用复杂的关系型数据库，而是选择使用更加简单的、读写更加快速的键值数据库，比如Redis。</p>
+<p>在幂等判重逻辑中，我们需要先检查幂等号是否存在。如果没有存在，再将幂等号存储进Redis。多个线程（同一个业务实例的多个线程）或者多进程（多个业务实例）同时执行刚刚的“检查-设置”逻辑时，就会存在竞争关系（竞态，race condition）。比如，A线程检查幂等号不存在，在A线程将幂等号存储进Redis之前，B线程也检查幂等号不存在，这样就会导致业务被重复执行。为了避免这种情况发生，我们要给“检查-设置”操作加锁，让同一时间只有一个线程能执行。除此之外，为了避免多进程之间的竞争，普通的线程锁还不起作用，我们需要分布式锁。</p>
+<p>引入分布式锁会增加开发的难度和复杂度，而Redis本身就提供了把“检查-设置”操作作为原子操作执行的命令：setnx(key, value)。它先检查key是否存在，如果存在，则返回结果0；如果不存在，则将key值存下来，并将值设置为value，返回结果1。因为Redis本身是单线程执行命令的，所以不存在刚刚讲到的并发问题。</p>
+<h1 id="最小原型代码实现"><a href="#最小原型代码实现" class="headerlink" title="最小原型代码实现"></a>最小原型代码实现</h1><p>V1版本要实现的功能和实现思路，现在已经很明确了。现在，我们来看下具体的代码实现。还是跟限流框架同样的实现方法，我们先不考虑设计和代码质量，怎么简单怎么来，先写出MVP代码，然后基于这个最简陋的版本做优化重构。</p>
+<p>V1版本的功能非常简单，我们用一个类就能搞定，代码如下所示。只用了不到30行代码，就搞定了一个框架，是不是觉得有点不可思议。对于这段代码，你可以先思考下，有哪些值得优化的地方。</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Idempotence</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="title class_">JedisCluster</span> jedisCluster;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title class_">Idempotence</span>(<span class="title class_">String</span> redisClusterAddress, <span class="title class_">GenericObjectPoolConfig</span> config) &#123;</span><br><span class="line">    <span class="title class_">String</span>[] addressArray= redisClusterAddress.<span class="title function_">split</span>(<span class="string">&quot;;&quot;</span>);</span><br><span class="line">    <span class="title class_">Set</span>&lt;<span class="title class_">HostAndPort</span>&gt; redisNodes = <span class="keyword">new</span> <span class="title class_">HashSet</span>&lt;&gt;();</span><br><span class="line">    <span class="keyword">for</span> (<span class="title class_">String</span> address : addressArray) &#123;</span><br><span class="line">      <span class="title class_">String</span>[] hostAndPort = address.<span class="title function_">split</span>(<span class="string">&quot;:&quot;</span>);</span><br><span class="line">      redisNodes.<span class="title function_">add</span>(<span class="keyword">new</span> <span class="title class_">HostAndPort</span>(hostAndPort[<span class="number">0</span>], <span class="title class_">Integer</span>.<span class="title function_">valueOf</span>(hostAndPort[<span class="number">1</span>])));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">jedisCluster</span> = <span class="keyword">new</span> <span class="title class_">JedisCluster</span>(redisNodes, config);</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">public</span> <span class="title class_">String</span> <span class="title function_">genId</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="variable constant_">UUID</span>.<span class="title function_">randomUUID</span>().<span class="title function_">toString</span>();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="built_in">boolean</span> <span class="title function_">saveIfAbsent</span>(<span class="params"><span class="title class_">String</span> idempotenceId</span>) &#123;</span><br><span class="line">    <span class="title class_">Long</span> success = jedisCluster.<span class="title function_">setnx</span>(idempotenceId, <span class="string">&quot;1&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> success == <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="built_in">void</span> <span class="title function_">delete</span>(<span class="params"><span class="title class_">String</span> idempotenceId</span>) &#123;</span><br><span class="line">    jedisCluster.<span class="title function_">del</span>(idempotenceId);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Review最小原型代码"><a href="#Review最小原型代码" class="headerlink" title="Review最小原型代码"></a>Review最小原型代码</h1><p>尽管MVP代码很少，但仔细推敲，也有很多值得优化的地方。现在，我们就站在Code Reviewer的角度，分析一下这段代码。我把我的所有意见都放到代码注释中了，你可以对照着代码一块看下。</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Idempotence</span> &#123;</span><br><span class="line">  <span class="comment">// comment-1: 如果要替换存储方式，是不是很麻烦呢？</span></span><br><span class="line">  <span class="keyword">private</span> <span class="title class_">JedisCluster</span> jedisCluster;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// comment-2: 如果幂等框架要跟业务系统复用jedisCluster连接呢？</span></span><br><span class="line">  <span class="comment">// comment-3: 是不是应该注释说明一下redisClusterAddress的格式，以及config是否可以传递进null呢？</span></span><br><span class="line">  <span class="keyword">public</span> <span class="title class_">Idempotence</span>(<span class="title class_">String</span> redisClusterAddress, <span class="title class_">GenericObjectPoolConfig</span> config) &#123;</span><br><span class="line">    <span class="comment">// comment-4: 这段逻辑放到构造函数里，不容易写单元测试呢</span></span><br><span class="line">    <span class="title class_">String</span>[] addressArray= redisClusterAddress.<span class="title function_">split</span>(<span class="string">&quot;;&quot;</span>);</span><br><span class="line">    <span class="title class_">Set</span>&lt;<span class="title class_">HostAndPort</span>&gt; redisNodes = <span class="keyword">new</span> <span class="title class_">HashSet</span>&lt;&gt;();</span><br><span class="line">    <span class="keyword">for</span> (<span class="title class_">String</span> address : addressArray) &#123;</span><br><span class="line">      <span class="title class_">String</span>[] hostAndPort = address.<span class="title function_">split</span>(<span class="string">&quot;:&quot;</span>);</span><br><span class="line">      redisNodes.<span class="title function_">add</span>(<span class="keyword">new</span> <span class="title class_">HostAndPort</span>(hostAndPort[<span class="number">0</span>], <span class="title class_">Integer</span>.<span class="title function_">valueOf</span>(hostAndPort[<span class="number">1</span>])));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">jedisCluster</span> = <span class="keyword">new</span> <span class="title class_">JedisCluster</span>(redisNodes, config);</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// comment-5: generateId()是不是比缩写要好点？</span></span><br><span class="line">  <span class="comment">// comment-6: 根据接口隔离原则，这个函数跟其他函数的使用场景完全不同，这个函数主要用在调用方，其他函数用在实现方，是不是应该分别放到两个类中？</span></span><br><span class="line">  <span class="keyword">public</span> <span class="title class_">String</span> <span class="title function_">genId</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="variable constant_">UUID</span>.<span class="title function_">randomUUID</span>().<span class="title function_">toString</span>();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// comment-7: 返回值的意义是不是应该注释说明一下？</span></span><br><span class="line">  <span class="keyword">public</span> <span class="built_in">boolean</span> <span class="title function_">saveIfAbsent</span>(<span class="params"><span class="title class_">String</span> idempotenceId</span>) &#123;</span><br><span class="line">    <span class="title class_">Long</span> success = jedisCluster.<span class="title function_">setnx</span>(idempotenceId, <span class="string">&quot;1&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> success == <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="built_in">void</span> <span class="title function_">delete</span>(<span class="params"><span class="title class_">String</span> idempotenceId</span>) &#123;</span><br><span class="line">    jedisCluster.<span class="title function_">del</span>(idempotenceId);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>总结一下，MVP代码主要涉及下面这样几个问题。</p>
+<ul>
+<li><strong>代码可读性问题</strong>：有些函数的参数和返回值的格式和意义不够明确，需要注释补充解释一下。genId()函数使用了缩写，全拼generateId()可能更好些！</li>
+<li><strong>代码可扩展性问题</strong>：按照现在的代码实现方式，如果改变幂等号的存储方式和生成算法，代码修改起来会比较麻烦。除此之外，基于接口隔离原则，我们应该将genId()函数跟其他函数分离开来，放到两个类中。独立变化，隔离修改，更容易扩展！</li>
+<li><strong>代码可测试性问题</strong>：解析Redis Cluster地址的代码逻辑较复杂，但因为放到了构造函数中，无法对它编写单元测试。</li>
+<li><strong>代码灵活性问题</strong>：业务系统有可能希望幂等框架复用已经建立好的jedisCluster，而不是单独给幂等框架创建一个jedisCluster。</li>
+</ul>
+<h1 id="重构最小原型代码"><a href="#重构最小原型代码" class="headerlink" title="重构最小原型代码"></a>重构最小原型代码</h1><p>实际上，问题找到了，修改起来就容易多了。针对刚刚罗列的几个问题，我们对MVP代码进行重构，重构之后的代码如下所示。</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 代码目录结构</span></span><br><span class="line">com.<span class="property">xzg</span>.<span class="property">cd</span>.<span class="property">idempotence</span></span><br><span class="line"> --<span class="title class_">Idempotence</span></span><br><span class="line"> --<span class="title class_">IdempotenceIdGenerator</span>(幂等号生成类)</span><br><span class="line"> --<span class="title class_">IdempotenceStorage</span>(接口：用来读写幂等号)</span><br><span class="line"> --<span class="title class_">RedisClusterIdempotenceStorage</span>(<span class="title class_">IdempotenceStorage</span>的实现类)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 每个类的代码实现</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Idempotence</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="title class_">IdempotenceStorage</span> storage;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title class_">Idempotence</span>(<span class="title class_">IdempotenceStorage</span> storage) &#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">storage</span> = storage;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="built_in">boolean</span> <span class="title function_">saveIfAbsent</span>(<span class="params"><span class="title class_">String</span> idempotenceId</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> storage.<span class="title function_">saveIfAbsent</span>(idempotenceId);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="built_in">void</span> <span class="title function_">delete</span>(<span class="params"><span class="title class_">String</span> idempotenceId</span>) &#123;</span><br><span class="line">    storage.<span class="title function_">delete</span>(idempotenceId);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">IdempotenceIdGenerator</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="title class_">String</span> <span class="title function_">generateId</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="variable constant_">UUID</span>.<span class="title function_">randomUUID</span>().<span class="title function_">toString</span>();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">IdempotenceStorage</span> &#123;</span><br><span class="line">  <span class="built_in">boolean</span> <span class="title function_">saveIfAbsent</span>(<span class="title class_">String</span> idempotenceId);</span><br><span class="line">  <span class="built_in">void</span> <span class="title function_">delete</span>(<span class="title class_">String</span> idempotenceId);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RedisClusterIdempotenceStorage</span> <span class="keyword">implements</span> <span class="title class_">IdempotenceStorage</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="title class_">JedisCluster</span> jedisCluster;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Constructor</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> redisClusterAddress the format is 128.91.12.1:3455;128.91.12.2:3452;289.13.2.12:8978</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> config should not be null</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">public</span> <span class="title class_">RedisIdempotenceStorage</span>(<span class="title class_">String</span> redisClusterAddress, <span class="title class_">GenericObjectPoolConfig</span> config) &#123;</span><br><span class="line">    <span class="title class_">Set</span>&lt;<span class="title class_">HostAndPort</span>&gt; redisNodes = <span class="title function_">parseHostAndPorts</span>(redisClusterAddress);</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">jedisCluster</span> = <span class="keyword">new</span> <span class="title class_">JedisCluster</span>(redisNodes, config);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title class_">RedisIdempotenceStorage</span>(<span class="title class_">JedisCluster</span> jedisCluster) &#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">jedisCluster</span> = jedisCluster;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Save &#123;<span class="doctag">@idempotenceId</span>&#125; into storage if it does not exist.</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> idempotenceId the idempotence ID</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span> true if the &#123;<span class="doctag">@idempotenceId</span>&#125; is saved, otherwise return false</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">public</span> <span class="built_in">boolean</span> <span class="title function_">saveIfAbsent</span>(<span class="params"><span class="title class_">String</span> idempotenceId</span>) &#123;</span><br><span class="line">    <span class="title class_">Long</span> success = jedisCluster.<span class="title function_">setnx</span>(idempotenceId, <span class="string">&quot;1&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> success == <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="built_in">void</span> <span class="title function_">delete</span>(<span class="params"><span class="title class_">String</span> idempotenceId</span>) &#123;</span><br><span class="line">    jedisCluster.<span class="title function_">del</span>(idempotenceId);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@VisibleForTesting</span></span><br><span class="line">  <span class="keyword">protected</span> <span class="title class_">Set</span>&lt;<span class="title class_">HostAndPort</span>&gt; <span class="title function_">parseHostAndPorts</span>(<span class="params"><span class="title class_">String</span> redisClusterAddress</span>) &#123;</span><br><span class="line">    <span class="title class_">String</span>[] addressArray= redisClusterAddress.<span class="title function_">split</span>(<span class="string">&quot;;&quot;</span>);</span><br><span class="line">    <span class="title class_">Set</span>&lt;<span class="title class_">HostAndPort</span>&gt; redisNodes = <span class="keyword">new</span> <span class="title class_">HashSet</span>&lt;&gt;();</span><br><span class="line">    <span class="keyword">for</span> (<span class="title class_">String</span> address : addressArray) &#123;</span><br><span class="line">      <span class="title class_">String</span>[] hostAndPort = address.<span class="title function_">split</span>(<span class="string">&quot;:&quot;</span>);</span><br><span class="line">      redisNodes.<span class="title function_">add</span>(<span class="keyword">new</span> <span class="title class_">HostAndPort</span>(hostAndPort[<span class="number">0</span>], <span class="title class_">Integer</span>.<span class="title function_">valueOf</span>(hostAndPort[<span class="number">1</span>])));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> redisNodes;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接下来，我再总结罗列一下，针对之前发现的问题，我们都做了哪些代码改动。主要有下面这样几点，你可以结合着代码一块看下。</p>
+<p>**在代码可读性方面，**我们对构造函数、saveIfAbsense()函数的参数和返回值做了注释，并且将genId()函数改为全拼generateId()。不过，对于这个函数来说，缩写实际上问题也不大。</p>
+<p>**在代码可扩展性方面，**我们按照基于接口而非实现的编程原则，将幂等号的读写独立出来，设计成IdempotenceStorage接口和RedisClusterIdempotenceStorage实现类。RedisClusterIdempotenceStorage实现了基于Redis Cluster的幂等号读写。如果我们需要替换新的幂等号读写方式，比如基于单个Redis而非Redis Cluster，我们就可以再定义一个实现了IdempotenceStorage接口的实现类：RedisIdempotenceStorage。</p>
+<p>除此之外，按照接口隔离原则，我们将生成幂等号的代码抽离出来，放到IdempotenceIdGenerator类中。这样，调用方只需要依赖这个类的代码就可以了。幂等号生成算法的修改，跟幂等号存储逻辑的修改，两者完全独立，一个修改不会影响另外一个。</p>
+<p>**在代码可测试性方面，**我们把原本放在构造函数中的逻辑抽离出来，放到了parseHostAndPorts()函数中。这个函数本应该是Private访问权限的，但为了方便编写单元测试，我们把它设置为成了Protected访问权限，并且通过注解@VisibleForTesting做了标明。</p>
+<p>**在代码灵活性方面，**为了方便复用业务系统已经建立好的jedisCluster，我们提供了一个新的构造函数，支持业务系统直接传递jedisCluster来创建Idempotence对象。</p>
+<h1 id="重点回顾"><a href="#重点回顾" class="headerlink" title="重点回顾"></a>重点回顾</h1><p>好了，今天的内容到此就讲完了。我们一块来总结回顾一下，你需要重点掌握的内容。</p>
+<p>我们前面花了两节课的时间，用很大的篇幅在讲需求和设计，特别是设计的缘由。而真正到了实现环节，我们只用了不到30行代码，就实现了幂等框架。这就很好体现了“思从深而行从简”的道理。对于不到30行代码，很多人觉得不大可能有啥优化空间了，但我们今天还是提出了7个优化建议，并且对代码结构做了比较大的调整。这说明，只要仔细推敲，再小的代码都有值得优化的地方。</p>
+<p>不过，之前有人建议我举一些大型项目中的例子，最好是上万行代码的那种，不要举这种几十行的小例子。大项目和小项目在编码这个层面，实际上没有太大区别。再宏大的工程、再庞大的项目，也是一行一行写出来的。那些上来就要看上万行代码，分析庞大项目的，大部分都还没有理解编码的精髓。编码本身就是一个很细节的事情，牛不牛也都隐藏在一行一行的代码中。空谈架构、设计、大道理，实际上没有太多意义，对你帮助不大。能沉下心来把细节都做好那才是真的牛！</p>
+<h1 id="课堂讨论"><a href="#课堂讨论" class="headerlink" title="课堂讨论"></a>课堂讨论</h1><ol>
+<li>针对MVP代码，我有两个问题留给你思考。其中一个问题是，delete()是应该返回void值还是boolean值？如果删除出错，应该如何处理？另一个问题是，需不需要给幂等号生成算法抽象出一个接口呢？为什么？</li>
+<li>在后续的版本规划中，你觉得幂等框架还可以继续扩展哪些功能？或者做哪些优化？如果让你规划第二个版本，你会做哪些东西？</li>
+</ol>
+<p>欢迎留言和我分享你的想法。如果有收获，也欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/01/94%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98-%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%9A%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E9%80%9A%E7%94%A8%E7%9A%84%E6%8E%A5%E5%8F%A3%E5%B9%82%E7%AD%89%E6%A1%86%E6%9E%B6%EF%BC%88%E8%AE%BE%E8%AE%A1%EF%BC%89/" rel="prev" title="94开源与项目实战之项目实战-项目实战二：设计实现一个通用的接口幂等框架（设计）">
+                  <i class="fa fa-angle-left"></i> 94开源与项目实战之项目实战-项目实战二：设计实现一个通用的接口幂等框架（设计）
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/01/96%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98-%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B8%89%EF%BC%9A%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E6%94%AF%E6%8C%81%E8%87%AA%E5%AE%9A%E4%B9%89%E8%A7%84%E5%88%99%E7%9A%84%E7%81%B0%E5%BA%A6%E5%8F%91%E5%B8%83%E7%BB%84%E4%BB%B6%EF%BC%88%E5%88%86%E6%9E%90%EF%BC%89/" rel="next" title="96开源与项目实战之项目实战-项目实战三：设计实现一个支持自定义规则的灰度发布组件（分析）">
+                  96开源与项目实战之项目实战-项目实战三：设计实现一个支持自定义规则的灰度发布组件（分析） <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

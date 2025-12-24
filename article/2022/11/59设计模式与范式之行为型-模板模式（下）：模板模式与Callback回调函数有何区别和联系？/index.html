@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="上一节课中，我们学习了模板模式的原理、实现和应用。它常用在框架开发中，通过提供功能扩展点，让框架用户在不修改框架源码的情况下，基于扩展点定制化框架的功能。除此之外，模板模式还可以起到代码复用的作用。 复用和扩展是模板模式的两大作用，实际上，还有另外一个技术概念，也能起到跟模板模式相同的作用，那就是回调（Callback）。今天我们今天就来看一下，回调的原理、实现和应用，以及它跟模板模式的区别和联系">
+<meta property="og:type" content="article">
+<meta property="og:title" content="59设计模式与范式之行为型-模板模式（下）：模板模式与Callback回调函数有何区别和联系？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/11/59%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E8%A1%8C%E4%B8%BA%E5%9E%8B-%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F%E4%B8%8ECallback%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0%E6%9C%89%E4%BD%95%E5%8C%BA%E5%88%AB%E5%92%8C%E8%81%94%E7%B3%BB%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="上一节课中，我们学习了模板模式的原理、实现和应用。它常用在框架开发中，通过提供功能扩展点，让框架用户在不修改框架源码的情况下，基于扩展点定制化框架的功能。除此之外，模板模式还可以起到代码复用的作用。 复用和扩展是模板模式的两大作用，实际上，还有另外一个技术概念，也能起到跟模板模式相同的作用，那就是回调（Callback）。今天我们今天就来看一下，回调的原理、实现和应用，以及它跟模板模式的区别和联系">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-11-29T00:00:00.000Z">
+<meta property="article:modified_time" content="2022-11-29T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/11/59%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E8%A1%8C%E4%B8%BA%E5%9E%8B-%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F%E4%B8%8ECallback%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0%E6%9C%89%E4%BD%95%E5%8C%BA%E5%88%AB%E5%92%8C%E8%81%94%E7%B3%BB%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/11/59%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E8%A1%8C%E4%B8%BA%E5%9E%8B-%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F%E4%B8%8ECallback%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0%E6%9C%89%E4%BD%95%E5%8C%BA%E5%88%AB%E5%92%8C%E8%81%94%E7%B3%BB%EF%BC%9F/","path":"article/2022/11/59设计模式与范式之行为型-模板模式（下）：模板模式与Callback回调函数有何区别和联系？/","title":"59设计模式与范式之行为型-模板模式（下）：模板模式与Callback回调函数有何区别和联系？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>59设计模式与范式之行为型-模板模式（下）：模板模式与Callback回调函数有何区别和联系？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9B%9E%E8%B0%83%E7%9A%84%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90"><span class="nav-number">1.</span> <span class="nav-text">回调的原理解析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E4%B8%BE%E4%BE%8B%E4%B8%80%EF%BC%9AJdbcTemplate"><span class="nav-number">2.</span> <span class="nav-text">应用举例一：JdbcTemplate</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E4%B8%BE%E4%BE%8B%E4%BA%8C%EF%BC%9AsetClickListener-%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">应用举例二：setClickListener(）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E4%B8%BE%E4%BE%8B%E4%B8%89%EF%BC%9AaddShutdownHook"><span class="nav-number">4.</span> <span class="nav-text">应用举例三：addShutdownHook()</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F-VS-%E5%9B%9E%E8%B0%83"><span class="nav-number">5.</span> <span class="nav-text">模板模式 VS 回调</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE"><span class="nav-number">6.</span> <span class="nav-text">重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%A0%82%E8%AE%A8%E8%AE%BA"><span class="nav-number">7.</span> <span class="nav-text">课堂讨论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/11/59%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E8%A1%8C%E4%B8%BA%E5%9E%8B-%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F%E4%B8%8ECallback%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0%E6%9C%89%E4%BD%95%E5%8C%BA%E5%88%AB%E5%92%8C%E8%81%94%E7%B3%BB%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="59设计模式与范式之行为型-模板模式（下）：模板模式与Callback回调函数有何区别和联系？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          59设计模式与范式之行为型-模板模式（下）：模板模式与Callback回调函数有何区别和联系？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-11-29 08:00:00" itemprop="dateCreated datePublished" datetime="2022-11-29T08:00:00+08:00">2022-11-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>上一节课中，我们学习了模板模式的原理、实现和应用。它常用在框架开发中，通过提供功能扩展点，让框架用户在不修改框架源码的情况下，基于扩展点定制化框架的功能。除此之外，模板模式还可以起到代码复用的作用。</p>
+<p><font color="red">复用和扩展是模板模式的两大作用，实际上，还有另外一个技术概念，也能起到跟模板模式相同的作用，那就是<strong>回调</strong>（Callback）。</font>今天我们今天就来看一下，回调的原理、实现和应用，以及它跟模板模式的区别和联系。</p>
+<p>话不多说，让我们正式开始今天的学习吧！</p>
+<span id="more"></span>
+
+<h1 id="回调的原理解析"><a href="#回调的原理解析" class="headerlink" title="回调的原理解析"></a>回调的原理解析</h1><p><font color="red">相对于普通的函数调用来说，回调是一种双向调用关系。A类事先注册某个函数F到B类，A类在调用B类的P函数的时候，B类反过来调用A类注册给它的F函数。这里的F函数就是“回调函数”。A调用B，B反过来又调用A，这种调用机制就叫作“回调”。</font></p>
+<p>A类如何将回调函数传递给B类呢？不同的编程语言，有不同的实现方法。C语言可以使用函数指针，Java则需要使用包裹了回调函数的类对象，我们简称为回调对象。这里我用Java语言举例说明一下。代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ICallback</span> &#123;</span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">methodToCallback</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BClass</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">process</span><span class="params">(ICallback callback)</span> &#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    callback.methodToCallback();</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AClass</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="type">BClass</span> <span class="variable">b</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BClass</span>();</span><br><span class="line">    b.process(<span class="keyword">new</span> <span class="title class_">ICallback</span>() &#123; <span class="comment">// 回调对象</span></span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">methodToCallback</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;Call back me.&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面就是Java语言中回调的典型代码实现。从代码实现中，我们可以看出，回调跟模板模式一样，也具有复用和扩展的功能。除了回调函数之外，BClass类的process()函数中的逻辑都可以复用。如果ICallback、BClass类是框架代码，AClass是使用框架的客户端代码，我们可以通过ICallback定制process()函数，也就是说，框架因此具有了扩展的能力。</p>
+<p>实际上，回调不仅可以应用在代码设计上，在更高层次的架构设计上也比较常用。比如，通过三方支付系统来实现支付功能，用户在发起支付请求之后，一般不会一直阻塞到支付结果返回，而是注册回调接口（类似回调函数，一般是一个回调用的URL）给三方支付系统，等三方支付系统执行完成之后，将结果通过回调接口返回给用户。</p>
+<p><font color="blue">回调可以分为同步回调和异步回调（或者延迟回调）。同步回调指在函数返回之前执行回调函数；异步回调指的是在函数返回之后执行回调函数。上面的代码实际上是同步回调的实现方式，在process()函数返回之前，执行完回调函数methodToCallback()。而上面支付的例子是异步回调的实现方式，发起支付之后不需要等待回调接口被调用就直接返回。从应用场景上来看，</font><font color="red"><strong>同步回调看起来更像模板模式，异步回调看起来更像观察者模式（异步非阻塞）。</strong></font> </p>
+<h1 id="应用举例一：JdbcTemplate"><a href="#应用举例一：JdbcTemplate" class="headerlink" title="应用举例一：JdbcTemplate"></a>应用举例一：JdbcTemplate</h1><p>Spring提供了很多Template类，比如，JdbcTemplate、RedisTemplate、RestTemplate。尽管都叫作xxxTemplate，但它们并非基于模板模式来实现的，而是基于回调来实现的，确切地说应该是同步回调。而同步回调从应用场景上很像模板模式，所以，在命名上，这些类使用Template（模板）这个单词作为后缀。</p>
+<p>这些Template类的设计思路都很相近，所以，我们只拿其中的JdbcTemplate来举例分析一下。对于其他Template类，你可以阅读源码自行分析。</p>
+<p>在前面的章节中，我们也多次提到，Java提供了JDBC类库来封装不同类型的数据库操作。不过，直接使用JDBC来编写操作数据库的代码，还是有点复杂的。比如，下面这段是使用JDBC来查询用户信息的代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JdbcDemo</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> User <span class="title function_">queryUser</span><span class="params">(<span class="type">long</span> id)</span> &#123;</span><br><span class="line">    <span class="type">Connection</span> <span class="variable">conn</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="type">Statement</span> <span class="variable">stmt</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">//1.加载驱动</span></span><br><span class="line">      Class.forName(<span class="string">&quot;com.mysql.jdbc.Driver&quot;</span>);</span><br><span class="line">      conn = DriverManager.getConnection(<span class="string">&quot;jdbc:mysql://localhost:3306/demo&quot;</span>, <span class="string">&quot;xzg&quot;</span>, <span class="string">&quot;xzg&quot;</span>);</span><br><span class="line"></span><br><span class="line">      <span class="comment">//2.创建statement类对象，用来执行SQL语句</span></span><br><span class="line">      stmt = conn.createStatement();</span><br><span class="line"></span><br><span class="line">      <span class="comment">//3.ResultSet类，用来存放获取的结果集</span></span><br><span class="line">      <span class="type">String</span> <span class="variable">sql</span> <span class="operator">=</span> <span class="string">&quot;select * from user where id=&quot;</span> + id;</span><br><span class="line">      <span class="type">ResultSet</span> <span class="variable">resultSet</span> <span class="operator">=</span> stmt.executeQuery(sql);</span><br><span class="line"></span><br><span class="line">      <span class="type">String</span> <span class="variable">eid</span> <span class="operator">=</span> <span class="literal">null</span>, ename = <span class="literal">null</span>, price = <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">while</span> (resultSet.next()) &#123;</span><br><span class="line">        <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>();</span><br><span class="line">        user.setId(resultSet.getLong(<span class="string">&quot;id&quot;</span>));</span><br><span class="line">        user.setName(resultSet.getString(<span class="string">&quot;name&quot;</span>));</span><br><span class="line">        user.setTelephone(resultSet.getString(<span class="string">&quot;telephone&quot;</span>));</span><br><span class="line">        <span class="keyword">return</span> user;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">      <span class="comment">// <span class="doctag">TODO:</span> log...</span></span><br><span class="line">    &#125; <span class="keyword">catch</span> (SQLException e) &#123;</span><br><span class="line">      <span class="comment">// <span class="doctag">TODO:</span> log...</span></span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (conn != <span class="literal">null</span>)</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          conn.close();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (SQLException e) &#123;</span><br><span class="line">          <span class="comment">// <span class="doctag">TODO:</span> log...</span></span><br><span class="line">        &#125;</span><br><span class="line">      <span class="keyword">if</span> (stmt != <span class="literal">null</span>)</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          stmt.close();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (SQLException e) &#123;</span><br><span class="line">          <span class="comment">// <span class="doctag">TODO:</span> log...</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>queryUser()函数包含很多流程性质的代码，跟业务无关，比如，加载驱动、创建数据库连接、创建statement、关闭连接、关闭statement、处理异常。针对不同的SQL执行请求，这些流程性质的代码是相同的、可以复用的，我们不需要每次都重新敲一遍。</p>
+<p>针对这个问题，Spring提供了JdbcTemplate，对JDBC进一步封装，来简化数据库编程。使用JdbcTemplate查询用户信息，我们只需要编写跟这个业务有关的代码，其中包括，查询用户的SQL语句、查询结果与User对象之间的映射关系。其他流程性质的代码都封装在了JdbcTemplate类中，不需要我们每次都重新编写。我用JdbcTemplate重写了上面的例子，代码简单了很多，如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JdbcTemplateDemo</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> JdbcTemplate jdbcTemplate;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> User <span class="title function_">queryUser</span><span class="params">(<span class="type">long</span> id)</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">sql</span> <span class="operator">=</span> <span class="string">&quot;select * from user where id=&quot;</span>+id;</span><br><span class="line">    <span class="keyword">return</span> jdbcTemplate.query(sql, <span class="keyword">new</span> <span class="title class_">UserRowMapper</span>()).get(<span class="number">0</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">class</span> <span class="title class_">UserRowMapper</span> <span class="keyword">implements</span> <span class="title class_">RowMapper</span>&lt;User&gt; &#123;</span><br><span class="line">    <span class="keyword">public</span> User <span class="title function_">mapRow</span><span class="params">(ResultSet rs, <span class="type">int</span> rowNum)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">      <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>();</span><br><span class="line">      user.setId(rs.getLong(<span class="string">&quot;id&quot;</span>));</span><br><span class="line">      user.setName(rs.getString(<span class="string">&quot;name&quot;</span>));</span><br><span class="line">      user.setTelephone(rs.getString(<span class="string">&quot;telephone&quot;</span>));</span><br><span class="line">      <span class="keyword">return</span> user;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那JdbcTemplate底层具体是如何实现的呢？我们来看一下它的源码。因为JdbcTemplate代码比较多，我只摘抄了部分相关代码，贴到了下面。其中，JdbcTemplate通过回调的机制，将不变的执行流程抽离出来，放到模板方法execute()中，将可变的部分设计成回调StatementCallback，由用户来定制。query()函数是对execute()函数的二次封装，让接口用起来更加方便。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; List&lt;T&gt; <span class="title function_">query</span><span class="params">(String sql, RowMapper&lt;T&gt; rowMapper)</span> <span class="keyword">throws</span> DataAccessException &#123;</span><br><span class="line"> <span class="keyword">return</span> query(sql, <span class="keyword">new</span> <span class="title class_">RowMapperResultSetExtractor</span>&lt;T&gt;(rowMapper));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; T <span class="title function_">query</span><span class="params">(<span class="keyword">final</span> String sql, <span class="keyword">final</span> ResultSetExtractor&lt;T&gt; rse)</span> <span class="keyword">throws</span> DataAccessException &#123;</span><br><span class="line"> Assert.notNull(sql, <span class="string">&quot;SQL must not be null&quot;</span>);</span><br><span class="line"> Assert.notNull(rse, <span class="string">&quot;ResultSetExtractor must not be null&quot;</span>);</span><br><span class="line"> <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">  logger.debug(<span class="string">&quot;Executing SQL query [&quot;</span> + sql + <span class="string">&quot;]&quot;</span>);</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">class</span> <span class="title class_">QueryStatementCallback</span> <span class="keyword">implements</span> <span class="title class_">StatementCallback</span>&lt;T&gt;, SqlProvider &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> T <span class="title function_">doInStatement</span><span class="params">(Statement stmt)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">   <span class="type">ResultSet</span> <span class="variable">rs</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">    rs = stmt.executeQuery(sql);</span><br><span class="line">    <span class="type">ResultSet</span> <span class="variable">rsToUse</span> <span class="operator">=</span> rs;</span><br><span class="line">    <span class="keyword">if</span> (nativeJdbcExtractor != <span class="literal">null</span>) &#123;</span><br><span class="line">     rsToUse = nativeJdbcExtractor.getNativeResultSet(rs);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> rse.extractData(rsToUse);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">finally</span> &#123;</span><br><span class="line">    JdbcUtils.closeResultSet(rs);</span><br><span class="line">   &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> String <span class="title function_">getSql</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">return</span> sql;</span><br><span class="line">  &#125;</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">return</span> execute(<span class="keyword">new</span> <span class="title class_">QueryStatementCallback</span>());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; T <span class="title function_">execute</span><span class="params">(StatementCallback&lt;T&gt; action)</span> <span class="keyword">throws</span> DataAccessException &#123;</span><br><span class="line"> Assert.notNull(action, <span class="string">&quot;Callback object must not be null&quot;</span>);</span><br><span class="line"></span><br><span class="line"> <span class="type">Connection</span> <span class="variable">con</span> <span class="operator">=</span> DataSourceUtils.getConnection(getDataSource());</span><br><span class="line"> <span class="type">Statement</span> <span class="variable">stmt</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"> <span class="keyword">try</span> &#123;</span><br><span class="line">  <span class="type">Connection</span> <span class="variable">conToUse</span> <span class="operator">=</span> con;</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">this</span>.nativeJdbcExtractor != <span class="literal">null</span> &amp;&amp;</span><br><span class="line">    <span class="built_in">this</span>.nativeJdbcExtractor.isNativeConnectionNecessaryForNativeStatements()) &#123;</span><br><span class="line">   conToUse = <span class="built_in">this</span>.nativeJdbcExtractor.getNativeConnection(con);</span><br><span class="line">  &#125;</span><br><span class="line">  stmt = conToUse.createStatement();</span><br><span class="line">  applyStatementSettings(stmt);</span><br><span class="line">  <span class="type">Statement</span> <span class="variable">stmtToUse</span> <span class="operator">=</span> stmt;</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">this</span>.nativeJdbcExtractor != <span class="literal">null</span>) &#123;</span><br><span class="line">   stmtToUse = <span class="built_in">this</span>.nativeJdbcExtractor.getNativeStatement(stmt);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="type">T</span> <span class="variable">result</span> <span class="operator">=</span> action.doInStatement(stmtToUse);</span><br><span class="line">  handleWarnings(stmt);</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="keyword">catch</span> (SQLException ex) &#123;</span><br><span class="line">  <span class="comment">// Release Connection early, to avoid potential connection pool deadlock</span></span><br><span class="line">  <span class="comment">// in the case when the exception translator hasn&#x27;t been initialized yet.</span></span><br><span class="line">  JdbcUtils.closeStatement(stmt);</span><br><span class="line">  stmt = <span class="literal">null</span>;</span><br><span class="line">  DataSourceUtils.releaseConnection(con, getDataSource());</span><br><span class="line">  con = <span class="literal">null</span>;</span><br><span class="line">  <span class="keyword">throw</span> getExceptionTranslator().translate(<span class="string">&quot;StatementCallback&quot;</span>, getSql(action), ex);</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="keyword">finally</span> &#123;</span><br><span class="line">  JdbcUtils.closeStatement(stmt);</span><br><span class="line">  DataSourceUtils.releaseConnection(con, getDataSource());</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="应用举例二：setClickListener-）"><a href="#应用举例二：setClickListener-）" class="headerlink" title="应用举例二：setClickListener(）"></a>应用举例二：setClickListener(）</h1><p>在客户端开发中，我们经常给控件注册事件监听器，比如下面这段代码，就是在Android应用开发中，给Button控件的点击事件注册监听器。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Button</span> <span class="variable">button</span> <span class="operator">=</span> (Button)findViewById(R.id.button);</span><br><span class="line">button.setOnClickListener(<span class="keyword">new</span> <span class="title class_">OnClickListener</span>() &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onClick</span><span class="params">(View v)</span> &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;I am clicked.&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>从代码结构上来看，事件监听器很像回调，即传递一个包含回调函数（onClick()）的对象给另一个函数。从应用场景上来看，它又很像观察者模式，即事先注册观察者（OnClickListener），当用户点击按钮的时候，发送点击事件给观察者，并且执行相应的onClick()函数。</p>
+<p>我们前面讲到，回调分为同步回调和异步回调。这里的回调算是异步回调，我们往setOnClickListener()函数中注册好回调函数之后，并不需要等待回调函数执行。这也印证了我们前面讲的，<font color="red"><strong>异步回调比较像观察者模式（异步非阻塞）。</strong></font></p>
+<h1 id="应用举例三：addShutdownHook"><a href="#应用举例三：addShutdownHook" class="headerlink" title="应用举例三：addShutdownHook()"></a>应用举例三：addShutdownHook()</h1><p>Hook可以翻译成“钩子”，那它跟Callback有什么区别呢？</p>
+<p>网上有人认为Hook就是Callback，两者说的是一回事儿，只是表达不同而已。而有人觉得Hook是Callback的一种应用。Callback更侧重语法机制的描述，Hook更加侧重应用场景的描述。我个人比较认可后面一种说法。不过，这个也不重要，我们只需要见了代码能认识，遇到场景会用就可以了。</p>
+<p>Hook比较经典的应用场景是Tomcat和JVM的shutdown hook。接下来，我们拿JVM来举例说明一下。JVM提供了Runtime.addShutdownHook(Thread hook)方法，可以注册一个JVM关闭的Hook。当应用程序关闭的时候，JVM会自动调用Hook代码。代码示例如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ShutdownHookDemo</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">ShutdownHook</span> <span class="keyword">extends</span> <span class="title class_">Thread</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">      System.out.println(<span class="string">&quot;I am called during shutting down.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    Runtime.getRuntime().addShutdownHook(<span class="keyword">new</span> <span class="title class_">ShutdownHook</span>());</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们再来看addShutdownHook()的代码实现，如下所示。这里我只给出了部分相关代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Runtime</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addShutdownHook</span><span class="params">(Thread hook)</span> &#123;</span><br><span class="line">    <span class="type">SecurityManager</span> <span class="variable">sm</span> <span class="operator">=</span> System.getSecurityManager();</span><br><span class="line">    <span class="keyword">if</span> (sm != <span class="literal">null</span>) &#123;</span><br><span class="line">      sm.checkPermission(<span class="keyword">new</span> <span class="title class_">RuntimePermission</span>(<span class="string">&quot;shutdownHooks&quot;</span>));</span><br><span class="line">    &#125;</span><br><span class="line">    ApplicationShutdownHooks.add(hook);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ApplicationShutdownHooks</span> &#123;</span><br><span class="line">    <span class="comment">/* The set of registered hooks */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> IdentityHashMap&lt;Thread, Thread&gt; hooks;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">            hooks = <span class="keyword">new</span> <span class="title class_">IdentityHashMap</span>&lt;&gt;();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IllegalStateException e) &#123;</span><br><span class="line">            hooks = <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">add</span><span class="params">(Thread hook)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (hooks == <span class="literal">null</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(<span class="string">&quot;Shutdown in progress&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (hook.isAlive())</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;Hook already running&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (hooks.containsKey(hook))</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;Hook previously registered&quot;</span>);</span><br><span class="line"></span><br><span class="line">        hooks.put(hook, hook);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">runHooks</span><span class="params">()</span> &#123;</span><br><span class="line">        Collection&lt;Thread&gt; threads;</span><br><span class="line">        <span class="keyword">synchronized</span>(ApplicationShutdownHooks.class) &#123;</span><br><span class="line">            threads = hooks.keySet();</span><br><span class="line">            hooks = <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (Thread hook : threads) &#123;</span><br><span class="line">            hook.start();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (Thread hook : threads) &#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    hook.join();</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException ignored) &#123;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从代码中我们可以发现，有关Hook的逻辑都被封装到ApplicationShutdownHooks类中了。当应用程序关闭的时候，JVM会调用这个类的runHooks()方法，创建多个线程，并发地执行多个Hook。我们在注册完Hook之后，并不需要等待Hook执行完成，所以，这也算是一种异步回调。</p>
+<h1 id="模板模式-VS-回调"><a href="#模板模式-VS-回调" class="headerlink" title="模板模式 VS 回调"></a>模板模式 VS 回调</h1><p>回调的原理、实现和应用到此就都讲完了。接下来，我们从应用场景和代码实现两个角度，来对比一下模板模式和回调。</p>
+<p>从应用场景上来看，同步回调跟模板模式几乎一致。它们都是在一个大的算法骨架中，自由替换其中的某个步骤，起到代码复用和扩展的目的。而异步回调跟模板模式有较大差别，更像是观察者模式。</p>
+<p>从代码实现上来看，回调和模板模式完全不同。回调基于组合关系来实现，把一个对象传递给另一个对象，是一种对象之间的关系；模板模式基于继承关系来实现，子类重写父类的抽象方法，是一种类之间的关系。</p>
+<p>前面我们也讲到，组合优于继承。实际上，这里也不例外。在代码实现上，回调相对于模板模式会更加灵活，主要体现在下面几点。</p>
+<ul>
+<li>像Java这种只支持单继承的语言，基于模板模式编写的子类，已经继承了一个父类，不再具有继承的能力。</li>
+<li>回调可以使用匿名类来创建回调对象，可以不用事先定义类；而模板模式针对不同的实现都要定义不同的子类。</li>
+<li>如果某个类中定义了多个模板方法，每个方法都有对应的抽象方法，那即便我们只用到其中的一个模板方法，子类也必须实现所有的抽象方法。而回调就更加灵活，我们只需要往用到的模板方法中注入回调对象即可。</li>
+</ul>
+<p>还记得上一节课的课堂讨论题目吗？看到这里，相信你应该有了答案了吧？</p>
+<h1 id="重点回顾"><a href="#重点回顾" class="headerlink" title="重点回顾"></a>重点回顾</h1><p>好了，今天的内容到此就讲完了。我们一块来总结回顾一下，你需要重点掌握的内容。</p>
+<p>今天，我们重点介绍了回调。它跟模板模式具有相同的作用：代码复用和扩展。在一些框架、类库、组件等的设计中经常会用到。</p>
+<p>相对于普通的函数调用，回调是一种双向调用关系。A类事先注册某个函数F到B类，A类在调用B类的P函数的时候，B类反过来调用A类注册给它的F函数。这里的F函数就是“回调函数”。A调用B，B反过来又调用A，这种调用机制就叫作“回调”。</p>
+<p>回调可以细分为同步回调和异步回调。从应用场景上来看，同步回调看起来更像模板模式，异步回调看起来更像观察者模式。回调跟模板模式的区别，更多的是在代码实现上，而非应用场景上。回调基于组合关系来实现，模板模式基于继承关系来实现，回调比模板模式更加灵活。</p>
+<h1 id="课堂讨论"><a href="#课堂讨论" class="headerlink" title="课堂讨论"></a>课堂讨论</h1><p>对于Callback和Hook的区别，你有什么不同的理解吗？在你熟悉的编程语言中，有没有提供相应的语法概念？是叫Callback，还是Hook呢？</p>
+<p>欢迎留言和我分享你的想法。如果有收获，欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/11/58%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E8%A1%8C%E4%B8%BA%E5%9E%8B-%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F%E5%9C%A8JDK%E3%80%81Servlet%E3%80%81JUnit%E7%AD%89%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/" rel="prev" title="58设计模式与范式之行为型-模板模式（上）：剖析模板模式在JDK、Servlet、JUnit等中的应用">
+                  <i class="fa fa-angle-left"></i> 58设计模式与范式之行为型-模板模式（上）：剖析模板模式在JDK、Servlet、JUnit等中的应用
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/11/60%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E8%A1%8C%E4%B8%BA%E5%9E%8B-%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D%E5%86%97%E9%95%BF%E7%9A%84if-elseswitch%E5%88%86%E6%94%AF%E5%88%A4%E6%96%AD%E4%BB%A3%E7%A0%81%EF%BC%9F/" rel="next" title="60设计模式与范式之行为型-策略模式（上）：如何避免冗长的if-elseswitch分支判断代码？">
+                  60设计模式与范式之行为型-策略模式（上）：如何避免冗长的if-elseswitch分支判断代码？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

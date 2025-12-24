@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="JVM监控及诊断工具-GUI篇">
+<meta property="og:type" content="article">
+<meta property="og:title" content="03-JVM监控及诊断工具-GUI篇">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="JVM监控及诊断工具-GUI篇">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/3abd4c40374c42bfb76ac9bb3affb095.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/d7c34596ad9e4e84a199e79b38ae9c18.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/6975d208546843e59d0417dad5ebf50e.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/918f86adeb47460295097f1d995448e4.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/cbe5531a0bd1482a8aa33e533a3e273c.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/4787a0175dbc4d26883ae6b5f95e3dbb.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/fab5a593f30442298ed4246a28a7be8a.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/2ab85513baa84951a7bf688cc9dd376f.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/f50f8758a6cf4dc7910858c047d7c179.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/eeb7b2b91dc8487ca999e170b2c15b4d.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/87183452a21f4cfdbf68da8dde276af6.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/1d33c10a80d7452cbd032da900f0d02a.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/85d9461067524b3e863a96402dce55c7.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/1827321ec4984105936067dcfe21d516.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/34920f4df0c649cb81e2f97af1b504eb.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/e80c60dc77c746458dbb0b44f166749e.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/be5b6b796ba3437fa8ef2a8fe2fd324a.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/451375c37ada40d28c7d36bf34af6bd6.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/44c7e37eadef46e988ae55e05aab1730.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/9c99e6cc8f314c1982da9e9d9b18f045.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/729bd0b8d7a44016b607076802d1cf86.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/de0629ce49004439b2df2254eabc0ea7.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/27ae75e0e57e4207b165938f6ee83ea0.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/a75759bd124e4db282a9872694fcda9d.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/083545066db744fa9321af264ff62034.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/1362df4ee76b4873bd8bcaaedf98c522.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/44687754183346d2924011320e53e3bc.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/ec7af5376c5a4d159f860e1abdc14c53.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/e36b2042594440bc94897451c2f48a45.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/280af8bdcfc6453d9bdc64b09bdf22db.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/00220e79bfb643c18ac8f73d26957f91.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/8b9df9182e064b1bbf7a62d6a25c4e53.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/99a46a3a6b54430889ffe658a01e6441.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/a63a729eecc04fa995de12428ae98196.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/b7162484938149ec93bae0fd5459733c.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/44df9b7f86b64cd9bf0a030e46957b39.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/1d8eb61f7c5949fdbf8599dc6590050f.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/fbcf26e6fc1f4b5886bc58c79631b490.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/465120d041b748469b746d88c2cd3eb8.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/9f36e5765c814d679619573ef1d6ce93.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/4fb261ae2f9b43909b3603872295d558.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/a0db439ef647486793aeb5d3b834776d.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/d6b1aa6e6362460caee463a339fcefc8.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/8ea3bcd214174afe9491e1465e2675ca.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/4815f4c3e5db48f68b8942c654e0883e.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/3ef8476aab5f4692a3e56dfed6d8876d.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/5de40f8933324289afc810361e3a5738.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/f5d4d8ba308a4b848ecd42aa446f1d49.png">
+<meta property="article:published_time" content="2020-12-03T01:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-03T01:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="JVM下篇：性能监控与调优篇">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/3abd4c40374c42bfb76ac9bb3affb095.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/","path":"article/2020/12/03-JVM监控及诊断工具-GUI篇/","title":"03-JVM监控及诊断工具-GUI篇"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>03-JVM监控及诊断工具-GUI篇 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B7%A5%E5%85%B7%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">工具概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JConsole"><span class="nav-number">2.</span> <span class="nav-text">JConsole</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8"><span class="nav-number">2.1.</span> <span class="nav-text">启动</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">2.1.1.</span> <span class="nav-text">三种启动方式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Visual-VM"><span class="nav-number">3.</span> <span class="nav-text">Visual VM</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E7%9A%84%E5%AE%89%E8%A3%85"><span class="nav-number">3.1.</span> <span class="nav-text">插件的安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E6%96%B9%E5%BC%8F"><span class="nav-number">3.2.</span> <span class="nav-text">连接方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E8%A6%81%E5%8A%9F%E8%83%BD"><span class="nav-number">3.3.</span> <span class="nav-text">主要功能</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E5%A0%86%E5%86%85%E5%AD%98-%E7%BA%BF%E7%A8%8B%E5%BF%AB%E7%85%A7"><span class="nav-number">3.3.1.</span> <span class="nav-text">生成堆内存&#x2F;线程快照</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BD%BD%E5%85%A5%E5%A0%86%E5%86%85%E5%AD%98-%E7%BA%BF%E7%A8%8B%E5%BF%AB%E7%85%A7"><span class="nav-number">3.3.2.</span> <span class="nav-text">载入堆内存&#x2F;线程快照</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JProfiler"><span class="nav-number">4.</span> <span class="nav-text">JProfiler</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E8%BF%B0"><span class="nav-number">4.1.</span> <span class="nav-text">基本概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE"><span class="nav-number">4.2.</span> <span class="nav-text">安装与配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B7%E4%BD%93%E4%BD%BF%E7%94%A8"><span class="nav-number">4.3.</span> <span class="nav-text">具体使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E9%87%87%E9%9B%86%E6%96%B9%E5%BC%8F"><span class="nav-number">4.3.1.</span> <span class="nav-text">数据采集方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%81%A5%E6%84%9F%E7%9B%91%E6%B5%8B-Telemetries"><span class="nav-number">4.3.2.</span> <span class="nav-text">遥感监测 Telemetries</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E6%97%B6%E5%86%85%E5%AD%98%E8%A7%86%E5%9B%BE-Live-Memory"><span class="nav-number">4.3.3.</span> <span class="nav-text">实时内存视图 (Live Memory)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A0%86%E9%81%8D%E5%8E%86%E5%99%A8-Heap-Walker"><span class="nav-number">4.3.4.</span> <span class="nav-text">堆遍历器 (Heap Walker)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CPU-%E8%A7%86%E5%9B%BE-CPU-Views"><span class="nav-number">4.3.5.</span> <span class="nav-text">CPU 视图 (CPU Views)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E8%A7%86%E5%9B%BE-Threads"><span class="nav-number">4.3.6.</span> <span class="nav-text">线程视图 (Threads)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%91%E6%8E%A7%E5%92%8C%E9%94%81-Monitors-%EF%BC%86Locks"><span class="nav-number">4.3.7.</span> <span class="nav-text">监控和锁 (Monitors ＆Locks)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A1%88%E4%BE%8B%E5%88%86%E6%9E%90"><span class="nav-number">4.4.</span> <span class="nav-text">案例分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Java-Mission-Control"><span class="nav-number">5.</span> <span class="nav-text">Java Mission Control</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%86%E5%8F%B2"><span class="nav-number">5.1.</span> <span class="nav-text">历史</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">5.2.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8-1"><span class="nav-number">5.3.</span> <span class="nav-text">启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%9F%E8%83%BD%EF%BC%9A%E5%AE%9E%E6%97%B6%E7%9B%91%E6%8E%A7JVM%E8%BF%90%E8%A1%8C%E6%97%B6%E7%9A%84%E7%8A%B6%E6%80%81"><span class="nav-number">5.4.</span> <span class="nav-text">功能：实时监控JVM运行时的状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-Flight-Recorder"><span class="nav-number">5.5.</span> <span class="nav-text">Java Flight Recorder</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%B6%E9%97%B4%E7%B1%BB%E5%9E%8B"><span class="nav-number">5.5.1.</span> <span class="nav-text">时间类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">5.5.2.</span> <span class="nav-text">启动方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Java-Flight-Recorder-%E5%8F%96%E6%A0%B7%E5%88%86%E6%9E%90"><span class="nav-number">5.5.3.</span> <span class="nav-text">Java Flight Recorder 取样分析</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="03-JVM监控及诊断工具-GUI篇 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          03-JVM监控及诊断工具-GUI篇
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-03 09:00:00" itemprop="dateCreated datePublished" datetime="2020-12-03T09:00:00+08:00">2020-12-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>JVM监控及诊断工具-GUI篇</p>
+<span id="more"></span>
+
+<h1 id="工具概述"><a href="#工具概述" class="headerlink" title="工具概述"></a>工具概述</h1><p>使用上一章命令行工具或组合能帮您获取目标Java应用性能相关的基础信息，但它们存在下列局限：</p>
+<p>1．无法获取方法级别的分析数据，如方法间的调用关系、各方法的调用次数和调用时间等（这对定位应用性能瓶颈至关重要）。<br>2．要求用户登录到目标 Java 应用所在的宿主机上，使用起来不是很方便。<br>3．分析数据通过终端输出，结果展示不够直观。</p>
+<p>为此，JDK提供了一些内存泄漏的分析工具，如jconsole，jvisualvm等，用于辅助开发人员定位问题，但是这些工具很多时候并不足以满足快速定位的需求。所以这里我们介绍的工具相对多一些、丰富一些。</p>
+<p><strong>图形化综合诊断工具</strong></p>
+<ul>
+<li>JDK自带的工具<ul>
+<li>jconsole：JDK 自带的可视化监控工具。查看 Java 应用程序的运行概况、监控堆信息、永久区（或元空间）使用情况、类加载情况等<ul>
+<li>位置：<code>&lt;JAVA_HOME&gt;\bin\jconsole.exe</code></li>
+</ul>
+</li>
+<li>Visual VM：Visual VM 是一个工具，它提供了一个可视界面，用于查看 Java 虚拟机上运行的基于 Java 技术的应用程序的详细信息。<ul>
+<li>官网：<a target="_blank" rel="noopener" href="https://visualvm.github.io/">https://visualvm.github.io/</a> ，默认情况下，JDK 不再带这个工具，需要自行<a target="_blank" rel="noopener" href="https://visualvm.github.io/download.html">下载</a></li>
+</ul>
+</li>
+<li>JMC：Java Mission Control，内置 Java Flight Recorder。能够以极低的性能开销收集Java虚拟机的性能数据。</li>
+</ul>
+</li>
+<li>第三方工具<ul>
+<li>MAT：MAT（Memory Analyzer Tool）是基于 Eclipse 的内存分析工具，是一个快速、功能丰富的 Java heap 分析工具，它可以帮助我们查找内存泄漏和减少内存消耗<ul>
+<li>Eclipse 的插件形式安装</li>
+</ul>
+</li>
+<li>JProfiler：商业软件，需要付费。功能强大。</li>
+</ul>
+</li>
+</ul>
+<h1 id="JConsole"><a href="#JConsole" class="headerlink" title="JConsole"></a>JConsole</h1><p><code>jconsole</code>：从 Java 5 开始，在 JDK 中自带的 Java 监控和管理控制台。用于对 JVM 中内存、线程和类等的监控，是一个基于 JMX（java management extensions） 的 GUI 性能监控工具。</p>
+<p>官方文档：<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/7/docs/technotes/guides/management/jconsole.html">https://docs.oracle.com/javase/7/docs/technotes/guides/management/jconsole.html</a></p>
+<h2 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h2><p>两种启动方式：</p>
+<ol>
+<li>直接单击 <code>jconsole.exe</code>，仅适用于 Windows</li>
+<li>命令行窗口中输入 <code>jconsole</code> 命令</li>
+</ol>
+<p>启动界面如下：</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/3abd4c40374c42bfb76ac9bb3affb095.png" alt="JConsole启动界面">JConsole启动界面</p>
+<p>需要选择一个要监控的进程。</p>
+<p>界面如下：</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/d7c34596ad9e4e84a199e79b38ae9c18.png" alt="img"></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/6975d208546843e59d0417dad5ebf50e.png" alt="img"></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/918f86adeb47460295097f1d995448e4.png" alt="img"></p>
+<h3 id="三种启动方式"><a href="#三种启动方式" class="headerlink" title="三种启动方式"></a>三种启动方式</h3><ul>
+<li><strong>Local</strong>：使用 JConsole 连接一个正在本地系统运行的 JVM，并且执行程序的和运行 JConsole 的需要是同一个用户。JConsole 使用文件系统的授权通过 RMI 连接起链接到平台的 MBean 的服务器上。这种从本地连接的监控能力只有 Sun 的 JDK 具有。</li>
+<li><strong>Remote</strong>：使用下面的 URL 通过 RMI 连接器连接到一个 JMX 代理，<code>service:jmx:rmi:///jndi/rmi://hostName:portNum/jmxrmi</code>。JConsole 为建立连接，需要在环境变量中设置 <code>mx.remote.credentials</code> 来指定用户名和密码，从而进行授权。</li>
+<li><strong>Advanced</strong>：使用一个特殊的 URL 连接 JMX 代理。一般情况使用自己定制的连接器而不是 RMI 提供的连接器来连接 JMX 代理，或者是一个使用 JDK1.4 的实现了 JMX 和 JMX Remote 的应用</li>
+</ul>
+<h1 id="Visual-VM"><a href="#Visual-VM" class="headerlink" title="Visual VM"></a>Visual VM</h1><ul>
+<li>Visual VM是一个功能强大的多合一故障诊断和性能监控的可视化工具。</li>
+<li>它集成了多个JDK命令行工具，使用Visual VM可用于显示虚拟机进程及进程的配置和环境信息（jps，jinfo），监视应用程序的CPU、GC、堆、方法区及线程的信息（jstat、jstack）等，甚至代替JConsole。</li>
+<li>在JDK 6 Update 7以后，Visual VM便作为JDK的一部分发布（VisualVM 在JDK／bin目录下）即：它完全免费。</li>
+<li>此外，Visual VM也可以作为独立的软件安装：官方地址：<a target="_blank" rel="noopener" href="https://visualvm.github.io/index.html">https://visualvm.github.io/index.html</a></li>
+</ul>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/cbe5531a0bd1482a8aa33e533a3e273c.png" alt="Visual VM">Visual VM</p>
+<h2 id="插件的安装"><a href="#插件的安装" class="headerlink" title="插件的安装"></a>插件的安装</h2><p><strong>IDEA 安装 VisualVM Launcher 插件</strong></p>
+<p>“File” →→ “Settings” →→ “Plugins” 打开插件安装界面。</p>
+<p>在市场（Marketplace）中搜索 “VisualVM Launcher”</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/4787a0175dbc4d26883ae6b5f95e3dbb.png" alt="img"></p>
+<p>插件安装好之后，重启IDEA，然后再打开 “Settings” 配置界面，找到 “VisualVM Launcher”，配置VisualVM的路径和JDK，如下：</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/fab5a593f30442298ed4246a28a7be8a.png" alt="img"></p>
+<h2 id="连接方式"><a href="#连接方式" class="headerlink" title="连接方式"></a>连接方式</h2><p><strong>1. 在IDEA中通过插件启动</strong></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/2ab85513baa84951a7bf688cc9dd376f.png" alt="img"></p>
+<p>两种启动方式，一种是正常启动，一种是DEBUG启动。</p>
+<p>也可启动应用后通过，左侧的 “Start VisualVM” 来启动。</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/f50f8758a6cf4dc7910858c047d7c179.png" alt="img"></p>
+<p>启动后的界面如下：</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/eeb7b2b91dc8487ca999e170b2c15b4d.png" alt="img"></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/87183452a21f4cfdbf68da8dde276af6.png" alt="img"></p>
+<p><strong>2. 本地连接</strong></p>
+<p>进入到VisualVM安装目录，然后进入到 “bin” 文件夹，单击 “visualvm.exe” 启动 VisualVM。</p>
+<p>界面如下</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/1d33c10a80d7452cbd032da900f0d02a.png" alt="img"></p>
+<p>在左侧的“Local” 下双击要监控的进程。即可进入监控界面</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/85d9461067524b3e863a96402dce55c7.png" alt="img"></p>
+<p><strong>3. 远程连接</strong></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/1827321ec4984105936067dcfe21d516.png" alt="img"></p>
+<h2 id="主要功能"><a href="#主要功能" class="headerlink" title="主要功能"></a>主要功能</h2><ol>
+<li>生成&#x2F;读取堆内存快照</li>
+<li>查看JVM参数和系统属性</li>
+<li>查看运行中的虚拟机进程</li>
+<li>生成&#x2F;读取线程快照</li>
+<li>程序资源的实时监控</li>
+<li>其他功能<ul>
+<li>JMX代理连接</li>
+<li>远程环境监控</li>
+<li>CPU分析和内存分析</li>
+</ul>
+</li>
+</ol>
+<h3 id="生成堆内存-线程快照"><a href="#生成堆内存-线程快照" class="headerlink" title="生成堆内存&#x2F;线程快照"></a>生成堆内存&#x2F;线程快照</h3><p><strong>在左侧的 “Local” 中通过进程生成堆内存&#x2F;线程快照</strong></p>
+<p>在左侧的 “Local” 中右击要生成快照的进程</p>
+<ul>
+<li>选择 “Heap Dump” 生成堆内存快照</li>
+<li>选择 “Thread Dump” 生成线程快照</li>
+</ul>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/34920f4df0c649cb81e2f97af1b504eb.png" alt="img"></p>
+<p><strong>通过监视（Monitor）生成堆内存快照</strong></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/e80c60dc77c746458dbb0b44f166749e.png" alt="img"></p>
+<p>堆内存快照如下：</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/be5b6b796ba3437fa8ef2a8fe2fd324a.png" alt="img"></p>
+<p>这些快照存储在内存中，当线程停止的时候快照就会丢失，如果还想利用，可以将快照进行另存为操作，如下图：</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/451375c37ada40d28c7d36bf34af6bd6.png" alt="img"></p>
+<p><strong>通过线程（Threads）生成线程快照</strong></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/44c7e37eadef46e988ae55e05aab1730.png" alt="img"></p>
+<p>线程快照如下：</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/9c99e6cc8f314c1982da9e9d9b18f045.png" alt="img"></p>
+<p>这些快照存储在内存中，当线程停止的时候快照就会丢失，如果还想利用，可以将快照进行另存为操作，如下图：</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/729bd0b8d7a44016b607076802d1cf86.png" alt="img"></p>
+<h3 id="载入堆内存-线程快照"><a href="#载入堆内存-线程快照" class="headerlink" title="载入堆内存&#x2F;线程快照"></a>载入堆内存&#x2F;线程快照</h3><p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/de0629ce49004439b2df2254eabc0ea7.png" alt="img"></p>
+<p>通过 “File” →→ “Load” 打开选择快照对话框。</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/27ae75e0e57e4207b165938f6ee83ea0.png" alt="img"></p>
+<p>选择堆内存快照或线程快照即可装入。</p>
+<h1 id="JProfiler"><a href="#JProfiler" class="headerlink" title="JProfiler"></a>JProfiler</h1><h2 id="基本概述"><a href="#基本概述" class="headerlink" title="基本概述"></a>基本概述</h2><p>在运行 Java 的时候有时候想测试运行时占用内存情况，这时候就需要使用测试工具查看了。在 eclipse 里面有 Eclipse Memory Analyzer tool（MAT）插件可以测试，而在 IDEA 中也有这么一个插件，就是 JProfiler。JProfiler 是由 ej-technologies 公司开发的一款 Java 应用性能诊断工具。功能强大，但是收费。</p>
+<p><strong>特点：</strong></p>
+<ul>
+<li>使用方便、界面操作友好（简单且强大）</li>
+<li>对被分析的应用影响小（提供模板）</li>
+<li>CPU，Thread，Memory 分析功能尤其强大</li>
+<li>支持对 jdbc，noSql，jsp，servlet，socket 等进行分析</li>
+<li>支持多种模式（离线，在线）的分析</li>
+<li>支持监控本地、远程的 JVM</li>
+<li>跨平台，拥有多种操作系统的安装版本</li>
+</ul>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/a75759bd124e4db282a9872694fcda9d.png" alt="img"></p>
+<p><strong>主要功能：</strong></p>
+<ol>
+<li>方法调用：对方法调用的分析可以帮助您了解应用程序正在做什么，并找到提高其性能的方法</li>
+<li>内存分配：通过分析堆上对象、引用链和垃圾收集能帮您修复内存泄露问题，优化内存使用</li>
+<li>线程和锁：JProfiler 提供多种针对线程和锁的分析视图助您发现多线程问题</li>
+<li>高级子系统：许多性能问题都发生在更高的语义级别上。例如，对于 JDBC 调用，您可能希望找出执行最慢的 SQL 语句。JProfiler 支持对这些子系统进行集成分析</li>
+</ol>
+<p>官网地址：<a target="_blank" rel="noopener" href="https://www.ej-technologies.com/products/jprofiler/overview.html">https://www.ej-technologies.com/products/jprofiler/overview.html</a></p>
+<h2 id="安装与配置"><a href="#安装与配置" class="headerlink" title="安装与配置"></a>安装与配置</h2><p><strong>下载与安装</strong></p>
+<p>下载地址：<a target="_blank" rel="noopener" href="https://www.ej-technologies.com/download/jprofiler/files">https://www.ej-technologies.com/download/jprofiler/files</a></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/083545066db744fa9321af264ff62034.png" alt="img"></p>
+<p>一个神秘的下载地址：<a target="_blank" rel="noopener" href="https://downloadlynet.ir/2020/12/1885/03/jprofiler/00/">https://downloadlynet.ir/2020/12/1885/03/jprofiler/00/</a></p>
+<p><strong>JProfiler 中配置 IDEA</strong></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/1362df4ee76b4873bd8bcaaedf98c522.png" alt="img"></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/44687754183346d2924011320e53e3bc.png" alt="img"></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/ec7af5376c5a4d159f860e1abdc14c53.png" alt="img"></p>
+<h2 id="具体使用"><a href="#具体使用" class="headerlink" title="具体使用"></a>具体使用</h2><h3 id="数据采集方式"><a href="#数据采集方式" class="headerlink" title="数据采集方式"></a>数据采集方式</h3><p>Profier 数据采集方式分为两种：Sampling（样本采集）和 Instrumentation（重构模式）</p>
+<ul>
+<li>Instrumentation：这是 JProfiler 全功能模式。在 class 加载之前，JProfier 把相关功能代码写入到需要分析的 class 的 bytecode 中，对正在运行的 jvm 有一定影响。<ul>
+<li>优点：功能强大。在此设置中，调用堆栈信息是准确的。</li>
+<li>缺点：若要分析的 class 较多，则对应用的性能影响较大，CPU 开销可能很高（取决于 Filter 的控制）。因此使用此模式一般配合 Filter 使用，只对特定的类或包进行分析</li>
+</ul>
+</li>
+<li>Sampling：类似于样本统计，每隔一定时间（5ms）将每个线程栈中方法栈中的信息统计出来。<ul>
+<li>优点：对 CPU 的开销非常低，对应用影响小（即使你不配置任何 Filter）</li>
+<li>缺点：一些数据／特性不能提供（例如：方法的调用次数、执行时间）</li>
+</ul>
+</li>
+</ul>
+<p>注：JProfiler 本身没有指出数据的采集类型，这里的采集类型是针对方法调用的采集类型。因为 JProfiler 的绝大多数核心功能都依赖方法调用采集的数据，所以可以直接认为是 JProfiler 的数据采集类型。</p>
+<h3 id="遥感监测-Telemetries"><a href="#遥感监测-Telemetries" class="headerlink" title="遥感监测 Telemetries"></a>遥感监测 Telemetries</h3><p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/e36b2042594440bc94897451c2f48a45.png" alt="img"></p>
+<h3 id="实时内存视图-Live-Memory"><a href="#实时内存视图-Live-Memory" class="headerlink" title="实时内存视图 (Live Memory)"></a>实时内存视图 (Live Memory)</h3><p>Live memory 内存剖析：class&#x2F;class instance 的相关信息。例如对象的个数，大小，对象创建的方法执行栈，对象创建的热点。</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/280af8bdcfc6453d9bdc64b09bdf22db.png" alt="img"></p>
+<ul>
+<li><strong>所有对象 All Objects</strong><br>显示所有加载的类的列表和在堆上分配的实例数。只有 Java 1.5（JVMTI）才会显示此视图。</li>
+<li><strong>记录对象 Record Objects</strong><br>查看特定时间段对象的分配，并记录分配的调用堆栈。</li>
+<li><strong>分配访问树 Allocation Call Tree</strong><br>显示一棵请求树或者方法、类、包或对已选择类有带注释的分配信息的 J2EE 组件。</li>
+<li><strong>分配热点 Allocation Hot Spots</strong><br>显示一个列表，包括方法、类、包或分配已选类的 J2EE 组件。你可以标注当前值并且显示差异值。对于每个热点都可以显示它的跟踪记录树。</li>
+<li><strong>类追踪器 Class Tracker</strong><br>类跟踪视图可以包含任意数量的图表，显示选定的类和包的实例与时间。</li>
+</ul>
+<p>分析：内存中的对象的情况</p>
+<ul>
+<li>频繁创建的 Java 对象：死循环、循环次数过多</li>
+<li>存在大的对象：读取文件是，<code>byte[]</code> 应该边读边写。 如果长时间不写出的话，导致 <code>byte[]</code> 过大</li>
+<li>存在内存泄漏</li>
+</ul>
+<blockquote>
+<p>[!NOTE]</p>
+<ol>
+<li>All Objects 后面的 Size 大小是浅堆大小</li>
+<li>Record Objects 在判断内存泄露的时候使用，可以通过观察 Telemetries 中的 Memory，如果里面出现垃圾回收之后的内存占用逐步提高，这就有可能出现内存泄露问题，所以可以使用 Record Objects 查看，但是该分析默认不开启，毕竟占用 CPU 性能太多</li>
+</ol>
+</blockquote>
+<h3 id="堆遍历器-Heap-Walker"><a href="#堆遍历器-Heap-Walker" class="headerlink" title="堆遍历器 (Heap Walker)"></a>堆遍历器 (Heap Walker)</h3><p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/00220e79bfb643c18ac8f73d26957f91.png" alt="img"></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/8b9df9182e064b1bbf7a62d6a25c4e53.png" alt="img"></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/99a46a3a6b54430889ffe658a01e6441.png" alt="img"></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/a63a729eecc04fa995de12428ae98196.png" alt="img"></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/b7162484938149ec93bae0fd5459733c.png" alt="img"></p>
+<h3 id="CPU-视图-CPU-Views"><a href="#CPU-视图-CPU-Views" class="headerlink" title="CPU 视图 (CPU Views)"></a>CPU 视图 (CPU Views)</h3><p>JProfiler 提供不同的方法来记录访问树以优化性能和细节。线程或者线程组以及线程状况可以被所有的视图选择。所有的视图都可以聚集到方法、类、包或 J2EE 组件等不同层上。</p>
+<ul>
+<li><strong>访问树 Call Tree</strong>：显示一个积累的自顶向下的树，树中包含所有在 JVM 中已记录的访问队列。JDBC，JMS 和 JNDI 服务请求都被注释在请求树中。请求树可以根据 Servlet 和 JSP 对 URL 的不同需要进行拆分。</li>
+<li><strong>热点 Hot Spots</strong>：显示消耗时间最多的方法的列表。对每个热点都能够显示回溯树。该热点可以按照方法请求，JDBC，JMS 和 JNDI 服务请求以及按照 URL 请求来进行计算。</li>
+<li><strong>访问图 Call Graph</strong>：显示一个从已选方法、类、包或 J2EE 组件开始的访问队列的图。</li>
+<li><strong>方法统计 Method Statistics</strong>：显示一段时间内记录的方法的调用时间细节。</li>
+</ul>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/44df9b7f86b64cd9bf0a030e46957b39.png" alt="img"></p>
+<h3 id="线程视图-Threads"><a href="#线程视图-Threads" class="headerlink" title="线程视图 (Threads)"></a>线程视图 (Threads)</h3><p>JProfiler通过对线程历史的监控判断其运行状态，并监控是否有线程阻塞产生，还能将一个线程所管理的方法以树状形式呈现。对线程剖析。</p>
+<ul>
+<li>线程历史 Thread History：显示一个与线程活动和线程状态在一起的活动时间表。</li>
+<li>线程监控 Thread Monitor：显示一个列表，包括所有的活动线程以及它们目前的活动状况。</li>
+<li>线程转储 Thread Dumps：显示所有线程的堆栈跟踪。</li>
+</ul>
+<p>线程分析主要关心三个方面：</p>
+<ol>
+<li>web 容器的线程最大数。比如：Tomcat 的线程容量应该略大于最大并发数。</li>
+<li>线程阻塞</li>
+<li>线程死锁</li>
+</ol>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/1d8eb61f7c5949fdbf8599dc6590050f.png" alt="img"></p>
+<h3 id="监控和锁-Monitors-＆Locks"><a href="#监控和锁-Monitors-＆Locks" class="headerlink" title="监控和锁 (Monitors ＆Locks)"></a>监控和锁 (Monitors ＆Locks)</h3><p>所有线程持有锁的情况以及锁的信息。观察 JVM 的内部线程并查看状态：</p>
+<ul>
+<li><strong>死锁探测图表 Current Locking Graph</strong>：显示 JVM 中的当前死锁图表。</li>
+<li><strong>目前使用的监测器 Current Monitors</strong>：显示目前使用的监测器并且包括它们的关联线程。</li>
+<li><strong>锁定历史图表 Locking History Graph</strong>：显示记录在 JVM 中的锁定历史。</li>
+<li><strong>历史检测记录 Monitor History</strong>：显示重大的等待事件和阻塞事件的历史记录。</li>
+<li><strong>监控器使用统计 Monitor Usage Statistics</strong>：显示分组监测，线程和监测类的统计监测数据</li>
+</ul>
+<h2 id="案例分析"><a href="#案例分析" class="headerlink" title="案例分析"></a>案例分析</h2><p><strong>案例1</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.TimeUnit;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JProfilerTest</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">            <span class="type">ArrayList</span> <span class="variable">list</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ArrayList</span>();</span><br><span class="line">            <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; <span class="number">500</span>; i++) &#123;</span><br><span class="line">                <span class="type">Data</span> <span class="variable">data</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Data</span>();</span><br><span class="line">                list.add(data);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                TimeUnit.MILLISECONDS.sleep(<span class="number">500</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Data</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> <span class="variable">size</span> <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">byte</span>[] buffer = <span class="keyword">new</span> <span class="title class_">byte</span>[<span class="number">1024</span> * <span class="number">1024</span>];<span class="comment">//1mb</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">String</span> <span class="variable">info</span> <span class="operator">=</span> <span class="string">&quot;hello,atguigu&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>java</p>
+<p><strong>案例2：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.TimeUnit;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MemoryLeak</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">            <span class="type">ArrayList</span> <span class="variable">beanList</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ArrayList</span>();</span><br><span class="line">            <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; <span class="number">500</span>; i++) &#123;</span><br><span class="line">                <span class="type">Bean</span> <span class="variable">data</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Bean</span>();</span><br><span class="line">                data.list.add(<span class="keyword">new</span> <span class="title class_">byte</span>[<span class="number">1024</span> * <span class="number">10</span>]);<span class="comment">//10kb</span></span><br><span class="line">                beanList.add(data);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                TimeUnit.MILLISECONDS.sleep(<span class="number">500</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Bean</span> &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">size</span> <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line">    <span class="type">String</span> <span class="variable">info</span> <span class="operator">=</span> <span class="string">&quot;hello,atguigu&quot;</span>;</span><br><span class="line">    <span class="keyword">static</span> <span class="type">ArrayList</span> <span class="variable">list</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ArrayList</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Java-Mission-Control"><a href="#Java-Mission-Control" class="headerlink" title="Java Mission Control"></a>Java Mission Control</h1><h2 id="历史"><a href="#历史" class="headerlink" title="历史"></a>历史</h2><p>在 Oracle 收购 Sun 之前，Oracle 的 JRockit 虚拟机提供了一款叫做 JRockit Mission Control 的虚拟机诊断工具。</p>
+<p>在 Oracle 收购 sun 之后，Oracle 公司同时拥有了 Hotspot 和 JRockit 两款虚拟机。根据 Oracle 对于 Java 的战略，在今后的发展中，会将 JRokit 的优秀特性移植到 Hotspot 上。其中一个重要的改进就是在 Sun 的 JDK 中加入了 JRockit 的支持。</p>
+<p>在 Oracle JDK 7u40 之后，Mission Control 这款工具己经绑定在 Oracle JDK 中发布。</p>
+<p>自 Java11 开始，本节介绍的 JFR 己经开源。但在之前的 Java 版本，JFR 属于 Commercial Feature 通过 Java 虚拟机参数 <code>-XX:+UnlockCommercialFeatures</code> 开启。</p>
+<ul>
+<li>官方地址：<a target="_blank" rel="noopener" href="https://openjdk.org/projects/jmc">https://openjdk.org/projects/jmc</a></li>
+<li>Github项目地址：<a target="_blank" rel="noopener" href="https://github.com/openjdk/jmc">https://github.com/openjdk/jmc</a></li>
+</ul>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Java Mission Control（简称 JMC) ， Java 官方提供的性能强劲的工具，是一个用于对 Java 应用程序进行管理、监视、概要分析和故障排除的工具套件。</p>
+<p>它包含一个 GUI 客户端以及众多用来收集 Java 虚拟机性能数据的插件如 JMX Console（能够访问用来存放虚拟机齐个于系统运行数据的 MXBeans）以及虚拟机内置的高效 profiling 工具 Java Flight Recorder（JFR）。</p>
+<p>JMC 的另一个优点就是：采用取样，而不是传统的代码植入技术，对应用性能的影响非常非常小，完全可以开着 JMC 来做压测（唯一影响可能是 full gc 多了）。</p>
+<h2 id="启动-1"><a href="#启动-1" class="headerlink" title="启动"></a>启动</h2><p>Mission Control 位于 <code>%JAVA_HOME%/bin/jmc.exe</code></p>
+<h2 id="功能：实时监控JVM运行时的状态"><a href="#功能：实时监控JVM运行时的状态" class="headerlink" title="功能：实时监控JVM运行时的状态"></a>功能：实时监控JVM运行时的状态</h2><p>如果是远程服务器，使用前要开 JMX。</p>
+<ul>
+<li><code>-Dcom.sun.management.jmxremote.port=${YOUR PORT}</code></li>
+<li><code>-Dcom.sun.management.jmxremote</code></li>
+<li><code>-Dcom.sun.management.jmxremote.authenticate=false</code></li>
+<li><code>-Dcom.sun.management.jmxremote.ssl=false</code></li>
+<li><code>-Djava.rmi.server.hostname=${YOUR HOST/IP}</code></li>
+</ul>
+<p>文件 -&gt;连接 -&gt;创建新连接， 填入上面 JMX 参数的 host 和 port</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/fbcf26e6fc1f4b5886bc58c79631b490.png" alt="img"></p>
+<h2 id="Java-Flight-Recorder"><a href="#Java-Flight-Recorder" class="headerlink" title="Java Flight Recorder"></a>Java Flight Recorder</h2><p>Java Flight Recorder 是 JMC 的其中一个组件。</p>
+<p>Java Flight Recorder 能够以极低的性能开销收集 Java 虚拟机的性能数据。</p>
+<p>JFR 的性能开销很小，在默认配置下平均低于 1%。与其他工具相比，JFR 能够直接访问虚拟机内的数据，并且不会影响虚拟机的优化。因此，它非常适用于生产环境下满负荷运行的 Java 程序。</p>
+<h3 id="时间类型"><a href="#时间类型" class="headerlink" title="时间类型"></a>时间类型</h3><p>Java Flight Recorder 和 JDK Mission Control 共同创建了一个完整的工具链。JDKMission Control 可对 Java Flight Recorder 连续收集低水平和详细的运行时信息进行高效详细的分析。</p>
+<p>当启用时 JFR将记录运行过程中发生的一系列事件。其中包括Java层面的事件如线程事件、锁事件，以及Java虚拟机内部的事件，如新建对象，垃圾回收和即时编译事件。</p>
+<p>按照发生时机以及持续时间来划分，JFR的事件共有四种类型，它们分别为以下四种：</p>
+<ul>
+<li>瞬时事件（Instant Event) ，用户关心的是它们发生与否，例如异常、线程启动事件。</li>
+<li>持续事件(Duration Event) ，用户关心的是它们的持续时间，例如垃圾回收事件。</li>
+<li>计时事件(Timed Event) ，是时长超出指定阈值的持续事件。</li>
+<li>取样事件（Sample Event)，是周期性取样的事件。</li>
+</ul>
+<p>取样事件的其中一个常见例子便是方法抽样（Method Sampling），即每隔一段时问统计各个线程的栈轨迹。如果在这些抽样取得的栈轨迹中存在一个反复出现的方法，那么我们可以推测该方法是热点方法</p>
+<h3 id="启动方式"><a href="#启动方式" class="headerlink" title="启动方式"></a>启动方式</h3><p><strong>方式1：使用 <code>-XX:StartFlightRecording=参数</code></strong></p>
+<p>第一种是在运行目标 Java 程序时添加 <code>-XX:startFlightRecording=参数</code>。</p>
+<p>比如: 下面命令中，JFR 将会在 Java 虚拟机启动 5s 后 (对应 <code>delay=5s</code>) 收集数据，持续 20s(对应 <code>duration=28s</code>)。当收集完毕后，JFR 会将收集得到的数据保存至指定的文件中(对应 <code>filename=myrecording.jfr</code>)</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -XX:StartFlightRecording=delay=5s,duration=20s,filename=myrecording.jfr,settings=profile MyApp</span><br></pre></td></tr></table></figure>
+
+<p>shell</p>
+<p>由于 JFR 将持续收集数据，如果不加以限制，那么 JFR 可能会填满硬盘的所有空间。因此，我们有必要对这种模式下所收集的数据进行限制。</p>
+<p>比如:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -XX:StartFlightRecording=maxage=10m,maxsize=100m,name=SomeLabel MyApp</span><br></pre></td></tr></table></figure>
+
+<p>shell</p>
+<p><strong>方式2：使用 jcmd 的JFR.*子命令</strong></p>
+<p>通过jcmd来让 JFR 开始收集数据、停止收集数据，或者保存所收集的数据，对应的子命令分别为JFR.start, JFR.stop，以及JFR.dump。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">jcmd &lt;PID&gt; JFR.start settings=profile maxage=10m maxsize=150m name=SomeLabel</span></span><br></pre></td></tr></table></figure>
+
+<p>shell</p>
+<p>上述命令运行过后，目标进程中的 JFR 已经开始收集数据。此时，我们可以通过下述命令来导出已经收集到的数据:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">jcmd &lt;PID&gt; JFR.dump name=SomeLabel filename=myrecording.jfr</span></span><br></pre></td></tr></table></figure>
+
+<p>shell</p>
+<p>最后，我们可以通过下述命令关闭目标进程中的 JFR:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">jcmd &lt;PID&gt; JFR.stop name=SomeLabel</span></span><br></pre></td></tr></table></figure>
+
+<p>shell</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/465120d041b748469b746d88c2cd3eb8.png" alt="img"></p>
+<p>1、启动飞行记录仪</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/9f36e5765c814d679619573ef1d6ce93.png" alt="img"></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/4fb261ae2f9b43909b3603872295d558.png" alt="img"></p>
+<p>2、正式启动</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/a0db439ef647486793aeb5d3b834776d.png" alt="img"></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/d6b1aa6e6362460caee463a339fcefc8.png" alt="img"></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/8ea3bcd214174afe9491e1465e2675ca.png" alt="img"></p>
+<h3 id="Java-Flight-Recorder-取样分析"><a href="#Java-Flight-Recorder-取样分析" class="headerlink" title="Java Flight Recorder 取样分析"></a>Java Flight Recorder 取样分析</h3><p>要采用取样，必须先添加参数:</p>
+<ul>
+<li><code>-XX:+UnlockCommercialFeatures</code></li>
+<li><code>-XX:+FlightRecorder</code></li>
+</ul>
+<p>JDK9及更高版本</p>
+<ul>
+<li><code>-XX:+UnlockCommercialFeatures</code></li>
+<li><code>-XX:+StartFlightRecording</code></li>
+</ul>
+<p>如：<code>-XX:+UnlockCommercialFeatures -XX:+FlightRecorder -XX:StartFlightRecording=duration=200s</code></p>
+<p>否则:</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/4815f4c3e5db48f68b8942c654e0883e.png" alt="img"></p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/3ef8476aab5f4692a3e56dfed6d8876d.png" alt="img"></p>
+<p>提示</p>
+<p>第一张图片中的错误是最新版本中的错误，下面的图可能是一个早期版本中的错误</p>
+<p>取样时间默认 1 分钟，可自行按需调整，事件设置选为profiling，然后可以设置取样 profile哪些信息，比如:</p>
+<ul>
+<li>加上对象数量的统计: Java Virtual Machine →→ Gc →→ Detailed →→ ObjectCount&#x2F;Object Count after GC</li>
+<li>方法调用采样的间隔从 10ms 改为 1ms(但不能低于 1ms，否则会影响性能了): JavaVirtual Machine →→ Profiling →→ Method Profiling Sample&#x2F;Method SamplingInformation</li>
+<li>Socket 与 File 采样，10ms 太久，但即使改为 1ms 也未必能抓住什么，可以干脆取消掉:Java Application →→ File Read&#x2F;FileWrite&#x2F;Socket Read&#x2F;Socket Write</li>
+</ul>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/5de40f8933324289afc810361e3a5738.png" alt="img"></p>
+<p>然后就开始 Profile，到时间后 Profile 结束，会自动把记录下载回来，在 JMC 中展示。</p>
+<p><img src="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/f5d4d8ba308a4b848ecd42aa446f1d49.png" alt="img"></p>
+<p>从展示信息中，我们大致可以读到内存和 CPU 信息、代码、线程和 IO 等比较重要的信息展示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.Random;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">OOMTest</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        ArrayList&lt;Picture&gt; list = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">        <span class="keyword">while</span>(<span class="literal">true</span>)&#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Thread.sleep(<span class="number">5</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            list.add(<span class="keyword">new</span> <span class="title class_">Picture</span>(<span class="keyword">new</span> <span class="title class_">Random</span>().nextInt(<span class="number">100</span> * <span class="number">50</span>)));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Picture</span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">byte</span>[] pixels;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Picture</span><span class="params">(<span class="type">int</span> length)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.pixels = <span class="keyword">new</span> <span class="title class_">byte</span>[length];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">byte</span>[] getPixels() &#123;</span><br><span class="line">        <span class="keyword">return</span> pixels;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setPixels</span><span class="params">(<span class="type">byte</span>[] pixels)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.pixels = pixels;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/JVM%E4%B8%8B%E7%AF%87%EF%BC%9A%E6%80%A7%E8%83%BD%E7%9B%91%E6%8E%A7%E4%B8%8E%E8%B0%83%E4%BC%98%E7%AF%87/" rel="tag"># JVM下篇：性能监控与调优篇</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/" rel="prev" title="02-JVM监控及诊断工具-命令行篇">
+                  <i class="fa fa-angle-left"></i> 02-JVM监控及诊断工具-命令行篇
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2020/12/04-JVM%20%E8%BF%90%E8%A1%8C%E6%97%B6%E5%8F%82%E6%95%B0/" rel="next" title="04-JVM 运行时参数">
+                  04-JVM 运行时参数 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

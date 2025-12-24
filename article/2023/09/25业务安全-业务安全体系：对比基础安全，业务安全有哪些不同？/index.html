@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="从这一讲开始，我们讨论业务安全。近几年，随着互联网的快速发展，很多公司为了获取用户增长，在业务中投入了大量的资本。向来都是向钱看齐的黑客（在业务安全中，我们称之为黑产），自然就将攻击的重心放到了业务中。业务安全也变得越来越热门，成为各大公司安全投入的重心之一。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="25业务安全-业务安全体系：对比基础安全，业务安全有哪些不同？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="从这一讲开始，我们讨论业务安全。近几年，随着互联网的快速发展，很多公司为了获取用户增长，在业务中投入了大量的资本。向来都是向钱看齐的黑客（在业务安全中，我们称之为黑产），自然就将攻击的重心放到了业务中。业务安全也变得越来越热门，成为各大公司安全投入的重心之一。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/20200816230152920.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/20200816230300944.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/20200816230317673.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/20200816230342915.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/20200816230441737.png">
+<meta property="article:published_time" content="2023-09-25T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-09-25T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="安全攻防技能30讲">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/20200816230152920.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/","path":"article/2023/09/25业务安全-业务安全体系：对比基础安全，业务安全有哪些不同？/","title":"25业务安全-业务安全体系：对比基础安全，业务安全有哪些不同？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>25业务安全-业务安全体系：对比基础安全，业务安全有哪些不同？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">如何理解业务安全？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%BB%91%E4%BA%A7%E5%92%8C%E9%BB%91%E5%AE%A2%E6%9C%89%E5%93%AA%E4%BA%9B%E5%B7%AE%E5%BC%82%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">黑产和黑客有哪些差异？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E5%A6%82%E4%BD%95%E9%98%B2%E6%8A%A4%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">业务安全如何防护？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%9D%E8%80%83%E9%A2%98"><span class="nav-number">5.</span> <span class="nav-text">思考题</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="25业务安全-业务安全体系：对比基础安全，业务安全有哪些不同？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          25业务安全-业务安全体系：对比基础安全，业务安全有哪些不同？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-09-25 08:00:00" itemprop="dateCreated datePublished" datetime="2023-09-25T08:00:00+08:00">2023-09-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" itemprop="url" rel="index"><span itemprop="name">安全攻防技能30讲</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>从这一讲开始，我们讨论业务安全。近几年，随着互联网的快速发展，很多公司为了获取用户增长，在业务中投入了大量的资本。向来都是向钱看齐的黑客（在业务安全中，我们称之为黑产），自然就将攻击的重心放到了业务中。业务安全也变得越来越热门，成为各大公司安全投入的重心之一。</p>
+<span id="more"></span>
+
+<p>对比于传统的基础安全，业务安全有哪些特点呢？为什么它能够成为一个独立的领域呢？在业务安全中，我们需要重点关注的防护方法又有哪些呢？</p>
+<p>以上这些问题，在这个模块中我会详细来讲。今天，我们先从业务安全的特点和防护重点入手，让你对业务安全的体系和框架有一个清晰的认识。</p>
+<h1 id="如何理解业务安全？"><a href="#如何理解业务安全？" class="headerlink" title="如何理解业务安全？"></a>如何理解业务安全？</h1><p>学习一个新知识的最好方法，一定是从我们学过的知识入手。所以，今天我会对比基础安全，来帮助你理解业务安全。基础安全其实就是我们前几个模块关注的安全攻防视角下的安全概念和知识，也叫网络安全。</p>
+<p>想要理解业务安全，我们先来认识一下黑产。黑产是基于正常的业务产品逻辑，采取非正常或者批量的操作，来获取利益的行为。业务安全就是通过各类产品策略，来对黑产进行识别和拦截，从而保障业务的正常运行。</p>
+<p>你一定见过，或者参加过“红包雨”领红包的活动。在活动中，用户可以通过“红包雨”游戏领取一定金额的红包，金额大小由前端决定。通过这个例子，我们来对比一下黑客和黑产的攻击。</p>
+<p>在基础安全的攻击视角中，黑客会逆向前端代码，找到最终决定金额的逻辑，然后自己伪造一个大额的红包请求。这样一来，黑客就可以不用玩游戏，同时还能获得一个大额的红包。在业务安全的攻击视角中，黑产会开发一个自动玩游戏领红包的工具，操纵大量的账号来参与活动。最终，将各个账号的小额红包汇总到一个账号下，从而实现获利。</p>
+<h1 id="黑产和黑客有哪些差异？"><a href="#黑产和黑客有哪些差异？" class="headerlink" title="黑产和黑客有哪些差异？"></a>黑产和黑客有哪些差异？</h1><p>从前面的例子中，我能够看出，黑客在基础安全和业务安全中的攻击方式有很大不同，那它们之间具体有哪些差异呢？接下来，我们一起来分析。</p>
+<p>在基础安全中，黑客会通过各种Web安全或者系统安全的漏洞，对公司的系统和应用发起攻击，最终侵入公司系统，窃取敏感信息等成果。“黑客”原意是指擅长各类计算机技术的人，也就是在基础安全领域中，掌握各种高端技巧，能够发现并利用漏洞的攻击者。但是，在业务安全中，业内普遍将攻击者称为“黑产”。之所以会改换一个名称，我认为主要有两点原因。</p>
+<p><strong>第一，“黑产”强调的是“产业化”。</strong></p>
+<p>尽管黑客也存在很多组织，但黑客组织更多的是将一群黑客进行统一管理，实际发起攻击的仍然是单人或者小组。</p>
+<p>相比于黑客，在业务攻击中，黑产已经形成了完整的产业化链条：在上游，有人专门提供各类技术支持，如验证码绕过、手机群控、自动注册工具等；在中游，有人专门收集大量的手机号、身份证号、银行卡号等信息，在应用内注册大量的垃圾账号；在下游，有人利用工具和账号，进行薅羊毛、刷评论、欺诈等操作。可以说，任何个人或者小的团体都没有办法发起业务攻击，必须依靠上游提供的各类资源，才能够实现真正获利。产业链的结构如下图所示：</p>
+<p><img src="/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/20200816230152920.png" alt="img"><br><strong>第二，黑客强调的是技术对抗，而“黑产”更看重资源对抗。</strong></p>
+<p>对于黑客来说，只要技术足够强大，并且手里掌握着一些“0 day”漏洞，就能够以一己之力攻破公司的安全防御体系。但是对于黑产来说，其本质是资源对抗，所以不可能有类似黑客的“单兵作战”。那什么是资源对抗呢？</p>
+<p>我们来看一个例子。现在有一个“新用户注册得红包”的活动，公司可能会给每个新用户发放1元的现金红包，以此作为用户增长的激励措施。这个时候，如果黑产注册一个新用户的成本是2元（需要手机号、银行卡等各种资源支持），那显然是一个亏本的买卖。因此，黑产需要想尽办法去降低注册资源的成本。如果是你，你会怎么做呢？你可以先试着思考一下，然后再来看我下面的分析。</p>
+<p>生活中就有很多这样的例子。以前，你想要骑一辆自行车，需要花几百块钱买一辆。而现在，你花上一块钱，就能够骑上共享单车，还能够“随停随走”。黑产的资源对抗也是利用的这种“共享”思想：在黑产的中上游，由专门的团伙负责大批量收集各类资源，供很多下游团伙使用，这样就能在很大程度上降低黑产发起攻击的成本。</p>
+<p>现在，黑产购买一个手机号的成本只需要几毛钱，而互联网应用获取一个新用户需要花费几十元，这其中的利益之大可见一斑。</p>
+<p>从黑客与黑产之间的攻击差异中，我们能够发现基础安全和业务安全的核心差异。基础安全是防御黑客的技术攻击，避免漏洞。业务安全是防御黑产的资源对抗，避免正常业务被攻击。</p>
+<h1 id="业务安全如何防护？"><a href="#业务安全如何防护？" class="headerlink" title="业务安全如何防护？"></a>业务安全如何防护？</h1><p>在基础安全中，我们说过应用的本质是数据，安全的本质是数据的CIA，我们可以通过黄金法则来保护数据。那么，对于业务安全来说，我们的防护思路又是怎么样的呢？</p>
+<p>我们还是要从业务的本质入手来解决问题。我认为，业务的本质是一种投资，也就是公司投入成本来获取用户价值。投入的成本包括应用开发的成本、服务的成本以及获取用户的成本等。</p>
+<p>用户的价值也多种多样，直接的如收取用户的服务费用，间接的如通过用户来获取广告收益、通过用户来吸引商家入驻收取租金等。那黑产是如何从中获利的呢？</p>
+<p>黑产的获利手段是通过廉价的资源，降低用户的价值，从而赚取公司投入的成本。因此，业务安全的本质就是保障用户价值不受黑产的恶意影响。保障的方法就是提高黑产的资源成本，使得黑产无法获利。这也就是我所说的，业务安全的本质其实就是资源层次上的对抗。</p>
+<p>那我们应该如何进行资源对抗呢？首先，我们要知道，黑产需要进行哪些资源投入。一般来说，黑产会从四个方面进行资源投入，分别是：用户资源、IP资源、设备资源和操作资源。下面，我们一一来看。</p>
+<p><strong>首先是用户资源。</strong></p>
+<p>黑产通常需要获取大量的用户身份，来进行大规模的业务操作，才能实现获利。这是因为，应用通常会要求用户绑定各种信息，比如手机号、身份证、银行卡等。而黑产需要满足应用的强制绑定要求，才能获得用户身份。因此，这些手机号、身份证以及银行卡等，其实就是黑产必须投入的用户资源。</p>
+<p>现在，黑产有很多办法可以获取这些用户资源。我来总结了几个常见的方法：</p>
+<ul>
+<li>通过虚拟运营商或者物联网卡来获取大量非实名手机卡</li>
+<li>在网上搜集各类泄露的身份证图片</li>
+<li>在偏远地区支付十几块钱，买到他人的手持身份证照片和视频</li>
+<li>在类似<a target="_blank" rel="noopener" href="https://tieba.baidu.com/f?kw=%D7%A2%EF%BF%BD%EF%BF%BD%EF%BF%BD%EF%BF%BD%EF%BF%BD%EF%BF%BD&fr=ala0&tpl=5&traceid=">注册任务贴吧</a>这样的任务群中，注册一个账号之后，再转手卖给黑产</li>
+</ul>
+<p><strong>对于用户资源的对抗，目前主要的方式就是黑名单</strong>。这里，我把黑名单的防护流程总结了一张图。</p>
+<p><img src="/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/20200816230300944.png" alt="img"><br>从上图中我们可以看到，用户黑名单主要有两种收集方式：内部收集和外部采购。其中，内部收集是基于用户在业务内部的行为进行判定的，流程相对复杂一些，而外部采购是直接购买汇总好的黑名单。这样一来，我们就利用黑名单实现了对黑产的拦截。</p>
+<p><strong>接着，我们来说IP资源。</strong></p>
+<p>黑产往往是在同一个地方进行大量操作的，IP相对固定。所以，任何公司做业务安全的第一步，都是对IP进行限制，常见的手段是限制一个IP下能够登录的用户数量。为了绕过这种安全防控机制，黑产必须掌握大量的IP资源。</p>
+<p>如果你有做过爬虫，一定知道通过<a target="_blank" rel="noopener" href="https://www.kuaidaili.com/free">快代理</a>这种网上的免费代理，来绕过反爬机制。而黑产更高级一些，黑产会利用“秒拨IP”来获取大量IP资源。所谓“秒拨”，就是指每一次拨号上网，都会分配一个新的IP给我们。只要持续地断网、拨号，我们就能够获得大量的IP资源。</p>
+<p>下图是某个代理IP网站的报价，我们可以看到，目前代理IP的价格最低只要0.5分钱。也就是说，黑产只需要付出很少的成本就能获得大量IP资源。<br><img src="/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/20200816230317673.png" alt="img"><br>事实上，我们目前很难对IP资源进行有效防控。IP的变化十分频繁，一个IP上一分钟可能是黑产在操作，下一分钟可能就被正常用户所使用了。所以，即使我们能基于业务数据确定一个IP存在异常，也没有办法对它进行黑名单处理。</p>
+<p><strong>除了IP之外，设备也是公司做业务安全的一个基础。</strong></p>
+<p>在正常情况下，一个设备对应一个账号。但是，黑产可能会需要在一个设备上使用几十个账号进行操作，这就很容易被应用和公司检测到异常。因此，黑产必须想办法获取大量的设备。</p>
+<p>黑产获取设备的方法比较多，最简单的一种是通过模拟器来模拟设备。但是，很多公司会对前端进行检测，来发现模拟设备。因此，黑产也就从使用模拟设备升级为使用真实的手机。所以，很多黑产案件中都会出现由大量手机设备组成的“手机墙”。除此之外，也有上游团队将手机做成云控模式，下游黑产可以直接花钱购入可远程操控的真实手机设备。</p>
+<p><strong>设备资源的对抗原理是对虚拟设备进行识别</strong>。这就需要依赖业务安全中比较关键的设备指纹技术了。所谓“设备指纹技术”，就是收集设备上的各类特征，对设备进行追踪，然后基于设备的行为和信息，判定是虚拟设备还是人为操作，以此对黑产进行拦截。</p>
+<p><strong>最后是操作资源。</strong></p>
+<p>黑产需要正常使用业务才能获利，所以在操作上会和正常用户一样花费时间和精力。这对黑产来说，也是一个不小的成本。</p>
+<p>比如说，在开头的例子中，用户参加“红包雨”游戏领取红包的过程，就是一个操作的过程：用户为了领取一个几毛钱的红包，在APP上花几分钟玩一个游戏。这显然对黑产是不合算的。因此，黑产会尝试使用一些自动化的工具，比如<a target="_blank" rel="noopener" href="http://www.anjian.com/">按键精灵</a>，让机器来完成游戏的过程。这样一来，黑产就释放了人力的操作资源投入，大大降低了操作成本。</p>
+<p>所以说，我们和操作资源的对抗，就是在和黑产的自动化工具进行对抗。公司为了区分“人”和“机器”的操作，就需要使用验证码（如图片验证码、滑块验证码等）。通过这类“人”很容易完成，但“机器”很难完成的验证方式，黑产就没办法全自动地完成交互，我们也就提高了黑产的操作成本。</p>
+<p>总之，业务安全的防护核心就是提高黑产的资源成本。更详细的防护方案，我们会在后面的课程中详细来讲，这里你只需要对这几种资源有一个全面的认知即可。</p>
+<p>为了帮助你理解这4种资源的核心特点，我整理了一个表格供你参考，如下图所示：</p>
+<p><img src="/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/20200816230342915.png" alt="img"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>好了，今天的内容讲完了。我们一起总结回顾一下，你需要掌握的重点内容。</p>
+<p>业务安全和基础安全在本质上就有很大的不同：在基础安全中，黑客将技术作为核心竞争力；在业务安全中，黑产将资源作为核心竞争力。谁能够以更低的成本掌握更多的资源，谁就能窃取公司更大的利益。因此，作为防守方，我们在关注业务安全的时候，也应当将关注的重点放在如何提高黑产的资源成本上，这样才能够为公司提供有力的业务安全防护。</p>
+<p><img src="/article/2023/09/25%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB%EF%BC%9A%E5%AF%B9%E6%AF%94%E5%9F%BA%E7%A1%80%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F/20200816230441737.png" alt="img"></p>
+<h1 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h1><p>最后，还是给你留一道思考题。</p>
+<p>今天，我们讲了几个黑产必须要掌握的资源。你可以思考一下，假如你掌握了这些资源，你会如何对你的业务发起攻击？又会如何获利呢？</p>
+<p>欢迎留言和我分享你的思考和疑惑，也欢迎你把文章分享给你的朋友。我们下一讲再见！</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" rel="tag"># 安全攻防技能30讲</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/09/24%E5%AE%89%E5%85%A8%E9%98%B2%E5%BE%A1%E5%B7%A5%E5%85%B7-SDL%EF%BC%9A%E6%80%8E%E6%A0%B7%E6%89%8D%E8%83%BD%E5%86%99%E5%87%BA%E6%9B%B4%E2%80%9C%E5%AE%89%E5%85%A8%E2%80%9D%E7%9A%84%E4%BB%A3%E7%A0%81%EF%BC%9F/" rel="prev" title="24安全防御工具-SDL：怎样才能写出更“安全”的代码？">
+                  <i class="fa fa-angle-left"></i> 24安全防御工具-SDL：怎样才能写出更“安全”的代码？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/09/26%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E4%BA%A7%E5%93%81%E5%AE%89%E5%85%A8%E6%96%B9%E6%A1%88%EF%BC%9A%E5%A6%82%E4%BD%95%E9%99%8D%E4%BD%8E%E4%B8%9A%E5%8A%A1%E5%AF%B9%E9%BB%91%E7%81%B0%E4%BA%A7%E7%9A%84%E8%AF%B1%E6%83%91%EF%BC%9F/" rel="next" title="26业务安全-产品安全方案：如何降低业务对黑灰产的诱惑？">
+                  26业务安全-产品安全方案：如何降低业务对黑灰产的诱惑？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

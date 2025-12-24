@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="本文 oracle 版本 12.2.0.1.0 。 安装指南： https:&#x2F;&#x2F;docs.oracle.com&#x2F;en&#x2F;database&#x2F;oracle&#x2F;oracle-database&#x2F;12.2&#x2F;ntdbi&#x2F;index.html   win10 安装Oracle19c (19.3版本)详细步骤  别瞎折腾以下安装顺序遇到的问题： 步骤1、安装数据库软件 步骤2、创建PDB： orcl.zhaolq.c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Oracle安装(Windows)及客户端连接配置">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="本文 oracle 版本 12.2.0.1.0 。 安装指南： https:&#x2F;&#x2F;docs.oracle.com&#x2F;en&#x2F;database&#x2F;oracle&#x2F;oracle-database&#x2F;12.2&#x2F;ntdbi&#x2F;index.html   win10 安装Oracle19c (19.3版本)详细步骤  别瞎折腾以下安装顺序遇到的问题： 步骤1、安装数据库软件 步骤2、创建PDB： orcl.zhaolq.c">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124165504515.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124150710445.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124150947901.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124151442874.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124152122560.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124152236953.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124152406367.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124160215006.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124160956245.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124161048576.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124163434587.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124170121534.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124170036861.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124170321540.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124170525213.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124170835796.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124171001362.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124171250525.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124171455141.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124171542079.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124171659582.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124171944501.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124172009364.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124172151733.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124172702837.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124173205318.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124174037461.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191202203853877.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191202204003400.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203201157941.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203201412941.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203201449093.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203202008433.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203202518256.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203211335925.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203212031231.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203212303744.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203212557486.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203212850232.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203220039186.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203220217075.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203221432589.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191208120637279.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203221934226.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203222213523.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203225502798.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203230047430.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203230634929.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124180356839.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124175349262.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191130132834756.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191207181437185.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191207182718030.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191207182847727.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191207182812172.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191130164708461.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191207160805927.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191207183707104.png">
+<meta property="article:published_time" content="2019-11-24T06:54:01.000Z">
+<meta property="article:modified_time" content="2019-11-24T06:54:01.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Oracle">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124165504515.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/","path":"article/2019/11/Oracle安装-Windows-及客户端连接配置/","title":"Oracle安装(Windows)及客户端连接配置"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Oracle安装(Windows)及客户端连接配置 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%AB%E7%9E%8E%E6%8A%98%E8%85%BE"><span class="nav-number">1.</span> <span class="nav-text">别瞎折腾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Oracle-Help-for-Java"><span class="nav-number">2.</span> <span class="nav-text">Oracle Help for Java</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BD%AF%E4%BB%B6%E3%80%81%E5%88%9B%E5%BB%BA%E5%92%8C%E9%85%8D%E7%BD%AE%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">3.</span> <span class="nav-text">安装数据库软件、创建和配置数据库</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%92%8C%E9%85%8D%E7%BD%AE%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">4.</span> <span class="nav-text">创建和配置数据库</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B8%E5%9E%8B%E9%85%8D%E7%BD%AE"><span class="nav-number">4.1.</span> <span class="nav-text">典型配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AB%98%E7%BA%A7%E9%85%8D%E7%BD%AE"><span class="nav-number">4.2.</span> <span class="nav-text">高级配置</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Oracle%E7%9A%84%E6%9C%8D%E5%8A%A1"><span class="nav-number">5.</span> <span class="nav-text">Oracle的服务</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PDB%E9%BB%98%E8%AE%A4%E7%8A%B6%E6%80%81"><span class="nav-number">6.</span> <span class="nav-text">PDB默认状态</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PDB%E8%BF%9E%E6%8E%A5%E9%97%AE%E9%A2%98"><span class="nav-number">7.</span> <span class="nav-text">PDB连接问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">8.</span> <span class="nav-text">连接数据库</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#SQL-Plus"><span class="nav-number">8.1.</span> <span class="nav-text">SQL Plus</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PL-SQL-Developer"><span class="nav-number">8.2.</span> <span class="nav-text">PL&#x2F;SQL Developer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JDBC-%E5%8D%95%E5%AE%9E%E4%BE%8B%E5%92%8CRAC"><span class="nav-number">8.3.</span> <span class="nav-text">JDBC (单实例和RAC)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E7%94%A8%E6%88%B7"><span class="nav-number">9.</span> <span class="nav-text">创建用户</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#TNS"><span class="nav-number">10.</span> <span class="nav-text">TNS</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8B%E7%BB%8D"><span class="nav-number">10.1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">10.2.</span> <span class="nav-text">配置文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%B7%A5%E5%85%B7"><span class="nav-number">10.3.</span> <span class="nav-text">配置工具</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Net-Configuration-Assistant%E6%96%B0%E5%A2%9E%E7%9B%91%E5%90%AC"><span class="nav-number">10.3.1.</span> <span class="nav-text">Net Configuration Assistant新增监听</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Net-Manager%E6%96%B0%E5%A2%9E%E7%9B%91%E5%90%AC"><span class="nav-number">10.3.2.</span> <span class="nav-text">Net Manager新增监听</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3oracle%E6%9C%8D%E5%8A%A1%E5%8D%A0%E7%94%A8%E5%86%85%E5%AD%98%E8%BF%87%E9%AB%98-%E5%88%AB%E7%9E%8E%E6%8A%98%E8%85%BE"><span class="nav-number">11.</span> <span class="nav-text">解决oracle服务占用内存过高(别瞎折腾)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%97%AD%E4%B8%80%E4%BA%9B%E5%BC%80%E6%9C%BA%E5%90%AF%E5%8A%A8%E6%9C%8D%E5%8A%A1"><span class="nav-number">11.1.</span> <span class="nav-text">关闭一些开机启动服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9SGA%E5%92%8CPGA%E5%A4%A7%E5%B0%8F"><span class="nav-number">11.2.</span> <span class="nav-text">修改SGA和PGA大小</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">12.</span> <span class="nav-text">删除数据库</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8D%B8%E8%BD%BD%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BD%AF%E4%BB%B6"><span class="nav-number">13.</span> <span class="nav-text">卸载数据库软件</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Oracle安装(Windows)及客户端连接配置 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Oracle安装(Windows)及客户端连接配置
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-11-24 14:54:01" itemprop="dateCreated datePublished" datetime="2019-11-24T14:54:01+08:00">2019-11-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>本文 oracle 版本 12.2.0.1.0 。</p>
+<p>安装指南： <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/database/oracle/oracle-database/12.2/ntdbi/index.html">https://docs.oracle.com/en/database/oracle/oracle-database/12.2/ntdbi/index.html</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_39915083/article/details/107055864">win10 安装Oracle19c (19.3版本)详细步骤</a> </p>
+<h1 id="别瞎折腾"><a href="#别瞎折腾" class="headerlink" title="别瞎折腾"></a><font color="red">别瞎折腾</font></h1><p>以下安装顺序遇到的问题：</p>
+<p>步骤1、安装数据库软件</p>
+<p>步骤2、创建PDB： <code>orcl.zhaolq.com</code> </p>
+<p>步骤3、创建CDB： <code>orcl2.zhaolq.com</code> </p>
+<p>安装完成后，将两个数据库都关闭，启动 PDB，用户无法登录：<font color="red"><strong>指定 pfile 文件启动成功。</strong></font> </p>
+<span id="more"></span>
+
+<h1 id="Oracle-Help-for-Java"><a href="#Oracle-Help-for-Java" class="headerlink" title="Oracle Help for Java"></a>Oracle Help for Java</h1><p>​		<strong>帮助导航器</strong> 对数据库安装的每一步都进行了详细说明，点击安装界面左下角的 <strong>帮助</strong> 按钮进入：</p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124165504515.png" alt="image-20191124165504515"></p>
+<h1 id="安装数据库软件、创建和配置数据库"><a href="#安装数据库软件、创建和配置数据库" class="headerlink" title="安装数据库软件、创建和配置数据库"></a>安装数据库软件、创建和配置数据库</h1><p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124150710445.png" alt="image-20191124150710445"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124150947901.png" alt="image-20191124150947901"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124151442874.png" alt="image-20191124151442874"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124152122560.png" alt="image-20191124152122560"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124152236953.png" alt="image-20191124152236953"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124152406367.png" alt="image-20191124152406367"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124160215006.png" alt="image-20191124160215006"></p>
+<p><font size="5"><strong>指定 Oracle 主目录用户</strong></font></p>
+<p>使用 Windows 内置帐户或指定标准 Windows 用户帐户 (非管理员帐户) 来安装和配置 Oracle 主目录。此帐户用于运行 Oracle 主目录的 Windows 服务。请勿使用此帐户登录执行管理任务。 </p>
+<ul>
+<li><p><strong>使用虚拟帐户</strong></p>
+<p>帐户是指用于 Oracle 数据库单实例安装的 Oracle 主目录用户。使用此帐户可以安装 Oracle 数据库, 创建和管理数据库服务而无需口令。 </p>
+</li>
+<li><p><strong>使用现有 Windows 用户</strong></p>
+<p>帐户可以是 Windows 本地用户, Windows 域用户或 Windows 托管服务帐户 (MSA)。必须为 Windows 本地或域用户提供用户名和口令。对于托管域帐户 MSA 帐户, 只需提供用户名。 </p>
+<p>对于 Oracle RAC 数据库或 Oracle Grid Infrastructure 的安装, 只能使用 Windows 域用户帐户。 </p>
+</li>
+<li><p><strong>创建新 Windows 用户</strong></p>
+<p>提供希望 Oracle Universal Installer 创建的 Windows 本地用户的用户名和口令。确认口令。创建的新用户未获得 Windows 计算机的交互式登录权限。不过, Windows 管理员可以像管理其他 Windows 帐户那样管理此帐户。 </p>
+</li>
+<li><p><strong>使用 Windows 内置帐户</strong></p>
+<p>不要求用户名或口令。Oracle 使用 Windows 内置帐户 (LocalSystem 或 LocalService) 创建 Windows 服务。</p>
+</li>
+</ul>
+<p>对于数据库服务器的安装, Oracle 建议将标准 Windows 用户帐户 (而不是 Windows 内置帐户) 作为 Oracle 主目录用户使用, 以增强安全性。</p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124160956245.png" alt="image-20191124160956245"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124161048576.png" alt="image-20191124161048576"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124163434587.png" alt="image-20191124163434587"></p>
+<p><font size="5"><strong>指定数据库标识符</strong></font></p>
+<p>数据库由全局数据库名标识, 与该数据库关联的实例由 Oracle 系统标识符 (SID) 标识。 </p>
+<p><strong>全局数据库名</strong> - 这是为了对数据库进行唯一标识以将其与网络中其他数据库区分开而指定给数据库的名称。全局数据库名由数据库唯一名称 (<code>db_unique_name</code>), 分隔符 (句点) 和数据库域名 (<code>db_domain</code>) 组成。它表示为: <code>db_unique_name.db_domain</code>。 </p>
+<p>其中: </p>
+<ul>
+<li><p><code>db_unique_name</code> 是数据库的名称。它最多可包含 30 个字符, 前 8 个字符必须是唯一的, 并且必须以字母字符开头。这些字符包括字母数字, 下划线 (_), 美元符号 ($) 和井号 (#)。 </p>
+</li>
+<li><p><code>db_domain</code> 是用于数据库的计算机环境。它最多可包含 128 个字符。字符可以包含字母数字, 下划线 (_), 井号 (#) 和句点 (.)。</p>
+</li>
+</ul>
+<p><strong>注</strong>: 请确保数据库名 (数据库唯一名称的前 8 个唯一字符), 分隔符和数据库域名的组合不超过 128 个字符。 </p>
+<p>例如: </p>
+<p><code>sales.us.example.com</code> </p>
+<p>其中: </p>
+<ul>
+<li><p><code>db_unique_name</code> 为 sales </p>
+</li>
+<li><p><code>db_domain</code> 为 us.example.com</p>
+</li>
+</ul>
+<p><strong>Oracle 系统标识符</strong> - 它是特定主机上 Oracle 数据库实例的唯一名称。Oracle 系统标识符 (SID) 帮助标识控制文件并定位打开数据库时所需的文件。当您输入全局数据库名时, Oracle Universal Installer 会使用该数据库名自动填充“Oracle 系统标识符”字段。您可以在高级安装中更改此名称。 </p>
+<p>Oracle Univeral Installer 将单实例数据库的 SID 限制为 12 个字母数字字符。对于 Oracle RAC 数据库, SID 前缀 (即 SID 的前 8 个字符) 必须是每个数据库的唯一名称。SID 不能包含下划线 (_), 美元符号 ($) 或井号 (#)。 </p>
+<p>选择<strong>创建为容器数据库</strong>选项以将数据库创建为支持一个或多个插接式数据库 (PDB) 的容器数据库 (CDB)。如果希望 Oracle Universal Installer 在创建 CDB 时创建 PDB, 请在<strong>插接式数据库名</strong>字段中指定 PDB 名称。 </p>
+<p>PDB 名称必须唯一并且遵守数据库命名惯例。 </p>
+<p>要创建其他 PDB 和管理 PDB, 请使用 Oracle Database Configuration Assistant。 </p>
+<p>单击<strong>下一步</strong>。 </p>
+<p><strong>服务名 (使用 Oracle RAC One Node)</strong> - 请确保为 Oracle RAC One Node 数据库提供服务名。使用服务名, 客户机可以连接到服务, 而不是连接到特定的 Oracle 数据库实例。使用服务名可在 Oracle RAC One Node 数据库已故障转移或重新定位到其他节点时仍然为客户机提供持续的连接。</p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124170121534.png" alt="image-20191124170121534"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124170036861.png" alt="image-20191124170036861"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124170321540.png" alt="image-20191124170321540"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124170525213.png" alt="image-20191124170525213"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124170835796.png" alt="image-20191124170835796"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124171001362.png" alt="image-20191124171001362"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124171250525.png" alt="image-20191124171250525"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124171455141.png" alt="image-20191124171455141"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124171542079.png" alt="image-20191124171542079"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124171659582.png" alt="image-20191124171659582"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124171944501.png" alt="image-20191124171944501"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124172009364.png" alt="image-20191124172009364"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124172151733.png" alt="image-20191124172151733"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124172702837.png" alt="image-20191124172702837"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124173205318.png" alt="image-20191124173205318"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124174037461.png" alt="image-20191124174037461"></p>
+<h1 id="创建和配置数据库"><a href="#创建和配置数据库" class="headerlink" title="创建和配置数据库"></a>创建和配置数据库</h1><p>数据库配置助手（Database Configuration Assistant）简称DBCA，在12c中的功能有：创建数据库、配置现有数据库、删除数据库、管理数据库模板、管理可插入数据库、Oracle RAC 数据库实例管理。</p>
+<p>PDB包含在CDB中，所以，要创建PDB，必须<font color="red"><strong>先创建CDB</strong></font>。详情见 <strong>CDB和PDB</strong> 章节。</p>
+<p>以下创建 <font color="red"><strong>非 CDB</strong> </font>：</p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191202203853877.png" alt="image-20191202203853877"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191202204003400.png" alt="image-20191202204003400"></p>
+<h2 id="典型配置"><a href="#典型配置" class="headerlink" title="典型配置"></a>典型配置</h2><p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203201157941.png" alt="image-20191203201157941"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203201412941.png" alt="image-20191203201412941"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203201449093.png" alt="image-20191203201449093"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203202008433.png" alt="image-20191203202008433"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203202518256.png" alt="image-20191203202518256"></p>
+<h2 id="高级配置"><a href="#高级配置" class="headerlink" title="高级配置"></a>高级配置</h2><p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203211335925.png" alt="image-20191203211335925"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203212031231.png" alt="image-20191203212031231"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203212303744.png" alt="image-20191203212303744"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203212557486.png" alt="image-20191203212557486"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203212850232.png" alt="image-20191203212850232"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203220039186.png" alt="image-20191203220039186"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203220217075.png" alt="image-20191203220217075"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203221432589.png" alt="image-20191203221432589"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191208120637279.png" alt="image-20191208120637279"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203221934226.png" alt="image-20191203221934226"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203222213523.png" alt="image-20191203222213523"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203225502798.png" alt="image-20191203225502798"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203230047430.png" alt="image-20191203230047430"></p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191203230634929.png" alt="image-20191203230634929"></p>
+<h1 id="Oracle的服务"><a href="#Oracle的服务" class="headerlink" title="Oracle的服务"></a>Oracle的服务</h1><p>成功安装并创建 Oracle 12c 数据库后的6个服务及默认设置：</p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124180356839.png" alt="image-20191124180356839"></p>
+<p>其中最重要的两个服务：</p>
+<ul>
+<li><p><code>OracleServiceORCL</code> ：数据库服务(数据库实例)，是Oracle核心服务，该服务是数据库启动的基础， 只有该服务启动，Oracle数据库才能正常启动。(必须启动) </p>
+</li>
+<li><p><code>OracleOraDB12Home1TNSListener</code> ：监听器服务，该服务只有在数据库需要远程访问的时候才需要。(非必须启动)</p>
+</li>
+</ul>
+<p>若只用 Oracle 自带的 <code>sql*plus</code>，只启动 <code>OracleServiceORCL</code> 服务即可；若要使用 PL&#x2F;SQL Developer 等第三方工具，<code>OracleOraDB12Home1TNSListener</code> 也要开启。</p>
+<p>禁止其他非必须开启的Oracle服务可以提升电脑的运行速度。</p>
+<h1 id="PDB默认状态"><a href="#PDB默认状态" class="headerlink" title="PDB默认状态"></a>PDB默认状态</h1><p>重新启动 Oracle 服务后，PDB 变为 MOUNTED 状态。</p>
+<p>参考链接 <a href="/article/2019/11/CDB%E5%92%8CPDB/">CDB和PDB</a> ，在 CDB 中创建触发器以实现 PDB 自启动。</p>
+<h1 id="PDB连接问题"><a href="#PDB连接问题" class="headerlink" title="PDB连接问题"></a>PDB连接问题</h1><p>ORACLE 12C 之前，实例与数据库是一对一或多对一关系（RAC）：即一个实例只能与一个数据库相关联，数据库可以被多个实例所加载。而实例与数据库不可能是一对多的关系。</p>
+<p>Oracle 12C 引入了CDB与PDB的新特性，在 ORACLE 12C 数据库引入的多租用户环境（Multitenant Environment）中，允许一个容器数据库（CDB）承载多个可插拔数据库（PDB），实例与数据库可以是一对多的关系。</p>
+<p><font color="red"><strong>默认 TNS 中没有 PDB 的监听，需要手动添加。添加前先确认【全局数据库名】和【服务名】。</strong></font> </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"># sqlplus登录见下文</span><br><span class="line"></span><br><span class="line"># 查看数据库实例名</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> instance_name; <span class="comment">-- CDB和PDB实例名相同，因为实例与数据库可以是一对多的关系</span></span><br><span class="line"></span><br><span class="line"># 查看数据库服务名</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> service_name; <span class="comment">-- 都是orcl.zhaolq.com，不理解</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- ######################## 配置监听的关键参数 ########################</span></span><br><span class="line"><span class="comment">-- ######################## 配置监听的关键参数 ########################</span></span><br><span class="line"><span class="comment">-- ######################## 配置监听的关键参数 ########################</span></span><br><span class="line"># 查看全局数据库名</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> GLOBAL_NAME; <span class="comment">-- 分别是 orcl.zhaolq.com、orclpdb.zhaolq.com</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="连接数据库"><a href="#连接数据库" class="headerlink" title="连接数据库"></a>连接数据库</h1><h2 id="SQL-Plus"><a href="#SQL-Plus" class="headerlink" title="SQL Plus"></a>SQL Plus</h2><p><strong>SQL Plus</strong> 是最基本的<strong>Oracle数据库</strong>实用程序，具有基本的<strong>命令行界面</strong>，通常由用户、管理员和程序员使用。 </p>
+<p>1、开始 –&gt; 运行 –&gt; sqlplus</p>
+<p>2、输入： <code>username/password@database</code> ，本地安装两个数据库时，使用 <code>@</code> 选择登录，例如： <code>system/123456789@orcl</code> </p>
+<p>登录成功示例：</p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191124175349262.png" alt="image-20191124175349262"></p>
+<p><font color="red"><strong>Sqlplus默认连接CDB</strong></font> </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"># 登录sys用户</span><br><span class="line">sqlplus sys<span class="operator">/</span>passwd <span class="keyword">as</span> sysdba # 任意passwd，其实跟不不需要密码，因为你可能数据ora_dba组用户</span><br><span class="line">sqlplus sys<span class="operator">/</span> <span class="keyword">as</span> sysdba</span><br><span class="line">sqlplus sys <span class="keyword">as</span> sysdba</span><br><span class="line">sqlplus <span class="operator">/</span> <span class="keyword">as</span> sysdba</span><br><span class="line">sqlplus <span class="operator">/</span><span class="keyword">as</span> sysdba</span><br><span class="line"></span><br><span class="line"># 连接pdb，需要为pdb添加监听</span><br><span class="line">sqlplus sys<span class="operator">/</span><span class="number">123456789</span><span class="variable">@orclpdb</span> <span class="keyword">as</span> sysdba</span><br><span class="line">sqlplus sys<span class="operator">/</span><span class="number">123456789</span>@<span class="operator">/</span><span class="operator">/</span><span class="number">192.168</span><span class="number">.0</span><span class="number">.5</span>:<span class="number">1521</span><span class="operator">/</span>orclpdb.zhaolq.com <span class="keyword">as</span> sysdba <span class="comment">-- 通过完整地址连接，无需客户端配置文件tnsnames.ora</span></span><br><span class="line">sqlplus sys<span class="operator">/</span><span class="number">123456789</span><span class="variable">@192</span><span class="number">.168</span><span class="number">.0</span><span class="number">.5</span>:<span class="number">1521</span><span class="operator">/</span>orclpdb.zhaolq.com <span class="keyword">as</span> sysdba</span><br><span class="line"></span><br><span class="line">#连接单实例数据库</span><br><span class="line">sqlplus sys<span class="operator">/</span><span class="number">123456789</span><span class="variable">@192</span><span class="number">.168</span><span class="number">.0</span><span class="number">.5</span>:<span class="number">1521</span>:orcl.zhaolq.com <span class="keyword">as</span> sysdba</span><br></pre></td></tr></table></figure>
+
+<p>计算机管理 &gt; 组 &gt; ora_dba组里的用户，无需输入用户和口令，直接以sysdba的身份登陆数据库。</p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191130132834756.png" alt="image-20191130132834756"></p>
+<h2 id="PL-SQL-Developer"><a href="#PL-SQL-Developer" class="headerlink" title="PL&#x2F;SQL Developer"></a>PL&#x2F;SQL Developer</h2><p><font color="red"><strong>是否带域名要看监听程序如何配置</strong></font> </p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># 连接地址格式</span><br><span class="line"><span class="number">192</span>.<span class="number">168</span>.<span class="number">0</span>.<span class="number">5</span>:<span class="number">1521</span>/orcl.zhaolq.com</span><br><span class="line"><span class="number">192</span>.<span class="number">168</span>.<span class="number">0</span>.<span class="number">5</span>:<span class="number">1521</span>/orclpdb.zhaolq.com</span><br></pre></td></tr></table></figure>
+
+<h2 id="JDBC-单实例和RAC"><a href="#JDBC-单实例和RAC" class="headerlink" title="JDBC (单实例和RAC)"></a>JDBC (单实例和RAC)</h2><p>对于Java程序配置数据源，无需知道数据库是单实例还是 RAC (集群)，第一种不行就用第二种。</p>
+<p><font color="red"><strong>是否带域名要看监听程序如何配置</strong></font> </p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 单实例</span><br><span class="line"><span class="function">jdbc:<span class="title">oracle:thin</span>:@192.168.0.5:1521:<span class="title">sid</span></span></span><br><span class="line"><span class="function"><span class="title">jdbc:oracle</span>:<span class="title">thin</span>:@192.168.0.5:1521:<span class="title">orcl.zhaolq.com</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"># <span class="title">RAC</span>集群/多实例。因为<span class="title">Oracle12c</span>以后允许一个实例对应多个数据库服务，所以根据全局数据库名连接。兼容单实例数据库</span></span><br><span class="line"><span class="function"><span class="title">jdbc:oracle</span>:<span class="title">thin</span>:@//192.168.0.5:1521/<span class="title">sname</span></span></span><br><span class="line"><span class="function"><span class="title">jdbc:oracle</span>:<span class="title">thin</span>:@//192.168.0.5:1521/<span class="title">orclpdb.zhaolq.com</span></span></span><br></pre></td></tr></table></figure>
+
+<h1 id="创建用户"><a href="#创建用户" class="headerlink" title="创建用户"></a>创建用户</h1><p>推荐连接：</p>
+<p> <a target="_blank" rel="noopener" href="https://blog.51cto.com/itrunner/4645726">https://blog.51cto.com/itrunner/4645726</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/database/oracle/oracle-database/19/index.html">https://docs.oracle.com/en/database/oracle/oracle-database/19/index.html</a> </p>
+<p><font color="blue" size="4"><strong>关于多租户架构：</strong></font> </p>
+<p> <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/database/oracle/oracle-database/19/multi/introduction-to-the-multitenant-architecture.html#GUID-C5B0AF7D-ABE8-4F69-9552-F4DAF40281F1">https://docs.oracle.com/en/database/oracle/oracle-database/19/multi/introduction-to-the-multitenant-architecture.html#GUID-C5B0AF7D-ABE8-4F69-9552-F4DAF40281F1</a> </p>
+<p><font color="blue" size="4"><strong>CDB Common 用户和 CDB Local 用户概述：</strong></font> </p>
+<p> <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/database/oracle/oracle-database/19/multi/overview-of-the-multitenant-architecture.html#GUID-3BB161DA-9CC0-4D61-A2C1-5D3662E0DECF">https://docs.oracle.com/en/database/oracle/oracle-database/19/multi/overview-of-the-multitenant-architecture.html#GUID-3BB161DA-9CC0-4D61-A2C1-5D3662E0DECF</a> </p>
+<p><strong>CDB Common 用户</strong>：CDB Common 用户可以连接到 CDB 中它有足够权限的任何容器。</p>
+<p><strong>Application common 用户</strong>：Application common 用户只能连接到创建它的 Application Root，或插入到该 Application Root 的 PDB，具体取决于其权限。</p>
+<p><strong>Local 用户</strong>：<font color="orange"><strong>CDB 中 的本地用户是不常见的数据库用户，只能在单个 PDB 中操作。</strong></font></p>
+<p><font color="blue" size="4"><strong>Common 用户和 Local 用户：</strong></font> </p>
+<p><strong>关于普通用户和本地用户：</strong> <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/managing-security-for-oracle-database-users.html#GUID-BBBD9904-F2F3-442B-9AFC-8ACDD9A588D8">https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/managing-security-for-oracle-database-users.html#GUID-BBBD9904-F2F3-442B-9AFC-8ACDD9A588D8</a> </p>
+<p><strong>创建普通用户或本地用户：</strong> <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/managing-security-for-oracle-database-users.html#GUID-23F9786D-7E15-4A25-A5C3-BEDFE8098F8A">https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/managing-security-for-oracle-database-users.html#GUID-23F9786D-7E15-4A25-A5C3-BEDFE8098F8A</a> </p>
+<p><font color="red" size="5"><strong>创建 PDB Local 用户：</strong></font> </p>
+<p>当我们想在数据库中创建 用户的时候，一般是不往ROOT中创建。</p>
+<p>要创建本地用户帐户，您必须连接到要在其中创建帐户的 PDB 并具有 <code>CREATE USER</code> 权限。脚本参考： <a href="/article/2019/11/Oracle%E8%A1%A8%E7%A9%BA%E9%97%B4%E5%92%8C%E7%94%A8%E6%88%B7%E7%9A%84%E5%BB%BA%E7%AB%8B%E4%B8%8E%E5%88%A0%E9%99%A4/">Oracle表空间和用户的建立与删除</a> </p>
+<h1 id="TNS"><a href="#TNS" class="headerlink" title="TNS"></a>TNS</h1><h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>Oracle中TNS的完整定义：transparence Network Substrate 透明网络底层。</p>
+<p>Oracle所有的TNS配置文件的默认路径：<code>%ORACLE_HOME%\network\admin</code> </p>
+<h2 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h2><p>TNS的配置文件包括 <strong>服务器端</strong> 和 <strong>客户端</strong> 两部分。</p>
+<p>服务器端： <code>listener.ora</code> 、 <code>sqlnet.ora</code> 、 <code>tnsnames.ora</code> </p>
+<p>客户端： <code>sqlnet.ora</code> 、 <code>tnsnames.ora</code> </p>
+<p>Oracle 12c TNS配置文件的默认路径： <code>D:\oracle12c\product\12.2.0\dbhome_1\network\admin</code> </p>
+<p><font color="red" size="5"><strong>listener.ora</strong></font> </p>
+<p>监听器是用来侦听客户端的连接请求以及建立客户端和服务器端连接通道的一个服务程序。默认情况下Oracle在1521端口上侦听客户端连接请求。</p>
+<p>监听器包括两部分：</p>
+<p>​		1、Oracle<font color="red">要监听的</font><strong>地址</strong>、<strong>端口</strong>、<strong>通讯协议</strong>。HOST参数可以是Oracle服务器主机名称，也可以是相应的IP地址。</p>
+<p>​		2、Oracle要监听的<strong>数据库实例</strong>（SID_LIST_LISTENER部分）。非RAC环境下，LISTENER只能监听本服务器的地址和实例，RAC环境下，LISTENER还可以监听远程服务器。每个数据库最少要配置一个监听器。（注：<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/RAC">RAC</a> 环境，指的是Oracle服务器集群配置的环境：<a target="_blank" rel="noopener" href="https://baike.baidu.com/item/Oracle%20RAC">Oracle RAC</a>）</p>
+<p><font color="red" size="5"><strong>sqlnet.ora</strong></font> </p>
+<p>sqlnet.ora 可以控制和管理Oracle连接的属性，根据参数作用的不同决定在客户端配置还是在server端配置。sqlnet.ora 的配置是全局性的，也就说sqlnet.ora的配置是对所有的连接起作用，如果想对某个特殊的连接或服务进行约束或限制，可以在TNS配置相应参数。</p>
+<p><font color="red" size="5"><strong>tnsnames.ora</strong></font> </p>
+<p><strong>配置客户端到服务器端的连接服务</strong>，包括客户端要连接到的服务器和数据库的<strong>配置信息</strong>。</p>
+<p>tnsnames.ora 包括两部分</p>
+<p>​		ADDRESS_LIST：包含了Oracle数据库服务器的监听地址信息，也就是要告诉TNS，数据库可通过这个地址和CLIENT进行通讯。</p>
+<p>​		CONNECT_DATA：定义了CLIENT要连接的数据库，以及数据库的连接方式，(专用或共享)。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">ORCL =</span><br><span class="line">  (DESCRIPTION =</span><br><span class="line">    (ADDRESS_LIST =</span><br><span class="line">      (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))</span><br><span class="line">    )</span><br><span class="line">    (CONNECT_DATA =</span><br><span class="line">      (SERVER = DEDICATED)</span><br><span class="line">      (SERVICE_NAME = orcl.zhaolq.com)</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">ORCL2 =</span><br><span class="line">  (DESCRIPTION =</span><br><span class="line">    (ADDRESS_LIST =</span><br><span class="line">      (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))</span><br><span class="line">    )</span><br><span class="line">    (CONNECT_DATA =</span><br><span class="line">      (SERVER = DEDICATED)</span><br><span class="line">      (SERVICE_NAME = orcl2.zhaolq.com)</span><br><span class="line">    )</span><br><span class="line">  )</span><br></pre></td></tr></table></figure>
+
+<h2 id="配置工具"><a href="#配置工具" class="headerlink" title="配置工具"></a>配置工具</h2><p><font color="red"><strong>Net Configuration Assistant</strong></font>（网络配置助手）和 <font color="red"><strong>Net Manager</strong></font>（网络管理器）都可以配置监听和TNS，但各有不同。</p>
+<p><strong>Net Configuration Assistant</strong> ：新增监听<strong>会</strong>添加并启动服务；修改参数<strong>会</strong>更新并重启服务；</p>
+<p><strong>Net Manager</strong> ：等同于<strong>手工修改</strong>（用文本编辑器修改）。新增监听<strong>不会</strong>添加服务；修改参数<strong>不会</strong>重启服务，需要手动重启。</p>
+<p><font color="red"><strong>另</strong></font>：可通过“lsnrctl status”命令查看监听启动情况，“lsnrctl start”(lsnrctl stop)可开启或关闭监听，命令“netca”可启动Net Configuration Assistant</p>
+<h3 id="Net-Configuration-Assistant新增监听"><a href="#Net-Configuration-Assistant新增监听" class="headerlink" title="Net Configuration Assistant新增监听"></a>Net Configuration Assistant新增监听</h3><p><strong>listener.ora 默认配置</strong> </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">listener.ora Network Configuration File: D:\oracle12c\product\12.2.0\dbhome_1\network\admin\listener.ora</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Generated by Oracle configuration tools.</span></span><br><span class="line"></span><br><span class="line">SID_LIST_LISTENER =</span><br><span class="line">  (SID_LIST =</span><br><span class="line">    (SID_DESC =</span><br><span class="line">      (SID_NAME = CLRExtProc)</span><br><span class="line">      (ORACLE_HOME = D:\oracle12c\product\12.2.0\dbhome_1)</span><br><span class="line">      (PROGRAM = extproc)</span><br><span class="line">      (ENVS = &quot;EXTPROC_DLLS=ONLY:D:\oracle12c\product\12.2.0\dbhome_1\bin\oraclr12.dll&quot;)</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">LISTENER =</span><br><span class="line">  (DESCRIPTION_LIST =</span><br><span class="line">    (DESCRIPTION =</span><br><span class="line">      (ADDRESS = (PROTOCOL = TCP)(HOST = zhaolq)(PORT = 1521))</span><br><span class="line">      (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1521))</span><br><span class="line">    )</span><br><span class="line">  )</span><br></pre></td></tr></table></figure>
+
+<p><strong>tnsnames.ora 默认配置</strong> </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">tnsnames.ora Network Configuration File: D:\oracle12c\product\12.2.0\dbhome_1\network\admin\tnsnames.ora</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Generated by Oracle configuration tools.</span></span><br><span class="line"></span><br><span class="line">ORACLR_CONNECTION_DATA =</span><br><span class="line">  (DESCRIPTION =</span><br><span class="line">    (ADDRESS_LIST =</span><br><span class="line">      (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1521))</span><br><span class="line">    )</span><br><span class="line">    (CONNECT_DATA =</span><br><span class="line">      (SID = CLRExtProc)</span><br><span class="line">      (PRESENTATION = RO)</span><br><span class="line">    )</span><br><span class="line">  )</span><br></pre></td></tr></table></figure>
+
+<h3 id="Net-Manager新增监听"><a href="#Net-Manager新增监听" class="headerlink" title="Net Manager新增监听"></a>Net Manager新增监听</h3><p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191207181437185.png" alt="image-20191207181437185"></p>
+<p><font color="red" size="5"><strong>listener.ora</strong></font> <font color="blue"><strong>(必须)</strong></font> </p>
+<p>安装完成后，默认只有 CDB 的监听，<font color="red" size><strong>PDB 监听需手动添加</strong></font>。</p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191207182718030.png" alt="image-20191207182718030"></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">listener.ora Network Configuration File: D:\oracle12c\product\12.2.0\dbhome_1\NETWORK\ADMIN\listener.ora</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Generated by Oracle configuration tools.</span></span><br><span class="line"></span><br><span class="line">SID_LIST_LISTENER =</span><br><span class="line">  (SID_LIST =</span><br><span class="line">    (SID_DESC =</span><br><span class="line">      (GLOBAL_DBNAME = orcl.zhaolq.com)</span><br><span class="line">      (SID_NAME = ORCL)</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">LISTENER =</span><br><span class="line">  (DESCRIPTION =</span><br><span class="line">    (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">ADR_BASE_LISTENER = D:\oracle12c\product\12.2.0\dbhome_1\log</span><br></pre></td></tr></table></figure>
+
+<p><font color="red" size="5"><strong>tnsnames.ora</strong></font> <font color="blue"><strong>(非必须)</strong></font> </p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191207182847727.png" alt="image-20191207182847727"></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">tnsnames.ora Network Configuration File: D:\oracle12c\product\12.2.0\dbhome_1\NETWORK\ADMIN\tnsnames.ora</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Generated by Oracle configuration tools.</span></span><br><span class="line"></span><br><span class="line">ORCL =</span><br><span class="line">  (DESCRIPTION =</span><br><span class="line">    (ADDRESS_LIST =</span><br><span class="line">      (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))</span><br><span class="line">    )</span><br><span class="line">    (CONNECT_DATA =</span><br><span class="line">      (SERVICE_NAME = orcl.zhaolq.com)</span><br><span class="line">    )</span><br><span class="line">  )</span><br></pre></td></tr></table></figure>
+
+<p><font color="red" size="5"><strong>sqlnet.ora</strong></font> <font color="blue"><strong>(默认即可)</strong></font> </p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191207182812172.png" alt="image-20191207182812172"></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">sqlnet.ora Network Configuration File: D:\oracle12c\product\12.2.0\dbhome_1\NETWORK\ADMIN\sqlnet.ora</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Generated by Oracle configuration tools.</span></span><br><span class="line"></span><br><span class="line">NAMES.DIRECTORY_PATH= (TNSNAMES, EZCONNECT)</span><br><span class="line"></span><br><span class="line">ADR_BASE = D:\oracle12c\product\12.2.0\dbhome_1\log</span><br></pre></td></tr></table></figure>
+
+<h1 id="解决oracle服务占用内存过高-别瞎折腾"><a href="#解决oracle服务占用内存过高-别瞎折腾" class="headerlink" title="解决oracle服务占用内存过高(别瞎折腾)"></a>解决oracle服务占用内存过高(<font color="red">别瞎折腾</font>)</h1><h2 id="关闭一些开机启动服务"><a href="#关闭一些开机启动服务" class="headerlink" title="关闭一些开机启动服务"></a>关闭一些开机启动服务</h2><p>​		关闭除 <code>OracleServiceORCL</code> 的其他服务。</p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191130164708461.png" alt="image-20191130164708461"></p>
+<h2 id="修改SGA和PGA大小"><a href="#修改SGA和PGA大小" class="headerlink" title="修改SGA和PGA大小"></a>修改SGA和PGA大小</h2><p>参考： <a href="/article/2019/11/Oracle%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%EF%BC%9ASGA%E3%80%81PGA%E3%80%81UGA/">Oracle内存结构：SGA、PGA、UGA</a> </p>
+<p>SGA的大小：一般物理内存20%用作操作系统保留，其他80%用于数据库。</p>
+<p>SGA普通数据库可以分配40%-60%之间，PGA可以分配20%-40%之间。</p>
+<p><font color="red">注意：</font><strong>sga_target</strong> 不得大于 <strong>sga_max_size</strong>（一般保持两者相等），否则会导致数据库无法启动。修改后重启数据库生效。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; startup <span class="comment"># 启动数据库</span></span><br><span class="line">ORA-00823: Specified value of sga_target greater than sga_max_size</span><br><span class="line">ORA-01078: 处理系统参数失败</span><br><span class="line">SQL&gt;</span><br></pre></td></tr></table></figure>
+
+<p><font color="red">当 <strong>sga_target</strong> 和 <strong>sga_max_size</strong> 设置相等时，最好用记事本检查spfile文件内容，确定二者是否真的相等，亲测不一定。</font></p>
+<p>以dba身份登录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#************************************ 设置sga开始 ************************************#</span></span><br><span class="line">SQL&gt; show parameter sga; <span class="comment"># 显示sga(系统全局区)内存分配情况</span></span><br><span class="line"></span><br><span class="line">NAME                                 TYPE        VALUE</span><br><span class="line">------------------------------------ ----------- ------------------------------</span><br><span class="line">allow_group_access_to_sga            boolean     FALSE</span><br><span class="line">lock_sga                             boolean     FALSE</span><br><span class="line">pre_page_sga                         boolean     TRUE</span><br><span class="line">sga_max_size                         big <span class="built_in">integer</span> 4880M</span><br><span class="line">sga_min_size                         big <span class="built_in">integer</span> 0</span><br><span class="line">sga_target                           big <span class="built_in">integer</span> 4880M</span><br><span class="line">unified_audit_sga_queue_size         <span class="built_in">integer</span>     1048576</span><br><span class="line"></span><br><span class="line">SQL&gt; alter system <span class="built_in">set</span> sga_target=500m; <span class="comment"># 修改sga_target</span></span><br><span class="line">SQL&gt; alter system <span class="built_in">set</span> sga_max_size=500m scope=spfile; <span class="comment"># 修改sga_max_size</span></span><br><span class="line"></span><br><span class="line">SQL&gt; shutdown immediate; <span class="comment"># 关闭数据库</span></span><br><span class="line">SQL&gt; startup <span class="comment"># 启动数据库</span></span><br><span class="line">ORA-00821: Specified value of sga_target 500M is too small, needs to be at least 564M</span><br><span class="line">ORA-01078: 处理系统参数失败</span><br><span class="line"><span class="comment">#-------------------------#</span></span><br><span class="line"><span class="comment"># 恢复spfile文件重新设置</span></span><br><span class="line">SQL&gt; alter system <span class="built_in">set</span> sga_target=1024m; <span class="comment"># 修改sga_target</span></span><br><span class="line">SQL&gt; alter system <span class="built_in">set</span> sga_max_size=1024m scope=spfile; <span class="comment"># 修改sga_max_size</span></span><br><span class="line"><span class="comment">#-------------------------#</span></span><br><span class="line"></span><br><span class="line">SQL&gt; show parameter sga; <span class="comment"># 查看修改是否生效</span></span><br><span class="line"></span><br><span class="line">NAME                                 TYPE        VALUE</span><br><span class="line">------------------------------------ ----------- ------------------------------</span><br><span class="line">allow_group_access_to_sga            boolean     FALSE</span><br><span class="line">lock_sga                             boolean     FALSE</span><br><span class="line">pre_page_sga                         boolean     TRUE</span><br><span class="line">sga_max_size                         big <span class="built_in">integer</span> 1G</span><br><span class="line">sga_min_size                         big <span class="built_in">integer</span> 0</span><br><span class="line">sga_target                           big <span class="built_in">integer</span> 1G</span><br><span class="line">unified_audit_sga_queue_size         <span class="built_in">integer</span>     1048576</span><br><span class="line"><span class="comment">#************************************ 设置sga结束 ************************************#</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#************************************ 设置pga开始 ************************************#</span></span><br><span class="line">SQL&gt; show parameter pga; <span class="comment"># 显示pga(进程全局区)内存分配情况</span></span><br><span class="line"></span><br><span class="line">NAME                                 TYPE        VALUE</span><br><span class="line">------------------------------------ ----------- ------------------------------</span><br><span class="line">pga_aggregate_limit                  big <span class="built_in">integer</span> 3250M</span><br><span class="line">pga_aggregate_target                 big <span class="built_in">integer</span> 1625M</span><br><span class="line"></span><br><span class="line">SQL&gt; alter system <span class="built_in">set</span> pga_aggregate_limit=512m scope=spfile;</span><br><span class="line">SQL&gt; alter system <span class="built_in">set</span> pga_aggregate_target=256m scope=spfile;</span><br><span class="line"></span><br><span class="line">SQL&gt; shutdown immediate; <span class="comment"># 关闭数据库</span></span><br><span class="line">SQL&gt; startup <span class="comment"># 启动数据库</span></span><br><span class="line">ORA-00093: pga_aggregate_limit must be between 2048M and 100000G</span><br><span class="line">ORA-01078: 处理系统参数失败</span><br><span class="line"><span class="comment">#************************************ 设置pga结束 ************************************#</span></span><br></pre></td></tr></table></figure>
+
+<p><font color="red" size="5"><strong>修改SGA导致用户无法登录问题</strong></font> </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">请输入用户名:  system/123456789</span><br><span class="line">ERROR:</span><br><span class="line">ORA-01034: ORACLE not available</span><br><span class="line">ORA-27101: shared memory realm does not exist</span><br><span class="line">进程 ID: 0</span><br><span class="line">会话 ID: 0 序列号: 0</span><br><span class="line"></span><br><span class="line">请输入用户名:</span><br></pre></td></tr></table></figure>
+
+<p>1、若没有配置网络服务名，可以通过命令 <code>sqlplus /as sysdba</code> 登录到服务器空闲例程；</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">请输入用户名:  / as sysdba</span><br><span class="line">已连接到空闲例程。</span><br><span class="line"></span><br><span class="line">SQL&gt;</span><br></pre></td></tr></table></figure>
+
+<p>若配置了网络服务名，则在 <code>D:\oracle12c\product\12.2.0\dbhome_1\network\admin</code> 下找到 <code>listener.ora</code> 文件，查看配置的服务名，登录： <code>sqlplus sys/sys@XXX(网络服务名) as sysdba</code> 。</p>
+<p>2、通过初始化参数文件（pfile）创建&#x2F;恢复 spfile 文件到database 目录。</p>
+<p>参考： <a href="/article/2019/11/Oracle%E7%9A%84spfile%E4%B8%8Epfile/">Oracle的spfile与pfile</a> </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create spfile from pfile=<span class="string">&#x27;D:\oracle12c\admin\orcl\pfile\init.ora.XXXXXXX&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>创建 <code>spfile</code> 成功会提示： 文件已创建。</p>
+<p>此时重启服务即可登录了。</p>
+<h1 id="删除数据库"><a href="#删除数据库" class="headerlink" title="删除数据库"></a>删除数据库</h1><p>打开 DBCA ，选择 <code>删除数据库</code> 。</p>
+<p>删除全部数据库的数据库软件目录，只需要保留 <code>product</code> 文件夹，其他均可删除：</p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191207160805927.png" alt="image-20191207160805927"></p>
+<p>删除全部数据库所剩服务：</p>
+<p><img src="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-Windows-%E5%8F%8A%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%E9%85%8D%E7%BD%AE/image-20191207183707104.png" alt="image-20191207183707104"></p>
+<h1 id="卸载数据库软件"><a href="#卸载数据库软件" class="headerlink" title="卸载数据库软件"></a>卸载数据库软件</h1><p>双击文件： <code>D:\oracle12c\product\12.2.0\dbhome_1\deinstall\deinstall.bat</code> </p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Oracle/" rel="tag"># Oracle</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2019/11/Tomcat%E6%95%99%E7%A8%8B/" rel="prev" title="Tomcat教程">
+                  <i class="fa fa-angle-left"></i> Tomcat教程
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2019/11/Oracle%E5%AE%89%E8%A3%85-CentOS/" rel="next" title="Oracle安装(CentOS8)">
+                  Oracle安装(CentOS8) <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

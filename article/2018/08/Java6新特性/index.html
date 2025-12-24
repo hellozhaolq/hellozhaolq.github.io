@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Java6的新特性  Pluggable Annotation Processing API可拔插注解处理API：用于编译时处理注解，而不是在运行时处理注解。 在运行时，我们仍然可以使用反射来分析注解并自定义行为。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java6新特性">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2018/08/Java6%E6%96%B0%E7%89%B9%E6%80%A7/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="Java6的新特性  Pluggable Annotation Processing API可拔插注解处理API：用于编译时处理注解，而不是在运行时处理注解。 在运行时，我们仍然可以使用反射来分析注解并自定义行为。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-08-02T00:00:25.000Z">
+<meta property="article:modified_time" content="2018-08-02T00:00:25.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="JDK">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2018/08/Java6%E6%96%B0%E7%89%B9%E6%80%A7/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2018/08/Java6%E6%96%B0%E7%89%B9%E6%80%A7/","path":"article/2018/08/Java6新特性/","title":"Java6新特性"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Java6新特性 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Pluggable-Annotation-Processing-API"><span class="nav-number">1.</span> <span class="nav-text">Pluggable Annotation Processing API</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AF%B9-WebService-%E6%94%AF%E6%8C%81%E7%9A%84%E5%A2%9E%E5%BC%BA"><span class="nav-number">2.</span> <span class="nav-text">对 WebService 支持的增强</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JDBC-4-0"><span class="nav-number">3.</span> <span class="nav-text">JDBC 4.0</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JAXB-%E5%8D%87%E7%BA%A7"><span class="nav-number">4.</span> <span class="nav-text">JAXB 升级</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Java-Compiler-API"><span class="nav-number">5.</span> <span class="nav-text">Java Compiler API</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%84%9A%E6%9C%AC%E8%AF%AD%E8%A8%80%E6%94%AF%E6%8C%81"><span class="nav-number">6.</span> <span class="nav-text">脚本语言支持</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2018/08/Java6%E6%96%B0%E7%89%B9%E6%80%A7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Java6新特性 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java6新特性
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2018-08-02 08:00:25" itemprop="dateCreated datePublished" datetime="2018-08-02T08:00:25+08:00">2018-08-02</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p> <a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000004417536">Java6的新特性</a> </p>
+<h1 id="Pluggable-Annotation-Processing-API"><a href="#Pluggable-Annotation-Processing-API" class="headerlink" title="Pluggable Annotation Processing API"></a>Pluggable Annotation Processing API</h1><p><strong>可拔插注解处理API</strong>：用于<font color="blue" size="4">编译时处理注解</font>，而不是在运行时处理注解。</p>
+<p>在运行时，我们仍然可以使用反射来分析注解并自定义行为。</p>
+<span id="more"></span>
+
+<p>编译时的注解处理是完全不同的概念。注解处理器(Annotation Processor)是javac内置的一个用于编译时扫描和处理注解的工具。简单的说，在源代码编译阶段，通过注解处理器，我们可以获取源文件内注解相关内容。通过<code>javac</code> process，我们可以插入自定义注解“处理器”（一个Java类），并可以执行以下操作。</p>
+<ul>
+<li>根据代码中批注提供的信息，我们可以进行一些验证并发出自定义错误&#x2F;警告。错误将导致编译失败。这意味着我们可以增加更多的编译时类型安全性。我们还可以执行一些设计规则。</li>
+<li>生成新代码并创建.java文件，新文件同样由编译器编译，也同样会被注解处理器处理。实际上，我们可以创建任何类型的文件，例如 properties&#x2F;resources 等。通常是自动产生一些有规律性的重复代码。</li>
+</ul>
+<p><font color="blue">推荐链接：</font></p>
+<p> <a target="_blank" rel="noopener" href="https://www.logicbig.com/tutorials/core-java-tutorial/java-se-annotation-processing-api/annotation-processing-concepts.html">Java Pluggable Annotation Processor</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.baeldung.com/java-annotation-processing-builder">https://www.baeldung.com/java-annotation-processing-builder</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://github.com/sockeqwe/annotationprocessing101">https://github.com/sockeqwe/annotationprocessing101</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://yuweiguocn.github.io/java-annotation-processor/">自定义Java注解处理器</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.cnblogs.com/yaoxiaowen/p/6753964.html">自定义注解处理器</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.cnblogs.com/ganchuanpu/p/9020478.html">Java注解处理器</a> </p>
+<h1 id="对-WebService-支持的增强"><a href="#对-WebService-支持的增强" class="headerlink" title="对 WebService 支持的增强"></a>对 WebService 支持的增强</h1><p>透过 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/JAX-WS">JAX-WS</a> 改善的网络服务支持(JSR 224)。</p>
+<p><font color="blue">推荐链接：</font></p>
+<p> <a href="../Web%20service">Web service</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/JAX-RPC">JAX-RPC</a> 2.0被更名为 JAX-WS 2.0</p>
+<p> <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/JAX-RS">JAX-RS</a> </p>
+<h1 id="JDBC-4-0"><a href="#JDBC-4-0" class="headerlink" title="JDBC 4.0"></a>JDBC 4.0</h1><p>支持 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Java%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5">JDBC</a> 4.0 (JSR 221)。</p>
+<h1 id="JAXB-升级"><a href="#JAXB-升级" class="headerlink" title="JAXB 升级"></a><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/JAXB">JAXB</a> 升级</h1><p>将 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/JAXB">JAXB</a> 升级到版本2.0：包括 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/StAX">StAX</a> 解析器的集成。扩展：<a target="_blank" rel="noopener" href="https://www.tutorialspoint.com/java_xml/java_xml_parsers.htm">Java XML解析器</a> 、 <a target="_blank" rel="noopener" href="https://www.baeldung.com/java-xml">Java XML指南</a> </p>
+<h1 id="Java-Compiler-API"><a href="#Java-Compiler-API" class="headerlink" title="Java Compiler API"></a>Java Compiler API</h1><p>Java编译器API (JSR 199)：允许Java程序以写程序的方式选择和调用Java编译器的API。</p>
+<h1 id="脚本语言支持"><a href="#脚本语言支持" class="headerlink" title="脚本语言支持"></a>脚本语言支持</h1><p>脚本语言支持（Scripting Language Support）（JSR 223）：用于与脚本语言紧密集成的通用API，以及内置的 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Rhino_(JavaScript%E5%BC%95%E6%93%8E)">Mozilla JavaScript Rhino</a> 集成。</p>
+<p>Rhino作为<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/JDK">JDK</a>脚本引擎对JavaScript支持部分包含到甲骨文JDK 1.6中，但将被<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/w/index.php?title=Nashorn_(JavaScript%E5%BC%95%E6%93%8E)&action=edit&redlink=1">Nashorn</a>继承取代包含到<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/OpenJDK">OpenJDK</a> 1.8中。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/JDK/" rel="tag"># JDK</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2018/08/Java5%E6%96%B0%E7%89%B9%E6%80%A7/" rel="prev" title="Java5新特性">
+                  <i class="fa fa-angle-left"></i> Java5新特性
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2018/08/Java7%E6%96%B0%E7%89%B9%E6%80%A7/" rel="next" title="Java7新特性">
+                  Java7新特性 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

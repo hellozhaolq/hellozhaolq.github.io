@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="从今天开始，我们就进入了专栏的高级篇。相对基础篇，高级篇涉及的知识点，都比较零散，不是太系统。所以，我会围绕一个实际软件开发的问题，在阐述具体解决方法的过程中，将涉及的知识点给你详细讲解出来。 所以，相较于基础篇“开篇问题-知识讲解-回答开篇-总结-课后思考”这样的文章结构，高级篇我稍作了些改变，大致分为这样几个部分：“问题阐述-算法解析-总结引申-课后思考”。 好了，现在，我们就进入高级篇的第一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="43高级篇-拓扑排序：如何确定代码源文件的编译依赖关系？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/03/43%E9%AB%98%E7%BA%A7%E7%AF%87-%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E4%BB%A3%E7%A0%81%E6%BA%90%E6%96%87%E4%BB%B6%E7%9A%84%E7%BC%96%E8%AF%91%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="从今天开始，我们就进入了专栏的高级篇。相对基础篇，高级篇涉及的知识点，都比较零散，不是太系统。所以，我会围绕一个实际软件开发的问题，在阐述具体解决方法的过程中，将涉及的知识点给你详细讲解出来。 所以，相较于基础篇“开篇问题-知识讲解-回答开篇-总结-课后思考”这样的文章结构，高级篇我稍作了些改变，大致分为这样几个部分：“问题阐述-算法解析-总结引申-课后思考”。 好了，现在，我们就进入高级篇的第一">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/03/43%E9%AB%98%E7%BA%A7%E7%AF%87-%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E4%BB%A3%E7%A0%81%E6%BA%90%E6%96%87%E4%BB%B6%E7%9A%84%E7%BC%96%E8%AF%91%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB%EF%BC%9F/20190315092323801.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/03/43%E9%AB%98%E7%BA%A7%E7%AF%87-%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E4%BB%A3%E7%A0%81%E6%BA%90%E6%96%87%E4%BB%B6%E7%9A%84%E7%BC%96%E8%AF%91%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB%EF%BC%9F/2019031509330292.jpg">
+<meta property="article:published_time" content="2023-03-13T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-03-13T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="数据结构与算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/03/43%E9%AB%98%E7%BA%A7%E7%AF%87-%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E4%BB%A3%E7%A0%81%E6%BA%90%E6%96%87%E4%BB%B6%E7%9A%84%E7%BC%96%E8%AF%91%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB%EF%BC%9F/20190315092323801.jpg">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/03/43%E9%AB%98%E7%BA%A7%E7%AF%87-%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E4%BB%A3%E7%A0%81%E6%BA%90%E6%96%87%E4%BB%B6%E7%9A%84%E7%BC%96%E8%AF%91%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/03/43%E9%AB%98%E7%BA%A7%E7%AF%87-%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E4%BB%A3%E7%A0%81%E6%BA%90%E6%96%87%E4%BB%B6%E7%9A%84%E7%BC%96%E8%AF%91%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB%EF%BC%9F/","path":"article/2023/03/43高级篇-拓扑排序：如何确定代码源文件的编译依赖关系？/","title":"43高级篇-拓扑排序：如何确定代码源文件的编译依赖关系？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>43高级篇-拓扑排序：如何确定代码源文件的编译依赖关系？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%97%E6%B3%95%E8%A7%A3%E6%9E%90"><span class="nav-number">1.</span> <span class="nav-text">算法解析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-Kahn%E7%AE%97%E6%B3%95"><span class="nav-number">1.1.</span> <span class="nav-text">1.Kahn算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-DFS%E7%AE%97%E6%B3%95"><span class="nav-number">1.2.</span> <span class="nav-text">2.DFS算法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E5%BC%95%E7%94%B3"><span class="nav-number">2.</span> <span class="nav-text">总结引申</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%90%8E%E6%80%9D%E8%80%83"><span class="nav-number">3.</span> <span class="nav-text">课后思考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/03/43%E9%AB%98%E7%BA%A7%E7%AF%87-%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E4%BB%A3%E7%A0%81%E6%BA%90%E6%96%87%E4%BB%B6%E7%9A%84%E7%BC%96%E8%AF%91%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="43高级篇-拓扑排序：如何确定代码源文件的编译依赖关系？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          43高级篇-拓扑排序：如何确定代码源文件的编译依赖关系？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-03-13 08:00:00" itemprop="dateCreated datePublished" datetime="2023-03-13T08:00:00+08:00">2023-03-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">数据结构与算法</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>从今天开始，我们就进入了专栏的高级篇。相对基础篇，高级篇涉及的知识点，都比较零散，不是太系统。所以，我会围绕一个实际软件开发的问题，在阐述具体解决方法的过程中，将涉及的知识点给你详细讲解出来。</p>
+<p>所以，相较于基础篇“<strong>开篇问题-知识讲解-回答开篇-总结-课后思考</strong>”这样的文章结构，高级篇我稍作了些改变，大致分为这样几个部分：“<strong>问题阐述-算法解析-总结引申-课后思考</strong>”。</p>
+<p>好了，现在，我们就进入高级篇的第一节，如何确定代码源文件的编译依赖关系？</p>
+<span id="more"></span>
+
+<p>我们知道，一个完整的项目往往会包含很多代码源文件。编译器在编译整个项目的时候，需要按照依赖关系，依次编译每个源文件。比如，A.cpp依赖B.cpp，那在编译的时候，编译器需要先编译B.cpp，才能编译A.cpp。</p>
+<p>编译器通过分析源文件或者程序员事先写好的编译配置文件（比如Makefile文件），来获取这种局部的依赖关系。<strong>那编译器又该如何通过源文件两两之间的局部依赖关系，确定一个全局的编译顺序呢？</strong></p>
+<p><img src="/article/2023/03/43%E9%AB%98%E7%BA%A7%E7%AF%87-%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E4%BB%A3%E7%A0%81%E6%BA%90%E6%96%87%E4%BB%B6%E7%9A%84%E7%BC%96%E8%AF%91%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB%EF%BC%9F/20190315092323801.jpg" alt="img"></p>
+<h1 id="算法解析"><a href="#算法解析" class="headerlink" title="算法解析"></a>算法解析</h1><p>这个问题的解决思路与“图”这种数据结构的一个经典算法“拓扑排序算法”有关。那什么是拓扑排序呢？这个概念很好理解，我们先来看一个生活中的拓扑排序的例子。</p>
+<p>我们在穿衣服的时候都有一定的顺序，我们可以把这种顺序想成，衣服与衣服之间有一定的依赖关系。比如说，你必须先穿袜子才能穿鞋，先穿内裤才能穿秋裤。假设我们现在有八件衣服要穿，它们之间的两两依赖关系我们已经很清楚了，那如何安排一个穿衣序列，能够满足所有的两两之间的依赖关系？</p>
+<p>这就是个拓扑排序问题。从这个例子中，你应该能想到，在很多时候，拓扑排序的序列并不是唯一的。你可以看我画的这幅图，我找到了好几种满足这些局部先后关系的穿衣序列。</p>
+<p><img src="/article/2023/03/43%E9%AB%98%E7%BA%A7%E7%AF%87-%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E4%BB%A3%E7%A0%81%E6%BA%90%E6%96%87%E4%BB%B6%E7%9A%84%E7%BC%96%E8%AF%91%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB%EF%BC%9F/2019031509330292.jpg" alt="img"></p>
+<p>弄懂了这个生活中的例子，开篇的关于编译顺序的问题，你应该也有思路了。开篇问题跟这个问题的模型是一样的，也可以抽象成一个拓扑排序问题。</p>
+<p>拓扑排序的原理非常简单，我们的重点应该放到拓扑排序的实现上面。</p>
+<p>我前面多次讲过，算法是构建在具体的数据结构之上的。针对这个问题，我们先来看下，如何将问题背景抽象成具体的数据结构？</p>
+<p>我们可以把源文件与源文件之间的依赖关系，抽象成一个有向图。每个源文件对应图中的一个顶点，源文件之间的依赖关系就是顶点之间的边。</p>
+<p>如果a先于b执行，也就是说b依赖于a，那么就在顶点a和顶点b之间，构建一条从a指向b的边。而且，这个图不仅要是有向图，还要是一个有向无环图，也就是不能存在像a-&gt;b-&gt;c-&gt;a这样的循环依赖关系。因为图中一旦出现环，拓扑排序就无法工作了。实际上，拓扑排序本身就是基于有向无环图的一个算法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Graph</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">int</span> v; <span class="comment">// 顶点的个数</span></span><br><span class="line">  <span class="keyword">private</span> LinkedList&lt;Integer&gt; adj[]; <span class="comment">// 邻接表</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">Graph</span><span class="params">(<span class="type">int</span> v)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.v = v;</span><br><span class="line">    adj = <span class="keyword">new</span> <span class="title class_">LinkedList</span>[v];</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i=<span class="number">0</span>; i&lt;v; ++i) &#123;</span><br><span class="line">      adj[i] = <span class="keyword">new</span> <span class="title class_">LinkedList</span>&lt;&gt;();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addEdge</span><span class="params">(<span class="type">int</span> s, <span class="type">int</span> t)</span> &#123; <span class="comment">// s先于t，边s-&gt;t</span></span><br><span class="line">    adj[s].add(t);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>数据结构定义好了，现在，我们来看，<strong>如何在这个有向无环图上，实现拓扑排序</strong>？</p>
+<p>拓扑排序有两种实现方法，都不难理解。它们分别是<strong>Kahn算法</strong>和<strong>DFS深度优先搜索算法</strong>。我们依次来看下它们都是怎么工作的。</p>
+<h2 id="1-Kahn算法"><a href="#1-Kahn算法" class="headerlink" title="1.Kahn算法"></a>1.Kahn算法</h2><p>Kahn算法实际上用的是贪心算法思想，思路非常简单、好懂。</p>
+<p>定义数据结构的时候，如果s需要先于t执行，那就添加一条s指向t的边。所以，如果某个顶点入度为0， 也就表示，没有任何顶点必须先于这个顶点执行，那么这个顶点就可以执行了。</p>
+<p>我们先从图中，找出一个入度为0的顶点，将其输出到拓扑排序的结果序列中（对应代码中就是把它打印出来），并且把这个顶点从图中删除（也就是把这个顶点可达的顶点的入度都减1）。我们循环执行上面的过程，直到所有的顶点都被输出。最后输出的序列，就是满足局部依赖关系的拓扑排序。</p>
+<p>我把Kahn算法用代码实现了一下，你可以结合着文字描述一块看下。不过，你应该能发现，这段代码实现更有技巧一些，并没有真正删除顶点的操作。代码中有详细的注释，你自己来看，我就不多解释了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">topoSortByKahn</span><span class="params">()</span> &#123;</span><br><span class="line">  <span class="type">int</span>[] inDegree = <span class="keyword">new</span> <span class="title class_">int</span>[v]; <span class="comment">// 统计每个顶点的入度</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; v; ++i) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> <span class="number">0</span>; j &lt; adj[i].size(); ++j) &#123;</span><br><span class="line">      <span class="type">int</span> <span class="variable">w</span> <span class="operator">=</span> adj[i].get(j); <span class="comment">// i-&gt;w</span></span><br><span class="line">      inDegree[w]++;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  LinkedList&lt;Integer&gt; queue = <span class="keyword">new</span> <span class="title class_">LinkedList</span>&lt;&gt;();</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; v; ++i) &#123;</span><br><span class="line">    <span class="keyword">if</span> (inDegree[i] == <span class="number">0</span>) queue.add(i);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">while</span> (!queue.isEmpty()) &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> queue.remove();</span><br><span class="line">    System.out.print(<span class="string">&quot;-&gt;&quot;</span> + i);</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> <span class="number">0</span>; j &lt; adj[i].size(); ++j) &#123;</span><br><span class="line">      <span class="type">int</span> <span class="variable">k</span> <span class="operator">=</span> adj[i].get(j);</span><br><span class="line">      inDegree[k]--;</span><br><span class="line">      <span class="keyword">if</span> (inDegree[k] == <span class="number">0</span>) queue.add(k);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-DFS算法"><a href="#2-DFS算法" class="headerlink" title="2.DFS算法"></a>2.DFS算法</h2><p>图上的深度优先搜索我们前面已经讲过了，实际上，拓扑排序也可以用深度优先搜索来实现。不过这里的名字要稍微改下，更加确切的说法应该是深度优先遍历，遍历图中的所有顶点，而非只是搜索一个顶点到另一个顶点的路径。</p>
+<p>关于这个算法的实现原理，我先把代码贴在下面，下面给你具体解释。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">topoSortByDFS</span><span class="params">()</span> &#123;</span><br><span class="line">  <span class="comment">// 先构建逆邻接表，边s-&gt;t表示，s依赖于t，t先于s</span></span><br><span class="line">  LinkedList&lt;Integer&gt; inverseAdj[] = <span class="keyword">new</span> <span class="title class_">LinkedList</span>[v];</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; v; ++i) &#123; <span class="comment">// 申请空间</span></span><br><span class="line">    inverseAdj[i] = <span class="keyword">new</span> <span class="title class_">LinkedList</span>&lt;&gt;();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; v; ++i) &#123; <span class="comment">// 通过邻接表生成逆邻接表</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> <span class="number">0</span>; j &lt; adj[i].size(); ++j) &#123;</span><br><span class="line">      <span class="type">int</span> <span class="variable">w</span> <span class="operator">=</span> adj[i].get(j); <span class="comment">// i-&gt;w</span></span><br><span class="line">      inverseAdj[w].add(i); <span class="comment">// w-&gt;i</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="type">boolean</span>[] visited = <span class="keyword">new</span> <span class="title class_">boolean</span>[v];</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; v; ++i) &#123; <span class="comment">// 深度优先遍历图</span></span><br><span class="line">    <span class="keyword">if</span> (visited[i] == <span class="literal">false</span>) &#123;</span><br><span class="line">      visited[i] = <span class="literal">true</span>;</span><br><span class="line">      dfs(i, inverseAdj, visited);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">dfs</span><span class="params">(</span></span><br><span class="line"><span class="params">    <span class="type">int</span> vertex, LinkedList&lt;Integer&gt; inverseAdj[], <span class="type">boolean</span>[] visited)</span> &#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; inverseAdj[vertex].size(); ++i) &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">w</span> <span class="operator">=</span> inverseAdj[vertex].get(i);</span><br><span class="line">    <span class="keyword">if</span> (visited[w] == <span class="literal">true</span>) <span class="keyword">continue</span>;</span><br><span class="line">    visited[w] = <span class="literal">true</span>;</span><br><span class="line">    dfs(w, inverseAdj, visited);</span><br><span class="line">  &#125; <span class="comment">// 先把vertex这个顶点可达的所有顶点都打印出来之后，再打印它自己</span></span><br><span class="line">  System.out.print(<span class="string">&quot;-&gt;&quot;</span> + vertex);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个算法包含两个关键部分。</p>
+<p>第一部分是<strong>通过邻接表构造逆邻接表</strong>。邻接表中，边s-&gt;t表示s先于t执行，也就是t要依赖s。在逆邻接表中，边s-&gt;t表示s依赖于t，s后于t执行。为什么这么转化呢？这个跟我们这个算法的实现思想有关。</p>
+<p>第二部分是这个算法的核心，也就是<strong>递归处理每个顶点</strong>。对于顶点vertex来说，我们先输出它可达的所有顶点，也就是说，先把它依赖的所有的顶点输出了，然后再输出自己。</p>
+<p>到这里，用Kahn算法和DFS算法求拓扑排序的原理和代码实现都讲完了。我们来看下，<strong>这两个算法的时间复杂度分别是多少呢？</strong></p>
+<p>从Kahn代码中可以看出来，每个顶点被访问了一次，每个边也都被访问了一次，所以，Kahn算法的时间复杂度就是O(V+E)（V表示顶点个数，E表示边的个数）。</p>
+<p>DFS算法的时间复杂度我们之前分析过。每个顶点被访问两次，每条边都被访问一次，所以时间复杂度也是O(V+E)。</p>
+<p>注意，这里的图可能不是连通的，有可能是有好几个不连通的子图构成，所以，E并不一定大于V，两者的大小关系不确定。所以，在表示时间复杂度的时候，V、E都要考虑在内。</p>
+<h1 id="总结引申"><a href="#总结引申" class="headerlink" title="总结引申"></a>总结引申</h1><p>在基础篇中，关于“图”，我们讲了图的定义和存储、图的广度和深度优先搜索。今天，我们又讲了一个关于图的算法，拓扑排序。</p>
+<p>拓扑排序应用非常广泛，解决的问题的模型也非常一致。凡是需要通过局部顺序来推导全局顺序的，一般都能用拓扑排序来解决。除此之外，拓扑排序还能检测图中环的存在。对于Kahn算法来说，如果最后输出出来的顶点个数，少于图中顶点个数，图中还有入度不是0的顶点，那就说明，图中存在环。</p>
+<p>关于图中环的检测，我们在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/41440">递归</a>那一节讲过一个例子，在查找最终推荐人的时候，可能会因为脏数据，造成存在循环推荐，比如，用户A推荐了用户B，用户B推荐了用户C，用户C又推荐了用户A。如何避免这种脏数据导致的无限递归？这个问题，我当时留给你思考了，现在是时候解答了。</p>
+<p>实际上，这就是环的检测问题。因为我们每次都只是查找一个用户的最终推荐人，所以，我们并不需要动用复杂的拓扑排序算法，而只需要记录已经访问过的用户ID，当用户ID第二次被访问的时候，就说明存在环，也就说明存在脏数据。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">HashSet&lt;Integer&gt; hashTable = <span class="keyword">new</span> <span class="title class_">HashSet</span>&lt;&gt;(); <span class="comment">// 保存已经访问过的actorId</span></span><br><span class="line"><span class="type">long</span> <span class="title function_">findRootReferrerId</span><span class="params">(<span class="type">long</span> actorId)</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (hashTable.contains(actorId)) &#123; <span class="comment">// 存在环</span></span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  hashTable.add(actorId);</span><br><span class="line">  <span class="type">Long</span> <span class="variable">referrerId</span> <span class="operator">=</span> </span><br><span class="line">       select referrer_id from [table] <span class="type">where</span> <span class="variable">actor_id</span> <span class="operator">=</span> actorId;</span><br><span class="line">  <span class="keyword">if</span> (referrerId == <span class="literal">null</span>) <span class="keyword">return</span> actorId;</span><br><span class="line">  <span class="keyword">return</span> findRootReferrerId(referrerId);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果把这个问题改一下，我们想要知道，数据库中的所有用户之间的推荐关系了，有没有存在环的情况。这个问题，就需要用到拓扑排序算法了。我们把用户之间的推荐关系，从数据库中加载到内存中，然后构建成今天讲的这种有向图数据结构，再利用拓扑排序，就可以快速检测出是否存在环了。</p>
+<h1 id="课后思考"><a href="#课后思考" class="headerlink" title="课后思考"></a>课后思考</h1><ol>
+<li>在今天的讲解中，我们用图表示依赖关系的时候，如果a先于b执行，我们就画一条从a到b的有向边；反过来，如果a先于b，我们画一条从b到a的有向边，表示b依赖a，那今天讲的Kahn算法和DFS算法还能否正确工作呢？如果不能，应该如何改造一下呢？</li>
+<li>我们今天讲了两种拓扑排序算法的实现思路，Kahn算法和DFS深度优先搜索算法，如果换做BFS广度优先搜索算法，还可以实现吗？</li>
+</ol>
+<p>欢迎留言和我分享，也欢迎点击“请朋友读”，把今天的内容分享给你的好友，和他一起讨论、学习。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/" rel="tag"># 数据结构与算法</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/03/42%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92%E5%AE%9E%E6%88%98%EF%BC%9A%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E%E4%B8%AD%E7%9A%84%E6%8B%BC%E5%86%99%E7%BA%A0%E9%94%99%E5%8A%9F%E8%83%BD%EF%BC%9F/" rel="prev" title="42基础篇-动态规划实战：如何实现搜索引擎中的拼写纠错功能？">
+                  <i class="fa fa-angle-left"></i> 42基础篇-动态规划实战：如何实现搜索引擎中的拼写纠错功能？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/03/44%E9%AB%98%E7%BA%A7%E7%AF%87-%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%EF%BC%9A%E5%9C%B0%E5%9B%BE%E8%BD%AF%E4%BB%B6%E6%98%AF%E5%A6%82%E4%BD%95%E8%AE%A1%E7%AE%97%E5%87%BA%E6%9C%80%E4%BC%98%E5%87%BA%E8%A1%8C%E8%B7%AF%E5%BE%84%E7%9A%84%EF%BC%9F/" rel="next" title="44高级篇-最短路径：地图软件是如何计算出最优出行路径的？">
+                  44高级篇-最短路径：地图软件是如何计算出最优出行路径的？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

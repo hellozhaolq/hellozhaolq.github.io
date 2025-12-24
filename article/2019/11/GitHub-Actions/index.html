@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="相关链接： 持续集成 、 持续部署 、 GitHub Actions 文档 、 GitHub Actions 入门教程  持续集成由很多操作组成，包括 抓取代码、构建、测试、打包、发布、部署 等等，GitHub 把这些操作称为 actions。 GitHub Actions入门GitHub Actions 是 GitHub 的持续集成服务，用来自动化工作流程，其具有功能强大的执行环境。我们可以发现">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GitHub Actions">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/11/GitHub-Actions/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="相关链接： 持续集成 、 持续部署 、 GitHub Actions 文档 、 GitHub Actions 入门教程  持续集成由很多操作组成，包括 抓取代码、构建、测试、打包、发布、部署 等等，GitHub 把这些操作称为 actions。 GitHub Actions入门GitHub Actions 是 GitHub 的持续集成服务，用来自动化工作流程，其具有功能强大的执行环境。我们可以发现">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/GitHub-Actions/annotated-workflow.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/GitHub-Actions/image-20191108115243622.png">
+<meta property="article:published_time" content="2019-11-08T00:31:46.000Z">
+<meta property="article:modified_time" content="2019-11-08T00:31:46.000Z">
+<meta property="article:author" content="zhaolq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2019/11/GitHub-Actions/annotated-workflow.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/11/GitHub-Actions/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2019/11/GitHub-Actions/","path":"article/2019/11/GitHub-Actions/","title":"GitHub Actions"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>GitHub Actions | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#GitHub-Actions%E5%85%A5%E9%97%A8"><span class="nav-number">1.</span> <span class="nav-text">GitHub Actions入门</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E-GitHub-Actions"><span class="nav-number">1.1.</span> <span class="nav-text">关于 GitHub Actions</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E-workflows"><span class="nav-number">1.2.</span> <span class="nav-text">关于 workflows</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA-workflow-%E6%96%87%E4%BB%B6"><span class="nav-number">1.2.1.</span> <span class="nav-text">创建一个 workflow 文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-events-%E8%A7%A6%E5%8F%91-workflow"><span class="nav-number">1.2.2.</span> <span class="nav-text">使用 events 触发 workflow</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%9B%E9%80%89%E7%89%B9%E5%AE%9A%E7%9A%84%E5%88%86%E6%94%AF%EF%BC%8C%E6%A0%87%E7%AD%BE%E5%92%8C%E8%B7%AF%E5%BE%84"><span class="nav-number">1.2.3.</span> <span class="nav-text">筛选特定的分支，标签和路径</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%89%E6%8B%A9%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83"><span class="nav-number">1.2.4.</span> <span class="nav-text">选择虚拟环境</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-build-matrix"><span class="nav-number">1.2.5.</span> <span class="nav-text">配置 build matrix</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">配置工作流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">2.1.</span> <span class="nav-text">使用环境变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%92%8C%E4%BD%BF%E7%94%A8%E5%8A%A0%E5%AF%86-Secrets"><span class="nav-number">2.2.</span> <span class="nav-text">创建和使用加密 Secrets</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/11/GitHub-Actions/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="GitHub Actions | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          GitHub Actions
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-11-08 08:31:46" itemprop="dateCreated datePublished" datetime="2019-11-08T08:31:46+08:00">2019-11-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/CI/" itemprop="url" rel="index"><span itemprop="name">CI</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>相关链接： <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%8C%81%E7%BA%8C%E6%95%B4%E5%90%88">持续集成</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%8C%81%E7%BA%8C%E9%83%A8%E7%BD%B2">持续部署</a> 、 <a target="_blank" rel="noopener" href="https://help.github.com/en/actions">GitHub Actions 文档</a> 、 <a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2019/09/getting-started-with-github-actions.html">GitHub Actions 入门教程</a> </p>
+<p>持续集成由很多操作组成，包括 抓取代码、构建、测试、打包、发布、部署 等等，GitHub 把这些操作称为 actions。</p>
+<h1 id="GitHub-Actions入门"><a href="#GitHub-Actions入门" class="headerlink" title="GitHub Actions入门"></a>GitHub Actions入门</h1><p>GitHub Actions 是 GitHub 的持续集成服务，用来自动化工作流程，其具有功能强大的执行环境。我们可以<strong>发现、创建和共享</strong> Actions，还可以<strong>组合这些 Actions 自定义 workflow</strong>。</p>
+<p>GitHub 做了一个 <a target="_blank" rel="noopener" href="https://github.com/marketplace?type=actions">官方市场</a> ，可以<strong>发现</strong>他人<strong>共享</strong>的 actions。</p>
+<span id="more"></span>
+
+<h2 id="关于-GitHub-Actions"><a href="#关于-GitHub-Actions" class="headerlink" title="关于 GitHub Actions"></a>关于 GitHub Actions</h2><p>GitHub Actions使您可以直接在GitHub存储库中创建自定义软件开发生命周期（SDLC）工作流。 我们可以编写单个任务（称为 actions ），并将其组合以创建自定义的自动化工作流程，也可以在存储库中对其进行编辑，以在GitHub上构建，测试，打包，发布或部署任何代码项目。</p>
+<p>工作流在Linux，macOS，Windows或GitHub托管服务器上的容器中运行。</p>
+<p>默认情况下，fork的存储库中的工作流不运行。</p>
+<p> <a target="_blank" rel="noopener" href="https://help.github.com/en/actions/automating-your-workflow-with-github-actions/about-github-actions#usage-limits">使用限制</a> 、 <a target="_blank" rel="noopener" href="https://help.github.com/en/actions/automating-your-workflow-with-github-actions/about-github-actions#notifications-for-workflow-runs">工作流程运行通知</a> </p>
+<h2 id="关于-workflows"><a href="#关于-workflows" class="headerlink" title="关于 workflows"></a>关于 workflows</h2><p>借助 workflows ，可以使用各种工具和服务来自动化软件开发生命周期，并在容器中运行。</p>
+<p>可以在存储库中创建多个 workflow，需要使用 YAML 语法配置 workflows，且必须将 workflows 放在存储库根目录中的 <code>.github/workflows/</code> 目录中。</p>
+<p>workflow 必须至少具有一个 job，并且 jobs 包含一组执行单个任务的 steps 。Steps 可以运行命令或使用 action。我们可以创建自己的 actions 或使用 GitHub 社区共享的 actions ，并根据需要进行组合。</p>
+<p>成功触发 workflow 后，我们将看到 workflow 每一步的构建日志、测试结果、状态。<img src="/article/2019/11/GitHub-Actions/annotated-workflow.png" alt="Annotated workflow run image"> </p>
+<p>我们还可以接收有关工作流状态更新的通知，请参阅“ <a target="_blank" rel="noopener" href="https://help.github.com/en/articles/choosing-the-delivery-method-for-your-notifications#choosing-the-delivery-method-for-notifications-about-github-actions">为通知选择传递方式</a> ”。</p>
+<h3 id="创建一个-workflow-文件"><a href="#创建一个-workflow-文件" class="headerlink" title="创建一个 workflow 文件"></a>创建一个 workflow 文件</h3><p>1、在存储库的根目录中，创建一个名为 <code>.github/workflows/</code> 的目录来存放工作流文件。</p>
+<p>2、在 <code>.github/workflows/</code> 下，为 workflow 添加一个 <code>.yml</code> 或 <code>.yaml</code>  文件，例如 <code>.github/workflows/continuous-integration-workflow.yml</code> 。</p>
+<p>3、使用 GitHub Actions 的 Workflow 语法自定义工作流。</p>
+<p>4、将 workflow 文件中的更改提交到要运行 workflow 的分支。</p>
+<p>例子：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">Greet</span> <span class="string">Everyone</span></span><br><span class="line"><span class="comment"># This workflow is triggered on pushes to the repository(此工作流在推送到存储库时触发)</span></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>]</span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">build:</span></span><br><span class="line">    <span class="comment"># Job name is Greeting(Job的名称是Greeting)</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">Greeting</span></span><br><span class="line">    <span class="comment"># This job runs on Linux(此Job在linux上运行)</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="comment"># This step uses GitHub&#x27;s hello-world-javascript-action: https://github.com/actions/hello-world-javascript-action</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Hello</span> <span class="string">world</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/hello-world-javascript-action@v1</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">who-to-greet:</span> <span class="string">&#x27;Mona the Octocat&#x27;</span></span><br><span class="line">        <span class="attr">id:</span> <span class="string">hello</span></span><br><span class="line">      <span class="comment"># This step prints an output (time) from the previous step&#x27;s action.(打印上一步操作的输出&lt;时间&gt;)</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Echo</span> <span class="string">the</span> <span class="string">greeting&#x27;s</span> <span class="string">time</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">echo</span> <span class="string">&#x27;The time was $&#123;&#123; steps.hello.outputs.time &#125;&#125;.&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="使用-events-触发-workflow"><a href="#使用-events-触发-workflow" class="headerlink" title="使用 events 触发 workflow"></a>使用 events 触发 workflow</h3><p>可以配置的 workflow 启动条件：</p>
+<ul>
+<li>GitHub 事件。例如当某人将提交推送到存储库、创建问题或拉取请求时。</li>
+<li>预定事件开始</li>
+<li>发生外部事件</li>
+</ul>
+<p>1、要在<strong>发生GitHub事件后</strong>触发 workflow ，请在 <code>on:</code> 后面添加事件值。例如：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">descriptive-workflow-name</span></span><br><span class="line"><span class="attr">on:</span> <span class="string">push</span> <span class="comment"># 将更改推送到存储库中的任何分支时，将触发此工作流。</span></span><br></pre></td></tr></table></figure>
+
+<p>2、要 <strong>schedule (计划、安排)一个 workflow</strong> ，可以在工作流程文件中使用 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%8F%AF%E7%A7%BB%E6%A4%8D%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%8E%A5%E5%8F%A3">POSIX</a> cron syntax。计划工作流程的最短时间间隔是5分钟。例如：此工作流每小时触发一次。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">schedule:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">cron:</span>  <span class="string">&#x27;0 * * * *&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>3、要在<strong>发生外部事件后</strong>触发工作流，可以通过调用 “<a target="_blank" rel="noopener" href="https://developer.github.com/v3/repos/#create-a-repository-dispatch-event">创建存储库调度事件</a>” REST API端点来调用repository_dispatch webhook事件。 </p>
+<h3 id="筛选特定的分支，标签和路径"><a href="#筛选特定的分支，标签和路径" class="headerlink" title="筛选特定的分支，标签和路径"></a>筛选特定的分支，标签和路径</h3><p>可以将 workflow 设置为仅在某些 branch 上运行。 </p>
+<p>例如：当在 master 分支上推送 <code>test</code> 目录中的文件或推送到 <code>v1</code> 标签时，此工作流运行。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">push:</span></span><br><span class="line">    <span class="attr">branches:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">master</span></span><br><span class="line">    <span class="attr">tags:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">v1</span></span><br><span class="line">    <span class="comment"># file paths to consider in the event. Optional; defaults to all.</span></span><br><span class="line">    <span class="comment"># 事件中要考虑的文件路径。可选的;默认为全部。</span></span><br><span class="line">    <span class="attr">paths:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;test/*&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="选择虚拟环境"><a href="#选择虚拟环境" class="headerlink" title="选择虚拟环境"></a>选择虚拟环境</h3><p>我们可以在GitHub托管的虚拟机上或Docker容器中运行 workflows 。可以为 workflow 中的每个 job 指定虚拟环境，包括系统、工具、程序包和设置。</p>
+<p>我们可以从不同类型和版本的虚拟主机中进行选择，包括Linux，Windows和macOS。workflow 中的每个 job 都在相同的虚拟环境中执行，从而允许该 job 中的 actions 使用文件系统共享信息。</p>
+<p>指定虚拟主机运行 job ：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">runs-on:</span> <span class="string">ubuntu-18.04</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="配置-build-matrix"><a href="#配置-build-matrix" class="headerlink" title="配置 build matrix"></a>配置 build matrix</h3><p>要同时跨多个操作系统，平台和语言版本进行测试，可以配置构建矩阵。</p>
+<p>定义操作系统矩阵时，必须将必需 <code>runs-on</code> 关键字设置为当前 job 的操作系统，而不是对操作系统名称进行硬编码。可以使用 <code>matrix.os</code> 上下文参数设置 <code>runs-on</code> 。</p>
+<p>例子：此构建矩阵将使用不同版本的 Node.js 和 Ubuntu 系统运行 job 。 </p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">runs-on:</span> <span class="string">$&#123;&#123;</span> <span class="string">matrix.os</span> <span class="string">&#125;&#125;</span></span><br><span class="line"><span class="attr">strategy:</span></span><br><span class="line">  <span class="attr">matrix:</span></span><br><span class="line">    <span class="attr">os:</span> [<span class="string">ubuntu-16.04</span>, <span class="string">ubuntu-18.04</span>]</span><br><span class="line">    <span class="attr">node:</span> [<span class="number">6</span>, <span class="number">8</span>, <span class="number">10</span>]</span><br></pre></td></tr></table></figure>
+
+<h1 id="配置工作流程"><a href="#配置工作流程" class="headerlink" title="配置工作流程"></a>配置工作流程</h1><h2 id="使用环境变量"><a href="#使用环境变量" class="headerlink" title="使用环境变量"></a>使用环境变量</h2><p>GitHub为每个GitHub Actions工作流程运行设置 <a target="_blank" rel="noopener" href="https://help.github.com/en/actions/automating-your-workflow-with-github-actions/using-environment-variables#default-environment-variables">默认环境变量</a> ，但是您也可以在 workflow 文件中设置自定义环境变量，请查看 <a target="_blank" rel="noopener" href="https://help.github.com/en/actions/automating-your-workflow-with-github-actions/using-environment-variables#naming-conventions-for-environment-variables">环境变量的命名约定</a> 。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">steps:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Hello</span> <span class="string">world</span></span><br><span class="line">    <span class="attr">env:</span></span><br><span class="line">      <span class="attr">FIRST_NAME:</span> <span class="string">Mona</span></span><br><span class="line">      <span class="attr">middle_name:</span> <span class="string">The</span></span><br><span class="line">      <span class="attr">Last_Name:</span> <span class="string">Octocat</span></span><br><span class="line">    <span class="attr">run:</span> <span class="string">echo</span> <span class="string">Hello</span> <span class="string">world</span> <span class="string">$FIRST_NAME</span> <span class="string">$middle_name</span> <span class="string">$Last_Name!</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="创建和使用加密-Secrets"><a href="#创建和使用加密-Secrets" class="headerlink" title="创建和使用加密 Secrets"></a>创建和使用加密 Secrets</h2><p>Secrets 是在存储库中创建的加密环境变量，并且只能由 GitHub Actions 使用。 GitHub 使用 <strong>公钥认证加密</strong> 和 <strong>Poly1305密码算法</strong> 在Web浏览器中加密 Secrets。</p>
+<p>在 action 中使用 Secrets，必须在 workflow 文件中设置 Secrets 为输入或环境变量。</p>
+<p>GitHub 自动修改打印到日志中的 Secrets，但您应避免有意将 Secrets 信息打印到日志中。</p>
+<p>Secrets 名称不能包含任何空格。为确保 GitHub 修改日志中的机密，请避免将结构化数据用作 Secrets 值。例如，避免创建包含 JSON 或编码的 Git Blob 的 Secrets。 </p>
+<p>在存储库主页点击 Settings，在左侧边栏中，点击 Secrets，输入name和value，点击 Add secrets。</p>
+<p><img src="/article/2019/11/GitHub-Actions/image-20191108115243622.png" alt="image-20191108115243622"></p>
+<p>除了 <code>GITHUB_TOKEN</code>，当触发一个 fork 存储库的 workflow 时，secrets 不会传递给 runner。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">steps:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Hello</span> <span class="string">world</span> <span class="string">action</span></span><br><span class="line">    <span class="attr">with:</span> <span class="comment"># Set the secret as an input</span></span><br><span class="line">      <span class="attr">super_secret:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.SuperSecret</span> <span class="string">&#125;&#125;</span> <span class="comment"># 使用secrets上下文访问在存储库中创建的secrets</span></span><br><span class="line">    <span class="attr">env:</span> <span class="comment"># Set the secret as an environment variable</span></span><br><span class="line">      <span class="attr">super_secret:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.SuperSecret</span> <span class="string">&#125;&#125;</span> <span class="comment"># 使用secrets上下文访问在存储库中创建的secrets</span></span><br></pre></td></tr></table></figure>
+
+<p> <a target="_blank" rel="noopener" href="https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets#limits-for-secrets">secrets限制</a> </p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2019/10/MVC%E3%80%81RPC%E3%80%81SOA%E5%92%8C%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9E%B6%E6%9E%84/" rel="prev" title="MVC、RPC、SOA和微服务架构">
+                  <i class="fa fa-angle-left"></i> MVC、RPC、SOA和微服务架构
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2019/11/cron-%E8%AF%AD%E6%B3%95/" rel="next" title="Cron 语法">
+                  Cron 语法 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

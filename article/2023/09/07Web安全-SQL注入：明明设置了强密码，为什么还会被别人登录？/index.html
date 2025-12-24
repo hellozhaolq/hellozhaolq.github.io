@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="在上一讲中，我们介绍了XSS攻击。今天，我们来介绍另外一种常见的Web攻击：SQL注入。 在讲正文之前，让我们先来看一个案例。某天，当你在查看应用的管理后台时，发现有很多异常的操作。接着，你很快反应过来了，这应该是黑客成功登录了管理员账户。于是，你立刻找到管理员，责问他是不是设置了弱密码。管理员很无辜地表示，自己的密码非常复杂，不可能泄露，但是为了安全起见，他还是立即修改了当前的密码。奇怪的是，第">
+<meta property="og:type" content="article">
+<meta property="og:title" content="07Web安全-SQL注入：明明设置了强密码，为什么还会被别人登录？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/09/07Web%E5%AE%89%E5%85%A8-SQL%E6%B3%A8%E5%85%A5%EF%BC%9A%E6%98%8E%E6%98%8E%E8%AE%BE%E7%BD%AE%E4%BA%86%E5%BC%BA%E5%AF%86%E7%A0%81%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E8%A2%AB%E5%88%AB%E4%BA%BA%E7%99%BB%E5%BD%95%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="在上一讲中，我们介绍了XSS攻击。今天，我们来介绍另外一种常见的Web攻击：SQL注入。 在讲正文之前，让我们先来看一个案例。某天，当你在查看应用的管理后台时，发现有很多异常的操作。接着，你很快反应过来了，这应该是黑客成功登录了管理员账户。于是，你立刻找到管理员，责问他是不是设置了弱密码。管理员很无辜地表示，自己的密码非常复杂，不可能泄露，但是为了安全起见，他还是立即修改了当前的密码。奇怪的是，第">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/07Web%E5%AE%89%E5%85%A8-SQL%E6%B3%A8%E5%85%A5%EF%BC%9A%E6%98%8E%E6%98%8E%E8%AE%BE%E7%BD%AE%E4%BA%86%E5%BC%BA%E5%AF%86%E7%A0%81%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E8%A2%AB%E5%88%AB%E4%BA%BA%E7%99%BB%E5%BD%95%EF%BC%9F/20200818104121927.png">
+<meta property="article:published_time" content="2023-09-07T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-09-07T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="安全攻防技能30讲">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/09/07Web%E5%AE%89%E5%85%A8-SQL%E6%B3%A8%E5%85%A5%EF%BC%9A%E6%98%8E%E6%98%8E%E8%AE%BE%E7%BD%AE%E4%BA%86%E5%BC%BA%E5%AF%86%E7%A0%81%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E8%A2%AB%E5%88%AB%E4%BA%BA%E7%99%BB%E5%BD%95%EF%BC%9F/20200818104121927.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/09/07Web%E5%AE%89%E5%85%A8-SQL%E6%B3%A8%E5%85%A5%EF%BC%9A%E6%98%8E%E6%98%8E%E8%AE%BE%E7%BD%AE%E4%BA%86%E5%BC%BA%E5%AF%86%E7%A0%81%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E8%A2%AB%E5%88%AB%E4%BA%BA%E7%99%BB%E5%BD%95%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/09/07Web%E5%AE%89%E5%85%A8-SQL%E6%B3%A8%E5%85%A5%EF%BC%9A%E6%98%8E%E6%98%8E%E8%AE%BE%E7%BD%AE%E4%BA%86%E5%BC%BA%E5%AF%86%E7%A0%81%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E8%A2%AB%E5%88%AB%E4%BA%BA%E7%99%BB%E5%BD%95%EF%BC%9F/","path":"article/2023/09/07Web安全-SQL注入：明明设置了强密码，为什么还会被别人登录？/","title":"07Web安全-SQL注入：明明设置了强密码，为什么还会被别人登录？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>07Web安全-SQL注入：明明设置了强密码，为什么还会被别人登录？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#SQL%E6%B3%A8%E5%85%A5%E6%94%BB%E5%87%BB%E6%98%AF%E5%A6%82%E4%BD%95%E4%BA%A7%E7%94%9F%E7%9A%84%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">SQL注入攻击是如何产生的？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E4%BF%AE%E6%94%B9WHERE%E8%AF%AD%E5%8F%A5"><span class="nav-number">1.1.</span> <span class="nav-text">1.修改WHERE语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E6%89%A7%E8%A1%8C%E4%BB%BB%E6%84%8F%E8%AF%AD%E5%8F%A5"><span class="nav-number">1.2.</span> <span class="nav-text">2.执行任意语句</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%80%9A%E8%BF%87SQL%E6%B3%A8%E5%85%A5%E6%94%BB%E5%87%BB%EF%BC%8C%E9%BB%91%E5%AE%A2%E8%83%BD%E5%81%9A%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">通过SQL注入攻击，黑客能做什么？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E7%BB%95%E8%BF%87%E9%AA%8C%E8%AF%81"><span class="nav-number">2.1.</span> <span class="nav-text">1.绕过验证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E4%BB%BB%E6%84%8F%E7%AF%A1%E6%94%B9%E6%95%B0%E6%8D%AE"><span class="nav-number">2.2.</span> <span class="nav-text">2.任意篡改数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E7%AA%83%E5%8F%96%E6%95%B0%E6%8D%AE"><span class="nav-number">2.3.</span> <span class="nav-text">3.窃取数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E6%B6%88%E8%80%97%E8%B5%84%E6%BA%90"><span class="nav-number">2.4.</span> <span class="nav-text">4.消耗资源</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8CSQL%E6%B3%A8%E5%85%A5%E9%98%B2%E6%8A%A4-%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">如何进行SQL注入防护 ？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E4%BD%BF%E7%94%A8PreparedStatement"><span class="nav-number">3.1.</span> <span class="nav-text">1.使用PreparedStatement</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E4%BD%BF%E7%94%A8%E5%AD%98%E5%82%A8%E8%BF%87%E7%A8%8B"><span class="nav-number">3.2.</span> <span class="nav-text">2.使用存储过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E9%AA%8C%E8%AF%81%E8%BE%93%E5%85%A5"><span class="nav-number">3.3.</span> <span class="nav-text">3.验证输入</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%9D%E8%80%83%E9%A2%98"><span class="nav-number">5.</span> <span class="nav-text">思考题</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/09/07Web%E5%AE%89%E5%85%A8-SQL%E6%B3%A8%E5%85%A5%EF%BC%9A%E6%98%8E%E6%98%8E%E8%AE%BE%E7%BD%AE%E4%BA%86%E5%BC%BA%E5%AF%86%E7%A0%81%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E8%A2%AB%E5%88%AB%E4%BA%BA%E7%99%BB%E5%BD%95%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="07Web安全-SQL注入：明明设置了强密码，为什么还会被别人登录？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          07Web安全-SQL注入：明明设置了强密码，为什么还会被别人登录？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-09-07 08:00:00" itemprop="dateCreated datePublished" datetime="2023-09-07T08:00:00+08:00">2023-09-07</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" itemprop="url" rel="index"><span itemprop="name">安全攻防技能30讲</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>在上一讲中，我们介绍了XSS攻击。今天，我们来介绍另外一种常见的Web攻击：SQL注入。</p>
+<p>在讲正文之前，让我们先来看一个案例。某天，当你在查看应用的管理后台时，发现有很多异常的操作。接着，你很快反应过来了，这应该是黑客成功登录了管理员账户。于是，你立刻找到管理员，责问他是不是设置了弱密码。管理员很无辜地表示，自己的密码非常复杂，不可能泄露，但是为了安全起见，他还是立即修改了当前的密码。奇怪的是，第二天，黑客还是能够继续登录管理员账号。问题来了，黑客究竟是怎么做到的呢？你觉得这里面的问题究竟出在哪里呢？你可以先自己思考一下，然后跟着我开始今天的学习！</p>
+<span id="more"></span>
+
+<h1 id="SQL注入攻击是如何产生的？"><a href="#SQL注入攻击是如何产生的？" class="headerlink" title="SQL注入攻击是如何产生的？"></a>SQL注入攻击是如何产生的？</h1><p>在上一讲中，我们讲了，XSS是黑客通过篡改HTML代码，来插入并执行恶意脚本的一种攻击。其实，SQL注入和XSS攻击很类似，都是黑客通过篡改代码逻辑发起的攻击。那么，不同的点是什么？SQL注入到底是什么呢？</p>
+<p>通常来说，我们会将应用的用户信息存储在数据库中。每次用户登录时，都会执行一个相应的SQL语句。这时，黑客会通过构造一些恶意的输入参数，在应用拼接SQL语句的时候，去篡改正常的SQL语意，从而执行黑客所控制的SQL查询功能。这个过程，就相当于黑客“注入”了一段SQL代码到应用中。这就是我们常说的<strong>SQL注入</strong>。</p>
+<p>这么说可能还是有点理论，不够具体。接下来，我就以几个简单而又经典的示例，来给你介绍两种主要的SQL注入方式。</p>
+<h2 id="1-修改WHERE语句"><a href="#1-修改WHERE语句" class="headerlink" title="1.修改WHERE语句"></a>1.修改WHERE语句</h2><p>我们先来看一个例子。现在有一个简单的登录页面，需要用户输入Username和Password这两个变量来完成登录。具体的Web后台代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">uName = getRequestString(<span class="string">&quot;username&quot;</span>);</span><br><span class="line">uPass = getRequestString(<span class="string">&quot;password&quot;</span>);</span><br><span class="line"></span><br><span class="line">sql = <span class="string">&#x27;SELECT * FROM Users WHERE Username =&quot;&#x27;</span> + uName + <span class="string">&#x27;&quot; AND Password =&quot;&#x27;</span> + uPass + <span class="string">&#x27;&quot;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>当用户提交一个表单（假设Username为admin，Password为123456）时，Web将执行下面这行代码：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> Users <span class="keyword">WHERE</span> Username <span class="operator">=</span>&quot;admin&quot; <span class="keyword">AND</span> Password <span class="operator">=</span>&quot;123456&quot;</span><br></pre></td></tr></table></figure>
+
+<p>用户名密码如果正确的话，这句SQL就能够返回对应的用户信息；如果错误的话，不会返回任何信息。因此，只要返回的行数≥1，就说明验证通过，用户可以成功登录。</p>
+<p>所以，当用户正常地输入自己的用户名和密码时，自然就可以成功登录应用。那黑客想要在不知道密码的情况下登录应用，他又会输入什么呢？他会输入 <strong><code>&quot; or &quot;&quot;=&quot;</code></strong>。这时，应用的数据库就会执行下面这行代码：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> Users <span class="keyword">WHERE</span> Username <span class="operator">=</span>&quot;&quot; <span class="keyword">AND</span> Password <span class="operator">=</span>&quot;&quot; <span class="keyword">or</span> &quot;&quot;<span class="operator">=</span>&quot;&quot;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到，WHERE语句后面的判断是通过or进行拼接的，其中””&#x3D;””的结果是true。那么，当有一个or是true的时候，最终结果就一定是true了。因此，这个WHERE语句是恒为真的，所以，数据库将返回全部的数据。</p>
+<p>这样一来，我们就能解答文章开头的问题了，也就是说，黑客只需要在登录页面中输入 <strong><code>&quot; or &quot;&quot;=&quot;</code></strong>，就可以在不知道密码的情况下，成功登录后台了。而这，也就是所谓的“万能密码”。而这个“万能密码”，其实就是通过修改WHERE语句，改变数据库的返回结果，实现无密码登录。</p>
+<h2 id="2-执行任意语句"><a href="#2-执行任意语句" class="headerlink" title="2.执行任意语句"></a>2.执行任意语句</h2><p>除此之外，大部分的数据库都支持多语句执行。因此，黑客除了修改原本的WHERE语句之外，也可以在原语句的后面，插入额外的SQL语句，来实现任意的增删改查操作。在实际工作中，MySQL是最常用的数据库，我们就以它为例，来介绍一下，任意语句是如何执行的。</p>
+<p>在MySQL中，实现任意语句执行最简单的方法，就是利用分号将原本的SQL语句进行分割。这样，我们就可以一次执行多个语句了。比如，下面这个语句在执行的时候会先插入一个行，然后再返回Users表中全部的数据。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT INTO</span> Users (Username, Password) <span class="keyword">VALUES</span>(&quot;test&quot;,&quot;000000&quot;); <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> Users;</span><br></pre></td></tr></table></figure>
+
+<p>接下来，我们来看一个具体的例子。在用户完成登录后，应用通常会通过userId来获取对应的用户信息。其Web后台的代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">uid = getRequestString(<span class="string">&quot;userId&quot;</span>);</span><br><span class="line">sql = <span class="string">&quot;SELECT * FROM Users WHERE UserId = &quot;</span> + uid;</span><br></pre></td></tr></table></figure>
+
+<p>在这种情况下，黑客只要在传入的userId参数中加入一个分号，就可以执行任意的SQL语句了。比如，黑客想“删库跑路”的话，就令userId为 <strong><code>1;DROP TABLE Users</code></strong>，那么，后台实际执行的SQL就会变成下面这行代码，而数据库中所有的用户信息就都会被删除。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> Users <span class="keyword">WHERE</span> UserId <span class="operator">=</span> <span class="number">1</span>；<span class="keyword">DROP</span> <span class="keyword">TABLE</span> Users</span><br></pre></td></tr></table></figure>
+
+<p>SQL注入的“姿势”还有很多（比如：<a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/web/175049.html">没有回显的盲注</a>、<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/1f82582452df?utm_campaign">基于INSERT语句的注入</a>等等），它们的原理都是一样的，都是通过更改SQL的语义来执行黑客设定的SQL语句。如果你有兴趣，可以通过我前面给出的链接去进一步了解。</p>
+<h1 id="通过SQL注入攻击，黑客能做什么？"><a href="#通过SQL注入攻击，黑客能做什么？" class="headerlink" title="通过SQL注入攻击，黑客能做什么？"></a>通过SQL注入攻击，黑客能做什么？</h1><p>通过上面对SQL注入的简单介绍，我们已经知道，SQL注入会令Web后台执行非常规的SQL语句，从而导致各种各样的问题。那么通过SQL注入攻击，黑客究竟能够干些什么呢？下面我们就一一来看。</p>
+<h2 id="1-绕过验证"><a href="#1-绕过验证" class="headerlink" title="1.绕过验证"></a>1.绕过验证</h2><p>在上面的内容中，我们已经介绍过，<strong><code>&quot; or &quot;&quot;=&quot;</code></strong> 作为万能密码，可以让黑客在不知道密码的情况下，通过登录认证。因此，SQL注入最直接的利用方式，就是绕过验证，也就相当于身份认证被破解了。</p>
+<h2 id="2-任意篡改数据"><a href="#2-任意篡改数据" class="headerlink" title="2.任意篡改数据"></a>2.任意篡改数据</h2><p>除了绕过验证，我们在任意语句执行的部分中讲到，SQL注入漏洞导致黑客可以执行任意的SQL语句。因此，通过插入DML类的SQL语句（INSERT、UPDATE、DELETE、TRUNCATE、DROP等），黑客就可以对表数据甚至表结构进行更改，这样数据的完整性就会受到损害。比如上面例子中，黑客通过插入DROP TABLE Users，删除数据库中全部的用户。</p>
+<h2 id="3-窃取数据"><a href="#3-窃取数据" class="headerlink" title="3.窃取数据"></a>3.窃取数据</h2><p>在XSS漏洞中，黑客可以通过窃取Cookie和“钓鱼”获得用户的隐私数据。那么，在SQL注入中，黑客会怎么来获取这些隐私数据呢？</p>
+<p>在各类安全事件中，我们经常听到“拖库”这个词。所谓“拖库”，就是指黑客通过类似SQL注入的手段，获取到数据库中的全部数据（如用户名、密码、手机号等隐私数据）。最简单的，黑客利用UNION关键词，将SQL语句拼接成下面这行代码之后，就可以直接获取全部的用户信息了。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> Users <span class="keyword">WHERE</span> UserId <span class="operator">=</span> <span class="number">1</span> <span class="keyword">UNION</span> <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> Users</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-消耗资源"><a href="#4-消耗资源" class="headerlink" title="4.消耗资源"></a>4.消耗资源</h2><p>通过<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/176567">第1讲</a>对CIA三元组的学习，我们知道，除了获取数据之外，影响服务可用性也是黑客的目标之一。</p>
+<p>SQL注入破坏可用性十分简单，可以通过完全消耗服务器的资源来实现。比如，在Web后台中，黑客可以利用WHILE打造死循环操作，或者定义存储过程，触发一个无限迭代等等。在这些情况下，数据库服务器因为CPU被迅速打满，持续100%，而无法及时响应其他请求。</p>
+<p>总结来说，通过SQL注入攻击，黑客可以绕过验证登录后台，非法篡改数据库中的数据；还能执行任意的SQL语句，盗取用户的隐私数据影响公司业务等等。所以，我认为，SQL注入相当于让黑客直接和服务端的数据库进行了交互。正如我们一直所说的，应用的本质是数据，黑客控制了数据库，也就相当于控制了整个应用。</p>
+<h1 id="如何进行SQL注入防护-？"><a href="#如何进行SQL注入防护-？" class="headerlink" title="如何进行SQL注入防护 ？"></a>如何进行SQL注入防护 ？</h1><p>在认识到SQL注入的危害之后，我们知道，一个简单的SQL查询逻辑，能够带来巨大的安全隐患。因此，我们应该做到在开发过程中就避免出现SQL注入漏洞。那具体应该怎么做呢？接下来，我会为你介绍3种常见的防护方法，它们分别是：使用PreparedStatement、使用存储过程和验证输入。接下来，我们一一来看。</p>
+<h2 id="1-使用PreparedStatement"><a href="#1-使用PreparedStatement" class="headerlink" title="1.使用PreparedStatement"></a>1.使用PreparedStatement</h2><p>通过<strong>合理地</strong>使用PreparedStatement，我们就能够避免99.99%的SQL注入问题。你肯定很好奇，我为什么会这么说。接下来，让我们一起看一下它的实现过程。</p>
+<p>当数据库在处理一个SQL命令的时候，大致可以分为两个步骤：</p>
+<ul>
+<li>将SQL语句解析成数据库可使用的指令集。我们在使用EXPLAIN关键字分析SQL语句，就是干的这个事情；</li>
+<li>将变量代入指令集，开始实际执行。之所以在批量处理SQL的时候能够提升性能，就是因为这样做避免了重复解析SQL的过程。</li>
+</ul>
+<p>那么PreparedStatement为什么能够避免SQL注入的问题呢？</p>
+<p>这是因为，SQL注入是在解析的过程中生效的，用户的输入会影响SQL解析的结果。因此，我们可以通过使用PreparedStatement，将SQL语句的解析和实际执行过程分开，只在执行的过程中代入用户的操作。这样一来，无论黑客提交的参数怎么变化，数据库都不会去执行额外的逻辑，也就避免了SQL注入的发生。</p>
+<p>在Java中，我们可以通过执行下面的代码将解析和执行分开：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">sql</span> <span class="operator">=</span> <span class="string">&quot;SELECT * FROM Users WHERE UserId = ?&quot;</span>;</span><br><span class="line"><span class="type">PreparedStatement</span> <span class="variable">statement</span> <span class="operator">=</span> connection.prepareStatement(sql);</span><br><span class="line">statement.setInt(<span class="number">1</span>, userId); </span><br><span class="line"><span class="type">ResultSet</span> <span class="variable">results</span> <span class="operator">=</span> statement.executeQuery();</span><br></pre></td></tr></table></figure>
+
+<p>为了实现相似的效果，在PHP中，我们可以使用PDO（PHP Data Objects）；在C#中，我们可以使用OleDbCommand等等。</p>
+<p>这里有一点需要你注意，前面我们说了，通过合理地使用PreparedStatement就能解决99.99%的SQL注入问题，那到底怎么做才算“合理地”使用呢？</p>
+<p>PreparedStatement为SQL语句的解析和执行提供了不同的“方法”，你需要分开来调用。但是，如果你在使用PreparedStatement的时候，还是通过字符串拼接来构造SQL语句，那仍然是将解析和执行放在了一块，也就不会产生相应的防护效果了。我这里给你展示了一个错误案例，你可以和上面的代码进行对比。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">sql</span> <span class="operator">=</span> <span class="string">&quot;SELECT * FROM Users WHERE UserId = &quot;</span> + userId;</span><br><span class="line"><span class="type">PreparedStatement</span> <span class="variable">statement</span> <span class="operator">=</span> connection.prepareStatement(sql);</span><br><span class="line"><span class="type">ResultSet</span> <span class="variable">results</span> <span class="operator">=</span> statement.executeQuery();</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-使用存储过程"><a href="#2-使用存储过程" class="headerlink" title="2.使用存储过程"></a>2.使用存储过程</h2><p>接下来，我们说一说，如何使用<a target="_blank" rel="noopener" href="https://baike.baidu.com/item/%E5%AD%98%E5%82%A8%E8%BF%87%E7%A8%8B/1240317?fr=aladdin">存储过程</a>来防止SQL注入。实际上，它的原理和使用PreparedStatement类似，都是通过将SQL语句的解析和执行过程分开，来实现防护。区别在于，存储过程防注入是将解析SQL的过程，由数据库驱动转移到了数据库本身。</p>
+<p>还是上述的例子，使用存储过程，我们可以这样来实现：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">delimiter $$　　#将语句的结束符号从分号;临时改为两个$$(可以是自定义)</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">PROCEDURE</span> select_user(<span class="keyword">IN</span> p_id <span class="type">INTEGER</span>)</span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line">　 <span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> Users <span class="keyword">WHERE</span> UserId <span class="operator">=</span> p_id;</span><br><span class="line"><span class="keyword">END</span>$$ </span><br><span class="line">delimiter;　　#将语句的结束符号恢复为分号</span><br><span class="line"></span><br><span class="line"><span class="keyword">call</span> select_user(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-验证输入"><a href="#3-验证输入" class="headerlink" title="3.验证输入"></a>3.验证输入</h2><p>在上一节课中，我们讲过，<strong>防护的核心原则是，一切用户输入皆不可信</strong>。因此，SQL注入的防护手段和XSS其实也是相通的，主要的不同在于：</p>
+<ul>
+<li>SQL注入的攻击发生在输入的时候，因此，我们只能在输入的时候去进行防护和验证；</li>
+<li>大部分数据库不提供针对SQL的编码，因为那会改变原有的语意，所以SQL注入没有编码的保护方案。</li>
+</ul>
+<p>因此，对所有输入进行验证或者过滤操作，能够很大程度上避免SQL注入的出现。比如，在通过userId获取Users相关信息的示例中，我们可以确认userId必然是一个整数。因此，我们只需要对userId参数，进行一个整型转化（比如，Java中的Integer.parseInt，PHP的intval），就可以实现防护了。</p>
+<p>当然，部分场景下，用户输入的参数会比较复杂。我们以用户发出的评论为例，其内容完全由用户定义，应用无法预判它的格式。这种情况下，应用只能通过对部分关键字符进行过滤，来避免SQL注入的发生。比如，在MySQL中，需要注意的关键词有” % ’ \ _。</p>
+<p>这里我简单地总结一下，在实际使用这些防护方法时的注意点。对于验证输入来说，尤其是在复杂场景下的验证输入措施，其防护效果是最弱的。因此，避免SQL注入的防护方法，首要选择仍然是PreparedStatement或者存储过程。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>好了，这一节内容差不多了，下面我来带你总结回顾一下，你要掌握的重点内容。</p>
+<p>SQL注入就是黑客通过相关漏洞，篡改SQL语句的攻击。通过SQL注入，黑客既可以影响正常的SQL执行结果，从而绕过验证，也可以执行额外的SQL语句，对数据的机密性、完整性和可用性都产生影响。</p>
+<p>为了避免SQL注入的出现，我们需要正确地使用PreparedStatement方法或者存储过程，尽量避免在SQL语句中出现字符串拼接的操作。除此之外，SQL注入的防护也可以和XSS一样，对用户的输入进行验证、检测并过滤SQL中的关键词，从而避免原有语句被篡改。</p>
+<p>今天的内容比较多，为了方便你记忆，我总结了一个知识脑图，你可以通过它来对今天的重点内容进行复习巩固。</p>
+<p><img src="/article/2023/09/07Web%E5%AE%89%E5%85%A8-SQL%E6%B3%A8%E5%85%A5%EF%BC%9A%E6%98%8E%E6%98%8E%E8%AE%BE%E7%BD%AE%E4%BA%86%E5%BC%BA%E5%AF%86%E7%A0%81%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E8%A2%AB%E5%88%AB%E4%BA%BA%E7%99%BB%E5%BD%95%EF%BC%9F/20200818104121927.png" alt="img"></p>
+<h1 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h1><p>好了，今天的内容差不多了，我们来看一道思考题。</p>
+<p>假设有下面这样一个语句：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> Username <span class="keyword">FROM</span> Users <span class="keyword">WHERE</span> UserId <span class="operator">=</span> <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p>你现在已经知道，WHERE语句中存在了SQL注入的点。那么，我们怎么才能获取到除了Username之外的其他字段呢？这里我给你一个小提示，你可以先了解一下“<a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/web/175049.html">盲注</a>”这个概念，之后再来思考这个问题。</p>
+<p>欢迎留言和我分享你的思考和疑惑，也欢迎你把文章分享给你的朋友。我们下一讲再见！</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" rel="tag"># 安全攻防技能30讲</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/09/06Web%E5%AE%89%E5%85%A8-XSS%EF%BC%9A%E5%BD%93%E4%BD%A0%E2%80%9C%E8%A2%AB%E5%8F%91%E9%80%81%E2%80%9D%E4%BA%86%E4%B8%80%E6%9D%A1%E5%BE%AE%E5%8D%9A%E6%97%B6%EF%BC%8C%E5%88%B0%E5%BA%95%E5%8F%91%E7%94%9F%E4%BA%86%E4%BB%80%E4%B9%88%EF%BC%9F/" rel="prev" title="06Web安全-XSS：当你“被发送”了一条微博时，到底发生了什么？">
+                  <i class="fa fa-angle-left"></i> 06Web安全-XSS：当你“被发送”了一条微博时，到底发生了什么？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/09/08Web%E5%AE%89%E5%85%A8-CSRF%E5%92%8CSSRF%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%81%BF%E5%85%8D%E4%BA%86XSS%EF%BC%8C%E8%BF%98%E6%98%AF%E2%80%9C%E8%A2%AB%E5%8F%91%E9%80%81%E2%80%9D%E4%BA%86%E4%B8%80%E6%9D%A1%E5%BE%AE%E5%8D%9A%EF%BC%9F/" rel="next" title="08Web安全-CSRF和SSRF：为什么避免了XSS，还是“被发送”了一条微博？">
+                  08Web安全-CSRF和SSRF：为什么避免了XSS，还是“被发送”了一条微博？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

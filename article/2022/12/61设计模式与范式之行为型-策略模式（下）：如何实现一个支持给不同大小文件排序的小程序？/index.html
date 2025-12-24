@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="上一节课，我们主要介绍了策略模式的原理和实现，以及如何利用策略模式来移除if-else或者switch-case分支判断逻辑。今天，我们结合“给文件排序”这样一个具体的例子，来详细讲一讲策略模式的设计意图和应用场景。 除此之外，在今天的讲解中，我还会通过一步一步地分析、重构，给你展示一个设计模式是如何“创造”出来的。通过今天的学习，你会发现，设计原则和思想其实比设计模式更加普适和重要，掌握了代码的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="61设计模式与范式之行为型-策略模式（下）：如何实现一个支持给不同大小文件排序的小程序？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/12/61%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E8%A1%8C%E4%B8%BA%E5%9E%8B-%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E6%94%AF%E6%8C%81%E7%BB%99%E4%B8%8D%E5%90%8C%E5%A4%A7%E5%B0%8F%E6%96%87%E4%BB%B6%E6%8E%92%E5%BA%8F%E7%9A%84%E5%B0%8F%E7%A8%8B%E5%BA%8F%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="上一节课，我们主要介绍了策略模式的原理和实现，以及如何利用策略模式来移除if-else或者switch-case分支判断逻辑。今天，我们结合“给文件排序”这样一个具体的例子，来详细讲一讲策略模式的设计意图和应用场景。 除此之外，在今天的讲解中，我还会通过一步一步地分析、重构，给你展示一个设计模式是如何“创造”出来的。通过今天的学习，你会发现，设计原则和思想其实比设计模式更加普适和重要，掌握了代码的">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-12-01T00:00:00.000Z">
+<meta property="article:modified_time" content="2022-12-01T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/12/61%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E8%A1%8C%E4%B8%BA%E5%9E%8B-%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E6%94%AF%E6%8C%81%E7%BB%99%E4%B8%8D%E5%90%8C%E5%A4%A7%E5%B0%8F%E6%96%87%E4%BB%B6%E6%8E%92%E5%BA%8F%E7%9A%84%E5%B0%8F%E7%A8%8B%E5%BA%8F%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/12/61%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E8%A1%8C%E4%B8%BA%E5%9E%8B-%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E6%94%AF%E6%8C%81%E7%BB%99%E4%B8%8D%E5%90%8C%E5%A4%A7%E5%B0%8F%E6%96%87%E4%BB%B6%E6%8E%92%E5%BA%8F%E7%9A%84%E5%B0%8F%E7%A8%8B%E5%BA%8F%EF%BC%9F/","path":"article/2022/12/61设计模式与范式之行为型-策略模式（下）：如何实现一个支持给不同大小文件排序的小程序？/","title":"61设计模式与范式之行为型-策略模式（下）：如何实现一个支持给不同大小文件排序的小程序？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>61设计模式与范式之行为型-策略模式（下）：如何实现一个支持给不同大小文件排序的小程序？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E4%B8%8E%E8%A7%A3%E5%86%B3%E6%80%9D%E8%B7%AF"><span class="nav-number">1.</span> <span class="nav-text">问题与解决思路</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0%E4%B8%8E%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">代码实现与分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E4%BC%98%E5%8C%96%E4%B8%8E%E9%87%8D%E6%9E%84"><span class="nav-number">3.</span> <span class="nav-text">代码优化与重构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE"><span class="nav-number">4.</span> <span class="nav-text">重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%A0%82%E8%AE%A8%E8%AE%BA"><span class="nav-number">5.</span> <span class="nav-text">课堂讨论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/12/61%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E8%A1%8C%E4%B8%BA%E5%9E%8B-%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E6%94%AF%E6%8C%81%E7%BB%99%E4%B8%8D%E5%90%8C%E5%A4%A7%E5%B0%8F%E6%96%87%E4%BB%B6%E6%8E%92%E5%BA%8F%E7%9A%84%E5%B0%8F%E7%A8%8B%E5%BA%8F%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="61设计模式与范式之行为型-策略模式（下）：如何实现一个支持给不同大小文件排序的小程序？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          61设计模式与范式之行为型-策略模式（下）：如何实现一个支持给不同大小文件排序的小程序？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-12-01 08:00:00" itemprop="dateCreated datePublished" datetime="2022-12-01T08:00:00+08:00">2022-12-01</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>上一节课，我们主要介绍了策略模式的原理和实现，以及如何利用策略模式来移除if-else或者switch-case分支判断逻辑。今天，我们结合“给文件排序”这样一个具体的例子，来详细讲一讲策略模式的设计意图和应用场景。</p>
+<p>除此之外，在今天的讲解中，我还会通过一步一步地分析、重构，给你展示一个设计模式是如何“创造”出来的。通过今天的学习，你会发现，<strong>设计原则和思想其实比设计模式更加普适和重要，掌握了代码的设计原则和思想，我们甚至可以自己创造出来新的设计模式</strong>。</p>
+<p>话不多说，让我们正式开始今天的学习吧！</p>
+<span id="more"></span>
+
+<h1 id="问题与解决思路"><a href="#问题与解决思路" class="headerlink" title="问题与解决思路"></a>问题与解决思路</h1><p>假设有这样一个需求，希望写一个小程序，实现对一个文件进行排序的功能。文件中只包含整型数，并且，相邻的数字通过逗号来区隔。如果由你来编写这样一个小程序，你会如何来实现呢？你可以把它当作面试题，先自己思考一下，再来看我下面的讲解。</p>
+<p>你可能会说，这不是很简单嘛，只需要将文件中的内容读取出来，并且通过逗号分割成一个一个的数字，放到内存数组中，然后编写某种排序算法（比如快排），或者直接使用编程语言提供的排序函数，对数组进行排序，最后再将数组中的数据写入文件就可以了。</p>
+<p>但是，如果文件很大呢？比如有10GB大小，因为内存有限（比如只有8GB大小），我们没办法一次性加载文件中的所有数据到内存中，这个时候，我们就要利用外部排序算法（具体怎么做，可以参看我的另一个专栏《数据结构与算法之美》中的“排序”相关章节）了。</p>
+<p>如果文件更大，比如有100GB大小，我们为了利用CPU多核的优势，可以在外部排序的基础之上进行优化，加入多线程并发排序的功能，这就有点类似“单机版”的MapReduce。</p>
+<p>如果文件非常大，比如有1TB大小，即便是单机多线程排序，这也算很慢了。这个时候，我们可以使用真正的MapReduce框架，利用多机的处理能力，提高排序的效率。</p>
+<h1 id="代码实现与分析"><a href="#代码实现与分析" class="headerlink" title="代码实现与分析"></a>代码实现与分析</h1><p>解决思路讲完了，不难理解。接下来，我们看一下，如何将解决思路翻译成代码实现。</p>
+<p>我先用最简单直接的方式将它实现出来。具体代码我贴在下面了，你可以先看一下。因为我们是在讲设计模式，不是讲算法，所以，在下面的代码实现中，我只给出了跟设计模式相关的骨架代码，并没有给出每种排序算法的具体代码实现。感兴趣的话，你可以自行实现一下。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Sorter</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">GB</span> <span class="operator">=</span> <span class="number">1000</span> * <span class="number">1000</span> * <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">sortFile</span><span class="params">(String filePath)</span> &#123;</span><br><span class="line">    <span class="comment">// 省略校验逻辑</span></span><br><span class="line">    <span class="type">File</span> <span class="variable">file</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">File</span>(filePath);</span><br><span class="line">    <span class="type">long</span> <span class="variable">fileSize</span> <span class="operator">=</span> file.length();</span><br><span class="line">    <span class="keyword">if</span> (fileSize &lt; <span class="number">6</span> * GB) &#123; <span class="comment">// [0, 6GB)</span></span><br><span class="line">      quickSort(filePath);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (fileSize &lt; <span class="number">10</span> * GB) &#123; <span class="comment">// [6GB, 10GB)</span></span><br><span class="line">      externalSort(filePath);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (fileSize &lt; <span class="number">100</span> * GB) &#123; <span class="comment">// [10GB, 100GB)</span></span><br><span class="line">      concurrentExternalSort(filePath);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123; <span class="comment">// [100GB, ~)</span></span><br><span class="line">      mapreduceSort(filePath);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">quickSort</span><span class="params">(String filePath)</span> &#123;</span><br><span class="line">    <span class="comment">// 快速排序</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">externalSort</span><span class="params">(String filePath)</span> &#123;</span><br><span class="line">    <span class="comment">// 外部排序</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">concurrentExternalSort</span><span class="params">(String filePath)</span> &#123;</span><br><span class="line">    <span class="comment">// 多线程外部排序</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">mapreduceSort</span><span class="params">(String filePath)</span> &#123;</span><br><span class="line">    <span class="comment">// 利用MapReduce多机排序</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SortingTool</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="type">Sorter</span> <span class="variable">sorter</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Sorter</span>();</span><br><span class="line">    sorter.sortFile(args[<span class="number">0</span>]);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在“编码规范”那一部分我们讲过，函数的行数不能过多，最好不要超过一屏的大小。所以，为了避免sortFile()函数过长，我们把每种排序算法从sortFile()函数中抽离出来，拆分成4个独立的排序函数。</p>
+<p>如果只是开发一个简单的工具，那上面的代码实现就足够了。毕竟，代码不多，后续修改、扩展的需求也不多，怎么写都不会导致代码不可维护。但是，如果我们是在开发一个大型项目，排序文件只是其中的一个功能模块，那我们就要在代码设计、代码质量上下点儿功夫了。只有每个小的功能模块都写好，整个项目的代码才能不差。</p>
+<p>在刚刚的代码中，我们并没有给出每种排序算法的代码实现。实际上，如果自己实现一下的话，你会发现，每种排序算法的实现逻辑都比较复杂，代码行数都比较多。所有排序算法的代码实现都堆在Sorter一个类中，这就会导致这个类的代码很多。而在“编码规范”那一部分中，我们也讲到，一个类的代码太多也会影响到可读性、可维护性。除此之外，所有的排序算法都设计成Sorter的私有函数，也会影响代码的可复用性。</p>
+<h1 id="代码优化与重构"><a href="#代码优化与重构" class="headerlink" title="代码优化与重构"></a>代码优化与重构</h1><p>只要掌握了我们之前讲过的设计原则和思想，针对上面的问题，即便我们想不到该用什么设计模式来重构，也应该能知道该如何解决，那就是将Sorter类中的某些代码拆分出来，独立成职责更加单一的小类。实际上，拆分是应对类或者函数代码过多、应对代码复杂性的一个常用手段。按照这个解决思路，我们对代码进行重构。重构之后的代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ISortAlg</span> &#123;</span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">sort</span><span class="params">(String filePath)</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">QuickSort</span> <span class="keyword">implements</span> <span class="title class_">ISortAlg</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">sort</span><span class="params">(String filePath)</span> &#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ExternalSort</span> <span class="keyword">implements</span> <span class="title class_">ISortAlg</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">sort</span><span class="params">(String filePath)</span> &#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ConcurrentExternalSort</span> <span class="keyword">implements</span> <span class="title class_">ISortAlg</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">sort</span><span class="params">(String filePath)</span> &#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MapReduceSort</span> <span class="keyword">implements</span> <span class="title class_">ISortAlg</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">sort</span><span class="params">(String filePath)</span> &#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Sorter</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">GB</span> <span class="operator">=</span> <span class="number">1000</span> * <span class="number">1000</span> * <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">sortFile</span><span class="params">(String filePath)</span> &#123;</span><br><span class="line">    <span class="comment">// 省略校验逻辑</span></span><br><span class="line">    <span class="type">File</span> <span class="variable">file</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">File</span>(filePath);</span><br><span class="line">    <span class="type">long</span> <span class="variable">fileSize</span> <span class="operator">=</span> file.length();</span><br><span class="line">    ISortAlg sortAlg;</span><br><span class="line">    <span class="keyword">if</span> (fileSize &lt; <span class="number">6</span> * GB) &#123; <span class="comment">// [0, 6GB)</span></span><br><span class="line">      sortAlg = <span class="keyword">new</span> <span class="title class_">QuickSort</span>();</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (fileSize &lt; <span class="number">10</span> * GB) &#123; <span class="comment">// [6GB, 10GB)</span></span><br><span class="line">      sortAlg = <span class="keyword">new</span> <span class="title class_">ExternalSort</span>();</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (fileSize &lt; <span class="number">100</span> * GB) &#123; <span class="comment">// [10GB, 100GB)</span></span><br><span class="line">      sortAlg = <span class="keyword">new</span> <span class="title class_">ConcurrentExternalSort</span>();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123; <span class="comment">// [100GB, ~)</span></span><br><span class="line">      sortAlg = <span class="keyword">new</span> <span class="title class_">MapReduceSort</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    sortAlg.sort(filePath);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>经过拆分之后，每个类的代码都不会太多，每个类的逻辑都不会太复杂，代码的可读性、可维护性提高了。除此之外，我们将排序算法设计成独立的类，跟具体的业务逻辑（代码中的if-else那部分逻辑）解耦，也让排序算法能够复用。这一步实际上就是策略模式的第一步，也就是将策略的定义分离出来。</p>
+<p>实际上，上面的代码还可以继续优化。每种排序类都是无状态的，我们没必要在每次使用的时候，都重新创建一个新的对象。所以，我们可以使用工厂模式对对象的创建进行封装。按照这个思路，我们对代码进行重构。重构之后的代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SortAlgFactory</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Map&lt;String, ISortAlg&gt; algs = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">static</span> &#123;</span><br><span class="line">    algs.put(<span class="string">&quot;QuickSort&quot;</span>, <span class="keyword">new</span> <span class="title class_">QuickSort</span>());</span><br><span class="line">    algs.put(<span class="string">&quot;ExternalSort&quot;</span>, <span class="keyword">new</span> <span class="title class_">ExternalSort</span>());</span><br><span class="line">    algs.put(<span class="string">&quot;ConcurrentExternalSort&quot;</span>, <span class="keyword">new</span> <span class="title class_">ConcurrentExternalSort</span>());</span><br><span class="line">    algs.put(<span class="string">&quot;MapReduceSort&quot;</span>, <span class="keyword">new</span> <span class="title class_">MapReduceSort</span>());</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> ISortAlg <span class="title function_">getSortAlg</span><span class="params">(String type)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (type == <span class="literal">null</span> || type.isEmpty()) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;type should not be empty.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> algs.get(type);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Sorter</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">GB</span> <span class="operator">=</span> <span class="number">1000</span> * <span class="number">1000</span> * <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">sortFile</span><span class="params">(String filePath)</span> &#123;</span><br><span class="line">    <span class="comment">// 省略校验逻辑</span></span><br><span class="line">    <span class="type">File</span> <span class="variable">file</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">File</span>(filePath);</span><br><span class="line">    <span class="type">long</span> <span class="variable">fileSize</span> <span class="operator">=</span> file.length();</span><br><span class="line">    ISortAlg sortAlg;</span><br><span class="line">    <span class="keyword">if</span> (fileSize &lt; <span class="number">6</span> * GB) &#123; <span class="comment">// [0, 6GB)</span></span><br><span class="line">      sortAlg = SortAlgFactory.getSortAlg(<span class="string">&quot;QuickSort&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (fileSize &lt; <span class="number">10</span> * GB) &#123; <span class="comment">// [6GB, 10GB)</span></span><br><span class="line">      sortAlg = SortAlgFactory.getSortAlg(<span class="string">&quot;ExternalSort&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (fileSize &lt; <span class="number">100</span> * GB) &#123; <span class="comment">// [10GB, 100GB)</span></span><br><span class="line">      sortAlg = SortAlgFactory.getSortAlg(<span class="string">&quot;ConcurrentExternalSort&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123; <span class="comment">// [100GB, ~)</span></span><br><span class="line">      sortAlg = SortAlgFactory.getSortAlg(<span class="string">&quot;MapReduceSort&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    sortAlg.sort(filePath);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>经过上面两次重构之后，现在的代码实际上已经符合策略模式的代码结构了。我们通过策略模式将策略的定义、创建、使用解耦，让每一部分都不至于太复杂。不过，Sorter类中的sortFile()函数还是有一堆if-else逻辑。这里的if-else逻辑分支不多、也不复杂，这样写完全没问题。但如果你特别想将if-else分支判断移除掉，那也是有办法的。我直接给出代码，你一看就能明白。实际上，这也是基于查表法来解决的，其中的“algs”就是“表”。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Sorter</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">GB</span> <span class="operator">=</span> <span class="number">1000</span> * <span class="number">1000</span> * <span class="number">1000</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> List&lt;AlgRange&gt; algs = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">  <span class="keyword">static</span> &#123;</span><br><span class="line">    algs.add(<span class="keyword">new</span> <span class="title class_">AlgRange</span>(<span class="number">0</span>, <span class="number">6</span>*GB, SortAlgFactory.getSortAlg(<span class="string">&quot;QuickSort&quot;</span>)));</span><br><span class="line">    algs.add(<span class="keyword">new</span> <span class="title class_">AlgRange</span>(<span class="number">6</span>*GB, <span class="number">10</span>*GB, SortAlgFactory.getSortAlg(<span class="string">&quot;ExternalSort&quot;</span>)));</span><br><span class="line">    algs.add(<span class="keyword">new</span> <span class="title class_">AlgRange</span>(<span class="number">10</span>*GB, <span class="number">100</span>*GB, SortAlgFactory.getSortAlg(<span class="string">&quot;ConcurrentExternalSort&quot;</span>)));</span><br><span class="line">    algs.add(<span class="keyword">new</span> <span class="title class_">AlgRange</span>(<span class="number">100</span>*GB, Long.MAX_VALUE, SortAlgFactory.getSortAlg(<span class="string">&quot;MapReduceSort&quot;</span>)));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">sortFile</span><span class="params">(String filePath)</span> &#123;</span><br><span class="line">    <span class="comment">// 省略校验逻辑</span></span><br><span class="line">    <span class="type">File</span> <span class="variable">file</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">File</span>(filePath);</span><br><span class="line">    <span class="type">long</span> <span class="variable">fileSize</span> <span class="operator">=</span> file.length();</span><br><span class="line">    <span class="type">ISortAlg</span> <span class="variable">sortAlg</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">for</span> (AlgRange algRange : algs) &#123;</span><br><span class="line">      <span class="keyword">if</span> (algRange.inRange(fileSize)) &#123;</span><br><span class="line">        sortAlg = algRange.getAlg();</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    sortAlg.sort(filePath);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">AlgRange</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">long</span> start;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">long</span> end;</span><br><span class="line">    <span class="keyword">private</span> ISortAlg alg;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">AlgRange</span><span class="params">(<span class="type">long</span> start, <span class="type">long</span> end, ISortAlg alg)</span> &#123;</span><br><span class="line">      <span class="built_in">this</span>.start = start;</span><br><span class="line">      <span class="built_in">this</span>.end = end;</span><br><span class="line">      <span class="built_in">this</span>.alg = alg;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> ISortAlg <span class="title function_">getAlg</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> alg;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">inRange</span><span class="params">(<span class="type">long</span> size)</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> size &gt;= start &amp;&amp; size &lt; end;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在的代码实现就更加优美了。我们把可变的部分隔离到了策略工厂类和Sorter类中的静态代码段中。当要添加一个新的排序算法时，我们只需要修改策略工厂类和Sort类中的静态代码段，其他代码都不需要修改，这样就将代码改动最小化、集中化了。</p>
+<p>你可能会说，即便这样，当我们添加新的排序算法的时候，还是需要修改代码，并不完全符合开闭原则。有什么办法让我们完全满足开闭原则呢？</p>
+<p>对于Java语言来说，我们可以通过反射来避免对策略工厂类的修改。具体是这么做的：我们通过一个配置文件或者自定义的annotation来标注都有哪些策略类；策略工厂类读取配置文件或者搜索被annotation标注的策略类，然后通过反射动态地加载这些策略类、创建策略对象；当我们新添加一个策略的时候，只需要将这个新添加的策略类添加到配置文件或者用annotation标注即可。还记得上一节课的课堂讨论题吗？我们也可以用这种方法来解决。</p>
+<p>对于Sorter来说，我们可以通过同样的方法来避免修改。我们通过将文件大小区间和算法之间的对应关系放到配置文件中。当添加新的排序算法时，我们只需要改动配置文件即可，不需要改动代码。</p>
+<h1 id="重点回顾"><a href="#重点回顾" class="headerlink" title="重点回顾"></a>重点回顾</h1><p>好了，今天的内容到此就讲完了。我们一块来总结回顾一下，你需要重点掌握的内容。</p>
+<p>一提到if-else分支判断，有人就觉得它是烂代码。如果if-else分支判断不复杂、代码不多，这并没有任何问题，毕竟if-else分支判断几乎是所有编程语言都会提供的语法，存在即有理由。遵循KISS原则，怎么简单怎么来，就是最好的设计。非得用策略模式，搞出n多类，反倒是一种过度设计。</p>
+<p>一提到策略模式，有人就觉得，它的作用是避免if-else分支判断逻辑。实际上，这种认识是很片面的。策略模式主要的作用还是解耦策略的定义、创建和使用，控制代码的复杂度，让每个部分都不至于过于复杂、代码量过多。除此之外，对于复杂代码来说，策略模式还能让其满足开闭原则，添加新策略的时候，最小化、集中化代码改动，减少引入bug的风险。</p>
+<p>实际上，设计原则和思想比设计模式更加普适和重要。掌握了代码的设计原则和思想，我们能更清楚的了解，为什么要用某种设计模式，就能更恰到好处地应用设计模式。</p>
+<h1 id="课堂讨论"><a href="#课堂讨论" class="headerlink" title="课堂讨论"></a>课堂讨论</h1><ol>
+<li>在过去的项目开发中，你有没有用过策略模式，都是为了解决什么问题才使用的？</li>
+<li>你可以说一说，在什么情况下，我们才有必要去掉代码中的if-else或者switch-case分支逻辑呢？</li>
+</ol>
+<p>欢迎留言和我分享你的想法。如果有收获，也欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/11/60%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E8%A1%8C%E4%B8%BA%E5%9E%8B-%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D%E5%86%97%E9%95%BF%E7%9A%84if-elseswitch%E5%88%86%E6%94%AF%E5%88%A4%E6%96%AD%E4%BB%A3%E7%A0%81%EF%BC%9F/" rel="prev" title="60设计模式与范式之行为型-策略模式（上）：如何避免冗长的if-elseswitch分支判断代码？">
+                  <i class="fa fa-angle-left"></i> 60设计模式与范式之行为型-策略模式（上）：如何避免冗长的if-elseswitch分支判断代码？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/12/62%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E8%A1%8C%E4%B8%BA%E5%9E%8B-%E8%81%8C%E8%B4%A3%E9%93%BE%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%8F%AF%E7%81%B5%E6%B4%BB%E6%89%A9%E5%B1%95%E7%AE%97%E6%B3%95%E7%9A%84%E6%95%8F%E6%84%9F%E4%BF%A1%E6%81%AF%E8%BF%87%E6%BB%A4%E6%A1%86%E6%9E%B6%EF%BC%9F/" rel="next" title="62设计模式与范式之行为型-职责链模式（上）：如何实现可灵活扩展算法的敏感信息过滤框架？">
+                  62设计模式与范式之行为型-职责链模式（上）：如何实现可灵活扩展算法的敏感信息过滤框架？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

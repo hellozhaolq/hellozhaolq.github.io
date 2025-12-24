@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="前面几篇文章我们介绍了线程池、Future、CompletableFuture和CompletionService，仔细观察你会发现这些工具类都是在帮助我们站在任务的视角来解决并发问题，而不是让我们纠缠在线程之间如何协作的细节上（比如线程之间如何实现等待、通知等）。对于简单的并行任务，你可以通过“线程池+Future”的方案来解决；如果任务之间有聚合关系，无论是AND聚合还是OR聚合，都可以通过C">
+<meta property="og:type" content="article">
+<meta property="og:title" content="26并发工具类-ForkJoin：单机版的MapReduce">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/07/26%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-ForkJoin%EF%BC%9A%E5%8D%95%E6%9C%BA%E7%89%88%E7%9A%84MapReduce/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="前面几篇文章我们介绍了线程池、Future、CompletableFuture和CompletionService，仔细观察你会发现这些工具类都是在帮助我们站在任务的视角来解决并发问题，而不是让我们纠缠在线程之间如何协作的细节上（比如线程之间如何实现等待、通知等）。对于简单的并行任务，你可以通过“线程池+Future”的方案来解决；如果任务之间有聚合关系，无论是AND聚合还是OR聚合，都可以通过C">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/07/26%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-ForkJoin%EF%BC%9A%E5%8D%95%E6%9C%BA%E7%89%88%E7%9A%84MapReduce/0a093613a28fff200eadd04ec2606141.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/07/26%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-ForkJoin%EF%BC%9A%E5%8D%95%E6%9C%BA%E7%89%88%E7%9A%84MapReduce/5c35170f58dd5e6b7047e9b0f424d1ea.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/07/26%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-ForkJoin%EF%BC%9A%E5%8D%95%E6%9C%BA%E7%89%88%E7%9A%84MapReduce/085a689bda96972b910977f856023af1.png">
+<meta property="article:published_time" content="2023-07-26T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-07-26T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Java并发编程实战">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/07/26%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-ForkJoin%EF%BC%9A%E5%8D%95%E6%9C%BA%E7%89%88%E7%9A%84MapReduce/0a093613a28fff200eadd04ec2606141.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/07/26%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-ForkJoin%EF%BC%9A%E5%8D%95%E6%9C%BA%E7%89%88%E7%9A%84MapReduce/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/07/26%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-ForkJoin%EF%BC%9A%E5%8D%95%E6%9C%BA%E7%89%88%E7%9A%84MapReduce/","path":"article/2023/07/26并发工具类-ForkJoin：单机版的MapReduce/","title":"26并发工具类-ForkJoin：单机版的MapReduce"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>26并发工具类-ForkJoin：单机版的MapReduce | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E6%B2%BB%E4%BB%BB%E5%8A%A1%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">分治任务模型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Fork-Join%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">Fork&#x2F;Join的使用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ForkJoinPool%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-number">3.</span> <span class="nav-text">ForkJoinPool工作原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A8%A1%E6%8B%9FMapReduce%E7%BB%9F%E8%AE%A1%E5%8D%95%E8%AF%8D%E6%95%B0%E9%87%8F"><span class="nav-number">4.</span> <span class="nav-text">模拟MapReduce统计单词数量</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%90%8E%E6%80%9D%E8%80%83"><span class="nav-number">6.</span> <span class="nav-text">课后思考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/07/26%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-ForkJoin%EF%BC%9A%E5%8D%95%E6%9C%BA%E7%89%88%E7%9A%84MapReduce/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="26并发工具类-ForkJoin：单机版的MapReduce | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          26并发工具类-ForkJoin：单机版的MapReduce
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-07-26 08:00:00" itemprop="dateCreated datePublished" datetime="2023-07-26T08:00:00+08:00">2023-07-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">Java并发编程实战</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>前面几篇文章我们介绍了线程池、Future、CompletableFuture和CompletionService，仔细观察你会发现这些工具类都是在帮助我们站在任务的视角来解决并发问题，而不是让我们纠缠在线程之间如何协作的细节上（比如线程之间如何实现等待、通知等）。<strong>对于简单的并行任务，你可以通过“线程池+Future”的方案来解决；如果任务之间有聚合关系，无论是AND聚合还是OR聚合，都可以通过CompletableFuture来解决；而批量的并行任务，则可以通过CompletionService来解决。</strong></p>
+<span id="more"></span>
+
+<p>我们一直讲，并发编程可以分为三个层面的问题，分别是分工、协作和互斥，当你关注于任务的时候，你会发现你的视角已经从并发编程的细节中跳出来了，你应用的更多的是现实世界的思维模式，类比的往往是现实世界里的分工，所以我把线程池、Future、CompletableFuture和CompletionService都列到了分工里面。</p>
+<p>下面我用现实世界里的工作流程图描述了并发编程领域的简单并行任务、聚合任务和批量并行任务，辅以这些流程图，相信你一定能将你的思维模式转换到现实世界里来。</p>
+<p><img src="/article/2023/07/26%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-ForkJoin%EF%BC%9A%E5%8D%95%E6%9C%BA%E7%89%88%E7%9A%84MapReduce/0a093613a28fff200eadd04ec2606141.png" alt="img"></p>
+<p>从上到下，依次为简单并行任务、聚合任务和批量并行任务示意图</p>
+<p>上面提到的简单并行、聚合、批量并行这三种任务模型，基本上能够覆盖日常工作中的并发场景了，但还是不够全面，因为还有一种“分治”的任务模型没有覆盖到。<strong>分治</strong>，顾名思义，即分而治之，是一种解决复杂问题的思维方法和模式；具体来讲，指的是<strong>把一个复杂的问题分解成多个相似的子问题，然后再把子问题分解成更小的子问题，直到子问题简单到可以直接求解</strong>。理论上来讲，解决每一个问题都对应着一个任务，所以对于问题的分治，实际上就是对于任务的分治。</p>
+<p>分治思想在很多领域都有广泛的应用，例如算法领域有分治算法（归并排序、快速排序都属于分治算法，二分法查找也是一种分治算法）；大数据领域知名的计算框架MapReduce背后的思想也是分治。既然分治这种任务模型如此普遍，那Java显然也需要支持，Java并发包里提供了一种叫做Fork&#x2F;Join的并行计算框架，就是用来支持分治这种任务模型的。</p>
+<h1 id="分治任务模型"><a href="#分治任务模型" class="headerlink" title="分治任务模型"></a>分治任务模型</h1><p>这里你需要先深入了解一下分治任务模型，分治任务模型可分为两个阶段：一个阶段是<strong>任务分解</strong>，也就是将任务迭代地分解为子任务，直至子任务可以直接计算出结果；另一个阶段是<strong>结果合并</strong>，即逐层合并子任务的执行结果，直至获得最终结果。下图是一个简化的分治任务模型图，你可以对照着理解。</p>
+<p><img src="/article/2023/07/26%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-ForkJoin%EF%BC%9A%E5%8D%95%E6%9C%BA%E7%89%88%E7%9A%84MapReduce/5c35170f58dd5e6b7047e9b0f424d1ea.png" alt="img"></p>
+<p>简版分治任务模型图</p>
+<p>在这个分治任务模型里，任务和分解后的子任务具有相似性，这种相似性往往体现在任务和子任务的算法是相同的，但是计算的数据规模是不同的。具备这种相似性的问题，我们往往都采用递归算法。</p>
+<h1 id="Fork-Join的使用"><a href="#Fork-Join的使用" class="headerlink" title="Fork&#x2F;Join的使用"></a>Fork&#x2F;Join的使用</h1><p>Fork&#x2F;Join是一个并行计算的框架，主要就是用来支持分治任务模型的，这个计算框架里的<strong>Fork对应的是分治任务模型里的任务分解，Join对应的是结果合并</strong>。Fork&#x2F;Join计算框架主要包含两部分，一部分是<strong>分治任务的线程池ForkJoinPool</strong>，另一部分是<strong>分治任务ForkJoinTask</strong>。这两部分的关系类似于ThreadPoolExecutor和Runnable的关系，都可以理解为提交任务到线程池，只不过分治任务有自己独特类型ForkJoinTask。</p>
+<p>ForkJoinTask是一个抽象类，它的方法有很多，最核心的是fork()方法和join()方法，其中fork()方法会异步地执行一个子任务，而join()方法则会阻塞当前线程来等待子任务的执行结果。ForkJoinTask有两个子类——RecursiveAction和RecursiveTask，通过名字你就应该能知道，它们都是用递归的方式来处理分治任务的。这两个子类都定义了抽象方法compute()，不过区别是RecursiveAction定义的compute()没有返回值，而RecursiveTask定义的compute()方法是有返回值的。这两个子类也是抽象类，在使用的时候，需要你定义子类去扩展。</p>
+<p>接下来我们就来实现一下，看看如何用Fork&#x2F;Join这个并行计算框架计算斐波那契数列（下面的代码源自Java官方示例）。首先我们需要创建一个分治任务线程池以及计算斐波那契数列的分治任务，之后通过调用分治任务线程池的 invoke() 方法来启动分治任务。由于计算斐波那契数列需要有返回值，所以Fibonacci 继承自RecursiveTask。分治任务Fibonacci 需要实现compute()方法，这个方法里面的逻辑和普通计算斐波那契数列非常类似，区别之处在于计算 <code>Fibonacci(n - 1)</code> 使用了异步子任务，这是通过 <code>f1.fork()</code> 这条语句实现的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span>&#123;</span><br><span class="line">  <span class="comment">//创建分治任务线程池  </span></span><br><span class="line">  <span class="type">ForkJoinPool</span> <span class="variable">fjp</span> <span class="operator">=</span> </span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">ForkJoinPool</span>(<span class="number">4</span>);</span><br><span class="line">  <span class="comment">//创建分治任务</span></span><br><span class="line">  <span class="type">Fibonacci</span> <span class="variable">fib</span> <span class="operator">=</span> </span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">Fibonacci</span>(<span class="number">30</span>);   </span><br><span class="line">  <span class="comment">//启动分治任务  </span></span><br><span class="line">  <span class="type">Integer</span> <span class="variable">result</span> <span class="operator">=</span> </span><br><span class="line">    fjp.invoke(fib);</span><br><span class="line">  <span class="comment">//输出结果  </span></span><br><span class="line">  System.out.println(result);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//递归任务</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Fibonacci</span> <span class="keyword">extends</span> </span><br><span class="line">    <span class="title class_">RecursiveTask</span>&lt;Integer&gt;&#123;</span><br><span class="line">  <span class="keyword">final</span> <span class="type">int</span> n;</span><br><span class="line">  Fibonacci(<span class="type">int</span> n)&#123;<span class="built_in">this</span>.n = n;&#125;</span><br><span class="line">  <span class="keyword">protected</span> Integer <span class="title function_">compute</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (n &lt;= <span class="number">1</span>)</span><br><span class="line">      <span class="keyword">return</span> n;</span><br><span class="line">    <span class="type">Fibonacci</span> <span class="variable">f1</span> <span class="operator">=</span> </span><br><span class="line">      <span class="keyword">new</span> <span class="title class_">Fibonacci</span>(n - <span class="number">1</span>);</span><br><span class="line">    <span class="comment">//创建子任务  </span></span><br><span class="line">    f1.fork();</span><br><span class="line">    <span class="type">Fibonacci</span> <span class="variable">f2</span> <span class="operator">=</span> </span><br><span class="line">      <span class="keyword">new</span> <span class="title class_">Fibonacci</span>(n - <span class="number">2</span>);</span><br><span class="line">    <span class="comment">//等待子任务结果，并合并结果  </span></span><br><span class="line">    <span class="keyword">return</span> f2.compute() + f1.join();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="ForkJoinPool工作原理"><a href="#ForkJoinPool工作原理" class="headerlink" title="ForkJoinPool工作原理"></a>ForkJoinPool工作原理</h1><p>Fork&#x2F;Join并行计算的核心组件是ForkJoinPool，所以下面我们就来简单介绍一下ForkJoinPool的工作原理。</p>
+<p>通过专栏前面文章的学习，你应该已经知道ThreadPoolExecutor本质上是一个生产者-消费者模式的实现，内部有一个任务队列，这个任务队列是生产者和消费者通信的媒介；ThreadPoolExecutor可以有多个工作线程，但是这些工作线程都共享一个任务队列。</p>
+<p>ForkJoinPool本质上也是一个生产者-消费者的实现，但是更加智能，你可以参考下面的ForkJoinPool工作原理图来理解其原理。ThreadPoolExecutor内部只有一个任务队列，而ForkJoinPool内部有多个任务队列，当我们通过ForkJoinPool的invoke()或者submit()方法提交任务时，ForkJoinPool根据一定的路由规则把任务提交到一个任务队列中，如果任务在执行过程中会创建出子任务，那么子任务会提交到工作线程对应的任务队列中。</p>
+<p>如果工作线程对应的任务队列空了，是不是就没活儿干了呢？不是的，ForkJoinPool支持一种叫做“<strong>任务窃取</strong>”的机制，如果工作线程空闲了，那它可以“窃取”其他工作任务队列里的任务，例如下图中，线程T2对应的任务队列已经空了，它可以“窃取”线程T1对应的任务队列的任务。如此一来，所有的工作线程都不会闲下来了。</p>
+<p>ForkJoinPool中的任务队列采用的是双端队列，工作线程正常获取任务和“窃取任务”分别是从任务队列不同的端消费，这样能避免很多不必要的数据竞争。我们这里介绍的仅仅是简化后的原理，ForkJoinPool的实现远比我们这里介绍的复杂，如果你感兴趣，建议去看它的源码。</p>
+<p><img src="/article/2023/07/26%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-ForkJoin%EF%BC%9A%E5%8D%95%E6%9C%BA%E7%89%88%E7%9A%84MapReduce/085a689bda96972b910977f856023af1.png" alt="img"></p>
+<p>ForkJoinPool工作原理图</p>
+<h1 id="模拟MapReduce统计单词数量"><a href="#模拟MapReduce统计单词数量" class="headerlink" title="模拟MapReduce统计单词数量"></a>模拟MapReduce统计单词数量</h1><p>学习MapReduce有一个入门程序，统计一个文件里面每个单词的数量，下面我们来看看如何用Fork&#x2F;Join并行计算框架来实现。</p>
+<p>我们可以先用二分法递归地将一个文件拆分成更小的文件，直到文件里只有一行数据，然后统计这一行数据里单词的数量，最后再逐级汇总结果，你可以对照前面的简版分治任务模型图来理解这个过程。</p>
+<p>思路有了，我们马上来实现。下面的示例程序用一个字符串数组 <code>String[] fc</code> 来模拟文件内容，fc里面的元素与文件里面的行数据一一对应。关键的代码在 <code>compute()</code> 这个方法里面，这是一个递归方法，前半部分数据fork一个递归任务去处理（关键代码mr1.fork()），后半部分数据则在当前任务中递归处理（mr2.compute()）。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span>&#123;</span><br><span class="line">  String[] fc = &#123;<span class="string">&quot;hello world&quot;</span>,</span><br><span class="line">          <span class="string">&quot;hello me&quot;</span>,</span><br><span class="line">          <span class="string">&quot;hello fork&quot;</span>,</span><br><span class="line">          <span class="string">&quot;hello join&quot;</span>,</span><br><span class="line">          <span class="string">&quot;fork join in world&quot;</span>&#125;;</span><br><span class="line">  <span class="comment">//创建ForkJoin线程池    </span></span><br><span class="line">  <span class="type">ForkJoinPool</span> <span class="variable">fjp</span> <span class="operator">=</span> </span><br><span class="line">      <span class="keyword">new</span> <span class="title class_">ForkJoinPool</span>(<span class="number">3</span>);</span><br><span class="line">  <span class="comment">//创建任务    </span></span><br><span class="line">  <span class="type">MR</span> <span class="variable">mr</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MR</span>(</span><br><span class="line">      fc, <span class="number">0</span>, fc.length);  </span><br><span class="line">  <span class="comment">//启动任务    </span></span><br><span class="line">  Map&lt;String, Long&gt; result = </span><br><span class="line">      fjp.invoke(mr);</span><br><span class="line">  <span class="comment">//输出结果    </span></span><br><span class="line">  result.forEach((k, v)-&gt;</span><br><span class="line">    System.out.println(k+<span class="string">&quot;:&quot;</span>+v));</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//MR模拟类</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">MR</span> <span class="keyword">extends</span> </span><br><span class="line">  <span class="title class_">RecursiveTask</span>&lt;Map&lt;String, Long&gt;&gt; &#123;</span><br><span class="line">  <span class="keyword">private</span> String[] fc;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">int</span> start, end;</span><br><span class="line">  <span class="comment">//构造函数</span></span><br><span class="line">  MR(String[] fc, <span class="type">int</span> fr, <span class="type">int</span> to)&#123;</span><br><span class="line">    <span class="built_in">this</span>.fc = fc;</span><br><span class="line">    <span class="built_in">this</span>.start = fr;</span><br><span class="line">    <span class="built_in">this</span>.end = to;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="meta">@Override</span> <span class="keyword">protected</span> </span><br><span class="line">  Map&lt;String, Long&gt; <span class="title function_">compute</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (end - start == <span class="number">1</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> calc(fc[start]);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="type">int</span> <span class="variable">mid</span> <span class="operator">=</span> (start+end)/<span class="number">2</span>;</span><br><span class="line">      <span class="type">MR</span> <span class="variable">mr1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MR</span>(</span><br><span class="line">          fc, start, mid);</span><br><span class="line">      mr1.fork();</span><br><span class="line">      <span class="type">MR</span> <span class="variable">mr2</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MR</span>(</span><br><span class="line">          fc, mid, end);</span><br><span class="line">      <span class="comment">//计算子任务，并返回合并的结果    </span></span><br><span class="line">      <span class="keyword">return</span> merge(mr2.compute(),</span><br><span class="line">          mr1.join());</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//合并结果</span></span><br><span class="line">  <span class="keyword">private</span> Map&lt;String, Long&gt; <span class="title function_">merge</span><span class="params">(</span></span><br><span class="line"><span class="params">      Map&lt;String, Long&gt; r1, </span></span><br><span class="line"><span class="params">      Map&lt;String, Long&gt; r2)</span> &#123;</span><br><span class="line">    Map&lt;String, Long&gt; result = </span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    result.putAll(r1);</span><br><span class="line">    <span class="comment">//合并结果</span></span><br><span class="line">    r2.forEach((k, v) -&gt; &#123;</span><br><span class="line">      <span class="type">Long</span> <span class="variable">c</span> <span class="operator">=</span> result.get(k);</span><br><span class="line">      <span class="keyword">if</span> (c != <span class="literal">null</span>)</span><br><span class="line">        result.put(k, c+v);</span><br><span class="line">      <span class="keyword">else</span> </span><br><span class="line">        result.put(k, v);</span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//统计单词数量</span></span><br><span class="line">  <span class="keyword">private</span> Map&lt;String, Long&gt; </span><br><span class="line">      <span class="title function_">calc</span><span class="params">(String line)</span> &#123;</span><br><span class="line">    Map&lt;String, Long&gt; result =</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    <span class="comment">//分割单词    </span></span><br><span class="line">    String [] words = </span><br><span class="line">        line.split(<span class="string">&quot;\\s+&quot;</span>);</span><br><span class="line">    <span class="comment">//统计单词数量    </span></span><br><span class="line">    <span class="keyword">for</span> (String w : words) &#123;</span><br><span class="line">      <span class="type">Long</span> <span class="variable">v</span> <span class="operator">=</span> result.get(w);</span><br><span class="line">      <span class="keyword">if</span> (v != <span class="literal">null</span>) </span><br><span class="line">        result.put(w, v+<span class="number">1</span>);</span><br><span class="line">      <span class="keyword">else</span></span><br><span class="line">        result.put(w, <span class="number">1L</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>Fork&#x2F;Join并行计算框架主要解决的是分治任务。分治的核心思想是“分而治之”：将一个大的任务拆分成小的子任务去解决，然后再把子任务的结果聚合起来从而得到最终结果。这个过程非常类似于大数据处理中的MapReduce，所以你可以把Fork&#x2F;Join看作单机版的MapReduce。</p>
+<p>Fork&#x2F;Join并行计算框架的核心组件是ForkJoinPool。ForkJoinPool支持任务窃取机制，能够让所有线程的工作量基本均衡，不会出现有的线程很忙，而有的线程很闲的状况，所以性能很好。Java 1.8提供的Stream API里面并行流也是以ForkJoinPool为基础的。不过需要你注意的是，默认情况下所有的并行流计算都共享一个ForkJoinPool，这个共享的ForkJoinPool默认的线程数是CPU的核数；如果所有的并行流计算都是CPU密集型计算的话，完全没有问题，但是如果存在I&#x2F;O密集型的并行流计算，那么很可能会因为一个很慢的I&#x2F;O计算而拖慢整个系统的性能。所以<strong>建议用不同的ForkJoinPool执行不同类型的计算任务</strong>。</p>
+<p>如果你对ForkJoinPool详细的实现细节感兴趣，也可以参考<a target="_blank" rel="noopener" href="http://gee.cs.oswego.edu/dl/papers/fj.pdf">Doug Lea的论文</a>。</p>
+<h1 id="课后思考"><a href="#课后思考" class="headerlink" title="课后思考"></a>课后思考</h1><p>对于一个CPU密集型计算程序，在单核CPU上，使用Fork&#x2F;Join并行计算框架是否能够提高性能呢？</p>
+<p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" rel="tag"># Java并发编程实战</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/07/25%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-CompletionService%EF%BC%9A%E5%A6%82%E4%BD%95%E6%89%B9%E9%87%8F%E6%89%A7%E8%A1%8C%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1%EF%BC%9F/" rel="prev" title="25并发工具类-CompletionService：如何批量执行异步任务？">
+                  <i class="fa fa-angle-left"></i> 25并发工具类-CompletionService：如何批量执行异步任务？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/07/27%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/" rel="next" title="27并发工具类-并发工具类模块热点问题答疑">
+                  27并发工具类-并发工具类模块热点问题答疑 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Golang是一门号称从语言层面支持并发的编程语言，支持并发是Golang一个非常重要的特性。在上一篇文章《44 | 协程：更轻量级的线程》中我们介绍过，Golang支持协程，协程可以类比Java中的线程，解决并发问题的难点就在于线程（协程）之间的协作。 那Golang是如何解决协作问题的呢？">
+<meta property="og:type" content="article">
+<meta property="og:title" content="45其他并发模型-CSP模型：Golang的主力队员">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/08/45%E5%85%B6%E4%BB%96%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B-CSP%E6%A8%A1%E5%9E%8B%EF%BC%9AGolang%E7%9A%84%E4%B8%BB%E5%8A%9B%E9%98%9F%E5%91%98/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="Golang是一门号称从语言层面支持并发的编程语言，支持并发是Golang一个非常重要的特性。在上一篇文章《44 | 协程：更轻量级的线程》中我们介绍过，Golang支持协程，协程可以类比Java中的线程，解决并发问题的难点就在于线程（协程）之间的协作。 那Golang是如何解决协作问题的呢？">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-08-15T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-08-15T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Java并发编程实战">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/08/45%E5%85%B6%E4%BB%96%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B-CSP%E6%A8%A1%E5%9E%8B%EF%BC%9AGolang%E7%9A%84%E4%B8%BB%E5%8A%9B%E9%98%9F%E5%91%98/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/08/45%E5%85%B6%E4%BB%96%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B-CSP%E6%A8%A1%E5%9E%8B%EF%BC%9AGolang%E7%9A%84%E4%B8%BB%E5%8A%9B%E9%98%9F%E5%91%98/","path":"article/2023/08/45其他并发模型-CSP模型：Golang的主力队员/","title":"45其他并发模型-CSP模型：Golang的主力队员"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>45其他并发模型-CSP模型：Golang的主力队员 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFCSP%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">什么是CSP模型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CSP%E6%A8%A1%E5%9E%8B%E4%B8%8E%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">CSP模型与生产者-消费者模式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CSP%E6%A8%A1%E5%9E%8B%E4%B8%8EActor%E6%A8%A1%E5%9E%8B%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">3.</span> <span class="nav-text">CSP模型与Actor模型的区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/08/45%E5%85%B6%E4%BB%96%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B-CSP%E6%A8%A1%E5%9E%8B%EF%BC%9AGolang%E7%9A%84%E4%B8%BB%E5%8A%9B%E9%98%9F%E5%91%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="45其他并发模型-CSP模型：Golang的主力队员 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          45其他并发模型-CSP模型：Golang的主力队员
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-08-15 08:00:00" itemprop="dateCreated datePublished" datetime="2023-08-15T08:00:00+08:00">2023-08-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">Java并发编程实战</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>Golang是一门号称从语言层面支持并发的编程语言，支持并发是Golang一个非常重要的特性。在上一篇文章<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/99787">《44 | 协程：更轻量级的线程》</a>中我们介绍过，Golang支持协程，协程可以类比Java中的线程，解决并发问题的难点就在于线程（协程）之间的协作。</p>
+<p>那Golang是如何解决协作问题的呢？</p>
+<span id="more"></span>
+
+<p>总的来说，Golang提供了两种不同的方案：一种方案支持协程之间以共享内存的方式通信，Golang提供了管程和原子类来对协程进行同步控制，这个方案与Java语言类似；另一种方案支持协程之间以消息传递（Message-Passing）的方式通信，本质上是要避免共享，Golang的这个方案是基于<strong>CSP</strong>（Communicating Sequential Processes）模型实现的。Golang比较推荐的方案是后者。</p>
+<h1 id="什么是CSP模型"><a href="#什么是CSP模型" class="headerlink" title="什么是CSP模型"></a>什么是CSP模型</h1><p>我们在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/98903">《42 | Actor模型：面向对象原生的并发模型》</a>中介绍了Actor模型，Actor模型中Actor之间就是不能共享内存的，彼此之间通信只能依靠消息传递的方式。Golang实现的CSP模型和Actor模型看上去非常相似，Golang程序员中有句格言：“<strong>不要以共享内存方式通信，要以通信方式共享内存</strong>（Don’t communicate by sharing memory, share memory by communicating）。”虽然Golang中协程之间，也能够以共享内存的方式通信，但是并不推荐；而推荐的以通信的方式共享内存，实际上指的就是协程之间以消息传递方式来通信。</p>
+<p>下面我们先结合一个简单的示例，看看Golang中协程之间是如何以消息传递的方式实现通信的。我们示例的目标是打印从1累加到100亿的结果，如果使用单个协程来计算，大概需要4秒多的时间。单个协程，只能用到CPU中的一个核，为了提高计算性能，我们可以用多个协程来并行计算，这样就能发挥多核的优势了。</p>
+<p>在下面的示例代码中，我们用了4个子协程来并行执行，这4个子协程分别计算[1, 25亿]、(25亿, 50亿]、(50亿, 75亿]、(75亿, 100亿]，最后再在主协程中汇总4个子协程的计算结果。主协程要汇总4个子协程的计算结果，势必要和4个子协程之间通信，<strong>Golang中协程之间通信推荐的是使用channel</strong>，channel你可以形象地理解为现实世界里的管道。另外，calc()方法的返回值是一个只能接收数据的channel ch，它创建的子协程会把计算结果发送到这个ch中，而主协程也会将这个计算结果通过ch读取出来。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="comment">// 变量声明</span></span><br><span class="line">	<span class="keyword">var</span> result, i <span class="type">uint64</span></span><br><span class="line">    <span class="comment">// 单个协程执行累加操作</span></span><br><span class="line">	start := time.Now()</span><br><span class="line">	<span class="keyword">for</span> i = <span class="number">1</span>; i &lt;= <span class="number">10000000000</span>; i++ &#123;</span><br><span class="line">		result += i</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 统计计算耗时</span></span><br><span class="line">	elapsed := time.Since(start)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;执行消耗的时间为:&quot;</span>, elapsed)</span><br><span class="line">	fmt.Println(<span class="string">&quot;, result:&quot;</span>, result)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 4个协程共同执行累加操作</span></span><br><span class="line">	start = time.Now()</span><br><span class="line">	ch1 := calc(<span class="number">1</span>, <span class="number">2500000000</span>)</span><br><span class="line">	ch2 := calc(<span class="number">2500000001</span>, <span class="number">5000000000</span>)</span><br><span class="line">	ch3 := calc(<span class="number">5000000001</span>, <span class="number">7500000000</span>)</span><br><span class="line">	ch4 := calc(<span class="number">7500000001</span>, <span class="number">10000000000</span>)</span><br><span class="line">    <span class="comment">// 汇总4个协程的累加结果</span></span><br><span class="line">	result = &lt;-ch1 + &lt;-ch2 + &lt;-ch3 + &lt;-ch4</span><br><span class="line">	<span class="comment">// 统计计算耗时</span></span><br><span class="line">	elapsed = time.Since(start)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;执行消耗的时间为:&quot;</span>, elapsed)</span><br><span class="line">	fmt.Println(<span class="string">&quot;, result:&quot;</span>, result)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 在协程中异步执行累加操作，累加结果通过channel传递</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">calc</span><span class="params">(from <span class="type">uint64</span>, to <span class="type">uint64</span>)</span></span> &lt;-<span class="keyword">chan</span> <span class="type">uint64</span> &#123;</span><br><span class="line">    <span class="comment">// channel用于协程间的通信</span></span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">uint64</span>)</span><br><span class="line">    <span class="comment">// 在协程中执行累加操作</span></span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		result := from</span><br><span class="line">		<span class="keyword">for</span> i := from + <span class="number">1</span>; i &lt;= to; i++ &#123;</span><br><span class="line">			result += i</span><br><span class="line">		&#125;</span><br><span class="line">        <span class="comment">// 将结果写入channel</span></span><br><span class="line">		ch &lt;- result</span><br><span class="line">	&#125;()</span><br><span class="line">    <span class="comment">// 返回结果是用于通信的channel</span></span><br><span class="line">	<span class="keyword">return</span> ch</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="CSP模型与生产者-消费者模式"><a href="#CSP模型与生产者-消费者模式" class="headerlink" title="CSP模型与生产者-消费者模式"></a>CSP模型与生产者-消费者模式</h1><p>你可以简单地把Golang实现的CSP模型类比为生产者-消费者模式，而channel可以类比为生产者-消费者模式中的阻塞队列。不过，需要注意的是Golang中channel的容量可以是0，容量为0的channel在Golang中被称为<strong>无缓冲的channel</strong>，容量大于0的则被称为<strong>有缓冲的channel</strong>。</p>
+<p>无缓冲的channel类似于Java中提供的SynchronousQueue，主要用途是在两个协程之间做数据交换。比如上面累加器的示例代码中，calc()方法内部创建的channel就是无缓冲的channel。</p>
+<p>而创建一个有缓冲的channel也很简单，在下面的示例代码中，我们创建了一个容量为4的channel，同时创建了4个协程作为生产者、4个协程作为消费者。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个容量为4的channel </span></span><br><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>, <span class="number">4</span>)</span><br><span class="line"><span class="comment">// 创建4个协程，作为生产者</span></span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">4</span>; i++ &#123;</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		ch &lt;- <span class="number">7</span></span><br><span class="line">	&#125;()</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 创建4个协程，作为消费者</span></span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">4</span>; i++ &#123;</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">    	o := &lt;-ch</span><br><span class="line">    	fmt.Println(<span class="string">&quot;received:&quot;</span>, o)</span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Golang中的channel是语言层面支持的，所以可以使用一个左向箭头（&lt;-）来完成向channel发送数据和读取数据的任务，使用上还是比较简单的。Golang中的channel是支持双向传输的，所谓双向传输，指的是一个协程既可以通过它发送数据，也可以通过它接收数据。</p>
+<p>不仅如此，Golang中还可以将一个双向的channel变成一个单向的channel，在累加器的例子中，calc()方法中创建了一个双向channel，但是返回的就是一个只能接收数据的单向channel，所以主协程中只能通过它接收数据，而不能通过它发送数据，如果试图通过它发送数据，编译器会提示错误。对比之下，双向变单向的功能，如果以SDK方式实现，还是很困难的。</p>
+<h1 id="CSP模型与Actor模型的区别"><a href="#CSP模型与Actor模型的区别" class="headerlink" title="CSP模型与Actor模型的区别"></a>CSP模型与Actor模型的区别</h1><p>同样是以消息传递的方式来避免共享，那Golang实现的CSP模型和Actor模型有什么区别呢？</p>
+<p>第一个最明显的区别就是：<strong>Actor模型中没有channel</strong>。虽然Actor模型中的 mailbox 和 channel 非常像，看上去都像个FIFO队列，但是区别还是很大的。Actor模型中的mailbox对于程序员来说是“透明”的，mailbox明确归属于一个特定的Actor，是Actor模型中的内部机制；而且Actor之间是可以直接通信的，不需要通信中介。但CSP模型中的 channel 就不一样了，它对于程序员来说是“可见”的，是通信的中介，传递的消息都是直接发送到 channel 中的。</p>
+<p>第二个区别是：Actor模型中发送消息是<strong>非阻塞</strong>的，而CSP模型中是<strong>阻塞</strong>的。Golang实现的CSP模型，channel是一个阻塞队列，当阻塞队列已满的时候，向channel中发送数据，会导致发送消息的协程阻塞。</p>
+<p>第三个区别则是关于消息送达的。在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/98903">《42 | Actor模型：面向对象原生的并发模型》</a>这篇文章中，我们介绍过Actor模型理论上不保证消息百分百送达，而在Golang实现的<strong>CSP模型中，是能保证消息百分百送达的</strong>。不过这种百分百送达也是有代价的，那就是有可能会导致<strong>死锁</strong>。</p>
+<p>比如，下面这段代码就存在死锁问题，在主协程中，我们创建了一个无缓冲的channel ch，然后从ch中接收数据，此时主协程阻塞，main()方法中的主协程阻塞，整个应用就阻塞了。这就是Golang中最简单的一种死锁。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="comment">// 创建一个无缓冲的channel  </span></span><br><span class="line">    ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>)</span><br><span class="line">    <span class="comment">// 主协程会阻塞在此处，发生死锁</span></span><br><span class="line">    &lt;- ch </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>Golang中虽然也支持传统的共享内存的协程间通信方式，但是推荐的还是使用CSP模型，以通信的方式共享内存。</p>
+<p>Golang中实现的CSP模型功能上还是很丰富的，例如支持select语句，select语句类似于网络编程里的多路复用函数select()，只要有一个channel能够发送成功或者接收到数据就可以跳出阻塞状态。鉴于篇幅原因，我就点到这里，不详细介绍那么多了。</p>
+<p>CSP模型是托尼·霍尔（Tony Hoare）在1978年提出的，不过这个模型这些年一直都在发展，其理论远比Golang的实现复杂得多，如果你感兴趣，可以参考霍尔写的<a target="_blank" rel="noopener" href="http://www.usingcsp.com/cspbook.pdf">Communicating Sequential Processes</a>这本电子书。另外，霍尔在并发领域还有一项重要成就，那就是提出了霍尔管程模型，这个你应该很熟悉了，Java领域解决并发问题的理论基础就是它。</p>
+<p>Java领域可以借助第三方的类库<a target="_blank" rel="noopener" href="https://www.cs.kent.ac.uk/projects/ofa/jcsp/">JCSP</a>来支持CSP模型，相比Golang的实现，JCSP更接近理论模型，如果你感兴趣，可以下载学习。不过需要注意的是，JCSP并没有经过广泛的生产环境检验，所以并不建议你在生产环境中使用。</p>
+<p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" rel="tag"># Java并发编程实战</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/08/44%E5%85%B6%E4%BB%96%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B-%E5%8D%8F%E7%A8%8B%EF%BC%9A%E6%9B%B4%E8%BD%BB%E9%87%8F%E7%BA%A7%E7%9A%84%E7%BA%BF%E7%A8%8B/" rel="prev" title="44其他并发模型-协程：更轻量级的线程">
+                  <i class="fa fa-angle-left"></i> 44其他并发模型-协程：更轻量级的线程
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/08/46%E7%BB%93%E6%9D%9F%E8%AF%AD-%E5%8D%81%E5%B9%B4%E4%B9%8B%E5%90%8E%EF%BC%8C%E5%88%9D%E5%BF%83%E4%BE%9D%E6%97%A7/" rel="next" title="46结束语-十年之后，初心依旧">
+                  46结束语-十年之后，初心依旧 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

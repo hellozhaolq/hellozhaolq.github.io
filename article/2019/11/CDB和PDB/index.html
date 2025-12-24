@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="本文 oracle 版本 12.2.0.1.0 。 Oracle 12C(2013年发布)后采用多租户架构（Multitenant architecture），引入了CDB（container database）与PDB（pluggable database），12.2后引入Application Container，一个CDB可以承载多个PDB或Application Container。 默认">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CDB和PDB">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="本文 oracle 版本 12.2.0.1.0 。 Oracle 12C(2013年发布)后采用多租户架构（Multitenant architecture），引入了CDB（container database）与PDB（pluggable database），12.2后引入Application Container，一个CDB可以承载多个PDB或Application Container。 默认">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/17061408243738.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202205647183.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202210248078.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202210658009.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202211246482.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202211734854.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202212755554.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191208015621654.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191208020616949.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202214510386.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202214755463.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202215122779.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191203205741176.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202215318684.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202215944249.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202220148279.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202220224291.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202220515721.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191202220536473.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/image-20191130132834756.png">
+<meta property="article:published_time" content="2019-11-30T04:42:16.000Z">
+<meta property="article:modified_time" content="2019-11-30T04:42:16.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Oracle">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/17061408243738.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/","path":"article/2019/11/CDB和PDB/","title":"CDB和PDB"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>CDB和PDB | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">基本概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA"><span class="nav-number">2.</span> <span class="nav-text">创建</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BACDB"><span class="nav-number">2.1.</span> <span class="nav-text">创建CDB</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B8%E5%9E%8B%E9%85%8D%E7%BD%AE"><span class="nav-number">2.1.1.</span> <span class="nav-text">典型配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AB%98%E7%BA%A7%E9%85%8D%E7%BD%AE"><span class="nav-number">2.1.2.</span> <span class="nav-text">高级配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAPDB"><span class="nav-number">2.2.</span> <span class="nav-text">创建PDB</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5"><span class="nav-number">3.</span> <span class="nav-text">连接</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#CDB%E5%92%8CPDB%E6%9C%89%E5%90%84%E8%87%AA%E7%9A%84sys%E8%B4%A6%E5%8F%B7%EF%BC%9F"><span class="nav-number">3.1.</span> <span class="nav-text">CDB和PDB有各自的sys账号？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5CDB"><span class="nav-number">3.2.</span> <span class="nav-text">连接CDB</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5PDB"><span class="nav-number">3.3.</span> <span class="nav-text">连接PDB</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E4%B8%8E%E5%85%B3%E9%97%AD"><span class="nav-number">4.</span> <span class="nav-text">启动与关闭</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E5%85%B3%E9%97%ADCDB"><span class="nav-number">4.1.</span> <span class="nav-text">启动关闭CDB</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E5%85%B3%E9%97%ADPDB"><span class="nav-number">4.2.</span> <span class="nav-text">启动关闭PDB</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E5%90%AF%E5%8A%A8%E6%89%80%E6%9C%89PDB"><span class="nav-number">4.3.</span> <span class="nav-text">自动启动所有PDB</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8SQL"><span class="nav-number">5.</span> <span class="nav-text">常用SQL</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/11/CDB%E5%92%8CPDB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="CDB和PDB | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CDB和PDB
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-11-30 12:42:16" itemprop="dateCreated datePublished" datetime="2019-11-30T12:42:16+08:00">2019-11-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>本文 oracle 版本 12.2.0.1.0 。</p>
+<p>Oracle 12C(2013年发布)后采用多租户架构（Multitenant architecture），引入了CDB（container database）与PDB（pluggable database），12.2后引入Application Container，一个CDB可以承载多个PDB或Application Container。</p>
+<p>默认安装后会创建一个ORCL实例、一个CDB和一个ORCLPDB(12.2后)，Application Container是可选的。</p>
+<p>假定我们通过 Net Manager 配置了两个网络服务名 orcl 和 orclpdb（不是监听哦），在SQL Plus分别用system(或system@orcl) 和 system@orclpdb 登录，则可以连接到CDB或PDB。Sqlplus默认连接CDB。</p>
+<h1 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h1><p>Multitenant Environment：多租户环境</p>
+<p>CDB：CDB全称为 Container Database ，容器数据库。（公用用户）</p>
+<p>PDB：PDB全称为 Pluggable Database ，可插拔数据库。（本地用户）</p>
+<span id="more"></span>
+
+<p>关系如下图：</p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/17061408243738.png" alt="img"></p>
+<p>通过上图我们可以清楚的看到CDB的组成部分：</p>
+<p>1、ROOT：<strong>ROOT又叫CDB$ROOT, 存储着ORACLE提供的元数据和Common User（公用用户）</strong>,元数据的一个例子是ORACLE提供的PL&#x2F;SQL包的源代码，Common User 是指在每个容器中都存在的用户。 一个CDB只能有一个根。</p>
+<p>2、SEED：Seed又叫PDB$SEED,<strong>这个是你创建PDBS数据库的模板</strong>，你不能在Seed中添加或修改一个对象。一个CDB中有且只能有一个Seed。这个概念，个人感觉非常类似SQL SERVER中的model数据库</p>
+<p>3、PDB：<strong>PDB展现给用户和应用的形象就像是一个没有CDB的普通数据库一样</strong>。例 如，一个PDB可以包括支持一个特定应用程序所需的所有数据和代码。PDB 完全向后兼容Oracle12c之前版本的所有数据库。</p>
+<p>这些组件中的每一个都可以被称为一个容器。因此，<strong>ROOT(根)是一个容器，Seed(种子)是一个容器，每个PDB是一个容器</strong>。每个容器在CDB中都有一个独一无二的的ID和名称。</p>
+<p><font color="red"><strong>我们可以很轻松的向CDB中插入一个PDB或者从CDB中拔出一个PDB。当我们将一个PDB插入CDB中时，相当于将这个PDB与CDB连接起来。反之则解除关系。</strong></font></p>
+<p>这大大方便了数据的迁移。我们可以很方便的将一个特定的PDB从一个CDB挪到另一个CDB上面而不改变里面的任何数据和架构。当然，一个PDB只能在同一时间内插入一个CDB而不是多个。每一个PDB都有自己独一无二的全局唯一标识符(GUID)来预防PDB的错乱使用。</p>
+<h1 id="创建"><a href="#创建" class="headerlink" title="创建"></a>创建</h1><h2 id="创建CDB"><a href="#创建CDB" class="headerlink" title="创建CDB"></a>创建CDB</h2><p>PDB包含在CDB中，所以，要创建PDB，必须<font color="red"><strong>先创建CDB</strong></font>。一台机器上可以有多个CDB。Oracle软件安装完成后，就可以创建CDB</p>
+<p>数据库配置助手（Database Configuration Assistant）简称DBCA，在12c中的功能有：创建数据库、配置现有数据库、删除数据库、管理数据库模板、管理可插入数据库、Oracle RAC 数据库实例管理。</p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202205647183.png" alt="image-20191202205647183"></p>
+<h3 id="典型配置"><a href="#典型配置" class="headerlink" title="典型配置"></a>典型配置</h3><p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202210248078.png" alt="image-20191202210248078"></p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202210658009.png" alt="image-20191202210658009"></p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202211246482.png" alt="image-20191202211246482"></p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202211734854.png" alt="image-20191202211734854"></p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202212755554.png" alt="image-20191202212755554"></p>
+<h3 id="高级配置"><a href="#高级配置" class="headerlink" title="高级配置"></a>高级配置</h3><p>以下是部分截图，其他操作请参考 <strong>Oracle安装及客户端连接配置</strong> 。</p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191208015621654.png" alt="image-20191208015621654"></p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191208020616949.png" alt="image-20191208020616949"></p>
+<h2 id="创建PDB"><a href="#创建PDB" class="headerlink" title="创建PDB"></a>创建PDB</h2><p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202214510386.png" alt="image-20191202214510386"></p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202214755463.png" alt="image-20191202214755463"></p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202215122779.png" alt="image-20191202215122779"></p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191203205741176.png" alt="image-20191203205741176"></p>
+<p>若所选数据库是容器数据库就不会出现上图提示，而是进入下图：</p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202215318684.png" alt="image-20191202215318684"></p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202215944249.png" alt="image-20191202215944249"></p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202220148279.png" alt="image-20191202220148279"></p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202220224291.png" alt="image-20191202220224291"></p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202220515721.png" alt="image-20191202220515721"></p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191202220536473.png" alt="image-20191202220536473"></p>
+<h1 id="连接"><a href="#连接" class="headerlink" title="连接"></a>连接</h1><h2 id="CDB和PDB有各自的sys账号？"><a href="#CDB和PDB有各自的sys账号？" class="headerlink" title="CDB和PDB有各自的sys账号？"></a>CDB和PDB有各自的sys账号？</h2><h2 id="连接CDB"><a href="#连接CDB" class="headerlink" title="连接CDB"></a>连接CDB</h2><p><font color="red"><strong>Sqlplus默认连接CDB</strong></font> </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">sqlplus sys/passwd as sysdba <span class="comment"># 任意passwd</span></span><br><span class="line">sqlplus sys/ as sysdba </span><br><span class="line">sqlplus sys as sysdba </span><br><span class="line">sqlplus / as sysdba </span><br><span class="line">sqlplus /as sysdba </span><br></pre></td></tr></table></figure>
+
+<p>计算机管理 &gt; 组 &gt; ora_dba组里的用户，无需输入用户和口令，直接以sysdba的身份登陆数据库。</p>
+<p><img src="/article/2019/11/CDB%E5%92%8CPDB/image-20191130132834756.png" alt="image-20191130132834756"></p>
+<h2 id="连接PDB"><a href="#连接PDB" class="headerlink" title="连接PDB"></a>连接PDB</h2><p>pdb可以通过在CDB中alter session container</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> session <span class="keyword">set</span> container<span class="operator">=</span>pdb1</span><br><span class="line"><span class="keyword">show</span> con_name</span><br></pre></td></tr></table></figure>
+
+<p>也可以直接通过tns方式（如下）登录</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlplus sys/oracle@pdb1 as sysdba</span><br></pre></td></tr></table></figure>
+
+<p>其中 tnsnames.ora 添加</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">PDB1 =</span><br><span class="line">  (DESCRIPTION =</span><br><span class="line">    (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))</span><br><span class="line">    (CONNECT_DATA =</span><br><span class="line">      (SERVER = DEDICATED)</span><br><span class="line">      (SERVICE_NAME = pdb1)</span><br><span class="line">    )</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">PDB2 =</span><br><span class="line">  (DESCRIPTION =</span><br><span class="line">    (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))</span><br><span class="line">    (CONNECT_DATA =</span><br><span class="line">      (SERVICE_NAME = pdb2)</span><br><span class="line">    )</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h1 id="启动与关闭"><a href="#启动与关闭" class="headerlink" title="启动与关闭"></a>启动与关闭</h1><h2 id="启动关闭CDB"><a href="#启动关闭CDB" class="headerlink" title="启动关闭CDB"></a>启动关闭CDB</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; show con_name <span class="comment"># 查看容器名称和ID</span></span><br><span class="line"></span><br><span class="line">CON_NAME</span><br><span class="line">------------------------------</span><br><span class="line">CDB<span class="variable">$ROOT</span></span><br><span class="line">SQL&gt; shutdown immediate</span><br><span class="line">数据库已经关闭。</span><br><span class="line">已经卸载数据库。</span><br><span class="line">ORACLE 例程已经关闭。</span><br><span class="line">SQL&gt; startup</span><br><span class="line">ORACLE 例程已经启动。</span><br><span class="line"></span><br><span class="line">Total System Global Area 5117050880 bytes</span><br><span class="line">Fixed Size                  8929496 bytes</span><br><span class="line">Variable Size            1140854568 bytes</span><br><span class="line">Database Buffers         3959422976 bytes</span><br><span class="line">Redo Buffers                7843840 bytes</span><br><span class="line">数据库装载完毕。</span><br><span class="line">数据库已经打开。</span><br><span class="line">SQL&gt; <span class="built_in">set</span> linesize 2000;</span><br><span class="line">SQL&gt; <span class="keyword">select</span> con_id,dbid,NAME,OPEN_MODE from v<span class="variable">$pdbs</span>;</span><br><span class="line"></span><br><span class="line">    CON_ID             DBID      NAME              OPEN_MODE</span><br><span class="line">---------- ---------- -----------------------------------------------------------------</span><br><span class="line">         2       4284962797      PDB<span class="variable">$SEED</span>          READ ONLY</span><br><span class="line">         3       2320597118      ORCLPDB           MOUNTED</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>从上面的操作中可以看到数据库启动的时候所有的PDBs的状态为MOUNTED</p>
+<h2 id="启动关闭PDB"><a href="#启动关闭PDB" class="headerlink" title="启动关闭PDB"></a>启动关闭PDB</h2><p>pdb的管理可以在cdb中进行也可以在pdb中进行,如果是cdb中进行,需要PLUGGABLE关键字,如果是在pdb中直接和普通数据库一样</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; show con_name <span class="comment"># 查看容器名称和ID</span></span><br><span class="line"></span><br><span class="line">CON_NAME</span><br><span class="line">------------------------------</span><br><span class="line">CDB<span class="variable">$ROOT</span></span><br><span class="line">SQL&gt; <span class="keyword">select</span> con_id,dbid,NAME,OPEN_MODE from v<span class="variable">$pdbs</span>;</span><br><span class="line"></span><br><span class="line">    CON_ID             DBID      NAME              OPEN_MODE</span><br><span class="line">---------- ---------- -----------------------------------------------------------------</span><br><span class="line">         2       4284962797      PDB<span class="variable">$SEED</span>          READ ONLY</span><br><span class="line">         3       2320597118      ORCLPDB           MOUNTED</span><br><span class="line"></span><br><span class="line">SQL&gt; alter pluggable database orclpdb open;</span><br><span class="line"></span><br><span class="line">插接式数据库已变更。</span><br><span class="line"></span><br><span class="line">SQL&gt; <span class="keyword">select</span> con_id,dbid,NAME,OPEN_MODE from v<span class="variable">$pdbs</span>;</span><br><span class="line"></span><br><span class="line">    CON_ID             DBID      NAME              OPEN_MODE</span><br><span class="line">---------- ---------- -----------------------------------------------------------------</span><br><span class="line">         2       4284962797      PDB<span class="variable">$SEED</span>          READ ONLY</span><br><span class="line">         3       2320597118      ORCLPDB           READ WRITE</span><br><span class="line"></span><br><span class="line">SQL&gt; alter pluggable database orclpdb close;</span><br><span class="line"></span><br><span class="line">插接式数据库已变更。</span><br><span class="line"></span><br><span class="line">SQL&gt; <span class="keyword">select</span> con_id,dbid,NAME,OPEN_MODE from v<span class="variable">$pdbs</span>;</span><br><span class="line"></span><br><span class="line">    CON_ID             DBID      NAME              OPEN_MODE</span><br><span class="line">---------- ---------- -----------------------------------------------------------------</span><br><span class="line">         2       4284962797      PDB<span class="variable">$SEED</span>          READ ONLY</span><br><span class="line">         3       2320597118      ORCLPDB           MOUNTED</span><br><span class="line"></span><br><span class="line">SQL&gt; alter pluggable database all open; <span class="comment"># 启动所有</span></span><br><span class="line"></span><br><span class="line">插接式数据库已变更。</span><br><span class="line"></span><br><span class="line">SQL&gt; <span class="keyword">select</span> con_id,dbid,NAME,OPEN_MODE from v<span class="variable">$pdbs</span>;</span><br><span class="line"></span><br><span class="line">    CON_ID             DBID      NAME              OPEN_MODE</span><br><span class="line">---------- ---------- -----------------------------------------------------------------</span><br><span class="line">         2       4284962797      PDB<span class="variable">$SEED</span>          READ ONLY</span><br><span class="line">         3       2320597118      ORCLPDB           READ WRITE</span><br><span class="line"></span><br><span class="line">SQL&gt; alter pluggable database all close; <span class="comment"># 关闭所有</span></span><br><span class="line"></span><br><span class="line">插接式数据库已变更。</span><br><span class="line"></span><br><span class="line">SQL&gt; <span class="keyword">select</span> con_id,dbid,NAME,OPEN_MODE from v<span class="variable">$pdbs</span>;</span><br><span class="line"></span><br><span class="line">    CON_ID             DBID      NAME              OPEN_MODE</span><br><span class="line">---------- ---------- -----------------------------------------------------------------</span><br><span class="line">         2       4284962797      PDB<span class="variable">$SEED</span>          READ ONLY</span><br><span class="line">         3       2320597118      ORCLPDB           MOUNTED</span><br><span class="line"></span><br><span class="line">SQL&gt; alter session <span class="built_in">set</span> container=orclpdb ; <span class="comment"># 切换</span></span><br><span class="line"></span><br><span class="line">会话已更改。</span><br><span class="line"></span><br><span class="line">SQL&gt; <span class="keyword">select</span> con_id,dbid,NAME,OPEN_MODE from v<span class="variable">$pdbs</span>;</span><br><span class="line"></span><br><span class="line">    CON_ID             DBID      NAME              OPEN_MODE</span><br><span class="line">---------- ---------- -----------------------------------------------------------------</span><br><span class="line">         3       2320597118      ORCLPDB           MOUNTED</span><br><span class="line"></span><br><span class="line">SQL&gt; startup</span><br><span class="line">插接式数据库已打开。</span><br><span class="line">SQL&gt; <span class="keyword">select</span> con_id,dbid,NAME,OPEN_MODE from v<span class="variable">$pdbs</span>;</span><br><span class="line"></span><br><span class="line">    CON_ID             DBID      NAME              OPEN_MODE</span><br><span class="line">---------- ---------- -----------------------------------------------------------------</span><br><span class="line">         3       2320597118      ORCLPDB           READ WRITE</span><br><span class="line"></span><br><span class="line">SQL&gt; shutdown</span><br><span class="line">插接式数据库已关闭。</span><br><span class="line">SQL&gt; <span class="keyword">select</span> con_id,dbid,NAME,OPEN_MODE from v<span class="variable">$pdbs</span>;</span><br><span class="line"></span><br><span class="line">    CON_ID             DBID      NAME              OPEN_MODE</span><br><span class="line">---------- ---------- -----------------------------------------------------------------</span><br><span class="line">         3       2320597118      ORCLPDB           MOUNTED</span><br><span class="line"></span><br><span class="line">SQL&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="自动启动所有PDB"><a href="#自动启动所有PDB" class="headerlink" title="自动启动所有PDB"></a>自动启动所有PDB</h2><p>从上面的操作中可以看到数据库启动的时候所有的PDBs的状态为MOUNTED，在实际应用可以考虑增加如下的触发器使所有的PDBs都处于打开状态。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">or</span> replace <span class="keyword">trigger</span> sys.open_all_pdbs after startup <span class="keyword">on</span> database</span><br><span class="line"><span class="keyword">begin</span></span><br><span class="line"><span class="keyword">execute</span> immediate <span class="string">&#x27;alter pluggable database all open&#x27;</span>;</span><br><span class="line"><span class="keyword">end</span> open_all_pdbs;</span><br></pre></td></tr></table></figure>
+
+<p>验证过程</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; create or replace trigger sys.open_all_pdbs after startup on database</span><br><span class="line"></span><br><span class="line">2 begin</span><br><span class="line"></span><br><span class="line">3 execute immediate <span class="string">&#x27;alter pluggable database all open&#x27;</span>;</span><br><span class="line"></span><br><span class="line">4 end open_all_pdbs;</span><br><span class="line"></span><br><span class="line">5 /</span><br><span class="line"></span><br><span class="line">触发器已创建</span><br><span class="line"></span><br><span class="line">SQL&gt; shutdown</span><br><span class="line"></span><br><span class="line">数据库已经关闭。</span><br><span class="line"></span><br><span class="line">已经卸载数据库。</span><br><span class="line"></span><br><span class="line">ORACLE 例程已经关闭。</span><br><span class="line"></span><br><span class="line">SQL&gt; startup</span><br><span class="line"></span><br><span class="line">ORACLE 例程已经启动。</span><br><span class="line"></span><br><span class="line">Total System Global Area 5044088832 bytes</span><br><span class="line"></span><br><span class="line">Fixed Size 2413072 bytes</span><br><span class="line"></span><br><span class="line">Variable Size 1040190960 bytes</span><br><span class="line"></span><br><span class="line">Database Buffers 3992977408 bytes</span><br><span class="line"></span><br><span class="line">Redo Buffers 8507392 bytes</span><br><span class="line"></span><br><span class="line">数据库装载完毕。</span><br><span class="line"></span><br><span class="line">数据库已经打开。</span><br><span class="line"></span><br><span class="line">SQL&gt; <span class="keyword">select</span> con_id,dbid,NAME,OPEN_MODE from v<span class="variable">$pdbs</span>;</span><br><span class="line"></span><br><span class="line">CON_ID DBID NAME OPEN_MODE</span><br><span class="line"></span><br><span class="line">---------- ---------- ------------------------------ ----------</span><br><span class="line"></span><br><span class="line">2 4122484437 PDB<span class="variable">$SEED</span> READ ONLY</span><br><span class="line"></span><br><span class="line">3 3387525155 PDB1 READ WRITE</span><br><span class="line"></span><br><span class="line">4 3946119498 PDB2 READ WRITE</span><br><span class="line"></span><br><span class="line">SQL&gt;</span><br></pre></td></tr></table></figure>
+
+<h1 id="常用SQL"><a href="#常用SQL" class="headerlink" title="常用SQL"></a>常用SQL</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 查看数据库版本</span></span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> v$version;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 查询所有服务 吗？吗？吗？</span></span><br><span class="line"><span class="keyword">select</span> name,pdb <span class="keyword">from</span> v$services;</span><br><span class="line"></span><br><span class="line"># 查看当前所在的容器</span><br><span class="line"><span class="keyword">show</span> con_name;</span><br><span class="line"><span class="keyword">select</span> sys_context(<span class="string">&#x27;USERENV&#x27;</span>,<span class="string">&#x27;CON_NAME&#x27;</span>) <span class="keyword">from</span> dual;	<span class="comment">-- 使用sys_context查看属于哪个容器</span></span><br><span class="line"></span><br><span class="line"># 查看所有pdb及状态</span><br><span class="line"><span class="keyword">show</span> pdbs;</span><br><span class="line"><span class="keyword">select</span> con_id,dbid,guid,name,open_mode,restricted <span class="keyword">from</span> v$pdbs; <span class="comment">-- 通过视图查询</span></span><br><span class="line"></span><br><span class="line"># 切入container</span><br><span class="line"><span class="keyword">alter</span> session <span class="keyword">set</span> container<span class="operator">=</span>orclpdb; <span class="comment">-- 切换到ORCLPDB可拔插数据库</span></span><br><span class="line"><span class="keyword">alter</span> session <span class="keyword">set</span> container<span class="operator">=</span>CDB$ROOT; <span class="comment">-- 切回到CDB容器数据库</span></span><br><span class="line"></span><br><span class="line"># 启动PDB</span><br><span class="line"><span class="keyword">alter</span> pluggable database orclpdb <span class="keyword">open</span>; <span class="comment">-- 开启指定PDB</span></span><br><span class="line"><span class="keyword">alter</span> pluggable database <span class="keyword">all</span> <span class="keyword">open</span>; <span class="comment">-- 开启所有PDB</span></span><br><span class="line"><span class="keyword">alter</span> session <span class="keyword">set</span> container<span class="operator">=</span>orclpdb; <span class="comment">-- 切换到PDB进去开启数据库</span></span><br><span class="line">startup;</span><br><span class="line"></span><br><span class="line"># 关闭PDB</span><br><span class="line"><span class="keyword">alter</span> pluggable database orcl1 <span class="keyword">close</span>; <span class="comment">-- 关闭指定的PDB</span></span><br><span class="line"><span class="keyword">alter</span> pluggable database <span class="keyword">all</span> <span class="keyword">close</span>; <span class="comment">-- 关闭所有PDB</span></span><br><span class="line"><span class="keyword">alter</span> session <span class="keyword">set</span> container<span class="operator">=</span>orcl1; <span class="comment">-- 切换到PDB进去关闭数据库</span></span><br><span class="line">shutdown immediate;</span><br><span class="line"></span><br><span class="line"># 查看当前数据库名</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> db_name;</span><br><span class="line"><span class="keyword">select</span> name <span class="keyword">from</span> v$database; <span class="comment">-- 通过视图查询</span></span><br><span class="line"></span><br><span class="line"># 查看数据库实例名</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> instance_name;</span><br><span class="line"><span class="keyword">select</span> instance_name <span class="keyword">from</span> v$instance; <span class="comment">-- 通过视图查询</span></span><br><span class="line"></span><br><span class="line"># 查看数据库域名</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> db_domain;</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">value</span> <span class="keyword">from</span> v$<span class="keyword">parameter</span> <span class="keyword">where</span> name<span class="operator">=</span><span class="string">&#x27;db_domain&#x27;</span>;</span><br><span class="line"></span><br><span class="line"># 查看数据库服务名</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> service_name; <span class="comment">-- 第一次安装数据库勾选【创建为容器数据库】时，都是orcl.zhaolq.com，不理解</span></span><br><span class="line"></span><br><span class="line"># 查看全局数据库名</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> GLOBAL_NAME;</span><br></pre></td></tr></table></figure>
+
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p> <a target="_blank" rel="noopener" href="https://www.cnblogs.com/xqzt/p/4472146.html">CDB和PDB的创建、连接、启动、关闭</a> </p>
+<p> <a target="_blank" rel="noopener" href="http://oracle-base.com/articles/12c/multitenant-overview-container-database-cdb-12cr1.php">ORACLE-BASE - Multitenant : Overview of Container Databases (CDB) and Pluggable Databases (PDB)</a> </p>
+<p> <a target="_blank" rel="noopener" href="http://blog.csdn.net/zzvnzz/article/details/24840541">【ORACLE】ORACLE 12c PDB 基础 - 临渊羡鱼 - 博客频道 - CSDN.NET</a> </p>
+<p> <a target="_blank" rel="noopener" href="http://www.cnblogs.com/tzetze/p/3665903.html">CDB和PDB基本管理 - Ziyoo - 博客园</a> </p>
+<p> <a target="_blank" rel="noopener" href="http://www.xifenfei.com/4432.html">ORACLE 12C PDB 维护基础介绍 – 提供专业ORACLE技术咨询和支持@Phone:13429648788 - 惜分飞</a> </p>
+<p> <a target="_blank" rel="noopener" href="http://www.cnblogs.com/dingyingsi/p/3604789.html">Oracle 12c CDB PDB - 丁应思 - 博客园</a> </p>
+<p> <a target="_blank" rel="noopener" href="http://www.databi.cn/article-90-1.html">Oracle 12c入门第三讲: Oracle 12c基本体系结构 (3) pdb,cdb元数据关系 …,数据智能网,Oracle 12C</a> </p>
+<p> <a target="_blank" rel="noopener" href="http://www.searchdatabase.com.cn/showcontent_74389.htm">浅谈Oracle数据库12c PDB技术 - Oracle安装与升级 - TechTarget数据库</a> </p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Oracle/" rel="tag"># Oracle</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2019/11/Oracle%E7%9A%84spfile%E4%B8%8Epfile/" rel="prev" title="Oracle的spfile与pfile">
+                  <i class="fa fa-angle-left"></i> Oracle的spfile与pfile
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2019/11/Oracle%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%EF%BC%9ASGA%E3%80%81PGA%E3%80%81UGA/" rel="next" title="Oracle内存结构：SGA、PGA、UGA">
+                  Oracle内存结构：SGA、PGA、UGA <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

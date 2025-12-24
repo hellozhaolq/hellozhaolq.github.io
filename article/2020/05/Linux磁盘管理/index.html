@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="推荐链接：  菜鸟 Linux 磁盘管理   Linux磁盘管理—-分区格式化挂载fdisk、mkfs、mount  相关命令：  菜鸟 df 命令 、 df 命令 、 df (Unix) - 维基百科   菜鸟 du 命令 、 du 命令 、 du (Unix) - 维基百科   菜鸟 fdisk 命令 、 fdisk 命令 —————————— parted 命令 、 GNU Parted -">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux磁盘管理">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2020/05/Linux%E7%A3%81%E7%9B%98%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="推荐链接：  菜鸟 Linux 磁盘管理   Linux磁盘管理—-分区格式化挂载fdisk、mkfs、mount  相关命令：  菜鸟 df 命令 、 df 命令 、 df (Unix) - 维基百科   菜鸟 du 命令 、 du 命令 、 du (Unix) - 维基百科   菜鸟 fdisk 命令 、 fdisk 命令 —————————— parted 命令 、 GNU Parted -">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E7%A3%81%E7%9B%98%E7%AE%A1%E7%90%86/image-20200513134336969.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E7%A3%81%E7%9B%98%E7%AE%A1%E7%90%86/image-20200513134430622.png">
+<meta property="article:published_time" content="2020-05-12T03:17:30.000Z">
+<meta property="article:modified_time" content="2020-05-12T03:17:30.000Z">
+<meta property="article:author" content="zhaolq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E7%A3%81%E7%9B%98%E7%AE%A1%E7%90%86/image-20200513134336969.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2020/05/Linux%E7%A3%81%E7%9B%98%E7%AE%A1%E7%90%86/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2020/05/Linux%E7%A3%81%E7%9B%98%E7%AE%A1%E7%90%86/","path":"article/2020/05/Linux磁盘管理/","title":"Linux磁盘管理"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Linux磁盘管理 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E6%95%B4%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">常用命令整理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A3%81%E7%9B%98"><span class="nav-number">2.</span> <span class="nav-text">磁盘</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A3%81%E7%9B%98%E5%88%86%E5%8C%BA"><span class="nav-number">3.</span> <span class="nav-text">磁盘分区</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%88%86%E5%8C%BA"><span class="nav-number">4.</span> <span class="nav-text">格式化分区</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8C%82%E8%BD%BD%E5%88%86%E5%8C%BA"><span class="nav-number">5.</span> <span class="nav-text">挂载分区</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%B4%E6%97%B6%E6%8C%82%E8%BD%BD"><span class="nav-number">5.1.</span> <span class="nav-text">临时挂载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B0%B8%E4%B9%85%E6%8C%82%E8%BD%BD"><span class="nav-number">5.2.</span> <span class="nav-text">永久挂载</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E6%96%87%E4%BB%B6%E3%80%81%E7%9B%AE%E5%BD%95%E3%80%81%E7%A3%81%E7%9B%98%E5%A4%A7%E5%B0%8F"><span class="nav-number">6.</span> <span class="nav-text">查看文件、目录、磁盘大小</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E5%88%86%E5%8C%BA%E6%8C%82%E8%BD%BD%E7%82%B9"><span class="nav-number">7.</span> <span class="nav-text">查看分区挂载点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#LVM"><span class="nav-number">8.</span> <span class="nav-text">LVM</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E5%8D%B7-PV"><span class="nav-number">8.1.</span> <span class="nav-text">物理卷 PV</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%B7%E7%BB%84-VG"><span class="nav-number">8.2.</span> <span class="nav-text">卷组 VG</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A9%E5%B1%95%E5%8D%B7%E7%BB%84"><span class="nav-number">8.2.1.</span> <span class="nav-text">扩展卷组</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%BB%E8%BE%91%E5%8D%B7-LV"><span class="nav-number">8.3.</span> <span class="nav-text">逻辑卷 LV</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A9%E5%B1%95%E9%80%BB%E8%BE%91%E5%8D%B7"><span class="nav-number">8.3.1.</span> <span class="nav-text">扩展逻辑卷</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%A9%E5%87%8F%E9%80%BB%E8%BE%91%E5%8D%B7"><span class="nav-number">8.3.2.</span> <span class="nav-text">缩减逻辑卷</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A0%B9%E5%88%86%E5%8C%BA%E6%89%A9%E5%AE%B9-LVM-%E9%9D%9ELVM"><span class="nav-number">9.</span> <span class="nav-text">根分区扩容(LVM+非LVM)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E6%98%AF%E5%90%A6%E4%BD%BF%E7%94%A8LVM%E7%AE%A1%E7%90%86%EF%BC%9F"><span class="nav-number">9.1.</span> <span class="nav-text">查看是否使用LVM管理？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LVM-%E6%89%A9%E5%AE%B9%E6%A0%B9%E5%88%86%E5%8C%BA"><span class="nav-number">9.2.</span> <span class="nav-text">LVM 扩容根分区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E-LVM%E6%89%A9%E5%AE%B9%E6%A0%B9%E5%88%86%E5%8C%BA"><span class="nav-number">9.3.</span> <span class="nav-text">非 LVM扩容根分区</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2020/05/Linux%E7%A3%81%E7%9B%98%E7%AE%A1%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Linux磁盘管理 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux磁盘管理
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-05-12 11:17:30" itemprop="dateCreated datePublished" datetime="2020-05-12T11:17:30+08:00">2020-05-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p><strong>推荐链接：</strong></p>
+<p> <a target="_blank" rel="noopener" href="https://www.runoob.com/linux/linux-filesystem.html">菜鸟 Linux 磁盘管理</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://blog.51cto.com/superleedo/1886547">Linux磁盘管理—-分区格式化挂载fdisk、mkfs、mount</a> </p>
+<p><strong>相关命令：</strong></p>
+<p> <a target="_blank" rel="noopener" href="https://www.runoob.com/linux/linux-comm-df.html">菜鸟 df 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/df">df 命令</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Df_(Unix)">df (Unix) - 维基百科</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.runoob.com/linux/linux-comm-du.html">菜鸟 du 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/du">du 命令</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Du_(Unix)">du (Unix) - 维基百科</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.runoob.com/linux/linux-comm-fdisk.html">菜鸟 fdisk 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/fdisk">fdisk 命令</a> —————————— <a target="_blank" rel="noopener" href="https://man.linuxde.net/parted">parted 命令</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/GNU_Parted">GNU Parted - 维基百科</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.runoob.com/linux/linux-comm-mkfs.html">菜鸟 mkfs 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/mkfs">mkfs 命令</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.runoob.com/linux/linux-comm-mount.html">菜鸟 mount 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/mount">mount 命令</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Mount_(Unix)">mount (Unix) - 维基百科</a> —&gt; <font color="red">临时挂载</font> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.runoob.com/linux/linux-comm-umount.html">菜鸟 umount命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/umount">umount 命令</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.runoob.com/linux/linux-comm-fsck.html">菜鸟 fsck 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/fsck">fsck 命令</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Fsck">fsck - 维基百科</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://man.linuxde.net/lsblk">lsblk 命令</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://man.linuxde.net/partprobe">partprobe 命令</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://man.linuxde.net/resize2fs">resize2fs 命令</a> </p>
+<span id="more"></span>
+
+<h1 id="常用命令整理"><a href="#常用命令整理" class="headerlink" title="常用命令整理"></a>常用命令整理</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">lsblk -f                        # 列出系统中的块设备及其文件系统信息。常用场景：快速查看磁盘分区、挂载点和文件系统类型。</span><br><span class="line"></span><br><span class="line">fdisk -l                        # 列出系统识别到的所有磁盘的分区表和物理信息。常用场景：查看磁盘大小、分区类型、扇区信息，通常用于分区或格式化前。</span><br><span class="line">fdisk /dev/vdb                  # 对磁盘进行分区操作（会进入交互界面，按提示一步步操作）。</span><br><span class="line"></span><br><span class="line">mkfs -t ext4 /dev/vdb           # 格式化分区，等价于 mkfs.ext4 /dev/vdb</span><br><span class="line">mkdir -p /data</span><br><span class="line">mount -t ext4 /dev/vdb /data    # 临时挂载分区到某个目录，文件系统类型指定为 ext4。</span><br><span class="line">df -hT                          # 查看挂载、磁盘空间统计</span><br><span class="line">df -hT /data/                   # 查看目录所在分区和空间使用情况。</span><br><span class="line">du -sh *                        # 查看当前目录下所有 文件/目录 大小。</span><br></pre></td></tr></table></figure>
+
+<p>永久挂载：<code>/etc/fstab</code> 是 Linux 系统里 <strong>控制开机自动挂载磁盘&#x2F;分区&#x2F;网络存储</strong> 的配置文件，定义每个文件系统的挂载点、文件系统类型、挂载选项，避免每次开机都要手动 <code>mount</code>。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/fstab</span><br><span class="line">/dev/vdb        /data   auto    defaults,nofail,comment=cloudconfig     0       2</span><br><span class="line"></span><br><span class="line">mount -a                        # 挂载 /etc/fstab 文件中定义的所有文件系统，无需重启。</span><br></pre></td></tr></table></figure>
+
+<p>linux fstab 文件详解：<a target="_blank" rel="noopener" href="https://blog.csdn.net/richerg85/article/details/17917129">https://blog.csdn.net/richerg85/article/details/17917129</a></p>
+<p>linux 误挂载磁盘，原数据被覆盖：<a target="_blank" rel="noopener" href="https://blog.csdn.net/dongfangxiaozi_/article/details/78277011">https://blog.csdn.net/dongfangxiaozi_/article/details/78277011</a></p>
+<h1 id="磁盘"><a href="#磁盘" class="headerlink" title="磁盘"></a>磁盘</h1><p>磁盘（disk）是指利用磁记录技术存储数据的<a target="_blank" rel="noopener" href="https://baike.baidu.com/item/%E5%AD%98%E5%82%A8%E5%99%A8/1583185">存储器</a>。</p>
+<p>磁盘是计算机主要的存储介质，可以存储大量的二进制数据，并且断电后也能保持数据不丢失。早期计算机使用的磁盘是<strong>软磁盘</strong>（Floppy Disk，简称<strong>软盘</strong>），如今常用的磁盘是<strong>硬磁盘</strong>（Hard disk，简称<strong>硬盘</strong>）。</p>
+<h1 id="磁盘分区"><a href="#磁盘分区" class="headerlink" title="磁盘分区"></a>磁盘分区</h1><p> <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%A3%81%E7%9B%98%E6%89%87%E5%8C%BA">磁盘扇区 sector - 维基百科</a> </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:~# fdisk -l</span><br><span class="line">root@ubuntu20-04:~# fdisk -l /dev/sda # 查看磁盘分区情况</span><br><span class="line">GPT PMBR size mismatch (41943039 != 419430399) will be corrected by write.</span><br><span class="line">Disk /dev/sda: 200 GiB, 214748364800 bytes, 419430400 sectors</span><br><span class="line">Disk model: VMware Virtual S</span><br><span class="line">Units: sectors of 1 * 512 = 512 bytes</span><br><span class="line">Sector size (logical/physical): 512 bytes / 512 bytes</span><br><span class="line">I/O size (minimum/optimal): 512 bytes / 512 bytes</span><br><span class="line">Disklabel type: gpt</span><br><span class="line">Disk identifier: 9732D11F-D526-4419-8BCA-35D48F77AACE</span><br><span class="line"></span><br><span class="line">Device       Start      End  Sectors Size Type</span><br><span class="line">/dev/sda1     2048     4095     2048   1M BIOS boot</span><br><span class="line">/dev/sda2     4096  4198399  4194304   2G Linux swap</span><br><span class="line">/dev/sda3  4198400 41940991 37742592  18G Linux filesystem</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:~# fdisk /dev/sda # 对磁盘sda进行分区</span><br><span class="line"></span><br><span class="line">Welcome to fdisk (util-linux 2.34).</span><br><span class="line">Changes will remain in memory only, until you decide to write them.</span><br><span class="line">Be careful before using the write command.</span><br><span class="line"></span><br><span class="line">GPT PMBR size mismatch (41943039 != 419430399) will be corrected by write.</span><br><span class="line"></span><br><span class="line">Command (m for help): m # 输出Help信息</span><br><span class="line"></span><br><span class="line">Help:</span><br><span class="line"></span><br><span class="line">  GPT</span><br><span class="line">   M   enter protective/hybrid MBR</span><br><span class="line"></span><br><span class="line">  Generic</span><br><span class="line">   d   delete a partition # 删除分区</span><br><span class="line">   F   list free unpartitioned space</span><br><span class="line">   l   list known partition types</span><br><span class="line">   n   add a new partition # 新建分区</span><br><span class="line">   p   print the partition table # 打印分区表</span><br><span class="line">   t   change a partition type # 修改分区类型</span><br><span class="line">   v   verify the partition table</span><br><span class="line">   i   print information about a partition</span><br><span class="line"></span><br><span class="line">  Misc</span><br><span class="line">   m   print this menu # 输出Help信息</span><br><span class="line">   x   extra functionality (experts only)</span><br><span class="line"></span><br><span class="line">  Script</span><br><span class="line">   I   load disk layout from sfdisk script file</span><br><span class="line">   O   dump disk layout to sfdisk script file</span><br><span class="line"></span><br><span class="line">  Save &amp; Exit</span><br><span class="line">   w   write table to disk and exit # 保存并退出</span><br><span class="line">   q   quit without saving changes # 退出不保存</span><br><span class="line"></span><br><span class="line">  Create a new label</span><br><span class="line">   g   create a new empty GPT partition table</span><br><span class="line">   G   create a new empty SGI (IRIX) partition table</span><br><span class="line">   o   create a new empty DOS partition table</span><br><span class="line">   s   create a new empty Sun partition table</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Command (m for help): n # 新建分区</span><br><span class="line">Partition number (4-128, default 4): 4 # 分区号，即后来的sda4</span><br><span class="line">First sector (41940992-419430366, default 41940992): # 开始扇区，分区起始位置。enter默认为下一个扇区</span><br><span class="line">Last sector, +/-sectors or +/-size&#123;K,M,G,T,P&#125; (41940992-419430366, default 419430366): +100G # 结束扇区，分区结束位置。enter默认为最后一个扇区</span><br><span class="line"></span><br><span class="line">Created a new partition 4 of type &#x27;Linux filesystem&#x27; and of size 100 GiB.</span><br><span class="line"></span><br><span class="line">Command (m for help): p # 打印分区表</span><br><span class="line">Disk /dev/sda: 200 GiB, 214748364800 bytes, 419430400 sectors</span><br><span class="line">Disk model: VMware Virtual S</span><br><span class="line">Units: sectors of 1 * 512 = 512 bytes</span><br><span class="line">Sector size (logical/physical): 512 bytes / 512 bytes</span><br><span class="line">I/O size (minimum/optimal): 512 bytes / 512 bytes</span><br><span class="line">Disklabel type: gpt</span><br><span class="line">Disk identifier: 9732D11F-D526-4419-8BCA-35D48F77AACE</span><br><span class="line"></span><br><span class="line">Device        Start       End   Sectors  Size Type</span><br><span class="line">/dev/sda1      2048      4095      2048    1M BIOS boot</span><br><span class="line">/dev/sda2      4096   4198399   4194304    2G Linux swap</span><br><span class="line">/dev/sda3   4198400  41940991  37742592   18G Linux filesystem</span><br><span class="line">/dev/sda4  41940992 251656191 209715200  100G Linux filesystem</span><br><span class="line"></span><br><span class="line">Command (m for help): t # 修改分区类型</span><br><span class="line">Partition number (1-4, default 4): 4 # 要改变的分区号</span><br><span class="line">Partition type (type L to list all types): L # 输出所有类型</span><br><span class="line">  1 EFI System                     C12A7328-F81F-11D2-BA4B-00A0C93EC93B</span><br><span class="line">  2 MBR partition scheme           024DEE41-33E7-11D3-9D69-0008C781F39F</span><br><span class="line">  3 Intel Fast Flash               D3BFE2DE-3DAF-11DF-BA40-E3A556D89593</span><br><span class="line">  4 BIOS boot                      21686148-6449-6E6F-744E-656564454649</span><br><span class="line">  5 Sony boot partition            F4019732-066E-4E12-8273-346C5641494F</span><br><span class="line">  6 Lenovo boot partition          BFBFAFE7-A34F-448A-9A5B-6213EB736C22</span><br><span class="line">  7 PowerPC PReP boot              9E1A2D38-C612-4316-AA26-8B49521E5A8B</span><br><span class="line">  8 ONIE boot                      7412F7D5-A156-4B13-81DC-867174929325</span><br><span class="line">  9 ONIE config                    D4E6E2CD-4469-46F3-B5CB-1BFF57AFC149</span><br><span class="line"> 10 Microsoft reserved             E3C9E316-0B5C-4DB8-817D-F92DF00215AE</span><br><span class="line"> 11 Microsoft basic data           EBD0A0A2-B9E5-4433-87C0-68B6B72699C7</span><br><span class="line"> 12 Microsoft LDM metadata         5808C8AA-7E8F-42E0-85D2-E1E90434CFB3</span><br><span class="line"> 13 Microsoft LDM data             AF9B60A0-1431-4F62-BC68-3311714A69AD</span><br><span class="line"> 14 Windows recovery environment   DE94BBA4-06D1-4D40-A16A-BFD50179D6AC</span><br><span class="line"> 15 IBM General Parallel Fs        37AFFC90-EF7D-4E96-91C3-2D7AE055B174</span><br><span class="line"> 16 Microsoft Storage Spaces       E75CAF8F-F680-4CEE-AFA3-B001E56EFC2D</span><br><span class="line"> 17 HP-UX data                     75894C1E-3AEB-11D3-B7C1-7B03A0000000</span><br><span class="line"> 18 HP-UX service                  E2A1E728-32E3-11D6-A682-7B03A0000000</span><br><span class="line"> 19 Linux swap                     0657FD6D-A4AB-43C4-84E5-0933C84B4F4F</span><br><span class="line"> 20 Linux filesystem               0FC63DAF-8483-4772-8E79-3D69D8477DE4</span><br><span class="line"> 21 Linux server data              3B8F8425-20E0-4F3B-907F-1A25A76F98E8</span><br><span class="line"> 22 Linux root (x86)               44479540-F297-41B2-9AF7-D131D5F0458A</span><br><span class="line"> 23 Linux root (ARM)               69DAD710-2CE4-4E3C-B16C-21A1D49ABED3</span><br><span class="line"> 24 Linux root (x86-64)            4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709</span><br><span class="line"> 25 Linux root (ARM-64)            B921B045-1DF0-41C3-AF44-4C6F280D3FAE</span><br><span class="line"> 26 Linux root  (IA-64)             993D8D3D-F80E-4225-855A-9DAF8ED7EA97</span><br><span class="line"> 27 Linux reserved                 8DA63339-0007-60C0-C436-083AC8230908</span><br><span class="line"> 28 Linux home                     933AC7E1-2EB4-4F13-B844-0E14E2AEF915</span><br><span class="line"> 29 Linux RAID                     A19D880F-05FC-4D3B-A006-743F0F84911E</span><br><span class="line"> 30 Linux extended boot            BC13C2FF-59E6-4262-A352-B275FD6F7172</span><br><span class="line"> 31 Linux LVM                      E6D6D379-F507-44C2-A23C-238F2A3DF928</span><br><span class="line"> 32 FreeBSD data                   516E7CB4-6ECF-11D6-8FF8-00022D09712B</span><br><span class="line"> 33 FreeBSD boot                   83BD6B9D-7F41-11DC-BE0B-001560B84F0F</span><br><span class="line"> 34 FreeBSD swap                   516E7CB5-6ECF-11D6-8FF8-00022D09712B</span><br><span class="line"> 35 FreeBSD UFS                    516E7CB6-6ECF-11D6-8FF8-00022D09712B</span><br><span class="line"> 36 FreeBSD ZFS                    516E7CBA-6ECF-11D6-8FF8-00022D09712B</span><br><span class="line"> 37 FreeBSD Vinum                  516E7CB8-6ECF-11D6-8FF8-00022D09712B</span><br><span class="line"></span><br><span class="line">Partition type (type L to list all types): 20 # 20对应&quot;Linux filesystem&quot;类型</span><br><span class="line"></span><br><span class="line">Changed type of partition &#x27;Linux filesystem&#x27; to &#x27;Linux filesystem&#x27;.</span><br><span class="line"></span><br><span class="line">Command (m for help): w # 保存并退出</span><br><span class="line">The partition table has been altered. # 分区表已更改</span><br><span class="line">Syncing disks. # 正在同步磁盘</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:~# fdisk -l /dev/sda # 再次查看磁盘分区情况</span><br><span class="line">Disk /dev/sda: 200 GiB, 214748364800 bytes, 419430400 sectors</span><br><span class="line">Disk model: VMware Virtual S</span><br><span class="line">Units: sectors of 1 * 512 = 512 bytes</span><br><span class="line">Sector size (logical/physical): 512 bytes / 512 bytes</span><br><span class="line">I/O size (minimum/optimal): 512 bytes / 512 bytes</span><br><span class="line">Disklabel type: gpt</span><br><span class="line">Disk identifier: 9732D11F-D526-4419-8BCA-35D48F77AACE</span><br><span class="line"></span><br><span class="line">Device        Start       End   Sectors  Size Type</span><br><span class="line">/dev/sda1      2048      4095      2048    1M BIOS boot</span><br><span class="line">/dev/sda2      4096   4198399   4194304    2G Linux swap</span><br><span class="line">/dev/sda3   4198400  41940991  37742592   18G Linux filesystem</span><br><span class="line">/dev/sda4  41940992 251656191 209715200  100G Linux filesystem</span><br></pre></td></tr></table></figure>
+
+<p>重复上面的操作，使用剩余的磁盘创建分区 <code>/dev/sda5</code> 。</p>
+<p><font color="red">磁盘分区后，可以直接格式化为 ext4 格式，然后挂载使用。</font></p>
+<h1 id="格式化分区"><a href="#格式化分区" class="headerlink" title="格式化分区"></a>格式化分区</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:~# mkfs -t ext4 /dev/sda4 # 格式化</span><br><span class="line">root@ubuntu20-04:~# mkfs.ext4 /dev/sda4 # 格式化</span><br></pre></td></tr></table></figure>
+
+<h1 id="挂载分区"><a href="#挂载分区" class="headerlink" title="挂载分区"></a>挂载分区</h1><h2 id="临时挂载"><a href="#临时挂载" class="headerlink" title="临时挂载"></a>临时挂载</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:/# mkdir /data</span><br><span class="line">root@ubuntu20-04:/# mount /dev/sda4 /data # 临时挂载到&#x27;/data&#x27;</span><br><span class="line">root@ubuntu20-04:/# df -hT /data/</span><br><span class="line">Filesystem     Type  Size  Used Avail Use% Mounted on</span><br><span class="line">/dev/sda4      ext4   99G   53M   97G   1% /</span><br><span class="line">root@ubuntu20-04:/# df -hT</span><br><span class="line">Filesystem                     Type      Size  Used Avail Use% Mounted on</span><br><span class="line">udev                           devtmpfs  938M     0  938M   0% /dev</span><br><span class="line">tmpfs                          tmpfs     196M  1.3M  195M   1% /run</span><br><span class="line">/dev/sda3                      ext4       18G  4.6G   13G  28% /</span><br><span class="line">tmpfs                          tmpfs     980M     0  980M   0% /dev/shm</span><br><span class="line">tmpfs                          tmpfs     5.0M     0  5.0M   0% /run/lock</span><br><span class="line">tmpfs                          tmpfs     980M     0  980M   0% /sys/fs/cgroup</span><br><span class="line">/dev/loop1                     squashfs   28M   28M     0 100% /snap/snapd/7264</span><br><span class="line">/dev/loop0                     squashfs   55M   55M     0 100% /snap/core18/1705</span><br><span class="line">/dev/loop2                     squashfs   69M   69M     0 100% /snap/lxd/14804</span><br><span class="line">tmpfs                          tmpfs     196M     0  196M   0% /run/user/0</span><br><span class="line">/dev/loop3                     squashfs   55M   55M     0 100% /snap/core18/1754</span><br><span class="line">/dev/loop4                     squashfs   70M   70M     0 100% /snap/lxd/14954</span><br><span class="line">/dev/sda4                      ext4       99G   53M   97G   1% /data</span><br></pre></td></tr></table></figure>
+
+<h2 id="永久挂载"><a href="#永久挂载" class="headerlink" title="永久挂载"></a>永久挂载</h2><p> <a target="_blank" rel="noopener" href="https://wiki.archlinux.org/index.php/Fstab_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">fstab (简体中文) - ArchWiki</a> </p>
+<p>在进行一下操作前，先创建 <code>/dev/sda4</code> 分区，大小为 10G，格式化为 ext4。</p>
+<p>1、准备目录，并查看所在分区和挂载点</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:/# <span class="built_in">mkdir</span> /data</span><br><span class="line">root@ubuntu20-04:/# <span class="built_in">df</span> -hT /data/</span><br><span class="line">Filesystem     Type  Size  Used Avail Use% Mounted on</span><br><span class="line">/dev/sda3      ext4   18G  4.6G   13G  28% /</span><br><span class="line"><span class="comment"># 可以看出，&#x27;/data&#x27; 所在分区是挂载到 &#x27;/&#x27; 目录的 &#x27;/dev/sda3&#x27; 分区</span></span><br></pre></td></tr></table></figure>
+
+<p>2、查看所有分区和设备的UUID值和挂载点</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:/# lsblk -f # 列出系统中的块设备及其文件系统信息。常用场景：快速查看磁盘分区、挂载点和文件系统类型。</span><br><span class="line">NAME   FSTYPE   LABEL UUID                                 FSAVAIL FSUSE% MOUNTPOINT</span><br><span class="line">loop0  squashfs                                                  0   100% /snap/core18/1705</span><br><span class="line">loop1  squashfs                                                  0   100% /snap/snapd/7264</span><br><span class="line">loop2  squashfs                                                  0   100% /snap/lxd/14804</span><br><span class="line">loop3  squashfs                                                  0   100% /snap/core18/1754</span><br><span class="line">loop4  squashfs                                                  0   100% /snap/lxd/14954</span><br><span class="line">sda</span><br><span class="line">├─sda1</span><br><span class="line">├─sda2 swap           0f5010bc-bc78-4f32-a8b8-aeeed49db343                [SWAP]</span><br><span class="line">├─sda3 ext4           a78143b8-b84a-440e-b330-346eae21aac4   12.2G    26% /</span><br><span class="line">└─sda4 ext4           047a3fdd-f0b6-4a33-835b-3dc8d5e48cf8</span><br><span class="line">sr0</span><br></pre></td></tr></table></figure>
+
+<p>3、编辑 <code>/etc/fstab</code> 文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:/# cat /etc/fstab # 列的详细描述请查看 &quot;fstab (简体中文) - ArchWiki&quot;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">/etc/fstab: static file system information.</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"></span></span><br><span class="line"><span class="language-bash"><span class="comment"># Use &#x27;blkid&#x27; to print the universally unique identifier for a</span></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">device; this may be used with UUID= as a more robust way to name devices</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">that works even <span class="keyword">if</span> disks are added and removed. See fstab(5).</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"></span></span><br><span class="line"><span class="language-bash"><span class="comment"># &lt;file system&gt; &lt;mount point&gt;   &lt;type&gt;  &lt;options&gt;       &lt;dump&gt;  &lt;pass&gt;</span></span></span><br><span class="line">/dev/disk/by-uuid/0f5010bc-bc78-4f32-a8b8-aeeed49db343 none swap sw 0 0</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">/ was on /dev/sda3 during curtin installation</span></span><br><span class="line">/dev/disk/by-uuid/a78143b8-b84a-440e-b330-346eae21aac4 / ext4 defaults 0 0</span><br><span class="line">/swap.img       none    swap    sw      0       0</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:/# vim /etc/fstab</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在<span class="string">&#x27;/etc/fstab&#x27;</span>文件中添加下面内容</span></span><br><span class="line">/dev/disk/by-uuid/047a3fdd-f0b6-4a33-835b-3dc8d5e48cf8 /data ext4 defaults 0 0</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:/# mount -a # 装载fstab文件中所有文件系统</span><br></pre></td></tr></table></figure>
+
+<p>4、再次查看所在分区和挂载点，发现已经改变。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:/# df -hT /data/</span><br><span class="line">Filesystem     Type  Size  Used Avail Use% Mounted on</span><br><span class="line">/dev/sda4      ext4  9.8G   37M  9.3G   1% /data</span><br></pre></td></tr></table></figure>
+
+<h1 id="查看文件、目录、磁盘大小"><a href="#查看文件、目录、磁盘大小" class="headerlink" title="查看文件、目录、磁盘大小"></a>查看文件、目录、磁盘大小</h1><p> <a target="_blank" rel="noopener" href="https://blog.csdn.net/ysdaniel/article/details/6922055">du和ls查看文件大小的区别</a> </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:~# cd /data/jdk-11.0.2</span><br><span class="line">root@ubuntu20-04:/data/jdk-11.0.2# du -sh * # 查看当前目录下所有文件及目录大小</span><br><span class="line">512K    bin</span><br><span class="line">140K    conf</span><br><span class="line">228K    include</span><br><span class="line">77M     jmods</span><br><span class="line">544K    legal</span><br><span class="line">219M    lib</span><br><span class="line">4.0K    release</span><br><span class="line">root@ubuntu20-04:/data/jdk-11.0.2# du -sh lib/ # 查看lib目录大小</span><br><span class="line">219M    lib/</span><br><span class="line">root@ubuntu20-04:/data/jdk-11.0.2# du -sh release # 查看release文件大小</span><br><span class="line">4.0K    release</span><br><span class="line">root@ubuntu20-04:/data/jdk-11.0.2# du -sh /data/jdk-11.0.2/ # 查看jdk目录大小</span><br><span class="line">297M    /data/jdk-11.0.2/</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:/data/jdk-11.0.2# ls *</span><br><span class="line">root@ubuntu20-04:/data/jdk-11.0.2# ls -lh *</span><br><span class="line">root@ubuntu20-04:/data/jdk-11.0.2# ls -lh</span><br><span class="line">total 28K</span><br><span class="line">drwxr-xr-x  2 root root 4.0K May  7 02:47 bin</span><br><span class="line">drwxr-xr-x  4 root root 4.0K May  7 02:47 conf</span><br><span class="line">drwxr-xr-x  3 root root 4.0K May  7 02:47 include</span><br><span class="line">drwxr-xr-x  2 root root 4.0K May  7 02:47 jmods</span><br><span class="line">drwxr-xr-x 72 root root 4.0K May  7 02:47 legal</span><br><span class="line">drwxr-xr-x  6 root root 4.0K May  7 02:47 lib</span><br><span class="line">-rw-r--r--  1  668  668 1.2K Jan 18  2019 release</span><br><span class="line">root@ubuntu20-04:/data/jdk-11.0.2# ls -lh release</span><br><span class="line">-rw-r--r-- 1 668 668 1.2K Jan 18  2019 release</span><br><span class="line">root@ubuntu20-04:/data/jdk-11.0.2# ls -lh lib/</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:/# df -hT # 查看文件系统的磁盘使用情况统计</span><br><span class="line">Filesystem     Type      Size  Used Avail Use% Mounted on</span><br><span class="line">udev           devtmpfs  938M     0  938M   0% /dev</span><br><span class="line">tmpfs          tmpfs     196M  1.3M  195M   1% /run</span><br><span class="line">/dev/sda3      ext4       18G  4.6G   13G  28% /</span><br><span class="line">tmpfs          tmpfs     980M     0  980M   0% /dev/shm</span><br><span class="line">tmpfs          tmpfs     5.0M     0  5.0M   0% /run/lock</span><br><span class="line">tmpfs          tmpfs     980M     0  980M   0% /sys/fs/cgroup</span><br><span class="line">/dev/loop1     squashfs   28M   28M     0 100% /snap/snapd/7264</span><br><span class="line">/dev/loop0     squashfs   55M   55M     0 100% /snap/core18/1705</span><br><span class="line">/dev/loop2     squashfs   69M   69M     0 100% /snap/lxd/14804</span><br><span class="line">/dev/loop3     squashfs   55M   55M     0 100% /snap/core18/1754</span><br><span class="line">tmpfs          tmpfs     196M     0  196M   0% /run/user/0</span><br><span class="line">/dev/loop4     squashfs   70M   70M     0 100% /snap/lxd/14954</span><br></pre></td></tr></table></figure>
+
+<h1 id="查看分区挂载点"><a href="#查看分区挂载点" class="headerlink" title="查看分区挂载点"></a>查看分区挂载点</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:/# df -hT</span><br><span class="line">Filesystem     Type      Size  Used Avail Use% Mounted on</span><br><span class="line">udev           devtmpfs  938M     0  938M   0% /dev</span><br><span class="line">tmpfs          tmpfs     196M  1.3M  195M   1% /run</span><br><span class="line">/dev/sda3      ext4       18G  4.6G   13G  28% /</span><br><span class="line">tmpfs          tmpfs     980M     0  980M   0% /dev/shm</span><br><span class="line">tmpfs          tmpfs     5.0M     0  5.0M   0% /run/lock</span><br><span class="line">tmpfs          tmpfs     980M     0  980M   0% /sys/fs/cgroup</span><br><span class="line">/dev/loop1     squashfs   28M   28M     0 100% /snap/snapd/7264</span><br><span class="line">/dev/loop0     squashfs   55M   55M     0 100% /snap/core18/1705</span><br><span class="line">/dev/loop2     squashfs   69M   69M     0 100% /snap/lxd/14804</span><br><span class="line">/dev/loop3     squashfs   55M   55M     0 100% /snap/core18/1754</span><br><span class="line">tmpfs          tmpfs     196M     0  196M   0% /run/user/0</span><br><span class="line">/dev/loop4     squashfs   70M   70M     0 100% /snap/lxd/14954</span><br><span class="line">root@ubuntu20-04:/# df -hT /opt/</span><br><span class="line">Filesystem     Type  Size  Used Avail Use% Mounted on</span><br><span class="line">/dev/sda3      ext4   18G  4.6G   13G  28% /</span><br><span class="line">root@ubuntu20-04:~# df -hT /data/</span><br><span class="line">Filesystem     Type  Size  Used Avail Use% Mounted on</span><br><span class="line">/dev/sda4      ext4  9.8G   37M  9.3G   1% /data</span><br><span class="line">root@ubuntu20-04:~# df -hT /dev/sda4</span><br><span class="line">Filesystem     Type  Size  Used Avail Use% Mounted on</span><br><span class="line">/dev/sda4      ext4  9.8G   37M  9.3G   1% /data</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:~# lsblk</span><br><span class="line">root@ubuntu20-04:/# lsblk -f</span><br><span class="line">NAME   FSTYPE   LABEL UUID                                 FSAVAIL FSUSE% MOUNTPOINT</span><br><span class="line">loop0  squashfs                                                  0   100% /snap/lxd/14804</span><br><span class="line">loop1  squashfs                                                  0   100% /snap/core18/1705</span><br><span class="line">loop2  squashfs                                                  0   100% /snap/lxd/14954</span><br><span class="line">loop3  squashfs                                                  0   100% /snap/snapd/7264</span><br><span class="line">loop4  squashfs                                                  0   100% /snap/core18/1754</span><br><span class="line">sda</span><br><span class="line">├─sda1</span><br><span class="line">├─sda2 swap           0f5010bc-bc78-4f32-a8b8-aeeed49db343                [SWAP]</span><br><span class="line">├─sda3 ext4           a78143b8-b84a-440e-b330-346eae21aac4   12.1G    26% /</span><br><span class="line">├─sda4 ext4           047a3fdd-f0b6-4a33-835b-3dc8d5e48cf8    9.2G     0% /data</span><br><span class="line">└─sda5 ext4           02d7d239-3b50-41af-aedd-690dda6568f2</span><br><span class="line">sr0</span><br></pre></td></tr></table></figure>
+
+<h1 id="LVM"><a href="#LVM" class="headerlink" title="LVM"></a>LVM</h1><p> <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E9%82%8F%E8%BC%AF%E6%8D%B2%E8%BB%B8%E7%AE%A1%E7%90%86">逻辑卷管理 LVM - 维基百科</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E9%82%8F%E8%BC%AF%E6%8D%B2%E8%BB%B8%E7%AE%A1%E7%90%86%E5%93%A1">逻辑卷管理器 LVM - 维基百科</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E9%82%8F%E8%BC%AF%E7%A3%81%E7%A2%9F%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7">逻辑磁盘管理工具 - 维基百科</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://linux.cn/article-3218-1.html">Linux LVM简明教程</a> </p>
+<p>LVM 是一种 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%8A%BD%E8%B1%A1%E5%8C%96%E5%AD%98%E5%82%A8">抽象化存储</a> 技术，是 Linux 内核提供的逻辑卷管理功能。它为电脑中的大量存储设备（Mass storage devices）提供更有弹性的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%A1%AC%E7%A2%9F%E5%88%86%E5%89%B2">硬盘分割</a>方式。它在硬盘分区程序和操作系统之间创建一个逻辑层，以方便操作系统管理硬盘分割系统。</p>
+<p>LVM 是卷的一种管理方式，并不是分区工具（也可不采用这种 LVM 管理方式）。</p>
+<p>LVM 管理导图：</p>
+<p><img src="/article/2020/05/Linux%E7%A3%81%E7%9B%98%E7%AE%A1%E7%90%86/image-20200513134336969.png" alt="image-20200513134336969"></p>
+<p><img src="/article/2020/05/Linux%E7%A3%81%E7%9B%98%E7%AE%A1%E7%90%86/image-20200513134430622.png" alt="image-20200513134430622"></p>
+<p><font size="4"><strong>LVM扩容思维流程：</strong></font> </p>
+<p>创建一个物理分区</p>
+<p>将这个物理分区转换为物理卷</p>
+<p>把这个物理卷添加到要扩展的卷组中</p>
+<p>然后用extend命令扩展此卷组中的逻辑卷</p>
+<p><font size="4"><strong>LVM基本术语：</strong></font> </p>
+<ul>
+<li><p>物理存储介质（The physical media）是指系统的存储设备 <strong>硬盘</strong>，如：<code>/dev/hda</code>、<code>/dev/sda</code> 等等，是存储系统最低层的存储单元。</p>
+</li>
+<li><p>PV：物理卷，PV处于LVM系统最低层，它可以是整个硬盘，或者与磁盘分区具有相同功能的设备（如RAID），但<font color="red">和基本的物理存储介质相比较，多了与LVM相关管理参数</font></p>
+</li>
+<li><p>VG：卷组，创建在PV之上，<font color="red">由一个或多个PV组成，可以在VG上创建一个或多个“LVM分区”（逻辑卷）</font>，功能类似非LVM系统的物理硬盘（物理存储介质）</p>
+</li>
+<li><p>LV：逻辑卷，从VG中分割出的一块空间，创建之后其大小可以伸缩，在LV上可以创建文件系统（如&#x2F;var,&#x2F;home）</p>
+</li>
+<li><p>PE：物理区域，每一个PV被划分为基本单元（也被称为PE），具有唯一编号的PE是可以被LVM寻址的最小存储单元，默认为4MB</p>
+</li>
+</ul>
+<h2 id="物理卷-PV"><a href="#物理卷-PV" class="headerlink" title="物理卷 PV"></a>物理卷 PV</h2><p>将物理磁盘分区初始化为物理卷，以便LVM使用。</p>
+<p> <a target="_blank" rel="noopener" href="https://man.linuxde.net/pvcreate">pvcreate 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/pvdisplay">pvdisplay 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/pvremove">pvremove 命令</a> 、 使用tab命令提示发现更多命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:~# pvcreate /dev/sda4 # 创建物理卷</span><br><span class="line">  Physical volume &quot;/dev/sda4&quot; successfully created.</span><br><span class="line">root@ubuntu20-04:~# pvcreate /dev/sda5</span><br><span class="line">  Physical volume &quot;/dev/sda5&quot; successfully created.</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:~# pvdisplay # 显示物理卷</span><br><span class="line">  &quot;/dev/sda4&quot; is a new physical volume of &quot;100.00 GiB&quot;</span><br><span class="line">  --- NEW Physical volume ---</span><br><span class="line">  PV Name               /dev/sda4</span><br><span class="line">  VG Name</span><br><span class="line">  PV Size               100.00 GiB</span><br><span class="line">  Allocatable           NO</span><br><span class="line">  PE Size               0</span><br><span class="line">  Total PE              0</span><br><span class="line">  Free PE               0</span><br><span class="line">  Allocated PE          0</span><br><span class="line">  PV UUID               guJjk2-UNDp-FOaf-ZDw4-iaDG-UMqX-5uDeWu</span><br><span class="line"></span><br><span class="line">  &quot;/dev/sda5&quot; is a new physical volume of &quot;80.00 GiB&quot;</span><br><span class="line">  --- NEW Physical volume ---</span><br><span class="line">  PV Name               /dev/sda5</span><br><span class="line">  VG Name</span><br><span class="line">  PV Size               80.00 GiB</span><br><span class="line">  Allocatable           NO</span><br><span class="line">  PE Size               0</span><br><span class="line">  Total PE              0</span><br><span class="line">  Free PE               0</span><br><span class="line">  Allocated PE          0</span><br><span class="line">  PV UUID               VpeMAB-grsB-vir9-vYuJ-7WQd-LMmM-s371Mu</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:~# pvremove /dev/sda4 # 删除物理卷</span><br></pre></td></tr></table></figure>
+
+<h2 id="卷组-VG"><a href="#卷组-VG" class="headerlink" title="卷组 VG"></a>卷组 VG</h2><p> <a target="_blank" rel="noopener" href="https://man.linuxde.net/vgcreate">vgcreate 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/vgdisplay">vgdisplay 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/vgremove">vgremove 命令</a> </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:~# vgcreate volume-group1 /dev/sda4 /dev/sda5 # 创建LVM卷组</span><br><span class="line">  Volume group &quot;volume-group1&quot; successfully created</span><br><span class="line">root@ubuntu20-04:~# vgdisplay # 显示LVM卷组</span><br><span class="line">  --- Volume group ---</span><br><span class="line">  VG Name               volume-group1</span><br><span class="line">  System ID</span><br><span class="line">  Format                lvm2</span><br><span class="line">  Metadata Areas        2</span><br><span class="line">  Metadata Sequence No  1</span><br><span class="line">  VG Access             read/write</span><br><span class="line">  VG Status             resizable</span><br><span class="line">  MAX LV                0</span><br><span class="line">  Cur LV                0</span><br><span class="line">  Open LV               0</span><br><span class="line">  Max PV                0</span><br><span class="line">  Cur PV                2</span><br><span class="line">  Act PV                2</span><br><span class="line">  VG Size               179.99 GiB</span><br><span class="line">  PE Size               4.00 MiB</span><br><span class="line">  Total PE              46078</span><br><span class="line">  Alloc PE / Size       0 / 0</span><br><span class="line">  Free  PE / Size       46078 / 179.99 GiB</span><br><span class="line">  VG UUID               qy0u2U-k7ef-rchG-coDQ-Wt0o-YGkx-9gtWAY</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:~# vgremove volume-group1 # 删除LVM卷组</span><br></pre></td></tr></table></figure>
+
+<h3 id="扩展卷组"><a href="#扩展卷组" class="headerlink" title="扩展卷组"></a>扩展卷组</h3><p>假设卷组’volume-group1’已经满了，需要扩大。手上的硬盘（sda）已经没有其他空闲分区，我们添加另外一个硬盘（sdb），把sdb的分区添加到卷组以扩展。</p>
+<p>检测现在卷组状态：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:/# vgdisplay volume-group1</span><br><span class="line">  --- Volume group ---</span><br><span class="line">  VG Name               volume-group1</span><br><span class="line">  System ID</span><br><span class="line">  Format                lvm2</span><br><span class="line">  Metadata Areas        2</span><br><span class="line">  Metadata Sequence No  6</span><br><span class="line">  VG Access             read/write</span><br><span class="line">  VG Status             resizable</span><br><span class="line">  MAX LV                0</span><br><span class="line">  Cur LV                1</span><br><span class="line">  Open LV               0</span><br><span class="line">  Max PV                0</span><br><span class="line">  Cur PV                2</span><br><span class="line">  Act PV                2</span><br><span class="line">  VG Size               179.99 GiB</span><br><span class="line">  PE Size               4.00 MiB</span><br><span class="line">  Total PE              46078</span><br><span class="line">  Alloc PE / Size       12800 / 50.00 GiB</span><br><span class="line">  Free  PE / Size       33278 / 129.99 GiB</span><br><span class="line">  VG UUID               qy0u2U-k7ef-rchG-coDQ-Wt0o-YGkx-9gtWAY</span><br></pre></td></tr></table></figure>
+
+<p>首先，创建一个 2GB 分区 sdb1 </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:/# fdisk /dev/sdb</span><br><span class="line">...略</span><br></pre></td></tr></table></figure>
+
+<p>创建物理卷 &#x2F;dev&#x2F;sdb1</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:/# pvcreate /dev/sdb1</span><br></pre></td></tr></table></figure>
+
+<p>将物理卷增加到已存在的卷组’volume-group1’上</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:/# vgextend volume-group1 /dev/sdb1</span><br></pre></td></tr></table></figure>
+
+<p>使用 vgdisplay 验证，会看到卷组大小增大了。</p>
+<h2 id="逻辑卷-LV"><a href="#逻辑卷-LV" class="headerlink" title="逻辑卷 LV"></a>逻辑卷 LV</h2><p> <a target="_blank" rel="noopener" href="https://man.linuxde.net/lvcreate">lvcreate 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/lvdisplay">lvdisplay 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/lvremove">lvremove 命令</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://man.linuxde.net/lvresize">lvresize 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/lvextend">lvextend 命令</a> 、 <a target="_blank" rel="noopener" href="https://man.linuxde.net/lvreduce">lvreduce 命令</a> </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:~# lvcreate -L 50G -n lv1 volume-group1 # 使用卷组创建一个50G的逻辑卷</span><br><span class="line">  Logical volume &quot;lv1&quot; created.</span><br><span class="line">root@ubuntu20-04:~# lvdisplay # 显示LVM逻辑卷</span><br><span class="line">  --- Logical volume ---</span><br><span class="line">  LV Path                /dev/volume-group1/lv1</span><br><span class="line">  LV Name                lv1</span><br><span class="line">  VG Name                volume-group1</span><br><span class="line">  LV UUID                pTLSPo-kfqW-AiTH-4TrE-03Gi-n0Rb-n0KQdu</span><br><span class="line">  LV Write Access        read/write</span><br><span class="line">  LV Creation host, time ubuntu20-04, 2020-05-12 08:21:34 +0000</span><br><span class="line">  LV Status              available</span><br><span class="line"><span class="meta prompt_">  # </span><span class="language-bash">open                 0</span></span><br><span class="line">  LV Size                50.00 GiB</span><br><span class="line">  Current LE             12800</span><br><span class="line">  Segments               1</span><br><span class="line">  Allocation             inherit</span><br><span class="line">  Read ahead sectors     auto</span><br><span class="line">  - currently set to     256</span><br><span class="line">  Block device           253:0</span><br></pre></td></tr></table></figure>
+
+<p>格式化和挂载逻辑卷，就像其它ext2&#x2F;3&#x2F;4分区一样：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:~# mkfs # tab命令补全</span><br><span class="line">mkfs         mkfs.btrfs   mkfs.ext2    mkfs.ext4    mkfs.minix   mkfs.ntfs    mkfs.xfs</span><br><span class="line">mkfs.bfs     mkfs.cramfs  mkfs.ext3    mkfs.fat     mkfs.msdos   mkfs.vfat</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:~# mkfs -t ext4 /dev/volume-group1/lv1 # 格式化</span><br><span class="line">root@ubuntu20-04:~# mkfs.ext4 /dev/volume-group1/lv1 # 格式化</span><br><span class="line">mke2fs 1.45.5 (07-Jan-2020)</span><br><span class="line">Creating filesystem with 13107200 4k blocks and 3276800 inodes</span><br><span class="line">Filesystem UUID: 8afc23b9-b607-405d-baa5-4f9eac8f7ad5</span><br><span class="line">Superblock backups stored on blocks:</span><br><span class="line">        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,</span><br><span class="line">        4096000, 7962624, 11239424</span><br><span class="line"></span><br><span class="line">Allocating group tables: done</span><br><span class="line">Writing inode tables: done</span><br><span class="line">Creating journal (65536 blocks): done</span><br><span class="line">Writing superblocks and filesystem accounting information: done</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:/# mkdir /data</span><br><span class="line">root@ubuntu20-04:/# mount /dev/volume-group1/lv1 /data # 临时挂载到&#x27;/data&#x27;</span><br><span class="line">root@ubuntu20-04:/# df -hT /data/</span><br><span class="line">Filesystem     Type  Size  Used Avail Use% Mounted on</span><br><span class="line">/dev/sda4      ext4   49G   53M   47G   1% /</span><br><span class="line">root@ubuntu20-04:/# df -hT</span><br><span class="line">Filesystem                     Type      Size  Used Avail Use% Mounted on</span><br><span class="line">udev                           devtmpfs  938M     0  938M   0% /dev</span><br><span class="line">tmpfs                          tmpfs     196M  1.3M  195M   1% /run</span><br><span class="line">/dev/sda3                      ext4       18G  4.6G   13G  28% /</span><br><span class="line">tmpfs                          tmpfs     980M     0  980M   0% /dev/shm</span><br><span class="line">tmpfs                          tmpfs     5.0M     0  5.0M   0% /run/lock</span><br><span class="line">tmpfs                          tmpfs     980M     0  980M   0% /sys/fs/cgroup</span><br><span class="line">/dev/loop1                     squashfs   28M   28M     0 100% /snap/snapd/7264</span><br><span class="line">/dev/loop0                     squashfs   55M   55M     0 100% /snap/core18/1705</span><br><span class="line">/dev/loop2                     squashfs   69M   69M     0 100% /snap/lxd/14804</span><br><span class="line">tmpfs                          tmpfs     196M     0  196M   0% /run/user/0</span><br><span class="line">/dev/loop3                     squashfs   55M   55M     0 100% /snap/core18/1754</span><br><span class="line">/dev/loop4                     squashfs   70M   70M     0 100% /snap/lxd/14954</span><br><span class="line">/dev/mapper/volume--group1-lv1 ext4       49G   53M   47G   1% /data</span><br></pre></td></tr></table></figure>
+
+<p>删除逻辑卷：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:/# umount /data</span><br><span class="line">root@ubuntu20-04:/# lvremove /dev/volume-group1/lv1</span><br><span class="line">Do you really want to remove and DISCARD active logical volume volume-group1/lv1? [y/n]: y</span><br><span class="line">  Logical volume &quot;lv1&quot; successfully removed</span><br></pre></td></tr></table></figure>
+
+<h3 id="扩展逻辑卷"><a href="#扩展逻辑卷" class="headerlink" title="扩展逻辑卷"></a>扩展逻辑卷</h3><p>命令的执行顺序很重要。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:/# umount /data # 卸除挂载的文件系统</span><br><span class="line">root@ubuntu20-04:/# lvextend -L +100%FREE /dev/volume-group1/lv1 # 将卷组中的空闲空间扩展到逻辑卷</span><br><span class="line">root@ubuntu20-04:/# lvresize -L 150G /dev/volume-group1/lv1 # 将逻辑卷空间大小调整为150G</span><br><span class="line">root@ubuntu20-04:/# lvresize -L +50G /dev/volume-group1/lv1 # 将逻辑卷空间大小增加50G</span><br><span class="line">  Size of logical volume volume-group1/lv1 changed from 50.00 GiB (12800 extents) to 150.00 GiB (38400 extents).</span><br><span class="line">  Logical volume volume-group1/lv1 successfully resized.</span><br><span class="line">root@ubuntu20-04:/# lvdisplay</span><br><span class="line">  --- Logical volume ---</span><br><span class="line">  LV Path                /dev/volume-group1/lv1</span><br><span class="line">  LV Name                lv1</span><br><span class="line">  VG Name                volume-group1</span><br><span class="line">  LV UUID                hRQV0h-3gq5-x1GA-miaw-xk9s-IpRd-XX1Nxe</span><br><span class="line">  LV Write Access        read/write</span><br><span class="line">  LV Creation host, time ubuntu20-04, 2020-05-12 08:45:51 +0000</span><br><span class="line">  LV Status              available</span><br><span class="line"><span class="meta prompt_">  # </span><span class="language-bash">open                 0</span></span><br><span class="line">  LV Size                150.00 GiB</span><br><span class="line">  Current LE             38400</span><br><span class="line">  Segments               2</span><br><span class="line">  Allocation             inherit</span><br><span class="line">  Read ahead sectors     auto</span><br><span class="line">  - currently set to     256</span><br><span class="line">  Block device           253:0</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:/# fsck -a /dev/volume-group1/lv1 # 检查磁盘错误</span><br><span class="line">root@ubuntu20-04:~# df -hT</span><br><span class="line">root@ubuntu20-04:~# resize2fs /dev/volume-group1/lv1 # 刷新分区</span><br><span class="line">root@ubuntu20-04:~# df -hT</span><br></pre></td></tr></table></figure>
+
+<p>现在，这个逻辑卷可以再次挂载，同样这个方法也可用于其他分区。</p>
+<h3 id="缩减逻辑卷"><a href="#缩减逻辑卷" class="headerlink" title="缩减逻辑卷"></a>缩减逻辑卷</h3><p>命令的执行顺序很重要。</p>
+<p>注意减少逻辑卷的大小值若小于储存的数据大小，存储在后面的数据会丢失。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:/# umount /data # 卸除挂载的文件系统</span><br><span class="line">root@ubuntu20-04:/# fsck -a /dev/volume-group1/lv1 # 检查磁盘错误</span><br><span class="line">fsck from util-linux 2.34</span><br><span class="line">/dev/mapper/volume--group1-lv1: clean, 11/9830400 files, 697822/39321600 blocks</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:/# lvreduce -L -50G /dev/volume-group1/lv1 # 减少逻辑卷占用空间</span><br><span class="line">root@ubuntu20-04:/# lvresize -L -50G /dev/volume-group1/lv1 # 将逻辑卷空间大小减少50G</span><br><span class="line">root@ubuntu20-04:/# lvresize -L 50G /dev/volume-group1/lv1 # 将逻辑卷空间大小调整为50G</span><br><span class="line">  WARNING: Reducing active logical volume to 50.00 GiB.</span><br><span class="line">  THIS MAY DESTROY YOUR DATA (filesystem etc.)</span><br><span class="line">Do you really want to reduce volume-group1/lv1? [y/n]: y</span><br><span class="line">  Size of logical volume volume-group1/lv1 changed from 150.00 GiB (38400 extents) to 50.00 GiB (12800 extents).</span><br><span class="line">  Logical volume volume-group1/lv1 successfully resized.</span><br><span class="line">root@ubuntu20-04:/# lvdisplay</span><br><span class="line">  --- Logical volume ---</span><br><span class="line">  LV Path                /dev/volume-group1/lv1</span><br><span class="line">  LV Name                lv1</span><br><span class="line">  VG Name                volume-group1</span><br><span class="line">  LV UUID                hRQV0h-3gq5-x1GA-miaw-xk9s-IpRd-XX1Nxe</span><br><span class="line">  LV Write Access        read/write</span><br><span class="line">  LV Creation host, time ubuntu20-04, 2020-05-12 08:45:51 +0000</span><br><span class="line">  LV Status              available</span><br><span class="line"><span class="meta prompt_">  # </span><span class="language-bash">open                 0</span></span><br><span class="line">  LV Size                50.00 GiB</span><br><span class="line">  Current LE             12800</span><br><span class="line">  Segments               1</span><br><span class="line">  Allocation             inherit</span><br><span class="line">  Read ahead sectors     auto</span><br><span class="line">  - currently set to     256</span><br><span class="line">  Block device           253:0</span><br><span class="line">root@ubuntu20-04:~# df -hT</span><br><span class="line">root@ubuntu20-04:~# resize2fs /dev/volume-group1/lv1 # 刷新分区</span><br><span class="line">root@ubuntu20-04:~# df -hT</span><br></pre></td></tr></table></figure>
+
+<h1 id="根分区扩容-LVM-非LVM"><a href="#根分区扩容-LVM-非LVM" class="headerlink" title="根分区扩容(LVM+非LVM)"></a>根分区扩容(LVM+非LVM)</h1><h2 id="查看是否使用LVM管理？"><a href="#查看是否使用LVM管理？" class="headerlink" title="查看是否使用LVM管理？"></a>查看是否使用LVM管理？</h2><p>pvdisplay #查看物理卷</p>
+<p>vgdisplay #查看卷组</p>
+<p>lvdisplay #查看逻辑卷</p>
+<p>如果没有采用 LVM 管理，是查看不到物理卷、卷组、逻辑卷的。</p>
+<h2 id="LVM-扩容根分区"><a href="#LVM-扩容根分区" class="headerlink" title="LVM 扩容根分区"></a>LVM 扩容根分区</h2><p>1、查看挂载到根分区（<code>/</code>）的逻辑卷： <code>df -hT /</code> 或 <code>lsblk</code> </p>
+<p>2、查看逻辑卷所在卷组： <code>lvdisplay</code> </p>
+<p>3、查看卷组剩余空间： <code>vgdisplay</code> 。若无剩余空间，扩容磁盘—&gt;创建物理分区—&gt;创建物理卷—&gt;将物理卷扩展到卷组。</p>
+<p>4、将卷组中的空闲空间扩展到根分区逻辑卷： <code>lvextend</code> </p>
+<p>5、刷新根分区： <code>resize2fs</code> </p>
+<h2 id="非-LVM扩容根分区"><a href="#非-LVM扩容根分区" class="headerlink" title="非 LVM扩容根分区"></a>非 LVM扩容根分区</h2><p>1、查看当前根分区大小</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:~# df -hT /</span><br><span class="line">Filesystem     Type  Size  Used Avail Use% Mounted on</span><br><span class="line">/dev/sda3      ext4   18G  4.6G   13G  28% /</span><br></pre></td></tr></table></figure>
+
+<p>2、扩展磁盘容量，并查看扩容后磁盘大小</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:~# lsblk</span><br><span class="line">NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT</span><br><span class="line">sda      8:0    0  200G  0 disk</span><br><span class="line">├─sda1   8:1    0    1M  0 part</span><br><span class="line">├─sda2   8:2    0    2G  0 part [SWAP]</span><br><span class="line">└─sda3   8:3    0   18G  0 part /</span><br><span class="line">sr0     11:0    1 1024M  0 rom</span><br></pre></td></tr></table></figure>
+
+<p>3、扩展分区</p>
+<p><strong>记住根分区起始位置和结束位置</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:~# fdisk /dev/sda</span><br><span class="line"></span><br><span class="line">Welcome to fdisk (util-linux 2.34).</span><br><span class="line">Changes will remain in memory only, until you decide to write them.</span><br><span class="line">Be careful before using the write command.</span><br><span class="line"></span><br><span class="line">GPT PMBR size mismatch (41943039 != 419430399) will be corrected by write.</span><br><span class="line"></span><br><span class="line">Command (m for help): p</span><br><span class="line"></span><br><span class="line">Disk /dev/sda: 200 GiB, 214748364800 bytes, 419430400 sectors</span><br><span class="line">Disk model: VMware Virtual S</span><br><span class="line">Units: sectors of 1 * 512 = 512 bytes</span><br><span class="line">Sector size (logical/physical): 512 bytes / 512 bytes</span><br><span class="line">I/O size (minimum/optimal): 512 bytes / 512 bytes</span><br><span class="line">Disklabel type: gpt</span><br><span class="line">Disk identifier: 9732D11F-D526-4419-8BCA-35D48F77AACE</span><br><span class="line"></span><br><span class="line">Device       Start      End  Sectors Size Type</span><br><span class="line">/dev/sda1     2048     4095     2048   1M BIOS boot</span><br><span class="line">/dev/sda2     4096  4198399  4194304   2G Linux swap</span><br><span class="line">/dev/sda3  4198400 41940991 37742592  18G Linux filesystem</span><br></pre></td></tr></table></figure>
+
+<p>删除根分区，<font color="red"><strong>切记不要保存</strong></font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Command (m for help): d</span><br><span class="line">Partition number (1-3, default 3): 3</span><br><span class="line"></span><br><span class="line">Partition 3 has been deleted.</span><br></pre></td></tr></table></figure>
+
+<p>创建分区，新分区和删除分区的开始扇区相同</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">Command (m for help): n</span><br><span class="line">Partition number (3-128, default 3): 3</span><br><span class="line">First sector (4198400-419430366, default 4198400):</span><br><span class="line">Last sector, +/-sectors or +/-size&#123;K,M,G,T,P&#125; (4198400-419430366, default 419430366):</span><br><span class="line"></span><br><span class="line">Created a new partition 3 of type &#x27;Linux filesystem&#x27; and of size 198 GiB.</span><br><span class="line">Partition #3 contains a ext4 signature.</span><br><span class="line"></span><br><span class="line">Do you want to remove the signature? [Y]es/[N]o: y</span><br><span class="line"></span><br><span class="line">The signature will be removed by a write command.</span><br><span class="line"></span><br><span class="line">Command (m for help): p</span><br><span class="line">Disk /dev/sda: 200 GiB, 214748364800 bytes, 419430400 sectors</span><br><span class="line">Disk model: VMware Virtual S</span><br><span class="line">Units: sectors of 1 * 512 = 512 bytes</span><br><span class="line">Sector size (logical/physical): 512 bytes / 512 bytes</span><br><span class="line">I/O size (minimum/optimal): 512 bytes / 512 bytes</span><br><span class="line">Disklabel type: gpt</span><br><span class="line">Disk identifier: 9732D11F-D526-4419-8BCA-35D48F77AACE</span><br><span class="line"></span><br><span class="line">Device       Start       End   Sectors  Size Type</span><br><span class="line">/dev/sda1     2048      4095      2048    1M BIOS boot</span><br><span class="line">/dev/sda2     4096   4198399   4194304    2G Linux swap</span><br><span class="line">/dev/sda3  4198400 419430366 415231967  198G Linux filesystem</span><br><span class="line"></span><br><span class="line">Filesystem/RAID signature on partition 3 will be wiped.</span><br></pre></td></tr></table></figure>
+
+<p>保存退出</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">Command (m for help): w</span><br><span class="line">The partition table has been altered.</span><br><span class="line">Syncing disks.</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:~# df -hT</span><br><span class="line">Filesystem     Type      Size  Used Avail Use% Mounted on</span><br><span class="line">udev           devtmpfs  938M     0  938M   0% /dev</span><br><span class="line">tmpfs          tmpfs     196M  1.3M  195M   1% /run</span><br><span class="line">/dev/sda3      ext4       18G  4.6G   13G  28% / ############## 并未改变</span><br><span class="line">tmpfs          tmpfs     980M     0  980M   0% /dev/shm</span><br><span class="line">tmpfs          tmpfs     5.0M     0  5.0M   0% /run/lock</span><br><span class="line">tmpfs          tmpfs     980M     0  980M   0% /sys/fs/cgroup</span><br><span class="line">/dev/loop1     squashfs   28M   28M     0 100% /snap/snapd/7264</span><br><span class="line">/dev/loop2     squashfs   69M   69M     0 100% /snap/lxd/14804</span><br><span class="line">/dev/loop0     squashfs   55M   55M     0 100% /snap/core18/1705</span><br><span class="line">/dev/loop4     squashfs   55M   55M     0 100% /snap/core18/1754</span><br><span class="line">/dev/loop3     squashfs   70M   70M     0 100% /snap/lxd/14954</span><br><span class="line">tmpfs          tmpfs     196M     0  196M   0% /run/user/0</span><br></pre></td></tr></table></figure>
+
+<p>重读分区表、刷新根分区</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">root@ubuntu20-04:~# partprobe /dev/sda # 重读分区表。当删除文件后，仍然占用空间，partprobe可以在不重启的情况下重读分区。</span><br><span class="line">root@ubuntu20-04:~# resize2fs /dev/sda3 # 刷新分区</span><br><span class="line">resize2fs 1.45.5 (07-Jan-2020)</span><br><span class="line">Filesystem at /dev/sda3 is mounted on /; on-line resizing required</span><br><span class="line">old_desc_blocks = 3, new_desc_blocks = 25</span><br><span class="line">The filesystem on /dev/sda3 is now 51903995 (4k) blocks long.</span><br><span class="line"></span><br><span class="line">root@ubuntu20-04:~# df -hT</span><br><span class="line">Filesystem     Type      Size  Used Avail Use% Mounted on</span><br><span class="line">udev           devtmpfs  938M     0  938M   0% /dev</span><br><span class="line">tmpfs          tmpfs     196M  1.3M  195M   1% /run</span><br><span class="line">/dev/sda3      ext4      195G  4.6G  183G   3% /</span><br><span class="line">tmpfs          tmpfs     980M     0  980M   0% /dev/shm</span><br><span class="line">tmpfs          tmpfs     5.0M     0  5.0M   0% /run/lock</span><br><span class="line">tmpfs          tmpfs     980M     0  980M   0% /sys/fs/cgroup</span><br><span class="line">/dev/loop1     squashfs   28M   28M     0 100% /snap/snapd/7264</span><br><span class="line">/dev/loop2     squashfs   69M   69M     0 100% /snap/lxd/14804</span><br><span class="line">/dev/loop0     squashfs   55M   55M     0 100% /snap/core18/1705</span><br><span class="line">/dev/loop4     squashfs   55M   55M     0 100% /snap/core18/1754</span><br><span class="line">/dev/loop3     squashfs   70M   70M     0 100% /snap/lxd/14954</span><br><span class="line">tmpfs          tmpfs     196M     0  196M   0% /run/user/0</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2020/05/Oracle%E5%88%86%E6%9E%90%E5%87%BD%E6%95%B0/" rel="prev" title="Oracle分析函数">
+                  <i class="fa fa-angle-left"></i> Oracle分析函数
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2020/06/Redis_01%E5%AE%89%E8%A3%85/" rel="next" title="Redis_01安装">
+                  Redis_01安装 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

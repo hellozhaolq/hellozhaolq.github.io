@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="推荐链接：  Shell 教程 | 菜鸟教程   壳层内置指令 - 维基百科   Shell内建命令  shell 及种类相关链接： 壳层 、 Unix shell 、 C Shell 、 Bourne shell 、 dash 、 Bash 、 fish 、 bash到fish的命令翻译对照">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ChildShell、SubShell、环境变量">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/07/ChildShell%E3%80%81SubShell%E3%80%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="推荐链接：  Shell 教程 | 菜鸟教程   壳层内置指令 - 维基百科   Shell内建命令  shell 及种类相关链接： 壳层 、 Unix shell 、 C Shell 、 Bourne shell 、 dash 、 Bash 、 fish 、 bash到fish的命令翻译对照">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/07/ChildShell%E3%80%81SubShell%E3%80%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F/180923154893576.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/07/ChildShell%E3%80%81SubShell%E3%80%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F/180923155345355.png">
+<meta property="article:published_time" content="2019-07-18T01:09:10.000Z">
+<meta property="article:modified_time" content="2019-07-18T01:09:10.000Z">
+<meta property="article:author" content="zhaolq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2019/07/ChildShell%E3%80%81SubShell%E3%80%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F/180923154893576.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/07/ChildShell%E3%80%81SubShell%E3%80%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2019/07/ChildShell%E3%80%81SubShell%E3%80%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F/","path":"article/2019/07/ChildShell、SubShell、环境变量/","title":"ChildShell、SubShell、环境变量"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>ChildShell、SubShell、环境变量 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#shell-%E5%8F%8A%E7%A7%8D%E7%B1%BB"><span class="nav-number">1.</span> <span class="nav-text">shell 及种类</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E9%BB%98%E8%AE%A4%E4%BA%A4%E4%BA%92%E5%BC%8F-shell"><span class="nav-number">1.1.</span> <span class="nav-text">用户默认交互式 shell</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E7%B3%BB%E7%BB%9F-shell"><span class="nav-number">1.2.</span> <span class="nav-text">默认系统 shell</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F"><span class="nav-number">1.3.</span> <span class="nav-text">注意</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%88%B6%E5%AD%90-shell-ChildShell"><span class="nav-number">2.</span> <span class="nav-text">父子 shell (ChildShell)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-ChildShell-%E8%BF%9B%E7%A8%8B"><span class="nav-number">2.1.</span> <span class="nav-text">创建 ChildShell 进程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ChildShell-%E5%86%8D%E5%88%9B%E5%BB%BA-ChildShell"><span class="nav-number">2.2.</span> <span class="nav-text">ChildShell 再创建 ChildShell</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%80%E5%87%BA-ChildShell-%E8%BF%9B%E7%A8%8B"><span class="nav-number">2.3.</span> <span class="nav-text">退出 ChildShell 进程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%A7%E8%83%BD"><span class="nav-number">2.4.</span> <span class="nav-text">性能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%B1%E5%BA%A6"><span class="nav-number">2.5.</span> <span class="nav-text">深度</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%88%B6%E5%AD%90-shell-SubShell"><span class="nav-number">3.</span> <span class="nav-text">父子 shell (SubShell)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E5%88%97%E8%A1%A8-SubShell"><span class="nav-number">3.1.</span> <span class="nav-text">进程列表 SubShell</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8E%E5%8F%B0%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.2.</span> <span class="nav-text">后台模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E5%88%97%E8%A1%A8-SubShell-%E2%80%93-%E5%90%8E%E5%8F%B0%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.3.</span> <span class="nav-text">进程列表 SubShell – 后台模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%A7%E8%83%BD-1"><span class="nav-number">3.4.</span> <span class="nav-text">性能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%B1%E5%BA%A6-1"><span class="nav-number">3.5.</span> <span class="nav-text">深度</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ChildShell-%E5%92%8C-SubShell"><span class="nav-number">4.</span> <span class="nav-text">ChildShell 和 SubShell</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%96%E9%83%A8%E5%91%BD%E4%BB%A4%E3%80%81%E5%86%85%E5%BB%BA%E5%91%BD%E4%BB%A4"><span class="nav-number">5.</span> <span class="nav-text">外部命令、内建命令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E9%83%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">5.1.</span> <span class="nav-text">内部命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#alias%E5%91%BD%E4%BB%A4"><span class="nav-number">5.1.1.</span> <span class="nav-text">alias命令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%96%E9%83%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">5.2.</span> <span class="nav-text">外部命令</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">6.</span> <span class="nav-text">环境变量</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E5%85%A8%E5%B1%80%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">6.1.</span> <span class="nav-text">系统全局环境变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E5%B1%80%E9%83%A8%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">6.2.</span> <span class="nav-text">系统局部环境变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E5%8F%98%E9%87%8F"><span class="nav-number">6.3.</span> <span class="nav-text">自定义变量</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F"><span class="nav-number">6.3.1.</span> <span class="nav-text">自定义局部变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F"><span class="nav-number">6.3.2.</span> <span class="nav-text">自定义全局变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">6.3.3.</span> <span class="nav-text">删除环境变量</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F-%E7%B3%BB%E7%BB%9F%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">7.</span> <span class="nav-text">默认环境变量(系统环境变量)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#bash-shell%E6%8F%90%E4%BE%9B%E7%9A%84%E4%B8%8EUnix-Bourne-shell%E5%85%BC%E5%AE%B9%E7%9A%84%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">7.1.</span> <span class="nav-text">bash shell提供的与Unix Bourne shell兼容的环境变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bash-shell-%E8%87%AA%E6%9C%89%E5%8F%98%E9%87%8F"><span class="nav-number">7.2.</span> <span class="nav-text">bash shell 自有变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PATH-%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">7.3.</span> <span class="nav-text">PATH 环境变量</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#shell-%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">8.</span> <span class="nav-text">shell 启动方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A4%E4%BA%92%E5%BC%8F-shell"><span class="nav-number">8.1.</span> <span class="nav-text">交互式 shell</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E4%BA%A4%E4%BA%92%E5%BC%8F-shell"><span class="nav-number">8.1.1.</span> <span class="nav-text">启动交互式 shell</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">8.1.2.</span> <span class="nav-text">配置文件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E%E4%BA%A4%E4%BA%92%E5%BC%8F-shell"><span class="nav-number">8.2.</span> <span class="nav-text">非交互式 shell</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E9%9D%9E%E4%BA%A4%E4%BA%92%E5%BC%8F-shell"><span class="nav-number">8.2.1.</span> <span class="nav-text">启动非交互式 shell</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6-1"><span class="nav-number">8.2.2.</span> <span class="nav-text">配置文件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%99%BB%E5%BD%95%E5%BC%8F-shell"><span class="nav-number">8.3.</span> <span class="nav-text">登录式 shell</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E7%99%BB%E9%99%86%E5%BC%8F-shell"><span class="nav-number">8.3.1.</span> <span class="nav-text">启动登陆式 shell</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6-2"><span class="nav-number">8.3.2.</span> <span class="nav-text">配置文件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#etc-profile-%E6%96%87%E4%BB%B6"><span class="nav-number">8.3.2.1.</span> <span class="nav-text">&#x2F;etc&#x2F;profile 文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HOME-%E7%9B%AE%E5%BD%95%E4%B8%8B%E7%9A%844%E4%B8%AA%E5%90%AF%E5%8A%A8%E6%96%87%E4%BB%B6"><span class="nav-number">8.3.2.2.</span> <span class="nav-text">$HOME 目录下的4个启动文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HOME-bash-profile"><span class="nav-number">8.3.2.3.</span> <span class="nav-text">$HOME&#x2F;.bash_profile</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E%E7%99%BB%E5%BD%95%E5%BC%8F-shell"><span class="nav-number">8.4.</span> <span class="nav-text">非登录式 shell</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A4%E6%96%AD%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">8.5.</span> <span class="nav-text">判断启动方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A4%E6%96%AD-shell-%E6%98%AF%E5%90%A6%E6%98%AF%E4%BA%A4%E4%BA%92%E5%BC%8F"><span class="nav-number">8.5.1.</span> <span class="nav-text">判断 shell 是否是交互式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A4%E6%96%AD-shell-%E6%98%AF%E5%90%A6%E4%B8%BA%E7%99%BB%E5%BD%95%E5%BC%8F"><span class="nav-number">8.5.2.</span> <span class="nav-text">判断 shell 是否为登录式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8C%E6%97%B6%E5%88%A4%E6%96%AD%E4%BA%A4%E4%BA%92%E5%BC%8F%E3%80%81%E7%99%BB%E5%BD%95%E5%BC%8F"><span class="nav-number">8.5.3.</span> <span class="nav-text">同时判断交互式、登录式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B1%9E%E4%BA%8E%E5%93%AA%E7%A7%8D%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F%EF%BC%9F"><span class="nav-number">8.6.</span> <span class="nav-text">( ) 属于哪种启动方式？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">8.7.</span> <span class="nav-text">常见的启动方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%A4%E4%BA%92%E5%BC%8F%E7%99%BB%E5%BD%95%E5%BC%8F"><span class="nav-number">8.7.1.</span> <span class="nav-text">交互式登录式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%A4%E4%BA%92%E5%BC%8F%E9%9D%9E%E7%99%BB%E5%BD%95%E5%BC%8F"><span class="nav-number">8.7.2.</span> <span class="nav-text">交互式非登录式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%9E%E4%BA%A4%E4%BA%92%E5%BC%8F%E7%99%BB%E5%BD%95%E5%BC%8F"><span class="nav-number">8.7.3.</span> <span class="nav-text">非交互式登录式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%9E%E4%BA%A4%E4%BA%92%E5%BC%8F%E9%9D%9E%E7%99%BB%E5%BD%95%E5%BC%8F"><span class="nav-number">8.7.4.</span> <span class="nav-text">非交互式非登录式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E6%8C%81%E4%B9%85%E5%8C%96"><span class="nav-number">9.</span> <span class="nav-text">环境变量持久化</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/07/ChildShell%E3%80%81SubShell%E3%80%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="ChildShell、SubShell、环境变量 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ChildShell、SubShell、环境变量
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-07-18 09:09:10" itemprop="dateCreated datePublished" datetime="2019-07-18T09:09:10+08:00">2019-07-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>推荐链接：</p>
+<p> <a target="_blank" rel="noopener" href="https://www.runoob.com/linux/linux-shell.html">Shell 教程 | 菜鸟教程</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%AE%BC%E5%B1%A4%E5%85%A7%E5%BB%BA%E6%8C%87%E4%BB%A4">壳层内置指令 - 维基百科</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://man.linuxde.net/sub/shell%e5%86%85%e5%bb%ba%e5%91%bd%e4%bb%a4">Shell内建命令</a> </p>
+<h1 id="shell-及种类"><a href="#shell-及种类" class="headerlink" title="shell 及种类"></a>shell 及<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%AE%BC%E5%B1%A4#Unix%E6%88%96%E9%A1%9E%E4%BC%BC%E4%BD%9C%E6%A5%AD%E7%B3%BB%E7%B5%B1%E4%B8%8B%E7%9A%84%E6%AE%BC%E5%B1%A4">种类</a></h1><p>相关链接： <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%AE%BC%E5%B1%A4">壳层</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Unix_shell">Unix shell</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/C_Shell">C Shell</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Bourne_shell">Bourne shell</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Debian_Almquist_shell">dash</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Bash">Bash</a> 、 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Fish">fish</a> 、 <a target="_blank" rel="noopener" href="https://github.com/fish-shell/fish-shell/wiki/Shell-Translation-Dictionary">bash到fish的命令翻译对照</a> </p>
+<span id="more"></span>
+
+<h2 id="用户默认交互式-shell"><a href="#用户默认交互式-shell" class="headerlink" title="用户默认交互式 shell"></a>用户默认交互式 shell</h2><p><strong>Bash</strong>，<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Unix_shell">Unix shell</a> 的一种，能运行于大多数 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%B1%BBUnix%E7%B3%BB%E7%BB%9F">类Unix系统</a> 的操作系统上，包括 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Linux">Linux</a> 与 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Mac_OS_X_v10.4">Mac OS X v10.4</a> 都将它作为默认 shell。<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Bash">Bash</a> 是 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Bourne_shell">Bourne shell</a> 的后继兼容版本与开放源代码版本，它的名称来自 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Bourne_shell">Bourne shell</a>（sh）的一个双关语（Bourne again &#x2F; born again）：<strong>B</strong>ourne-<strong>A</strong>gain <strong>SH</strong>ell。</p>
+<p>当用户登录到终端时，默认的 shell 程序就会运行。系统启动什么样的 shell 程序取决于个人的用户配置。如下所示，root 用户使用 <code>bash shell</code> 作为自己的默认 shell 程序。</p>
+<p> <a target="_blank" rel="noopener" href="https://www.runoob.com/linux/linux-user-manage.html">Linux 用户和用户组管理</a> ：包括对 <code>/etc/passwd</code> 文件等详细说明。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cat</span> /etc/passwd</span><br><span class="line">root:x:0:0:root:/root:/bin/bash <span class="comment"># Ubuntu root用户的默认交互式shell</span></span><br><span class="line"><span class="comment"># 其格式和具体含义如下：</span></span><br><span class="line"><span class="comment"># 用户名:口令:用户标识号:组标识号:注释性描述:主目录:登录Shell</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>bash shell</strong> 程序位于 <code>/bin</code> 目录下，使用长列表可以看出它是一个可执行程序：</p>
+<p><font color="gray"> <a target="_blank" rel="noopener" href="https://man.linuxde.net/ls">ls命令</a> -F：在每个输出项后追加文件的类型标识符，具体含义：“*”表示具有可执行权限的普通文件，“&#x2F;”表示目录，“@”表示符号链接，“|”表示命令管道FIFO，“&#x3D;”表示sockets套接字。当文件为普通文件时，不输出任何标识符；</font></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">ls</span> -lF /bin/bash</span><br><span class="line">-rwxr-xr-x 1 root root 1113504 Jun  7  2019 /bin/bash*</span><br></pre></td></tr></table></figure>
+
+<p>像 <code>/bin/tcsh</code> 或 <code>/bin/dash</code> 或 <code>/bin/csh</code> 这些都是 shell 程序，由于 bash shell 使用者最多，很少有人使用其它 shell 作为默认 shell 。</p>
+<h2 id="默认系统-shell"><a href="#默认系统-shell" class="headerlink" title="默认系统 shell"></a>默认系统 shell</h2><p><strong>Bourne shell 或 sh</strong>，它的二进制程序文件在大多数 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Unix">Unix</a> 系统上位于 <code>/usr/bin/sh</code> 或 <code>/bin/sh</code>。在很多 Unix 版本中，它仍然是 root 的默认 shell。</p>
+<p>在 Linux 系统中，会使用 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%AC%A6%E5%8F%B7%E9%93%BE%E6%8E%A5">软链接</a> 将默认的系统 shell 设置成 bash 或 dash，那么 sh 其实就是 bash 或 dash 程序。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">ls</span> -li /bin/sh</span><br><span class="line">1179731 lrwxrwxrwx 1 root root 4 May 29  2019 /bin/sh -&gt; dash <span class="comment"># Ubuntu的默认系统shell</span></span><br><span class="line">1179731 lrwxrwxrwx 1 root root 4 May 29  2019 /bin/sh -&gt; bash <span class="comment"># Centos</span></span><br></pre></td></tr></table></figure>
+
+<p>使用长列表格式查看 <strong>软连接实际指向的文件位置</strong> 和 <strong>文件类型</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">ls</span> -liF /bin/sh</span><br><span class="line">1179731 lrwxrwxrwx 1 root root 4 May 29  2019 /bin/sh -&gt; dash*</span><br></pre></td></tr></table></figure>
+
+<p>带有 <code>-&gt;</code> 符号的就是 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%AC%A6%E5%8F%B7%E9%93%BE%E6%8E%A5">软连接</a> 。</p>
+<h2 id="注意"><a href="#注意" class="headerlink" title="注意"></a><font color="red">注意</font></h2><p><font color="green">有些发行版系统上，默认交互式 shell 和默认系统 shell 并不相同。</font></p>
+<p>例如在 Ubuntu 发行版中（上文已列出），默认交互式 shell 是 bash，而默认系统 shell 是 dash。而且并不是必须一直使用默认的交互式 shell ，可以使用发行版中所有可用的 shell 。可以直接输入命令 <code>/bin/dash</code> 来启动 <strong>dash shell</strong> （子 shell 进程）。</p>
+<h1 id="父子-shell-ChildShell"><a href="#父子-shell-ChildShell" class="headerlink" title="父子 shell (ChildShell)"></a>父子 shell (ChildShell)</h1><h2 id="创建-ChildShell-进程"><a href="#创建-ChildShell-进程" class="headerlink" title="创建 ChildShell 进程"></a>创建 ChildShell 进程</h2><p>上面说的默认 bash shell ，是一个父 shell 进程 。要创建一个 ChildShell 进程很简单，输入 bash 就会创建一个新的 shell 进程，被称为 ChildShell 进程。要区分是父 shell 进程还是 ChildShell 进程，需要使用 <code>ps</code> 查看进程命令。<strong>在 root 用户下</strong>，我们先查看一下没有 ChildShell 进程的父 shell 进程是什么样子：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ ps -f</span><br><span class="line">UID        PID  PPID  C STIME TTY          TIME CMD</span><br><span class="line">root      5895  5840  0 18:57 pts/0    00:00:00 -bash</span><br><span class="line">root     21742  5895  0 19:40 pts/0    00:00:00 ps -f</span><br></pre></td></tr></table></figure>
+
+<p>接下来，输入 <code>bash</code>，来创建一个 ChildShell 进程，该 ChildShell 进程的 PPID（父进程 ID）是 5895，对应 -bash 进程的 PID 5895。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ bash</span><br><span class="line">$ ps -f</span><br><span class="line">UID        PID  PPID  C STIME TTY          TIME CMD</span><br><span class="line">root      5895  5840  0 18:57 pts/0    00:00:00 -bash</span><br><span class="line">root     22335  5895  0 19:41 pts/0    00:00:00 bash</span><br><span class="line">root     22370 22335  0 19:42 pts/0    00:00:00 ps -f</span><br></pre></td></tr></table></figure>
+
+<h2 id="ChildShell-再创建-ChildShell"><a href="#ChildShell-再创建-ChildShell" class="headerlink" title="ChildShell 再创建 ChildShell"></a>ChildShell 再创建 ChildShell</h2><p>上面创建的 ChildShell 进程 PID 为 22335 。ChildShell 进程也可以再创建一个 ChildShell 进程，以此类推。它们的关系如下图所示：</p>
+<p><img src="/article/2019/07/ChildShell%E3%80%81SubShell%E3%80%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F/180923154893576.png" alt="img"></p>
+<p>下面继续建了两个 ChildShell 进程，总共三个 ChildShell 进程：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">$ bash</span><br><span class="line">$ bash</span><br><span class="line">$ ps --forest</span><br><span class="line">  PID TTY          TIME CMD</span><br><span class="line"> 5895 pts/0    00:00:00 bash</span><br><span class="line">22335 pts/0    00:00:00  \_ bash</span><br><span class="line">23674 pts/0    00:00:00      \_ bash</span><br><span class="line">23690 pts/0    00:00:00          \_ bash</span><br><span class="line">23760 pts/0    00:00:00              \_ ps</span><br><span class="line"><span class="comment"># 使用 &#x27;ps -f&#x27; 命令也能够通过 PPID 列出谁是谁的父进程。</span></span><br><span class="line">$ ps -f</span><br><span class="line">UID        PID  PPID  C STIME TTY          TIME CMD</span><br><span class="line">root      5895  5840  0 18:57 pts/0    00:00:00 -bash</span><br><span class="line">root     22335  5895  0 19:41 pts/0    00:00:00 bash</span><br><span class="line">root     23674 22335  0 19:45 pts/0    00:00:00 bash</span><br><span class="line">root     23690 23674  0 19:46 pts/0    00:00:00 bash</span><br><span class="line">root     24340 23690  0 19:47 pts/0    00:00:00 ps -f</span><br></pre></td></tr></table></figure>
+
+<h2 id="退出-ChildShell-进程"><a href="#退出-ChildShell-进程" class="headerlink" title="退出 ChildShell 进程"></a>退出 ChildShell 进程</h2><p>通过输入 exit 命令能有条不紊的退出 ChildShell 进程：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">exit</span></span><br><span class="line"><span class="built_in">exit</span></span><br><span class="line">$ ps -f</span><br><span class="line">UID        PID  PPID  C STIME TTY          TIME CMD</span><br><span class="line">root      5895  5840  0 18:57 pts/0    00:00:00 -bash</span><br><span class="line">root     22335  5895  0 19:41 pts/0    00:00:00 bash</span><br><span class="line">root     23674 22335  0 19:45 pts/0    00:00:00 bash</span><br><span class="line">root     24340 23674  0 19:47 pts/0    00:00:00 ps -f</span><br><span class="line">$ <span class="built_in">exit</span></span><br><span class="line"><span class="built_in">exit</span></span><br><span class="line">$ <span class="built_in">exit</span></span><br><span class="line"><span class="built_in">exit</span></span><br><span class="line">$ ps -f</span><br><span class="line">UID        PID  PPID  C STIME TTY          TIME CMD</span><br><span class="line">root      5895  5840  0 18:57 pts/0    00:00:00 -bash</span><br><span class="line">root     24410  5895  0 19:47 pts/0    00:00:00 ps -f</span><br></pre></td></tr></table></figure>
+
+<p>当没有了 ChildShell 时，再输入 exit 将退出控制台终端。</p>
+<h2 id="性能"><a href="#性能" class="headerlink" title="性能"></a>性能</h2><p><font color="red">生成 ChildShell 进程的成本不低，而且速度还慢，创建嵌套的 ChildShell 进程去处理命令，性能更为严重。</font></p>
+<h2 id="深度"><a href="#深度" class="headerlink" title="深度"></a>深度</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">echo</span> <span class="variable">$SHLVL</span> <span class="comment"># ChildShell进程嵌套深度</span></span></span><br></pre></td></tr></table></figure>
+
+<h1 id="父子-shell-SubShell"><a href="#父子-shell-SubShell" class="headerlink" title="父子 shell (SubShell)"></a>父子 shell (SubShell)</h1><h2 id="进程列表-SubShell"><a href="#进程列表-SubShell" class="headerlink" title="进程列表 SubShell"></a>进程列表 SubShell</h2><p>在 shell 中，将命令放入 <code>( 括号 )</code> 中，并在命令列表尾部加分号 <code>;</code> 。这样便会创建出一个子进程去执行。是否生成了 SubShell，需要借助 <code>echo $BASH_SUBSHELL</code> （此环境变量表示当前 SubShell 环境的嵌套级别），如果该命令返回 <code>0</code>，表示没有 SubShell。一组命令放入括号中，产生了一个 SubShell 去执行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">echo</span> <span class="variable">$BASH_SUBSHELL</span> <span class="comment"># 在任何shell中输出结果都是0</span></span><br><span class="line">0</span><br><span class="line">$ (<span class="built_in">pwd</span>; <span class="built_in">ls</span>; <span class="built_in">echo</span> <span class="variable">$BASH_SUBSHELL</span>) <span class="comment"># 在SubShell中输出深度如下</span></span><br><span class="line">/root</span><br><span class="line">Dockerfile  get-docker.sh</span><br><span class="line">1</span><br></pre></td></tr></table></figure>
+
+<p>上面说了，把命令列表放入括号中，就会创建一个 SubShell，下面在括号中再套一个括号， 结果是在 SubShell 上创建了 SubShell。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ (<span class="built_in">pwd</span>; <span class="built_in">ls</span>; (<span class="built_in">echo</span> <span class="variable">$BASH_SUBSHELL</span>))</span><br><span class="line">/root</span><br><span class="line">Dockerfile  get-docker.sh</span><br><span class="line">2</span><br></pre></td></tr></table></figure>
+
+<h2 id="后台模式"><a href="#后台模式" class="headerlink" title="后台模式"></a>后台模式</h2><p><font color="red">在交互式 shell 中，一个高效的 SubShell 用法就是使用后台模式</font>，在后台模式中运行命令在处理命令的同时让出 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%95%8C%E9%9D%A2">CLI</a> ，以供他用。 演示后台模式经典命令就是 <code>sleep</code> 。想要将命令置入后台模式。在命令末尾加上字符 <code>&amp;</code> 。 结合 <code>sleep</code> 暂停 10 秒，通过 <code>ps</code> 命令来看看。<br>将 <code>sleep</code> 命令置入后台模式，执行命令 <code>sleep 10&amp;</code>，出现了后台作业号 1，以及后台作业进程 29332。通过 <code>ps</code> 可以看到，该后台命令进程 29332 一直在运行。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sleep</span> 10&amp;</span><br><span class="line">[1] 29332</span><br><span class="line">$ ps -f</span><br><span class="line">UID        PID  PPID  C STIME TTY          TIME CMD</span><br><span class="line">root      5895  5840  0 18:57 pts/0    00:00:00 -bash</span><br><span class="line">root     29332  5895  0 20:00 pts/0    00:00:00 <span class="built_in">sleep</span> 10</span><br><span class="line">root     29401  5895  0 20:00 pts/0    00:00:00 ps -f</span><br><span class="line">$ ps -f</span><br><span class="line">UID        PID  PPID  C STIME TTY          TIME CMD</span><br><span class="line">root      5895  5840  0 18:57 pts/0    00:00:00 -bash</span><br><span class="line">root     29434  5895  0 20:00 pts/0    00:00:00 ps -f</span><br><span class="line">[1]+  Done                    <span class="built_in">sleep</span> 10</span><br></pre></td></tr></table></figure>
+
+<p>通过 <code>jobs</code> 命令可以查看当前后台运行的进程信息（另外 jobs -l 显示进程号），如下所示：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sleep</span> 10&amp;</span><br><span class="line">[1] 31864</span><br><span class="line"><span class="comment"># ------------------------------------------------------</span></span><br><span class="line">$ <span class="built_in">jobs</span></span><br><span class="line">[1]+  Running                 <span class="built_in">sleep</span> 10 &amp;</span><br><span class="line">$ <span class="built_in">jobs</span></span><br><span class="line">[1]+  Done                    <span class="built_in">sleep</span> 10</span><br><span class="line"><span class="comment"># ------------------------------------------------------</span></span><br><span class="line">$ <span class="built_in">jobs</span> -l</span><br><span class="line">[1]+ 31864 Running                 <span class="built_in">sleep</span> 10 &amp;</span><br><span class="line">$ <span class="built_in">jobs</span> -l</span><br><span class="line">[1]+ 31864 Done                    <span class="built_in">sleep</span> 10</span><br></pre></td></tr></table></figure>
+
+<h2 id="进程列表-SubShell-–-后台模式"><a href="#进程列表-SubShell-–-后台模式" class="headerlink" title="进程列表 SubShell – 后台模式"></a>进程列表 SubShell – 后台模式</h2><p>上面讲到了<code>进程列表 SubShell</code> ，<strong>进程列表</strong> 是运行在 SubShell 中的一条或多条命令。</p>
+<p>下面将进程列表置入后台模式，如下所示：当一级 SubShell 的数字 1 显示在提示符的旁边时，按下回车键。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ (<span class="built_in">sleep</span> 2; <span class="built_in">echo</span> <span class="variable">$BASH_SUBSHELL</span>)&amp;</span><br><span class="line">[1] 1189</span><br><span class="line">$ 1</span><br><span class="line"></span><br><span class="line">[1]+  Done                    ( <span class="built_in">sleep</span> 2; <span class="built_in">echo</span> <span class="variable">$BASH_SUBSHELL</span> )</span><br><span class="line">$ </span><br></pre></td></tr></table></figure>
+
+<p>在使用 shell 时，很多情况下，可以将命令置入后台模式，例如：下面将 mysql 的慢日志归档。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">pwd</span></span><br><span class="line">/usr/local/mysql/data</span><br><span class="line">$ (tar -cvf mysql-slow.tar mysql-slow.log)&amp;</span><br><span class="line">[1] 1356</span><br><span class="line">$ mysql-slow.log</span><br><span class="line"></span><br><span class="line">[1]+  Done                    ( tar -cvf mysql-slow.tar mysql-slow.log )</span><br><span class="line">$ <span class="built_in">ls</span> -li</span><br></pre></td></tr></table></figure>
+
+<h2 id="性能-1"><a href="#性能-1" class="headerlink" title="性能"></a>性能</h2><p>在 shell 脚本中，经常会<strong>使用 SubShell 进行多进程处理</strong>，<font color="red">直接使用 SubShell 明显拖慢处理速度</font>，因为多进程共用一个终端，这个终端控制着所有 SubShell 的 I&#x2F;O 。<font color="red">解决办法：</font>使用后台模式避免终端控制 I&#x2F;O 。</p>
+<p><font color="red">将 SubShell 要处理的进程置入后台模式，即可以在 SubShell 中进行繁重的处理工作，又不会让 SubShell 的 I&#x2F;O 受制于终端。</font></p>
+<h2 id="深度-1"><a href="#深度-1" class="headerlink" title="深度"></a>深度</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">echo</span> <span class="variable">$BASH_SUBSHELL</span> <span class="comment"># SubShell进程嵌套深度</span></span></span><br></pre></td></tr></table></figure>
+
+<h1 id="ChildShell-和-SubShell"><a href="#ChildShell-和-SubShell" class="headerlink" title="ChildShell 和 SubShell"></a>ChildShell 和 SubShell</h1><p>ChildShell 和 SubShell 都拥有自己的进程，都是对应父进程的子进程。</p>
+<p>shell 脚本创建的是 ChildShell 进程，测试脚本 test.sh：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">echo $BASH_SUBSHELL</span><br><span class="line">echo $SHLVL</span><br></pre></td></tr></table></figure>
+
+
+
+<p>当我们创建一个 subshell 时，该 subshell 会有自己的进程，这个进程叫子进程（subshell 的进程）。</p>
+<p>我们可以在 subshell 中创建很多子进程以完成作业，这些子进程的父进程就是这个 subshell 进程，这些子进程都是在这个 subshell 中完成作业（也许这样可以更好的控制环境变量吧！）。</p>
+<p>以下内容摘自 <a target="_blank" rel="noopener" href="https://www.cnblogs.com/ziyunfei/p/4803832.html">SHLVL 和 BASH_SUBSHELL 两个变量的区别</a> ：</p>
+<blockquote>
+<p>SHLVL 是记录多个 Bash 进程实例嵌套深度的累加器，而 BASH_SUBSHELL 是记录一个 Bash 进程实例中多个子 Shell（subshell）嵌套深度的累加器。</p>
+</blockquote>
+<p>如果你混淆了这两个变量，多半是对 BASH_SUBSHELL 这个变量名中的 subshell 概念不清，下面我们就讲讲什么是 subshell，什么不是。</p>
+<p>很多人误以为在 Bash 里面再执行一次 Bash，或者再执行一个 Shell 脚本就是进入子 Shell 了，所以他们会有下面这样的疑问：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">bash <span class="comment"># 执行另外一个 bash 命令</span></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">echo</span> <span class="variable">$BASH_SUBSHELL</span></span> </span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">0 <span class="comment"># 怎么还是 0，我这不是在上个 Shell 的子 Shell 里吗？</span></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">echo</span> <span class="string">&#x27; echo $BASH_SUBSHELL &#x27;</span> &gt; <span class="built_in">test</span>; <span class="built_in">chmod</span> +x <span class="built_in">test</span>; ./test;</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">0 <span class="comment"># 难道再执行 Shell 脚本也不是子 Shell？</span></span></span><br></pre></td></tr></table></figure>
+
+<p>然而并不是，这些都不是子 Shell，这种情况只能描述成是“当前 Shell 启动了个外部命令，而这个外部命令刚好是个 Shell”，真正的子 Shell 是不需要重新执行硬盘上的外部命令的，全部是内存中的操作。上面这个示例中的 BASH_SUBSHELL 都应该替换成 SHLVL 才能看到累加效果。</p>
+<p>有几本书给子 Shell 下过定义：</p>
+<p><a target="_blank" rel="noopener" href="http://www.tldp.org/LDP/abs/html/subshells.html">Advanced Bash-Scripting Guide</a> 说：</p>
+<blockquote>
+<p>A subshell is a child process launched by a shell (or shell script).</p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="http://book.douban.com/subject/2074235/">Bash Cookbook</a> 说：</p>
+<blockquote>
+<p>A subshell is a forked copy of the parent shell and shares it’s environment.</p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="http://www.amazon.com/The-Korn-Shell-Programming-Manual/dp/0201675234">The Korn Shell: Unix &amp; Linux Programming Manual</a> 说：</p>
+<blockquote>
+<p>A subshell is a separate copy of the parent shell, so variables, functions, and aliases from the parent shell are available to the subshell</p>
+</blockquote>
+<p>第一本书流传较广，但它这句话说的太泛了，很容易误导人，<font color="red">虽然子 Shell 的确是当前 Shell 的子进程，但当前 Shell 的子进程不一定都是子 Shell</font>（可能已经替换成了其他程序）。在 Bash 里面，只有特定的语法才会让代码进入子 Shell，比如管道两边的命令，比如用小括号括起来等等：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">(<span class="built_in">echo</span> <span class="variable">$BASH_SUBSHELL</span>)</span></span><br><span class="line">1</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">( ( ( ( (<span class="built_in">echo</span> <span class="variable">$BASH_SUBSHELL</span>) ) ) ) )</span></span><br><span class="line">5</span><br></pre></td></tr></table></figure>
+
+<p>真正的子 Shell 可以访问其父 Shell 的任何变量，而通过再执行一次 bash 命令所启动的 Shell 只能访问其父 Shell 传来的环境变量。<a target="_blank" rel="noopener" href="http://mywiki.wooledge.org/SubShell">这篇教程</a>里面专门写了个例子：</p>
+<blockquote>
+<p>For an example of the difference between a subshell and a child process that happens to be a shell:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">unset a; a=1</span><br><span class="line">(echo &quot;a is $a in the subshell&quot;)</span><br><span class="line">sh -c &#x27;echo &quot;a is $a in the child shell&quot;&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>In the subshell, the regular shell variable <code>a</code> is visible; but because it is not exported, the full child process does not see it.</p>
+</blockquote>
+<p>上面的例子中把当前 Shell 执行外部命令 sh 启动的 Shell 叫做 child shell，可惜在中文里还是得翻译成子 Shell。。。</p>
+<p>从 c 语言层面讲，真正的子 Shell 是当前 Shell 进程调用了 fork() 函数，在内存中复制出一个几乎一模一样的子进程。而执行 bash 命令启动的所谓 child shell 是在执行 fork() 函数的基础上，又执行了一次 execve() 函数，execve() 函数会重新加载硬盘上的 bash 命令并执行，替换刚才 fork 出来的那个 shell 进程，除了传入的环境变量外，是个崭新的进程。</p>
+<p><font color="red">总结一下就是说，SHLVL 变量是记录了所谓的 child shell 的嵌套深度，而 BASH_SUBSHELL 是记录了 subshell 的嵌套深度。</font></p>
+<p><font color="red">把 child shell 叫成子 Shell，在口头上说说还可以，因为中文里没有其它什么好的叫法用来指代它，但你心里得明白，这不是术语子 Shell 真正的含义。</font></p>
+<p> <a target="_blank" rel="noopener" href="http://c.biancheng.net/view/3015.html">http://c.biancheng.net/view/3015.html</a> </p>
+<p> <a target="_blank" rel="noopener" href="http://c.biancheng.net/view/3210.html">http://c.biancheng.net/view/3210.html</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.cnblogs.com/f-ck-need-u/p/7446194.html">https://www.cnblogs.com/f-ck-need-u/p/7446194.html</a> </p>
+<h1 id="外部命令、内建命令"><a href="#外部命令、内建命令" class="headerlink" title="外部命令、内建命令"></a>外部命令、内建命令</h1><p>Linux 命令有内部命令（内建命令）和外部命令之分，内部命令和外部命令功能基本相同，但也有些细微差别。</p>
+<p> <strong><a target="_blank" rel="noopener" href="https://man.linuxde.net/type">type命令</a></strong> 用来显示指定 <font color="blue"><strong>命令类型</strong></font>，判断给出的指令是 <font color="blue"><strong>内部指令</strong></font> 还是 <font color="blue"><strong>外部指令</strong></font>。</p>
+<h2 id="内部命令"><a href="#内部命令" class="headerlink" title="内部命令"></a>内部命令</h2><p>内部命令<font color="red">不需要使用子进程来执行，不需要借助外部程序文件来运行</font>，它们已经和shell编译成一体，作为shell工具的组成部分存在。</p>
+<p>它们是一些比较简单的 linux 系统命令，如 exit、history、cd、echo 等。</p>
+<p>要分区是外部命令还是内部命令可以使用 <code>type</code> 来查看，如查看 <code>cd</code> 是内部还是外部命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">type</span> <span class="built_in">cd</span></span><br><span class="line"><span class="built_in">cd</span> is a shell <span class="built_in">builtin</span></span><br><span class="line">$ <span class="built_in">type</span> <span class="built_in">exit</span></span><br><span class="line"><span class="built_in">exit</span> is a shell <span class="built_in">builtin</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="alias命令"><a href="#alias命令" class="headerlink" title="alias命令"></a>alias命令</h3><p><code>alias</code> 命令也是一个内建命令，允许你为常用的命令和参数创建另一个名称，从而减少输入。在系统中已经设置好了一些常用的<strong>命令别名</strong>。查看当前可用的别名使用 <code>alias -p</code> ：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">alias</span> -p</span><br><span class="line"><span class="built_in">alias</span> egrep=<span class="string">&#x27;egrep --color=auto&#x27;</span></span><br><span class="line"><span class="built_in">alias</span> fgrep=<span class="string">&#x27;fgrep --color=auto&#x27;</span></span><br><span class="line"><span class="built_in">alias</span> grep=<span class="string">&#x27;grep --color=auto&#x27;</span></span><br><span class="line"><span class="built_in">alias</span> l=<span class="string">&#x27;ls -CF&#x27;</span></span><br><span class="line"><span class="built_in">alias</span> la=<span class="string">&#x27;ls -A&#x27;</span></span><br><span class="line"><span class="built_in">alias</span> ll=<span class="string">&#x27;ls -alF&#x27;</span></span><br><span class="line"><span class="built_in">alias</span> <span class="built_in">ls</span>=<span class="string">&#x27;ls --color=auto&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>下面通过 <code>alias</code> 命令来创建属于自己的别名。把 <code>ls -li</code> 长列表命令参数改别名为 <code>li</code> 。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ li</span><br><span class="line">li: <span class="built_in">command</span> not found</span><br><span class="line">$ <span class="built_in">alias</span> li=<span class="string">&#x27;ls -li&#x27;</span></span><br><span class="line">$ li</span><br><span class="line">total 20</span><br><span class="line">272554 -rw-r--r-- 1 root root   145 Apr  8 11:10 Dockerfile</span><br><span class="line">265369 -rw-r--r-- 1 root root 13328 Apr  1 11:06 get-docker.sh</span><br></pre></td></tr></table></figure>
+
+<p>定义好了别名就可以随时在 shell 中使用，但目前<font color="red">仅在当前进程中才有效</font>，在子 shell 或新 shell 中使用别名无效。可以使用 <code>ps -f</code> 查看 shell 进程 ID。</p>
+<h2 id="外部命令"><a href="#外部命令" class="headerlink" title="外部命令"></a>外部命令</h2><p>外部命令是存在于 bash shell 之外的程序，它们不是 shell 程序的一部分，外部命令程序通常位于 <code>/bin</code> 、 <code>/usr/bin</code> 、 <code>/sbin</code> 、 <code>/usr/sbin</code> 中。 <code>ps</code> 就是一个外部命令，使用 type查看如下所示：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">type</span> ps</span><br><span class="line">ps is hashed (/bin/ps)</span><br></pre></td></tr></table></figure>
+
+<p>外部命令会创建出一个包含全新环境的子进程</p>
+<p>外部命令<font color="red">会在一个 新创建的、包含全新环境的 子进程中执行</font> (<font color="blue">是否是 SubShell 进程呢？</font>)。<code>ps</code> 的父进程是 bash shell PID <strong>25838</strong>，如下所示：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ ps -f</span><br><span class="line">UID        PID  PPID  C STIME TTY          TIME CMD</span><br><span class="line">root     25838 25756  0 17:08 pts/0    00:00:00 -bash</span><br><span class="line">root     28787 25838  0 17:16 pts/0    00:00:00 ps -f</span><br></pre></td></tr></table></figure>
+
+<h1 id="环境变量"><a href="#环境变量" class="headerlink" title="环境变量"></a>环境变量</h1><p>在 Linux 中，很多程序和脚本都通过环境变量来获取系统信息，存储临时数据，配置信息。环境变量是指用来存储有关 shell 会话和工作环境信息，允许你在内存中存储数据，以便程序或 shell 中运行的脚本能够轻松访问到它们。也是存储持久数据的一种简便方法</p>
+<p>在 bash shell 中，环境变量分为两类：</p>
+<ul>
+<li><font color="blue">全局环境变量</font>：对<font color="red">所有 shell 都可见</font>（包括当前 shell、生成的 SubShell 和 ChildShell）。全局环境变量让那些 SubShell 和 ChildShell 需要获取父 shell 信息的程序来说非常有用。</li>
+<li><font color="blue">局部环境变量</font>：<font color="red">对当前 shell、生成的 SubShell 可见，对生成的 ChildShell 不可见</font>。尽管它们是局部的，但是和全局环境变量一样重要。</li>
+</ul>
+<h2 id="系统全局环境变量"><a href="#系统全局环境变量" class="headerlink" title="系统全局环境变量"></a>系统全局环境变量</h2><p>又叫默认全局环境变量。<font color="red">它们基本都是使用<strong>全大写字母</strong>，以区别普通用户的环境变量</font>。</p>
+<p> <code>env</code> 命令查看系统全局环境变量：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">env</span></span><br><span class="line">SSH_CONNECTION=111.18.92.144 27010 192.168.16.4 22</span><br><span class="line">LANG=en_US.UTF-8 <span class="comment"># 系统默认语言字符集</span></span><br><span class="line">DISPLAY=localhost:10.0</span><br><span class="line">XDG_SESSION_ID=251</span><br><span class="line">USER=root</span><br><span class="line">PWD=/root</span><br><span class="line">HOME=/root</span><br><span class="line">SSH_CLIENT=111.18.92.144 27010 22</span><br><span class="line">XDG_DATA_DIRS=/usr/local/share:/usr/share:/var/lib/snapd/desktop</span><br><span class="line">LANGUAGE=en_US:</span><br><span class="line">PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin</span><br><span class="line">HISTSIZE=1000</span><br><span class="line">HISTFILESIZE=10000</span><br><span class="line"></span><br><span class="line">$ <span class="built_in">printenv</span> USER <span class="comment"># 查看某个全局变量</span></span><br><span class="line">root</span><br><span class="line">$ bash</span><br><span class="line">$ <span class="built_in">printenv</span> USER <span class="comment"># 在 ChildShell 中输出全局变量USER</span></span><br><span class="line">root</span><br><span class="line">$ <span class="built_in">echo</span> <span class="variable">$USER</span> <span class="comment"># 在这种情况下引用某个环境变量的时候，必须在变量前面加上一个美元符$</span></span><br><span class="line">root</span><br></pre></td></tr></table></figure>
+
+<h2 id="系统局部环境变量"><a href="#系统局部环境变量" class="headerlink" title="系统局部环境变量"></a>系统局部环境变量</h2><p>在 linux 操作系统上，<strong>有默认全局环境变量</strong>，也有<strong>默认局部环境变量</strong>，<strong>用户也可以自定义局部变量</strong>。</p>
+<p>不同的 shell 启动方式加载的脚本有所不同，有些脚本会包含局部变量。例如启动交互式 shell 时必须读取的 <code>~/.bashrc</code> 文件，其中包含 alias 类型的命令，这些可以理解为<strong>局部环境变量</strong>。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">alias rm=&#x27;rm -i&#x27;</span><br><span class="line">alias cp=&#x27;cp -i&#x27;</span><br><span class="line">alias mv=&#x27;mv -i&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>后者使用 <code>alisa</code> 命令查看所有的别名命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">alias</span></span></span><br><span class="line">alias cp=&#x27;cp -i&#x27;</span><br><span class="line">alias egrep=&#x27;egrep --color=auto&#x27;</span><br><span class="line">alias fgrep=&#x27;fgrep --color=auto&#x27;</span><br><span class="line">alias grep=&#x27;grep --color=auto&#x27;</span><br><span class="line">alias l.=&#x27;ls -d .* --color=auto&#x27;</span><br><span class="line">alias ll=&#x27;ls -l --color=auto&#x27;</span><br><span class="line">alias ls=&#x27;ls --color=auto&#x27;</span><br><span class="line">alias mv=&#x27;mv -i&#x27;</span><br><span class="line">alias rm=&#x27;rm -i&#x27;</span><br><span class="line">alias which=&#x27;alias | /usr/bin/which --tty-only --read-alias --show-dot --show-tilde&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>测试局部变量的有效范围：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ps -f</span></span><br><span class="line">UID        PID  PPID  C STIME TTY          TIME CMD</span><br><span class="line">root     16931 16920  0 11:17 pts/0    00:00:00 -bash</span><br><span class="line">root     17285 16931  0 11:18 pts/0    00:00:00 ps -f</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ll <span class="comment"># 当前shell</span></span></span><br><span class="line">total 12</span><br><span class="line">drwxr-xr-x 12 root root 4096 Dec 17 15:22 nginx</span><br><span class="line">drwxr-xr-x  9 1001 1001 4096 Dec 17 15:11 nginx-1.18.0</span><br><span class="line">drwxrwxr-x  7 root root 4096 Oct 27 15:12 redis-6.0.9</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">(ll) <span class="comment"># SubShell</span></span></span><br><span class="line">total 12</span><br><span class="line">drwxr-xr-x 12 root root 4096 Dec 17 15:22 nginx</span><br><span class="line">drwxr-xr-x  9 1001 1001 4096 Dec 17 15:11 nginx-1.18.0</span><br><span class="line">drwxrwxr-x  7 root root 4096 Oct 27 15:12 redis-6.0.9</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">echo</span> -e ll &gt;&gt; /home/test.sh</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">chmod</span> +x /home/test.sh</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">/home/test.sh <span class="comment"># ChildShell</span></span></span><br><span class="line">/home/test.sh: line 1: ll: command not found</span><br></pre></td></tr></table></figure>
+
+<p>查看局部环境变量的列表有点复杂。<strong>遗憾的是</strong>，在Linux系统并没有一个只显示局部环境变量的命令。使用 <a target="_blank" rel="noopener" href="https://www.runoob.com/linux/linux-comm-set.html"><strong>set 命令</strong></a> 会显示某个特定进程设置的所有环境变量，包括局变变量、全局变量、用户自定义变量。</p>
+<p> <a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2017/11/bash-set.html">Bash 脚本 set 命令教程</a> </p>
+<h2 id="自定义变量"><a href="#自定义变量" class="headerlink" title="自定义变量"></a>自定义变量</h2><p>规则：变量名区分大小写，为了与大写的系统环境变量区分，自定义变量和shell脚本推荐使用小写字母。</p>
+<p><font color="red"><strong>父 shell 中定义的局部变量，SubShell 可见，ChildShell 不可见。</strong></font> </p>
+<p><font color="red"><strong>父 shell 中定义的全局变量，所有子进程中都可见。</strong></font> </p>
+<p><font color="red"><strong>在子进程中 新增、删除、修改 局部变量和全局变量，都不会反映给父进程，这种改变仅在子进程中有效。</strong></font> </p>
+<p><font color="red"><strong>只要创建自定义局部变量和全局变量的进程一结束，该变量就会永久失效。</strong></font> </p>
+<h3 id="自定义局部变量"><a href="#自定义局部变量" class="headerlink" title="自定义局部变量"></a>自定义局部变量</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ my_variable=<span class="string">&quot;hello world&quot;</span> <span class="comment"># 如果变量含有空格，则必须加单引号或双引号</span></span><br><span class="line">$ my_variable=hello <span class="comment"># 变量名、等号、值之间没有空格</span></span><br><span class="line">$ <span class="built_in">echo</span> <span class="variable">$my_variable</span></span><br><span class="line">hello</span><br></pre></td></tr></table></figure>
+
+<h3 id="自定义全局变量"><a href="#自定义全局变量" class="headerlink" title="自定义全局变量"></a>自定义全局变量</h3><p>先创建一个局部变量，然后<font color="red">通过 <code>export</code> 导出到全局环境</font>，变量名前<font color="red">不加 <code>$</code> </font>。如下所示：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">echo</span> <span class="variable">$my_variable</span></span><br><span class="line"></span><br><span class="line">$ my_variable=<span class="string">&quot;I am Global now&quot;</span></span><br><span class="line">$ <span class="built_in">echo</span> <span class="variable">$my_variable</span></span><br><span class="line">I am Global now</span><br><span class="line">$ bash <span class="comment"># 创建ChildShell进程</span></span><br><span class="line">$ <span class="built_in">echo</span> <span class="variable">$my_variable</span> <span class="comment"># 未用export导出时，子进程中不可见</span></span><br><span class="line"></span><br><span class="line">$ <span class="built_in">exit</span></span><br><span class="line"><span class="built_in">exit</span></span><br><span class="line">$ <span class="built_in">export</span> my_variable</span><br><span class="line">$ bash</span><br><span class="line">$ <span class="built_in">echo</span> <span class="variable">$my_variable</span> <span class="comment"># 用export导出后，子进程中可见</span></span><br><span class="line">I am Global now</span><br></pre></td></tr></table></figure>
+
+<h3 id="删除环境变量"><a href="#删除环境变量" class="headerlink" title="删除环境变量"></a>删除环境变量</h3><p>删除环境变量用 <code>unset</code> 命令，变量名前<font color="red">不加 <code>$</code> </font>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">echo</span> <span class="variable">$my_variable</span></span><br><span class="line"></span><br><span class="line">$ my_variable=<span class="string">&quot;hello&quot;</span></span><br><span class="line">$ <span class="built_in">echo</span> <span class="variable">$my_variable</span></span><br><span class="line">hello</span><br><span class="line">$ <span class="built_in">unset</span> my_variable</span><br><span class="line">$ <span class="built_in">echo</span> <span class="variable">$my_variable</span></span><br><span class="line"></span><br><span class="line">$</span><br></pre></td></tr></table></figure>
+
+<h1 id="默认环境变量-系统环境变量"><a href="#默认环境变量-系统环境变量" class="headerlink" title="默认环境变量(系统环境变量)"></a>默认环境变量(系统环境变量)</h1><p>默认情况下， bash shell会用一些特定的环境变量来定义系统环境。这些变量在你的Linux系统上都已经设置好了，只管放心使用。 bash shell源自当初的Unix Bourne shell，因此也保留了Unix Bourne shell里定义的那些环境变量。</p>
+<h2 id="bash-shell提供的与Unix-Bourne-shell兼容的环境变量"><a href="#bash-shell提供的与Unix-Bourne-shell兼容的环境变量" class="headerlink" title="bash shell提供的与Unix Bourne shell兼容的环境变量"></a>bash shell提供的与Unix Bourne shell兼容的环境变量</h2><p>常用的几个：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">HOME             # 当前用户的主目录</span><br><span class="line">PATH             # shell查找命令的目录列表，由冒号分隔</span><br><span class="line">PS1              # shell命令行界面的主提示符</span><br><span class="line">PS2              # shell命令行界面的次提示符</span><br></pre></td></tr></table></figure>
+
+<p>使用 <code>echo</code> 输出变量 PATH 的值，会列出 shell 查找命令会去的6个目录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">echo</span> <span class="variable">$PATH</span></span><br><span class="line">/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin <span class="comment"># 在这里，优先级最高的是&quot;/usr/local/sbin&quot;目录。</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 下面是主提示符与次提示符</span></span><br><span class="line">$ <span class="built_in">echo</span> <span class="variable">$PS1</span></span><br><span class="line">\[\e]0;\u@\h: \w\a\]<span class="variable">$&#123;debian_chroot:+($debian_chroot)&#125;</span>\u@\h:\w\$</span><br><span class="line">$ <span class="built_in">echo</span> <span class="variable">$PS2</span></span><br><span class="line">&gt;</span><br><span class="line">$ </span><br></pre></td></tr></table></figure>
+
+<h2 id="bash-shell-自有变量"><a href="#bash-shell-自有变量" class="headerlink" title="bash shell 自有变量"></a>bash shell 自有变量</h2><p>部分自有变量：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">BASH_SUBSHELL      当前子shell环境的嵌套级别</span><br><span class="line">BASH_VERSION       当前运行的bash shell 版本号</span><br><span class="line">HOSTNAME           当前主机名称</span><br><span class="line">PWD                当前工作目录，对应内部命令小写pwd</span><br><span class="line">LANG               shell的语言环境类别</span><br></pre></td></tr></table></figure>
+
+<p>下面查看 bash shell 版本号：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">echo</span> <span class="variable">$BASH_VERSION</span></span><br><span class="line">4.4.20(1)-release</span><br></pre></td></tr></table></figure>
+
+<h2 id="PATH-环境变量"><a href="#PATH-环境变量" class="headerlink" title="PATH 环境变量"></a>PATH 环境变量</h2><p>PATH 变量的作用是：当在 shell 命令行中输入一个外部命令时，shell 必须搜索对应的命令和程序，PATH 环境变量<strong>定义了搜索命令和程序的目录</strong>。</p>
+<p>如果命令或者程序的位置没有包括在PATH变量中，那么不使用绝对路径的话，shell 就无法找到该命令。</p>
+<p>例如 <code>/home/nginx/sbin/nginx -v</code> ，否则 shell 无法找到。</p>
+<p>如果想在虚拟目录任意位置操作 <code>nginx</code> 服务，又不想每次都用 cd 绝对路径定位。有三种方法：</p>
+<ul>
+<li><p>使用绝对路径。例如 <code>/home/nginx/sbin/nginx -v</code> </p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%AC%A6%E5%8F%B7%E9%93%BE%E6%8E%A5">软链接</a> 。把 <code>nginx</code> 的绝对路径通过软链接指定到 PATH 环境的一个目录下。</p>
+</li>
+<li><p>添加 path 环境变量。PATH中各个目录之间是用冒号分隔，无需从头定义，只需引用原来的PATH值，然后再给这个字符串添加新目录就行了。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">PATH=<span class="variable">$PATH</span>:/home/nginx/sbin/ <span class="comment"># 使用export导出全局变量，可供ChildShell等子进程使用。</span></span></span><br></pre></td></tr></table></figure>
+
+<p><font color="red"><strong>注意：</strong></font>即便导出为全局变量，这样的修改也只能持续到退出终端（exit）或重启系统。后面介绍如何永久保持环境变量的修改效果。</p>
+</li>
+</ul>
+<p>Windows系统同理，有些程序提供了 <code>Protable edition</code> 便携式版，下载并解压，将 bin 目录添加至 path 环境变量，这样就可以在 cmd 窗口任意目录下运行程序。例如 git、nssm。</p>
+<h1 id="shell-启动方式"><a href="#shell-启动方式" class="headerlink" title="shell 启动方式"></a>shell 启动方式</h1><p>当使用 bash shell 时，bash 是如何查找环境变量位置的？系统环境变量文件（启动文件或环境文件）会在哪些位置？</p>
+<p>bash 检查的启动文件（环境文件）取决于你启动 bash shell 的方式。 <a target="_blank" rel="noopener" href="http://c.biancheng.net/view/3045.html">Shell 四种运行方式（启动方式）</a> ：</p>
+<ul>
+<li>交互式的登录 Shell；</li>
+<li>交互式的非登录 Shell；</li>
+<li>非交互式的登录 Shell；</li>
+<li>非交互式的非登录 Shell。</li>
+</ul>
+<h2 id="交互式-shell"><a href="#交互式-shell" class="headerlink" title="交互式 shell"></a>交互式 shell</h2><p>​		就是在终端上执行。终端等待命令的输入，当我们输入命令并提交后，shell 会接受到终端传来的命令并立即解释执行。这种模式被称作交互式是因为 shell 与用户进行交互。这种模式也是大多数用户非常熟悉的：登录、执行一些命令、退出。当你退出后，shell 也终止了。</p>
+<h3 id="启动交互式-shell"><a href="#启动交互式-shell" class="headerlink" title="启动交互式 shell"></a>启动交互式 shell</h3><p>1、打开桌面环境自带的终端启动的 shell。</p>
+<p>2、在命令行提示符下敲入 <code>bash</code> 启动的 shell。如果 bash 是作为交互式 shell 启动的，它就不会访问 <code>/etc/profile</code> 文件，只会检查用户 HOME 目录中的 <code>.bashrc</code> 文件。</p>
+<h3 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h3><p>​		<font color="red">交互式 shell 必然读取  <code>~/.bashrc</code> 文件</font>。 该文件的两个作用：</p>
+<p>1、读取 <code>/etc</code> 目录下通用的 <code>bashrc</code> 文件。具体请查看 <code>.bashrc</code> 文件中的内容，我的 Ubuntu 18.04 并没有这样写。</p>
+<p>2、为用户提供一个定制自己的命令别名和私有脚本函数。 <code>.bashrc</code> 文件<strong>部分内容</strong>如下所示：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"><span class="comment"># some more ls aliases</span></span><br><span class="line"><span class="built_in">alias</span> ll=<span class="string">&#x27;ls -alF&#x27;</span></span><br><span class="line"><span class="built_in">alias</span> la=<span class="string">&#x27;ls -A&#x27;</span></span><br><span class="line"><span class="built_in">alias</span> l=<span class="string">&#x27;ls -CF&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Alias definitions.</span></span><br><span class="line"><span class="comment"># You may want to put all your additions into a separate file like</span></span><br><span class="line"><span class="comment"># ~/.bash_aliases, instead of adding them here directly.</span></span><br><span class="line"><span class="comment"># See /usr/share/doc/bash-doc/examples in the bash-doc package.</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ -f ~/.bash_aliases ]; <span class="keyword">then</span></span><br><span class="line">    . ~/.bash_aliases</span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<h2 id="非交互式-shell"><a href="#非交互式-shell" class="headerlink" title="非交互式 shell"></a>非交互式 shell</h2><p>​		以 shell script（非交互）方式执行。在这种模式下，shell 不与你进行交互，而是读取存放在文件中的命令，并且执行它们。当它读到文件的结尾 EOF，shell 也就终止了。</p>
+<h3 id="启动非交互式-shell"><a href="#启动非交互式-shell" class="headerlink" title="启动非交互式 shell"></a>启动非交互式 shell</h3><p>1、执行 shell 脚本，即启动一个 ChildShell。如果父 shell 是登录 shell，那么 ChildShell 可以从 <code>/etc/profile</code> 、<code>/etc/profiled/*.sh</code> 、<code>$HOME/.bashrc</code> 文件中继承这些变量。如果父 shell 中的变量是局部变量时，那么 ChildShell 无法继承。</p>
+<h3 id="配置文件-1"><a href="#配置文件-1" class="headerlink" title="配置文件"></a>配置文件</h3><p>​		<font color="red">非交互式 shell 读取的是环境变量 <code>BASH_ENV</code>（通常情况下）所指定的配置文件。</font></p>
+<p>当 shell 启动一个非交互式 shell 进程时，它会检查这个环境变量来查看要执行的启动文件，默认情况下并没有设置该变量：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">printenv</span> BASH_ENV</span><br><span class="line">$ </span><br></pre></td></tr></table></figure>
+
+<h2 id="登录式-shell"><a href="#登录式-shell" class="headerlink" title="登录式 shell"></a>登录式 shell</h2><h3 id="启动登陆式-shell"><a href="#启动登陆式-shell" class="headerlink" title="启动登陆式 shell"></a>启动登陆式 shell</h3><p>1、用户登陆时，输入用户名和密码后启动的 shell（例如使用 ssh 登录远程主机等），登录shell属于交互式shell。</p>
+<p>2、通过带 <code>--login</code> 参数的命令（如：<code>bash --login</code> ）而启动的 shell。</p>
+<h3 id="配置文件-2"><a href="#配置文件-2" class="headerlink" title="配置文件"></a>配置文件</h3><p>​		当登录 linux 系统时，bash shell 作为登录 shell 启动，登录 shell 会从 5 个不同的启动文件里读取命令：</p>
+<ul>
+<li><code>/etc/profile</code> </li>
+<li><code>$HOME/.bash_profile</code> </li>
+<li><code>$HOME/.bashrc</code> </li>
+<li><code>$HOME/.bash_login</code> </li>
+<li><code>$HOME/.profile</code></li>
+</ul>
+<p><font color="red">而 <code>/etc/profile</code> 文件是系统默认的 bash shell 的主启动文件，系统上的每个用户登录时都会执行这个启动文件</font>。另外 4 个启动文件是<font color="red">针对用户</font>的（<font color="red">不同发行版中，四个启动文件一般都只有一到二个</font>），可根据个人需求定制。</p>
+<h4 id="etc-profile-文件"><a href="#etc-profile-文件" class="headerlink" title="/etc/profile 文件"></a><code>/etc/profile</code> 文件</h4><p>只要登录了 linux 系统，bash 就会执行 <code>/etc/profile</code> 启动文件中的命令（不同发行版的 <code>/etc/profile</code> 有不同的设置和命令），profile 文件内容如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cat</span> /etc/profile</span><br><span class="line"><span class="comment"># /etc/profile: system-wide .profile file for the Bourne shell (sh(1))</span></span><br><span class="line"><span class="comment"># and Bourne compatible shells (bash(1), ksh(1), ash(1), ...).</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ <span class="string">&quot;<span class="variable">$&#123;PS1-&#125;</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">  <span class="keyword">if</span> [ <span class="string">&quot;<span class="variable">$&#123;BASH-&#125;</span>&quot;</span> ] &amp;&amp; [ <span class="string">&quot;<span class="variable">$BASH</span>&quot;</span> != <span class="string">&quot;/bin/sh&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">    <span class="comment"># The file bash.bashrc already sets the default PS1.</span></span><br><span class="line">    <span class="comment"># PS1=&#x27;\h:\w\$ &#x27;</span></span><br><span class="line">    <span class="keyword">if</span> [ -f /etc/bash.bashrc ]; <span class="keyword">then</span></span><br><span class="line">      . /etc/bash.bashrc</span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    <span class="keyword">if</span> [ <span class="string">&quot;`id -u`&quot;</span> -eq 0 ]; <span class="keyword">then</span></span><br><span class="line">      PS1=<span class="string">&#x27;# &#x27;</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      PS1=<span class="string">&#x27;$ &#x27;</span></span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line">  <span class="keyword">fi</span></span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ -d /etc/profile.d ]; <span class="keyword">then</span></span><br><span class="line">  <span class="keyword">for</span> i <span class="keyword">in</span> /etc/profile.d/*.sh; <span class="keyword">do</span></span><br><span class="line">    <span class="keyword">if</span> [ -r <span class="variable">$i</span> ]; <span class="keyword">then</span></span><br><span class="line">      . <span class="variable">$i</span></span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line">  <span class="keyword">done</span></span><br><span class="line">  <span class="built_in">unset</span> i</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+
+<p>其中有个 for 语句，它用来循环读取 <code>/etc/profile.d</code> 目录下的所有文件。在我使用的 Ubuntu 中，该文件目录包含以下文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> /etc/profile.d/</span><br><span class="line">$ <span class="built_in">ls</span> -li</span><br><span class="line">total 24</span><br><span class="line">1056231 -rw-r--r-- 1 root root  825 Mar 21  2019 apps-bin-path.sh</span><br><span class="line">1055957 -rw-r--r-- 1 root root  664 Apr  2  2018 bash_completion.sh</span><br><span class="line">1048710 -rw-r--r-- 1 root root  226 Nov  5 11:43 bcc-hist.sh</span><br><span class="line">1055738 -rw-r--r-- 1 root root 1003 Dec 29  2015 cedilla-portuguese.sh</span><br><span class="line">1056465 -rwxr-xr-x 1 root root  873 Oct  4  2019 Z99-cloudinit-warnings.sh</span><br><span class="line">1056464 -rwxr-xr-x 1 root root 3417 Oct  4  2019 Z99-cloud-locale-test.sh</span><br></pre></td></tr></table></figure>
+
+<p>启动文件中 <code>sh</code> 后缀供 bash shell 使用。若有 <code>csh</code> 后缀的，是供 c shell 使用。</p>
+<h4 id="HOME-目录下的4个启动文件"><a href="#HOME-目录下的4个启动文件" class="headerlink" title="$HOME 目录下的4个启动文件"></a><code>$HOME</code> 目录下的4个启动文件</h4><p><font color="red">仅对 $HOME 用户有效</font></p>
+<p>在 <code>$HOME</code> 目录下的隐藏文件中可以找到 4 个启动文件中的一个到两个，<strong>每个用户都可以编辑这些文件添加自己的环境变量</strong>，这此环境变量会在每次启动 bash shell 会话时生效。HOME 目录如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">ls</span> -la</span><br><span class="line">total 100</span><br><span class="line">drwx------  5 root root  4096 Apr  8 21:56 .</span><br><span class="line">drwxr-xr-x 23 root root  4096 Apr  1 09:54 ..</span><br><span class="line">-rw-------  1 root root 29753 Apr  8 22:33 .bash_history <span class="comment"># 执行过的bash记录/执行命令记录</span></span><br><span class="line">-rw-r--r--  1 root root  3107 Nov  5 11:43 .bashrc <span class="comment"># *****启动文件*****</span></span><br><span class="line">drwx------  2 root root  4096 May 29  2019 .cache</span><br><span class="line">-rw-r--r--  1 root root   145 Apr  8 11:10 Dockerfile</span><br><span class="line">-rw-r--r--  1 root root 13328 Apr  1 11:06 get-docker.sh</span><br><span class="line">drwx------  3 root root  4096 May 29  2019 .gnupg</span><br><span class="line">-rw-r--r--  1 root root   148 Aug 17  2015 .profile <span class="comment"># *****启动文件*****</span></span><br><span class="line">drwx------  2 root root  4096 Apr  1 09:54 .ssh</span><br><span class="line">-rw-------  1 root root  9245 Apr  8 14:00 .viminfo</span><br><span class="line">-rw-------  1 root root   126 Apr  8 21:56 .Xauthority</span><br></pre></td></tr></table></figure>
+
+<h4 id="HOME-bash-profile"><a href="#HOME-bash-profile" class="headerlink" title="$HOME&#x2F;.bash_profile"></a>$HOME&#x2F;.bash_profile</h4><p>有的发行版会有 <code>.bash_profile</code> 启动文件，该启动文件会先去检查 HOME 目录下是不是有一个叫 <code>.bashrc</code> 的启动文件，如果有就会先执行里面的命令。<code>.bash_profile</code> 文件内容如下图所示：</p>
+<p><img src="/article/2019/07/ChildShell%E3%80%81SubShell%E3%80%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F/180923155345355.png" alt="img"></p>
+<p><font color="blue" size="4">可以看到，在 <code>.bash_profile</code> 文件中给 PATH 变量添加了一个目录路径，并用 <code>export PATH</code> 导入到全局中，又因为登录 shell 时会从该启动文件中读取命令，因此，在 <code>.bash_profile</code> 文件中加的变量可以持久化。</font></p>
+<h2 id="非登录式-shell"><a href="#非登录式-shell" class="headerlink" title="非登录式 shell"></a>非登录式 shell</h2><p>在图形界面中打开新终端、使用 su 切换用户、bash 命令创建的 ChildShell，均属于<strong>交互式非登录 shell</strong>。</p>
+<h2 id="判断启动方式"><a href="#判断启动方式" class="headerlink" title="判断启动方式"></a>判断启动方式</h2><h3 id="判断-shell-是否是交互式"><a href="#判断-shell-是否是交互式" class="headerlink" title="判断 shell 是否是交互式"></a>判断 shell 是否是交互式</h3><p>判断是否为交互式 Shell 有两种简单的方法。</p>
+<ol>
+<li>查看变量<code>-</code>的值，如果值中包含了字母<code>i</code>，则表示交互式（interactive）。</li>
+</ol>
+<p>【实例1】在 CentOS GNOME 桌面环境自带的终端下输出<code>-</code>的值：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">echo</span> $-</span></span><br><span class="line">himBH</span><br></pre></td></tr></table></figure>
+
+<p>包含了<code>i</code>，为交互式。</p>
+<p>【实例2】在 Shell 脚本文件中输出<code>-</code>的值：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cat</span> test.sh</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line"></span><br><span class="line">echo $-</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">bash ./test.sh</span></span><br><span class="line">hB</span><br></pre></td></tr></table></figure>
+
+<p>不包含<code>i</code>，为非交互式。注意，必须在新进程中<a target="_blank" rel="noopener" href="http://c.biancheng.net/view/739.html">运行 Shell 脚本</a>。</p>
+<ol start="2">
+<li>查看变量<code>PS1</code>的值，如果非空，则为交互式，否则为非交互式，因为非交互式会清空该变量。</li>
+</ol>
+<p>【实例1】在 CentOS GNOME 桌面环境自带的终端下输出 PS1 的值：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">echo</span> <span class="variable">$PS1</span></span></span><br><span class="line">[\u@\h \W]\$</span><br></pre></td></tr></table></figure>
+
+<p>非空，为交互式。</p>
+<p>【实例2】在 Shell 脚本文件中输出 PS1 的值：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cat</span> test.sh</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line"></span><br><span class="line">echo $PS1</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">bash ./test.sh</span></span><br></pre></td></tr></table></figure>
+
+<p>空值，为非交互式。注意，必须在新进程中运行 Shell 脚本。</p>
+<h3 id="判断-shell-是否为登录式"><a href="#判断-shell-是否为登录式" class="headerlink" title="判断 shell 是否为登录式"></a>判断 shell 是否为登录式</h3><p>判断 Shell 是否为登录式也非常简单，只需执行<code>shopt login_shell</code>即可，值为<code>on</code>表示为登录式，<code>off</code>为非登录式。</p>
+<p>shopt 命令用来查看或设置 Shell 中的行为选项，这些选项可以增强 Shell 的易用性。</p>
+<p>【实例1】在 CentOS GNOME 桌面环境自带的终端下查看 login_shell 选项：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">shopt</span> login_shell</span></span><br><span class="line">login_shell    off</span><br></pre></td></tr></table></figure>
+
+
+<p>【实例2】按下<code>Ctrl+Alt+Fn</code>组合键切换到虚拟终端，输入用户名和密码登录后，再查看 login_shell 选项：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">shopt</span> login_shell</span></span><br><span class="line">login_shell    on</span><br></pre></td></tr></table></figure>
+
+
+<p>【实例3】在 Shell 脚本文件中查看 login_shell 选项：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cat</span> test.sh</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line"></span><br><span class="line">shopt login_shell</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">bash ./test.sh</span></span><br><span class="line">login_shell    off</span><br></pre></td></tr></table></figure>
+
+<h3 id="同时判断交互式、登录式"><a href="#同时判断交互式、登录式" class="headerlink" title="同时判断交互式、登录式"></a>同时判断交互式、登录式</h3><p>要同时判断是否为交互式和登录式，可以简单使用如下的命令：</p>
+<p> <code>echo $PS1; shopt login_shell</code> </p>
+<p>或者</p>
+<p> <code>echo $-; shopt login_shell</code> </p>
+<h2 id="属于哪种启动方式？"><a href="#属于哪种启动方式？" class="headerlink" title="( ) 属于哪种启动方式？"></a>( ) 属于哪种启动方式？</h2><p>进程列表的方式启动 <code>( )</code> ，SubShell 会继承父 Shell 的交互和登录属性，所以 () 的启动方式取决于父 shell：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">(<span class="built_in">echo</span> <span class="variable">$PS1</span>;<span class="built_in">shopt</span> login_shell)</span></span><br><span class="line">[\u@\h \W]\$</span><br><span class="line">login_shell     on</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cat</span> test.sh</span></span><br><span class="line">echo $PS1;shopt login_shell</span><br><span class="line">(echo $PS1;shopt login_shell)</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">./test.sh</span></span><br><span class="line"></span><br><span class="line">login_shell     off</span><br><span class="line"></span><br><span class="line">login_shell     off</span><br><span class="line"><span class="meta prompt_">$</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="常见的启动方式"><a href="#常见的启动方式" class="headerlink" title="常见的启动方式"></a>常见的启动方式</h2><h3 id="交互式登录式"><a href="#交互式登录式" class="headerlink" title="交互式登录式"></a>交互式登录式</h3><p>1、通过 Linux 控制台（<font color="red"><strong>不是</strong></font>桌面环境自带的终端）或者 ssh 登录 shell ：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">echo</span> <span class="variable">$PS1</span>;<span class="built_in">shopt</span> login_shell</span></span><br><span class="line">[\u@\h \W]\$</span><br><span class="line">login_shell    on</span><br></pre></td></tr></table></figure>
+
+<p>2、使用 <code>su -</code> 切换用户，改变 shell 环境变量。</p>
+<p>3、输入 <code>bash --login</code> ：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">bash --login</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">echo</span> <span class="variable">$PS1</span>;<span class="built_in">shopt</span> login_shell</span></span><br><span class="line">[\u@\h \W]\$</span><br><span class="line">login_shell     on</span><br></pre></td></tr></table></figure>
+
+<h3 id="交互式非登录式"><a href="#交互式非登录式" class="headerlink" title="交互式非登录式"></a>交互式非登录式</h3><p>1、在 Linux 桌面环境下打开终端</p>
+<p>2、使用 <code>su</code> 切换用户</p>
+<p>3、输入 <code>bash</code> ：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">bash</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">echo</span> <span class="variable">$PS1</span>;<span class="built_in">shopt</span> login_shell</span></span><br><span class="line">[\u@\h \W]\$</span><br><span class="line">login_shell     off</span><br></pre></td></tr></table></figure>
+
+<h3 id="非交互式登录式"><a href="#非交互式登录式" class="headerlink" title="非交互式登录式"></a>非交互式登录式</h3><h3 id="非交互式非登录式"><a href="#非交互式非登录式" class="headerlink" title="非交互式非登录式"></a>非交互式非登录式</h3><p>1、shell 脚本</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cat</span> test.sh</span></span><br><span class="line">echo $PS1;shopt login_shell</span><br><span class="line">(echo $PS1;shopt login_shell)</span><br></pre></td></tr></table></figure>
+
+<p>2、ssh 执行远程命令，但不登录。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ssh localhost <span class="string">&#x27;echo $PS1;shopt login_shell&#x27;</span></span></span><br><span class="line"></span><br><span class="line">login_shell     off</span><br></pre></td></tr></table></figure>
+
+<h1 id="环境变量持久化"><a href="#环境变量持久化" class="headerlink" title="环境变量持久化"></a>环境变量持久化</h1><p>上面了解了各种 shell 进程对应的环境文件，那么找出永久性环境变量就容易多了。可以利用这些文件来创建自己的永久性全局变量或局部变量。全局变量是对所有用户都需要使用的变量，可以将新的变量或修改过的变量设置放在 <code>/etc/profile</code> 文件中，<font color="red">但升级了发行版该文件也会更新</font>，所以这点要注意 （对所有用户）。</p>
+<p>最好是在 <code>/etc/profile.d</code> 目录中创建一个以 <code>.sh</code> 结尾的文件，把所有新的变量或修改过的变量全部放在此文件中（<font color="red">对所有用户</font>）。</p>
+<p>对于存储个人用户永久性 bash shell 变量的地方是 <code>$HOME/.bashrc</code> 文件。这一点适用于所有类型的 shell 进程（<font color="red">仅对当前用户</font>）。</p>
+<p><strong>例：将 nginx 服务的绝对路径，添加到 PATH 全局环境变量中</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">echo</span> <span class="variable">$PATH</span></span><br><span class="line">/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin</span><br><span class="line">$ <span class="built_in">pwd</span></span><br><span class="line">/home/nginx/sbin</span><br><span class="line">$ <span class="built_in">ls</span></span><br><span class="line">nginx</span><br><span class="line">$ vim ~/.bashrc <span class="comment"># 在末尾添加如下内容</span></span><br><span class="line">PATH=<span class="variable">$PATH</span>:/home/nginx/sbin</span><br><span class="line"><span class="built_in">export</span> PATH</span><br><span class="line"><span class="comment"># 然后重新打开&quot;非登录交互式shell&quot;或&quot;登录shell&quot;，查看PATH变量</span></span><br><span class="line">$ bash</span><br><span class="line">$ <span class="built_in">echo</span> <span class="variable">$PATH</span></span><br><span class="line">/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/home/nginx/sbin</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p><a target="_blank" rel="noopener" href="https://www.linuxidc.com/Linux/2018-11/155618.htm">https://www.linuxidc.com/Linux/2018-11/155618.htm</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2019/07/%E7%BB%88%E7%AB%AF(terminal)%E5%92%8Cshell%E7%9A%84%E5%8C%BA%E5%88%AB%E4%B8%8E%E8%81%94%E7%B3%BB/" rel="prev" title="终端(terminal)和shell的区别与联系">
+                  <i class="fa fa-angle-left"></i> 终端(terminal)和shell的区别与联系
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2019/07/Linux%E4%B8%ADapt%E4%B8%8Eapt-get%E5%91%BD%E4%BB%A4%E7%9A%84%E5%8C%BA%E5%88%AB%E4%B8%8E%E8%A7%A3%E9%87%8A/" rel="next" title="Linux中apt与apt-get命令的区别与解释">
+                  Linux中apt与apt-get命令的区别与解释 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="在工作中，我发现很多同学在设计之初都是直接按照单线程的思路来写程序的，而忽略了本应该重视的并发问题；等上线后的某天，突然发现诡异的Bug，再历经千辛万苦终于定位到问题所在，却发现对于如何解决已经没有了思路。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="12并发理论基础-如何用面向对象思想写好并发程序？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/07/12%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E5%A6%82%E4%BD%95%E7%94%A8%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E6%80%9D%E6%83%B3%E5%86%99%E5%A5%BD%E5%B9%B6%E5%8F%91%E7%A8%8B%E5%BA%8F%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="在工作中，我发现很多同学在设计之初都是直接按照单线程的思路来写程序的，而忽略了本应该重视的并发问题；等上线后的某天，突然发现诡异的Bug，再历经千辛万苦终于定位到问题所在，却发现对于如何解决已经没有了思路。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-07-12T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-07-12T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Java并发编程实战">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/07/12%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E5%A6%82%E4%BD%95%E7%94%A8%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E6%80%9D%E6%83%B3%E5%86%99%E5%A5%BD%E5%B9%B6%E5%8F%91%E7%A8%8B%E5%BA%8F%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/07/12%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E5%A6%82%E4%BD%95%E7%94%A8%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E6%80%9D%E6%83%B3%E5%86%99%E5%A5%BD%E5%B9%B6%E5%8F%91%E7%A8%8B%E5%BA%8F%EF%BC%9F/","path":"article/2023/07/12并发理论基础-如何用面向对象思想写好并发程序？/","title":"12并发理论基础-如何用面向对象思想写好并发程序？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>12并发理论基础-如何用面向对象思想写好并发程序？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E5%B0%81%E8%A3%85%E5%85%B1%E4%BA%AB%E5%8F%98%E9%87%8F"><span class="nav-number">1.</span> <span class="nav-text">一、封装共享变量</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E8%AF%86%E5%88%AB%E5%85%B1%E4%BA%AB%E5%8F%98%E9%87%8F%E9%97%B4%E7%9A%84%E7%BA%A6%E6%9D%9F%E6%9D%A1%E4%BB%B6"><span class="nav-number">2.</span> <span class="nav-text">二、识别共享变量间的约束条件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E5%88%B6%E5%AE%9A%E5%B9%B6%E5%8F%91%E8%AE%BF%E9%97%AE%E7%AD%96%E7%95%A5"><span class="nav-number">3.</span> <span class="nav-text">三、制定并发访问策略</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%90%8E%E6%80%9D%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">课后思考</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BB%B6%E4%BC%B8%E9%98%85%E8%AF%BB"><span class="nav-number">6.</span> <span class="nav-text">延伸阅读</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/07/12%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E5%A6%82%E4%BD%95%E7%94%A8%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E6%80%9D%E6%83%B3%E5%86%99%E5%A5%BD%E5%B9%B6%E5%8F%91%E7%A8%8B%E5%BA%8F%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="12并发理论基础-如何用面向对象思想写好并发程序？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          12并发理论基础-如何用面向对象思想写好并发程序？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-07-12 08:00:00" itemprop="dateCreated datePublished" datetime="2023-07-12T08:00:00+08:00">2023-07-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">Java并发编程实战</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>在工作中，我发现很多同学在设计之初都是直接按照单线程的思路来写程序的，而忽略了本应该重视的并发问题；等上线后的某天，突然发现诡异的Bug，再历经千辛万苦终于定位到问题所在，却发现对于如何解决已经没有了思路。</p>
+<span id="more"></span>
+
+<p>关于这个问题，我觉得咱们今天很有必要好好聊聊“如何用面向对象思想写好并发程序”这个话题。</p>
+<p>面向对象思想与并发编程有关系吗？本来是没关系的，它们分属两个不同的领域，但是在Java语言里，这两个领域被无情地融合在一起了，好在融合的效果还是不错的：<strong>在Java语言里，面向对象思想能够让并发编程变得更简单</strong>。</p>
+<p>那如何才能用面向对象思想写好并发程序呢？结合我自己的工作经验来看，我觉得你可以从封装共享变量、识别共享变量间的约束条件和制定并发访问策略这三个方面下手。</p>
+<h1 id="一、封装共享变量"><a href="#一、封装共享变量" class="headerlink" title="一、封装共享变量"></a>一、封装共享变量</h1><p>并发程序，我们关注的一个核心问题，不过是解决多线程同时访问共享变量的问题。在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/84344">《03 | 互斥锁（上）：解决原子性问题》</a>中，我们类比过球场门票的管理，现实世界里门票管理的一个核心问题是：所有观众只能通过规定的入口进入，否则检票就形同虚设。在编程世界这个问题也很重要，编程领域里面对于共享变量的访问路径就类似于球场的入口，必须严格控制。好在有了面向对象思想，对共享变量的访问路径可以轻松把控。</p>
+<p>面向对象思想里面有一个很重要的特性是<strong>封装</strong>，封装的通俗解释就是<strong>将属性和实现细节封装在对象内部</strong>，外界对象<strong>只能通过</strong>目标对象提供的<strong>公共方法来间接访问</strong>这些内部属性，这和门票管理模型匹配度相当的高，球场里的座位就是对象属性，球场入口就是对象的公共方法。我们把共享变量作为对象的属性，那对于共享变量的访问路径就是对象的公共方法，所有入口都要安排检票程序就相当于我们前面提到的并发访问策略。</p>
+<p>利用面向对象思想写并发程序的思路，其实就这么简单：<strong>将共享变量作为对象属性封装在内部，对所有公共方法制定并发访问策略</strong>。就拿很多统计程序都要用到计数器来说，下面的计数器程序共享变量只有一个，就是value，我们把它作为Counter类的属性，并且将两个公共方法get()和addOne()声明为同步方法，这样Counter类就成为一个线程安全的类了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Counter</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">long</span> value;</span><br><span class="line">  <span class="keyword">synchronized</span> <span class="type">long</span> <span class="title function_">get</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="keyword">return</span> value;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">synchronized</span> <span class="type">long</span> <span class="title function_">addOne</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="keyword">return</span> ++value;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当然，实际工作中，很多的场景都不会像计数器这么简单，经常要面临的情况往往是有很多的共享变量，例如，信用卡账户有卡号、姓名、身份证、信用额度、已出账单、未出账单等很多共享变量。这么多的共享变量，如果每一个都考虑它的并发安全问题，那我们就累死了。但其实仔细观察，你会发现，很多共享变量的值是不会变的，例如信用卡账户的卡号、姓名、身份证。<strong>对于这些不会发生变化的共享变量，建议你用final关键字来修饰</strong>。这样既能避免并发问题，也能很明了地表明你的设计意图，让后面接手你程序的兄弟知道，你已经考虑过这些共享变量的并发安全问题了。</p>
+<h1 id="二、识别共享变量间的约束条件"><a href="#二、识别共享变量间的约束条件" class="headerlink" title="二、识别共享变量间的约束条件"></a>二、识别共享变量间的约束条件</h1><p>识别共享变量间的约束条件非常重要。因为<strong>这些约束条件，决定了并发访问策略</strong>。例如，库存管理里面有个合理库存的概念，库存量不能太高，也不能太低，它有一个上限和一个下限。关于这些约束条件，我们可以用下面的程序来模拟一下。在类SafeWM中，声明了两个成员变量upper和lower，分别代表库存上限和库存下限，这两个变量用了AtomicLong这个原子类，原子类是线程安全的，所以这两个成员变量的set方法就不需要同步了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SafeWM</span> &#123;</span><br><span class="line">  <span class="comment">// 库存上限</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicLong</span> <span class="variable">upper</span> <span class="operator">=</span></span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">AtomicLong</span>(<span class="number">0</span>);</span><br><span class="line">  <span class="comment">// 库存下限</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicLong</span> <span class="variable">lower</span> <span class="operator">=</span></span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">AtomicLong</span>(<span class="number">0</span>);</span><br><span class="line">  <span class="comment">// 设置库存上限</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">setUpper</span><span class="params">(<span class="type">long</span> v)</span>&#123;</span><br><span class="line">    upper.set(v);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 设置库存下限</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">setLower</span><span class="params">(<span class="type">long</span> v)</span>&#123;</span><br><span class="line">    lower.set(v);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 省略其他业务代码</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>虽说上面的代码是没有问题的，但是忽视了一个约束条件，就是<strong>库存下限要小于库存上限</strong>，这个约束条件能够直接加到上面的set方法上吗？我们先直接加一下看看效果（如下面代码所示）。我们在setUpper()和setLower()中增加了参数校验，这乍看上去好像是对的，但其实存在并发问题，问题在于存在竞态条件。这里我顺便插一句，其实当你看到代码里出现if语句的时候，就应该立刻意识到可能存在竞态条件。</p>
+<p>我们假设库存的下限和上限分别是(2,10)，线程A调用setUpper(5)将上限设置为5，线程B调用setLower(7)将下限设置为7，如果线程A和线程B完全同时执行，你会发现线程A能够通过参数校验，因为这个时候，下限还没有被线程B设置，还是2，而5&gt;2；线程B也能够通过参数校验，因为这个时候，上限还没有被线程A设置，还是10，而7&lt;10。当线程A和线程B都通过参数校验后，就把库存的下限和上限设置成(7, 5)了，显然此时的结果是不符合<strong>库存下限要小于库存上限</strong>这个约束条件的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SafeWM</span> &#123;</span><br><span class="line">  <span class="comment">// 库存上限</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicLong</span> <span class="variable">upper</span> <span class="operator">=</span></span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">AtomicLong</span>(<span class="number">0</span>);</span><br><span class="line">  <span class="comment">// 库存下限</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicLong</span> <span class="variable">lower</span> <span class="operator">=</span></span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">AtomicLong</span>(<span class="number">0</span>);</span><br><span class="line">  <span class="comment">// 设置库存上限</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">setUpper</span><span class="params">(<span class="type">long</span> v)</span>&#123;</span><br><span class="line">    <span class="comment">// 检查参数合法性</span></span><br><span class="line">    <span class="keyword">if</span> (v &lt; lower.get()) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    upper.set(v);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 设置库存下限</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">setLower</span><span class="params">(<span class="type">long</span> v)</span>&#123;</span><br><span class="line">    <span class="comment">// 检查参数合法性</span></span><br><span class="line">    <span class="keyword">if</span> (v &gt; upper.get()) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    lower.set(v);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 省略其他业务代码</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在没有识别出<strong>库存下限要小于库存上限</strong>这个约束条件之前，我们制定的并发访问策略是利用原子类，但是这个策略，完全不能保证<strong>库存下限要小于库存上限</strong>这个约束条件。所以说，在设计阶段，我们<strong>一定要识别出所有共享变量之间的约束条件，如果约束条件识别不足，很可能导致制定的并发访问策略南辕北辙</strong>。</p>
+<p>共享变量之间的约束条件，反映在代码里，基本上都会有if语句，所以，一定要特别注意竞态条件。</p>
+<h1 id="三、制定并发访问策略"><a href="#三、制定并发访问策略" class="headerlink" title="三、制定并发访问策略"></a>三、制定并发访问策略</h1><p>制定并发访问策略，是一个非常复杂的事情。应该说整个专栏都是在尝试搞定它。不过从方案上来看，无外乎就是以下“三件事”。</p>
+<ol>
+<li>避免共享：避免共享的技术主要是利于线程本地存储以及为每个任务分配独立的线程。</li>
+<li>不变模式：这个在Java领域应用的很少，但在其他领域却有着广泛的应用，例如Actor模式、CSP模式以及函数式编程的基础都是不变模式。</li>
+<li>管程及其他同步工具：Java领域万能的解决方案是管程，但是对于很多特定场景，使用Java并发包提供的读写锁、并发容器等同步工具会更好。</li>
+</ol>
+<p>接下来在咱们专栏的第二模块我会仔细讲解Java并发工具类以及他们的应用场景，在第三模块我还会讲解并发编程的设计模式，这些都是和制定并发访问策略有关的。</p>
+<p>除了这些方案之外，还有一些宏观的原则需要你了解。这些宏观原则，有助于你写出“健壮”的并发程序。这些原则主要有以下三条。</p>
+<ol>
+<li>优先使用成熟的工具类：Java SDK并发包里提供了丰富的工具类，基本上能满足你日常的需要，建议你熟悉它们，用好它们，而不是自己再“发明轮子”，毕竟并发工具类不是随随便便就能发明成功的。</li>
+<li>迫不得已时才使用低级的同步原语：低级的同步原语主要指的是synchronized、Lock、Semaphore等，这些虽然感觉简单，但实际上并没那么简单，一定要小心使用。</li>
+<li>避免过早优化：安全第一，并发程序首先要保证安全，出现性能瓶颈后再优化。在设计期和开发期，很多人经常会情不自禁地预估性能的瓶颈，并对此实施优化，但残酷的现实却是：性能瓶颈不是你想预估就能预估的。</li>
+</ol>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>利用面向对象思想编写并发程序，一个关键点就是利用面向对象里的封装特性，由于篇幅原因，这里我只做了简单介绍，详细的你可以借助相关资料定向学习。而对共享变量进行封装，要避免“逸出”，所谓“逸出”简单讲就是共享变量逃逸到对象的外面，比如在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/84017">《02 | Java内存模型：看Java如何解决可见性和有序性问题》</a>那一篇我们已经讲过构造函数里的this“逸出”。这些都是必须要避免的。</p>
+<p>这是我们专栏并发理论基础的最后一部分内容，这一部分内容主要是让你对并发编程有一个全面的认识，让你了解并发编程里的各种概念，以及它们之间的关系，当然终极目标是让你知道遇到并发问题该怎么思考。这部分的内容还是有点烧脑的，但专栏后面几个模块的内容都是具体的实践部分，相对来说就容易多了。我们一起坚持吧！</p>
+<h1 id="课后思考"><a href="#课后思考" class="headerlink" title="课后思考"></a>课后思考</h1><p>本期示例代码中，类SafeWM不满足库存下限要小于库存上限这个约束条件，那你来试试修改一下，让它能够在并发条件下满足库存下限要小于库存上限这个约束条件。</p>
+<p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p>
+<h1 id="延伸阅读"><a href="#延伸阅读" class="headerlink" title="延伸阅读"></a>延伸阅读</h1><p>关于这部分的内容，如果你觉得还不“过瘾”，这里我再给你推荐一本书吧——<a href="time://mall?url=https%3A%2F%2Fh5.youzan.com%2Fv2%2Fgoods%2F2758xqdzr6uuw">《Java并发编程实战》</a>，这本书的第三章《对象的共享》、第四章《对象的组合》全面地介绍了如何构建线程安全的对象，你可以拿来深入地学习。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" rel="tag"># Java并发编程实战</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/07/11%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-Java%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F%E6%98%AF%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E7%9A%84%EF%BC%9F/" rel="prev" title="11并发理论基础-Java线程（下）：为什么局部变量是线程安全的？">
+                  <i class="fa fa-angle-left"></i> 11并发理论基础-Java线程（下）：为什么局部变量是线程安全的？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/07/13%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/" rel="next" title="13并发理论基础-理论基础模块热点问题答疑">
+                  13并发理论基础-理论基础模块热点问题答疑 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

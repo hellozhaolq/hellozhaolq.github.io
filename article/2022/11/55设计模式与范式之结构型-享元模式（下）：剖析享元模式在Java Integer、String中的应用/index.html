@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="上一节课，我们通过棋牌游戏和文本编辑器这样两个实际的例子，学习了享元模式的原理、实现以及应用场景。用一句话总结一下，享元模式中的“享元”指被共享的单元。享元模式通过复用对象，以达到节省内存的目的。 今天，我再用一节课的时间带你剖析一下，享元模式在Java Integer、String中的应用。如果你不熟悉Java编程语言，那也不用担心看不懂，因为今天的内容主要还是介绍设计思路，跟语言本身关系不大。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="55设计模式与范式之结构型-享元模式（下）：剖析享元模式在Java Integer、String中的应用">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/11/55%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E7%BB%93%E6%9E%84%E5%9E%8B-%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E5%9C%A8Java%20Integer%E3%80%81String%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="上一节课，我们通过棋牌游戏和文本编辑器这样两个实际的例子，学习了享元模式的原理、实现以及应用场景。用一句话总结一下，享元模式中的“享元”指被共享的单元。享元模式通过复用对象，以达到节省内存的目的。 今天，我再用一节课的时间带你剖析一下，享元模式在Java Integer、String中的应用。如果你不熟悉Java编程语言，那也不用担心看不懂，因为今天的内容主要还是介绍设计思路，跟语言本身关系不大。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/11/55%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E7%BB%93%E6%9E%84%E5%9E%8B-%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E5%9C%A8Java%20Integer%E3%80%81String%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/2383216-20210621150156599-1925166371.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/11/55%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E7%BB%93%E6%9E%84%E5%9E%8B-%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E5%9C%A8Java%20Integer%E3%80%81String%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/2383216-20210621150408831-1483478584.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/11/55%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E7%BB%93%E6%9E%84%E5%9E%8B-%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E5%9C%A8Java%20Integer%E3%80%81String%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/2383216-20210621150916114-785493541.png">
+<meta property="article:published_time" content="2022-11-25T00:00:00.000Z">
+<meta property="article:modified_time" content="2022-11-25T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2022/11/55%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E7%BB%93%E6%9E%84%E5%9E%8B-%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E5%9C%A8Java%20Integer%E3%80%81String%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/2383216-20210621150156599-1925166371.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/11/55%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E7%BB%93%E6%9E%84%E5%9E%8B-%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E5%9C%A8Java%20Integer%E3%80%81String%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/11/55%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E7%BB%93%E6%9E%84%E5%9E%8B-%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E5%9C%A8Java%20Integer%E3%80%81String%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/","path":"article/2022/11/55设计模式与范式之结构型-享元模式（下）：剖析享元模式在Java Integer、String中的应用/","title":"55设计模式与范式之结构型-享元模式（下）：剖析享元模式在Java Integer、String中的应用"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>55设计模式与范式之结构型-享元模式（下）：剖析享元模式在Java Integer、String中的应用 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E5%9C%A8Java-Integer%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">1.</span> <span class="nav-text">享元模式在Java Integer中的应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E5%9C%A8Java-String%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">享元模式在Java String中的应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE"><span class="nav-number">3.</span> <span class="nav-text">重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%A0%82%E8%AE%A8%E8%AE%BA"><span class="nav-number">4.</span> <span class="nav-text">课堂讨论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/11/55%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E7%BB%93%E6%9E%84%E5%9E%8B-%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E5%9C%A8Java%20Integer%E3%80%81String%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="55设计模式与范式之结构型-享元模式（下）：剖析享元模式在Java Integer、String中的应用 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          55设计模式与范式之结构型-享元模式（下）：剖析享元模式在Java Integer、String中的应用
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-11-25 08:00:00" itemprop="dateCreated datePublished" datetime="2022-11-25T08:00:00+08:00">2022-11-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>上一节课，我们通过棋牌游戏和文本编辑器这样两个实际的例子，学习了享元模式的原理、实现以及应用场景。用一句话总结一下，享元模式中的“享元”指被共享的单元。享元模式通过复用对象，以达到节省内存的目的。</p>
+<p>今天，我再用一节课的时间带你剖析一下，享元模式在Java Integer、String中的应用。如果你不熟悉Java编程语言，那也不用担心看不懂，因为今天的内容主要还是介绍设计思路，跟语言本身关系不大。</p>
+<p>话不多说，让我们正式开始今天的学习吧！</p>
+<span id="more"></span>
+
+<h1 id="享元模式在Java-Integer中的应用"><a href="#享元模式在Java-Integer中的应用" class="headerlink" title="享元模式在Java Integer中的应用"></a>享元模式在Java Integer中的应用</h1><p>我们先来看下面这样一段代码。你可以先思考下，这段代码会输出什么样的结果。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Integer</span> <span class="variable">i1</span> <span class="operator">=</span> <span class="number">56</span>;</span><br><span class="line"><span class="type">Integer</span> <span class="variable">i2</span> <span class="operator">=</span> <span class="number">56</span>;</span><br><span class="line"><span class="type">Integer</span> <span class="variable">i3</span> <span class="operator">=</span> <span class="number">129</span>;</span><br><span class="line"><span class="type">Integer</span> <span class="variable">i4</span> <span class="operator">=</span> <span class="number">129</span>;</span><br><span class="line">System.out.println(i1 == i2);</span><br><span class="line">System.out.println(i3 == i4);</span><br></pre></td></tr></table></figure>
+
+<p>如果不熟悉Java语言，你可能会觉得，i1和i2值都是56，i3和i4值都是129，i1跟i2值相等，i3跟i4值相等，所以输出结果应该是两个true。这样的分析是不对的，主要还是因为你对Java语法不熟悉。要正确地分析上面的代码，我们需要弄清楚下面两个问题：</p>
+<ul>
+<li>如何判定两个Java对象是否相等（也就代码中的“&#x3D;&#x3D;”操作符的含义）？</li>
+<li>什么是自动装箱（Autoboxing）和自动拆箱（Unboxing）？</li>
+</ul>
+<p>在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/166698">加餐一</a>中，我们讲到，Java为基本数据类型提供了对应的包装器类型。具体如下所示：</p>
+<p><img src="/article/2022/11/55%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E7%BB%93%E6%9E%84%E5%9E%8B-%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E5%9C%A8Java%20Integer%E3%80%81String%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/2383216-20210621150156599-1925166371.png" alt="img"></p>
+<p>所谓的自动装箱，就是自动将基本数据类型转换为包装器类型。所谓的自动拆箱，也就是自动将包装器类型转化为基本数据类型。具体的代码示例如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Integer</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">56</span>; <span class="comment">//自动装箱</span></span><br><span class="line"><span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> i; <span class="comment">//自动拆箱</span></span><br></pre></td></tr></table></figure>
+
+<p>数值56是基本数据类型int，当赋值给包装器类型（Integer）变量的时候，触发自动装箱操作，创建一个Integer类型的对象，并且赋值给变量i。其底层相当于执行了下面这条语句：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Integer</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">59</span>；底层执行了：<span class="type">Integer</span> <span class="variable">i</span> <span class="operator">=</span> Integer.valueOf(<span class="number">59</span>);</span><br></pre></td></tr></table></figure>
+
+<p>反过来，当把包装器类型的变量i，赋值给基本数据类型变量j的时候，触发自动拆箱操作，将i中的数据取出，赋值给j。其底层相当于执行了下面这条语句：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> i; 底层执行了：<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> i.intValue();</span><br></pre></td></tr></table></figure>
+
+<p>弄清楚了自动装箱和自动拆箱，我们再来看，如何判定两个对象是否相等？不过，在此之前，我们先要搞清楚，Java对象在内存中是如何存储的。我们通过下面这个例子来说明一下。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">User</span> <span class="variable">a</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>(<span class="number">123</span>, <span class="number">23</span>); <span class="comment">// id=123, age=23</span></span><br></pre></td></tr></table></figure>
+
+<p>针对这条语句，我画了一张内存存储结构图，如下所示。a存储的值是User对象的内存地址，在图中就表现为a指向User对象。</p>
+<p><img src="/article/2022/11/55%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E7%BB%93%E6%9E%84%E5%9E%8B-%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E5%9C%A8Java%20Integer%E3%80%81String%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/2383216-20210621150408831-1483478584.png" alt="img"></p>
+<p>当我们通过“&#x3D;&#x3D;”来判定两个对象是否相等的时候，实际上是在判断两个局部变量存储的地址是否相同，换句话说，是在判断两个局部变量是否指向相同的对象。</p>
+<p>了解了Java的这几个语法之后，我们重新看一下开头的那段代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Integer</span> <span class="variable">i1</span> <span class="operator">=</span> <span class="number">56</span>;</span><br><span class="line"><span class="type">Integer</span> <span class="variable">i2</span> <span class="operator">=</span> <span class="number">56</span>;</span><br><span class="line"><span class="type">Integer</span> <span class="variable">i3</span> <span class="operator">=</span> <span class="number">129</span>;</span><br><span class="line"><span class="type">Integer</span> <span class="variable">i4</span> <span class="operator">=</span> <span class="number">129</span>;</span><br><span class="line">System.out.println(i1 == i2);</span><br><span class="line">System.out.println(i3 == i4);</span><br></pre></td></tr></table></figure>
+
+<p>前4行赋值语句都会触发自动装箱操作，也就是会创建Integer对象并且赋值给i1、i2、i3、i4这四个变量。根据刚刚的讲解，i1、i2尽管存储的数值相同，都是56，但是指向不同的Integer对象，所以通过“&#x3D;&#x3D;”来判定是否相同的时候，会返回false。同理，i3&#x3D;&#x3D;i4判定语句也会返回false。</p>
+<p>不过，上面的分析还是不对，答案并非是两个false，而是一个true，一个false。看到这里，你可能会比较纳闷了。实际上，这正是<font color="red"><strong>因为Integer用到了享元模式来复用对象</strong></font>，才导致了这样的运行结果。当我们通过自动装箱，也就是<font color="blue"><strong>调用valueOf()来创建Integer对象的时候，如果要创建的Integer对象的值在-128到127之间，会从<font color="red">IntegerCache类</font>中直接返回，否则才调用new方法创建。</strong></font>看代码更加清晰一些，Integer类的valueOf()函数的具体代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Integer <span class="title function_">valueOf</span><span class="params">(<span class="type">int</span> i)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (i &gt;= IntegerCache.low &amp;&amp; i &lt;= IntegerCache.high)</span><br><span class="line">        <span class="keyword">return</span> IntegerCache.cache[i + (-IntegerCache.low)];</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Integer</span>(i);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实际上，这里的IntegerCache相当于，我们上一节课中讲的生成享元对象的工厂类，只不过名字不叫xxxFactory而已。我们来看它的具体代码实现。这个类是Integer的内部类，你也可以自行查看JDK源码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Cache to support the object identity semantics of autoboxing for values between</span></span><br><span class="line"><span class="comment"> * -128 and 127 (inclusive) as required by JLS.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * The cache is initialized on first usage.  The size of the cache</span></span><br><span class="line"><span class="comment"> * may be controlled by the &#123;<span class="doctag">@code</span> -XX:AutoBoxCacheMax=&lt;size&gt;&#125; option.</span></span><br><span class="line"><span class="comment"> * During VM initialization, java.lang.Integer.IntegerCache.high property</span></span><br><span class="line"><span class="comment"> * may be set and saved in the private system properties in the</span></span><br><span class="line"><span class="comment"> * sun.misc.VM class.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">IntegerCache</span> &#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">low</span> <span class="operator">=</span> -<span class="number">128</span>;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> high;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> Integer cache[];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        <span class="comment">// high value may be configured by property</span></span><br><span class="line">        <span class="type">int</span> <span class="variable">h</span> <span class="operator">=</span> <span class="number">127</span>;</span><br><span class="line">        <span class="type">String</span> <span class="variable">integerCacheHighPropValue</span> <span class="operator">=</span></span><br><span class="line">            sun.misc.VM.getSavedProperty(<span class="string">&quot;java.lang.Integer.IntegerCache.high&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (integerCacheHighPropValue != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> parseInt(integerCacheHighPropValue);</span><br><span class="line">                i = Math.max(i, <span class="number">127</span>);</span><br><span class="line">                <span class="comment">// Maximum array size is Integer.MAX_VALUE</span></span><br><span class="line">                h = Math.min(i, Integer.MAX_VALUE - (-low) -<span class="number">1</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span>( NumberFormatException nfe) &#123;</span><br><span class="line">                <span class="comment">// If the property cannot be parsed into an int, ignore it.</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        high = h;</span><br><span class="line"></span><br><span class="line">        cache = <span class="keyword">new</span> <span class="title class_">Integer</span>[(high - low) + <span class="number">1</span>];</span><br><span class="line">        <span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> low;</span><br><span class="line">        <span class="keyword">for</span>(<span class="type">int</span> <span class="variable">k</span> <span class="operator">=</span> <span class="number">0</span>; k &lt; cache.length; k++)</span><br><span class="line">            cache[k] = <span class="keyword">new</span> <span class="title class_">Integer</span>(j++);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// range [-128, 127] must be interned (JLS7 5.1.7)</span></span><br><span class="line">        <span class="keyword">assert</span> IntegerCache.high &gt;= <span class="number">127</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="title function_">IntegerCache</span><span class="params">()</span> &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><font color="red"><strong>为什么IntegerCache只缓存-128到127之间的整型值呢？</strong></font> </p>
+<p>在IntegerCache的代码实现中，当这个类被加载的时候，缓存的享元对象会被集中一次性创建好。毕竟整型值太多了，我们不可能在IntegerCache类中预先创建好所有的整型值，这样既占用太多内存，也使得加载IntegerCache类的时间过长。所以，我们只能选择缓存对于大部分应用来说最常用的整型值，也就是一个字节的大小（-128到127之间的数据）。</p>
+<p>实际上，<font color="red">JDK也提供了方法来让我们可以自定义缓存的<strong>最大值</strong></font>，有下面两种方式。如果你通过分析应用的JVM内存占用情况，发现-128到255之间的数据占用的内存比较多，你就可以用如下方式，将缓存的最大值从127调整到255。不过，这里注意一下，<font color="red">JDK并没有提供设置最小值的方法</font>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 方法一：</span></span><br><span class="line">-Djava.lang.Integer.IntegerCache.high=<span class="number">255</span></span><br><span class="line"><span class="comment">// 方法二：</span></span><br><span class="line">-XX:AutoBoxCacheMax=<span class="number">255</span></span><br></pre></td></tr></table></figure>
+
+<p>现在，让我们再回到最开始的问题，因为56处于-128和127之间，i1和i2会指向相同的享元对象，所以i1&#x3D;&#x3D;i2返回true。而129大于127，并不会被缓存，每次都会创建一个全新的对象，也就是说，i3和i4指向不同的Integer对象，所以i3&#x3D;&#x3D;i4返回false。</p>
+<p>实际上，<font color="red">除了Integer类型之外，其他包装器类型，比如Long、Short、Byte等，也都利用了享元模式来缓存-128到127之间的数据。</font>比如，Long类型对应的LongCache享元工厂类及valueOf()函数代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">LongCache</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="title function_">LongCache</span><span class="params">()</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> Long cache[] = <span class="keyword">new</span> <span class="title class_">Long</span>[-(-<span class="number">128</span>) + <span class="number">127</span> + <span class="number">1</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; cache.length; i++)</span><br><span class="line">            cache[i] = <span class="keyword">new</span> <span class="title class_">Long</span>(i - <span class="number">128</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Long <span class="title function_">valueOf</span><span class="params">(<span class="type">long</span> l)</span> &#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">offset</span> <span class="operator">=</span> <span class="number">128</span>;</span><br><span class="line">    <span class="keyword">if</span> (l &gt;= -<span class="number">128</span> &amp;&amp; l &lt;= <span class="number">127</span>) &#123; <span class="comment">// will cache</span></span><br><span class="line">        <span class="keyword">return</span> LongCache.cache[(<span class="type">int</span>)l + offset];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Long</span>(l);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在我们平时的开发中，对于下面这样三种创建整型对象的方式，我们<font color="red"><strong>优先使用后两种</strong></font>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Integer</span> <span class="variable">a</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Integer</span>(<span class="number">123</span>);</span><br><span class="line"><span class="type">Integer</span> <span class="variable">a</span> <span class="operator">=</span> <span class="number">123</span>;</span><br><span class="line"><span class="type">Integer</span> <span class="variable">a</span> <span class="operator">=</span> Integer.valueOf(<span class="number">123</span>);</span><br></pre></td></tr></table></figure>
+
+<p>第一种创建方式并不会使用到IntegerCache，而后面两种创建方法可以利用IntegerCache缓存，返回共享的对象，以达到节省内存的目的。举一个极端一点的例子，假设程序需要创建1万个-128到127之间的Integer对象。使用第一种创建方式，我们需要分配1万个Integer对象的内存空间；使用后两种创建方式，我们最多只需要分配256个Integer对象的内存空间。</p>
+<h1 id="享元模式在Java-String中的应用"><a href="#享元模式在Java-String中的应用" class="headerlink" title="享元模式在Java String中的应用"></a>享元模式在Java String中的应用</h1><p>刚刚我们讲了享元模式在Java Integer类中的应用，现在，我们再来看下，享元模式在Java String类中的应用。同样，我们还是先来看一段代码，你觉得这段代码输出的结果是什么呢？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">s1</span> <span class="operator">=</span> <span class="string">&quot;小争哥&quot;</span>;</span><br><span class="line"><span class="type">String</span> <span class="variable">s2</span> <span class="operator">=</span> <span class="string">&quot;小争哥&quot;</span>;</span><br><span class="line"><span class="type">String</span> <span class="variable">s3</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">String</span>(<span class="string">&quot;小争哥&quot;</span>);</span><br><span class="line"></span><br><span class="line">System.out.println(s1 == s2);</span><br><span class="line">System.out.println(s1 == s3);</span><br></pre></td></tr></table></figure>
+
+<p>上面代码的运行结果是：一个true，一个false。跟Integer类的设计思路相似，String类利用享元模式来复用相同的字符串常量（也就是代码中的“小争哥”）。JVM会专门开辟一块存储区来存储字符串常量，这块存储区叫作“字符串常量池”。上面代码对应的内存存储结构如下所示：</p>
+<p><img src="/article/2022/11/55%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E7%BB%93%E6%9E%84%E5%9E%8B-%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E5%9C%A8Java%20Integer%E3%80%81String%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/2383216-20210621150916114-785493541.png" alt="img"></p>
+<p>不过，<font color="red"><strong>String类的享元模式的设计，跟Integer类稍微有些不同。</strong></font>Integer类中要共享的对象，是在类加载的时候，就集中一次性创建好的。但是，对于字符串来说，我们没法事先知道要共享哪些字符串常量，所以没办法事先创建好，只能在<font color="red"><strong>某个字符串常量第一次被用到的时候，存储到常量池中，当之后再用到的时候，直接引用常量池中已经存在的</strong></font>即可，就不需要再重新创建了。</p>
+<h1 id="重点回顾"><a href="#重点回顾" class="headerlink" title="重点回顾"></a>重点回顾</h1><p>好了，今天的内容到此就讲完了。我们一块来总结回顾一下，你需要重点掌握的内容。</p>
+<p>在Java Integer的实现中，-128到127之间的整型对象会被事先创建好，缓存在IntegerCache类中。当我们使用自动装箱或者valueOf()来创建这个数值区间的整型对象时，会复用IntegerCache类事先创建好的对象。这里的IntegerCache类就是享元工厂类，事先创建好的整型对象就是享元对象。</p>
+<p>在Java String类的实现中，JVM开辟一块存储区专门存储字符串常量，这块存储区叫作字符串常量池，类似于Integer中的IntegerCache。不过，跟IntegerCache不同的是，它并非事先创建好需要共享的对象，而是在程序的运行期间，根据需要来创建和缓存字符串常量。</p>
+<p>除此之外，这里我再补充强调一下。</p>
+<p>实际上，享元模式对JVM的垃圾回收并不友好。因为享元工厂类一直保存了对享元对象的引用，这就导致享元对象在没有任何代码使用的情况下，也并不会被JVM垃圾回收机制自动回收掉。因此，在某些情况下，如果对象的生命周期很短，也不会被密集使用，利用享元模式反倒可能会浪费更多的内存。所以，除非经过线上验证，利用享元模式真的可以大大节省内存，否则，就不要过度使用这个模式，为了一点点内存的节省而引入一个复杂的设计模式，得不偿失啊。</p>
+<h1 id="课堂讨论"><a href="#课堂讨论" class="headerlink" title="课堂讨论"></a>课堂讨论</h1><p>IntegerCache只能缓存事先指定好的整型对象，那我们是否可以借鉴String的设计思路，不事先指定需要缓存哪些整型对象，而是在程序的运行过程中，当用到某个整型对象的时候，创建好放置到IntegerCache，下次再被用到的时候，直接从IntegerCache中返回呢？</p>
+<p>如果可以这么做，请你按照这个思路重新实现一下IntegerCache类，并且能够做到在某个对象没有任何代码使用的时候，能被JVM垃圾回收机制回收掉。</p>
+<p>欢迎留言和我分享你的想法，如果有收获，欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/11/54%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E7%BB%93%E6%9E%84%E5%9E%8B-%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%E4%BA%AB%E5%85%83%E6%A8%A1%E5%BC%8F%E4%BC%98%E5%8C%96%E6%96%87%E6%9C%AC%E7%BC%96%E8%BE%91%E5%99%A8%E7%9A%84%E5%86%85%E5%AD%98%E5%8D%A0%E7%94%A8%EF%BC%9F/" rel="prev" title="54设计模式与范式之结构型-享元模式（上）：如何利用享元模式优化文本编辑器的内存占用？">
+                  <i class="fa fa-angle-left"></i> 54设计模式与范式之结构型-享元模式（上）：如何利用享元模式优化文本编辑器的内存占用？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/11/56%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%8E%E8%8C%83%E5%BC%8F%E4%B9%8B%E8%A1%8C%E4%B8%BA%E5%9E%8B-%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E8%AF%A6%E8%A7%A3%E5%90%84%E7%A7%8D%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF%E4%B8%8B%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F%E7%9A%84%E4%B8%8D%E5%90%8C%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F/" rel="next" title="56设计模式与范式之行为型-观察者模式（上）：详解各种应用场景下观察者模式的不同实现方式">
+                  56设计模式与范式之行为型-观察者模式（上）：详解各种应用场景下观察者模式的不同实现方式 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

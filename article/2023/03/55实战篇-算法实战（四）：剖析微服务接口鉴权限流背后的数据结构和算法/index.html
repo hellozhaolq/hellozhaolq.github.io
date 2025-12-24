@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="微服务是最近几年才兴起的概念。简单点讲，就是把复杂的大应用，解耦拆分成几个小的应用。这样做的好处有很多。比如，这样有利于团队组织架构的拆分，毕竟团队越大协作的难度越大；再比如，每个应用都可以独立运维，独立扩容，独立上线，各个应用之间互不影响。不用像原来那样，一个小功能上线，整个大应用都要重新发布。 不过，有利就有弊。大应用拆分成微服务之后，服务之间的调用关系变得更复杂，平台的整体复杂熵升高，出错的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="55实战篇-算法实战（四）：剖析微服务接口鉴权限流背后的数据结构和算法">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="微服务是最近几年才兴起的概念。简单点讲，就是把复杂的大应用，解耦拆分成几个小的应用。这样做的好处有很多。比如，这样有利于团队组织架构的拆分，毕竟团队越大协作的难度越大；再比如，每个应用都可以独立运维，独立扩容，独立上线，各个应用之间互不影响。不用像原来那样，一个小功能上线，整个大应用都要重新发布。 不过，有利就有弊。大应用拆分成微服务之后，服务之间的调用关系变得更复杂，平台的整体复杂熵升高，出错的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190711164438772.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190711165451477.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190711170452320.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190711171434460.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/2019071117210534.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190712145245136.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190712145747458.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190712150613440.jpg">
+<meta property="article:published_time" content="2023-03-25T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-03-25T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="数据结构与算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190711164438772.jpg">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/","path":"article/2023/03/55实战篇-算法实战（四）：剖析微服务接口鉴权限流背后的数据结构和算法/","title":"55实战篇-算法实战（四）：剖析微服务接口鉴权限流背后的数据结构和算法"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>55实战篇-算法实战（四）：剖析微服务接口鉴权限流背后的数据结构和算法 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%89%B4%E6%9D%83%E8%83%8C%E6%99%AF%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">鉴权背景介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%BF%AB%E9%80%9F%E9%89%B4%E6%9D%83%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">如何实现快速鉴权？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%B2%BE%E7%A1%AE%E5%8C%B9%E9%85%8D%E8%A7%84%E5%88%99%EF%BC%9F"><span class="nav-number">2.1.</span> <span class="nav-text">1.如何实现精确匹配规则？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%89%8D%E7%BC%80%E5%8C%B9%E9%85%8D%E8%A7%84%E5%88%99%EF%BC%9F"><span class="nav-number">2.2.</span> <span class="nav-text">2.如何实现前缀匹配规则？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E6%A8%A1%E7%B3%8A%E5%8C%B9%E9%85%8D%E8%A7%84%E5%88%99%EF%BC%9F"><span class="nav-number">2.3.</span> <span class="nav-text">3.如何实现模糊匹配规则？</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%99%90%E6%B5%81%E8%83%8C%E6%99%AF%E4%BB%8B%E7%BB%8D"><span class="nav-number">3.</span> <span class="nav-text">限流背景介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%B2%BE%E5%87%86%E9%99%90%E6%B5%81%EF%BC%9F"><span class="nav-number">4.</span> <span class="nav-text">如何实现精准限流？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E5%BC%95%E7%94%B3"><span class="nav-number">5.</span> <span class="nav-text">总结引申</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%90%8E%E6%80%9D%E8%80%83"><span class="nav-number">6.</span> <span class="nav-text">课后思考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="55实战篇-算法实战（四）：剖析微服务接口鉴权限流背后的数据结构和算法 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          55实战篇-算法实战（四）：剖析微服务接口鉴权限流背后的数据结构和算法
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-03-25 08:00:00" itemprop="dateCreated datePublished" datetime="2023-03-25T08:00:00+08:00">2023-03-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">数据结构与算法</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>微服务是最近几年才兴起的概念。简单点讲，就是把复杂的大应用，解耦拆分成几个小的应用。这样做的好处有很多。比如，这样有利于团队组织架构的拆分，毕竟团队越大协作的难度越大；再比如，每个应用都可以独立运维，独立扩容，独立上线，各个应用之间互不影响。不用像原来那样，一个小功能上线，整个大应用都要重新发布。</p>
+<p>不过，有利就有弊。大应用拆分成微服务之后，服务之间的调用关系变得更复杂，平台的整体复杂熵升高，出错的概率、debug问题的难度都高了好几个数量级。所以，为了解决这些问题，服务治理便成了微服务的一个技术重点。</p>
+<p>所谓服务治理，简单点讲，就是管理微服务，保证平台整体正常、平稳地运行。服务治理涉及的内容比较多，比如鉴权、限流、降级、熔断、监控告警等等。这些服务治理功能的实现，底层依赖大量的数据结构和算法。今天，我就拿其中的鉴权和限流这两个功能，来带你看看，它们的实现过程中都要用到哪些数据结构和算法。</p>
+<span id="more"></span>
+
+<h1 id="鉴权背景介绍"><a href="#鉴权背景介绍" class="headerlink" title="鉴权背景介绍"></a>鉴权背景介绍</h1><p>以防你之前可能对微服务没有太多了解，所以我对鉴权的背景做了简化。</p>
+<p>假设我们有一个微服务叫用户服务（User Service）。它提供很多用户相关的接口，比如获取用户信息、注册、登录等，给公司内部的其他应用使用。但是，并不是公司内部所有应用，都可以访问这个用户服务，也并不是每个有访问权限的应用，都可以访问用户服务的所有接口。</p>
+<p>我举了一个例子给你讲解一下，你可以看我画的这幅图。这里面，只有A、B、C、D四个应用可以访问用户服务，并且，每个应用只能访问用户服务的部分接口。</p>
+<p><img src="/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190711164438772.jpg" alt="img"></p>
+<p>要实现接口鉴权功能，我们需要事先将应用对接口的访问权限规则设置好。当某个应用访问其中一个接口的时候，我们就可以拿应用的请求URL，在规则中进行匹配。如果匹配成功，就说明允许访问；如果没有可以匹配的规则，那就说明这个应用没有这个接口的访问权限，我们就拒绝服务。</p>
+<h1 id="如何实现快速鉴权？"><a href="#如何实现快速鉴权？" class="headerlink" title="如何实现快速鉴权？"></a>如何实现快速鉴权？</h1><p>接口的格式有很多，有类似Dubbo这样的RPC接口，也有类似Spring Cloud这样的HTTP接口。不同接口的鉴权实现方式是类似的，我这里主要拿HTTP接口给你讲解。</p>
+<p>鉴权的原理比较简单、好理解。那具体到实现层面，我们该用什么数据结构来存储规则呢？用户请求URL在规则中快速匹配，又该用什么样的算法呢？</p>
+<p>实际上，不同的规则和匹配模式，对应的数据结构和匹配算法也是不一样的。所以，关于这个问题，我继续细化为三个更加详细的需求给你讲解。</p>
+<h2 id="1-如何实现精确匹配规则？"><a href="#1-如何实现精确匹配规则？" class="headerlink" title="1.如何实现精确匹配规则？"></a>1.如何实现精确匹配规则？</h2><p>我们先来看最简单的一种匹配模式。只有当请求URL跟规则中配置的某个接口精确匹配时，这个请求才会被接受、处理。为了方便你理解，我举了一个例子，你可以看一下。</p>
+<p><img src="/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190711165451477.jpg" alt="img"></p>
+<p>不同的应用对应不同的规则集合。我们可以采用散列表来存储这种对应关系。我这里着重讲下，每个应用对应的规则集合，该如何存储和匹配。</p>
+<p>针对这种匹配模式，我们可以将每个应用对应的权限规则，存储在一个字符串数组中。当用户请求到来时，我们拿用户的请求URL，在这个字符串数组中逐一匹配，匹配的算法就是我们之前学过的字符串匹配算法（比如KMP、BM、BF等）。</p>
+<p>规则不会经常变动，所以，为了加快匹配速度，我们可以按照字符串的大小给规则排序，把它组织成有序数组这种数据结构。当要查找某个URL能否匹配其中某条规则的时候，我们可以采用二分查找算法，在有序数组中进行匹配。</p>
+<p>而二分查找算法的时间复杂度是O(logn)（n表示规则的个数），这比起时间复杂度是O(n)的顺序遍历快了很多。对于规则中接口长度比较长，并且鉴权功能调用量非常大的情况，这种优化方法带来的性能提升还是非常可观的 。</p>
+<h2 id="2-如何实现前缀匹配规则？"><a href="#2-如何实现前缀匹配规则？" class="headerlink" title="2.如何实现前缀匹配规则？"></a>2.如何实现前缀匹配规则？</h2><p>我们再来看一种稍微复杂的匹配模式。只要某条规则可以匹配请求URL的前缀，我们就说这条规则能够跟这个请求URL匹配。同样，为了方便你理解这种匹配模式，我还是举一个例子说明一下。</p>
+<p><img src="/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190711170452320.jpg" alt="img"></p>
+<p>不同的应用对应不同的规则集合。我们采用散列表来存储这种对应关系。我着重讲一下，每个应用的规则集合，最适合用什么样的数据结构来存储。</p>
+<p>在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/72414">Trie树</a>那节，我们讲到，Trie树非常适合用来做前缀匹配。所以，针对这个需求，我们可以将每个用户的规则集合，组织成Trie树这种数据结构。</p>
+<p>不过，Trie树中的每个节点不是存储单个字符，而是存储接口被“&#x2F;”分割之后的子目录（比如“&#x2F;user&#x2F;name”被分割为“user”“name”两个子目录）。因为规则并不会经常变动，所以，在Trie树中，我们可以把每个节点的子节点们，组织成有序数组这种数据结构。在匹配的过程中，我们可以利用二分查找算法，决定从一个节点应该跳到哪一个子节点。</p>
+<p><img src="/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190711171434460.jpg" alt="img"></p>
+<h2 id="3-如何实现模糊匹配规则？"><a href="#3-如何实现模糊匹配规则？" class="headerlink" title="3.如何实现模糊匹配规则？"></a>3.如何实现模糊匹配规则？</h2><p>如果我们的规则更加复杂，规则中包含通配符，比如“**”表示匹配任意多个子目录，“*”表示匹配任意一个子目录。只要用户请求URL可以跟某条规则模糊匹配，我们就说这条规则适用于这个请求。为了方便你理解，我举一个例子来解释一下。</p>
+<p><img src="/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/2019071117210534.jpg" alt="img"></p>
+<p>不同的应用对应不同的规则集合。我们还是采用散列表来存储这种对应关系。这点我们刚才讲过了，这里不再重复说了。我们着重看下，每个用户对应的规则集合，该用什么数据结构来存储？针对这种包含通配符的模糊匹配，我们又该使用什么算法来实现呢？</p>
+<p>还记得我们在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/74287">回溯算法</a>那节讲的正则表达式的例子吗？我们可以借助正则表达式那个例子的解决思路，来解决这个问题。我们采用回溯算法，拿请求URL跟每条规则逐一进行模糊匹配。如何用回溯算法进行模糊匹配，这部分我就不重复讲了。你如果忘记了，可以回到相应章节复习一下。</p>
+<p>不过，这个解决思路的时间复杂度是非常高的。我们需要拿每一个规则，跟请求URL匹配一遍。那有没有办法可以继续优化一下呢？</p>
+<p>实际上，我们可以结合实际情况，挖掘出这样一个隐形的条件，那就是，并不是每条规则都包含通配符，包含通配符的只是少数。于是，我们可以把不包含通配符的规则和包含通配符的规则分开处理。</p>
+<p>我们把不包含通配符的规则，组织成有序数组或者Trie树（具体组织成什么结构，视具体的需求而定，是精确匹配，就组织成有序数组，是前缀匹配，就组织成Trie树），而这一部分匹配就会非常高效。剩下的是少数包含通配符的规则，我们只要把它们简单存储在一个数组中就可以了。尽管匹配起来会比较慢，但是毕竟这种规则比较少，所以这种方法也是可以接受的。</p>
+<p>当接收到一个请求URL之后，我们可以先在不包含通配符的有序数组或者Trie树中查找。如果能够匹配，就不需要继续在通配符规则中匹配了；如果不能匹配，就继续在通配符规则中查找匹配。</p>
+<h1 id="限流背景介绍"><a href="#限流背景介绍" class="headerlink" title="限流背景介绍"></a>限流背景介绍</h1><p>讲完了鉴权的实现思路，我们再来看一下限流。</p>
+<p>所谓限流，顾名思义，就是对接口调用的频率进行限制。比如每秒钟不能超过100次调用，超过之后，我们就拒绝服务。限流的原理听起来非常简单，但它在很多场景中，发挥着重要的作用。比如在秒杀、大促、双11、618等场景中，限流已经成为了保证系统平稳运行的一种标配的技术解决方案。</p>
+<p>按照不同的限流粒度，限流可以分为很多种类型。比如给每个接口限制不同的访问频率，或者给所有接口限制总的访问频率，又或者更细粒度地限制某个应用对某个接口的访问频率等等。</p>
+<p>不同粒度的限流功能的实现思路都差不多，所以，我今天主要针对限制所有接口总的访问频率这样一个限流需求来讲解。其他粒度限流需求的实现思路，你可以自己思考。</p>
+<h1 id="如何实现精准限流？"><a href="#如何实现精准限流？" class="headerlink" title="如何实现精准限流？"></a>如何实现精准限流？</h1><p>最简单的限流算法叫<strong>固定时间窗口限流算法</strong>。这种算法是如何工作的呢？首先我们需要选定一个时间起点，之后每当有接口请求到来，我们就将计数器加一。如果在当前时间窗口内，根据限流规则（比如每秒钟最大允许100次访问请求），出现累加访问次数超过限流值的情况时，我们就拒绝后续的访问请求。当进入下一个时间窗口之后，计数器就清零重新计数。</p>
+<p><img src="/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190712145245136.jpg" alt="img"></p>
+<p>这种基于固定时间窗口的限流算法的缺点是，限流策略过于粗略，无法应对两个时间窗口临界时间内的突发流量。这是怎么回事呢？我举一个例子给你解释一下。</p>
+<p>假设我们的限流规则是，每秒钟不能超过100次接口请求。第一个1s时间窗口内，100次接口请求都集中在最后10ms内。在第二个1s的时间窗口内，100次接口请求都集中在最开始的10ms内。虽然两个时间窗口内流量都符合限流要求（≤100个请求），但在两个时间窗口临界的20ms内，会集中有200次接口请求。固定时间窗口限流算法并不能对这种情况做限制，所以，集中在这20ms内的200次请求就有可能压垮系统。</p>
+<p><img src="/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190712145747458.jpg" alt="img"></p>
+<p>为了解决这个问题，我们可以对固定时间窗口限流算法稍加改造。我们可以限制任意时间窗口（比如1s）内，接口请求数都不能超过某个阈值（ 比如100次）。因此，相对于固定时间窗口限流算法，这个算法叫<strong>滑动时间窗口限流算法</strong>。</p>
+<p>流量经过滑动时间窗口限流算法整形之后，可以保证任意一个1s的时间窗口内，都不会超过最大允许的限流值，从流量曲线上来看会更加平滑。那具体到实现层面，我们该如何来做呢？</p>
+<p>我们假设限流的规则是，在任意1s内，接口的请求次数都不能大于K次。我们就维护一个大小为K+1的循环队列，用来记录1s内到来的请求。注意，这里循环队列的大小等于限流次数加一，因为循环队列存储数据时会浪费一个存储单元。</p>
+<p>当有新的请求到来时，我们将与这个新请求的时间间隔超过1s的请求，从队列中删除。然后，我们再来看循环队列中是否有空闲位置。如果有，则把新请求存储在队列尾部（tail指针所指的位置）；如果没有，则说明这1秒内的请求次数已经超过了限流值K，所以这个请求被拒绝服务。</p>
+<p>为了方便你理解，我举一个例子，给你解释一下。在这个例子中，我们假设限流的规则是，任意1s内，接口的请求次数都不能大于6次。</p>
+<p><img src="/article/2023/03/55%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E9%89%B4%E6%9D%83%E9%99%90%E6%B5%81%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/20190712150613440.jpg" alt="img"></p>
+<p>即便滑动时间窗口限流算法可以保证任意时间窗口内，接口请求次数都不会超过最大限流值，但是仍然不能防止，在细时间粒度上访问过于集中的问题。</p>
+<p>比如我刚刚举的那个例子，第一个1s的时间窗口内，100次请求都集中在最后10ms中，也就是说，基于时间窗口的限流算法，不管是固定时间窗口还是滑动时间窗口，只能在选定的时间粒度上限流，对选定时间粒度内的更加细粒度的访问频率不做限制。</p>
+<p>实际上，针对这个问题，还有很多更加平滑的限流算法，比如令牌桶算法、漏桶算法等。如果感兴趣，你可以自己去研究一下。</p>
+<h1 id="总结引申"><a href="#总结引申" class="headerlink" title="总结引申"></a>总结引申</h1><p>今天，我们讲解了跟微服务相关的接口鉴权和限流功能的实现思路。现在，我稍微总结一下。</p>
+<p>关于鉴权，我们讲了三种不同的规则匹配模式。不管是哪种匹配模式，我们都可以用散列表来存储不同应用对应的不同规则集合。对于每个应用的规则集合的存储，三种匹配模式使用不同的数据结构。</p>
+<p>对于第一种精确匹配模式，我们利用有序数组来存储每个应用的规则集合，并且通过二分查找和字符串匹配算法，来匹配请求URL与规则。对于第二种前缀匹配模式，我们利用Trie树来存储每个应用的规则集合。对于第三种模糊匹配模式，我们采用普通的数组来存储包含通配符的规则，通过回溯算法，来进行请求URL与规则的匹配。</p>
+<p>关于限流，我们讲了两种限流算法，第一种是固定时间窗口限流算法，第二种是滑动时间窗口限流算法。对于滑动时间窗口限流算法，我们用了之前学习过的循环队列来实现。比起固定时间窗口限流算法，它对流量的整形效果更好，流量更加平滑。</p>
+<p>从今天的学习中，我们也可以看出，对于基础架构工程师来说，如果不精通数据结构和算法，我们就很难开发出性能卓越的基础架构、中间件。这其实就体现了数据结构和算法的重要性。</p>
+<h1 id="课后思考"><a href="#课后思考" class="headerlink" title="课后思考"></a>课后思考</h1><ol>
+<li>除了用循环队列来实现滑动时间窗口限流算法之外，我们是否还可以用其他数据结构来实现呢？请对比一下这些数据结构跟循环队列在解决这个问题时的优劣之处。</li>
+<li>分析一下鉴权那部分内容中，前缀匹配算法的时间复杂度和空间复杂度。</li>
+</ol>
+<hr>
+<p>最后，有个消息提前通知你一下。本节是专栏的倒数第二节课了，不知道学到现在，你掌握得怎么样呢？为了帮你复习巩固，做到真正掌握这些知识，我针对专栏涉及的数据结构和算法，精心编制了一套练习题。从正月初一到初七，每天发布一篇。你要做好准备哦！</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/" rel="tag"># 数据结构与算法</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/03/54%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97Disruptor%E8%83%8C%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95/" rel="prev" title="54实战篇-算法实战（三）：剖析高性能队列Disruptor背后的数据结构和算法">
+                  <i class="fa fa-angle-left"></i> 54实战篇-算法实战（三）：剖析高性能队列Disruptor背后的数据结构和算法
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/03/56%E5%AE%9E%E6%88%98%E7%AF%87-%E7%AE%97%E6%B3%95%E5%AE%9E%E6%88%98%EF%BC%88%E4%BA%94%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E7%94%A8%E5%AD%A6%E8%BF%87%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E7%9F%AD%E7%BD%91%E5%9D%80%E7%B3%BB%E7%BB%9F%EF%BC%9F/" rel="next" title="56实战篇-算法实战（五）：如何用学过的数据结构和算法实现一个短网址系统？">
+                  56实战篇-算法实战（五）：如何用学过的数据结构和算法实现一个短网址系统？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="黑客在网络攻击时，第一步会扫描系统对外开放的端口，尝试发起连接或者攻击。比如，黑客可以扫描公司公网IP的22端口（SSH服务），然后尝试爆破登录。这个时候，通过防火墙，我们既可以屏蔽掉开放的22端口，也能拦截爆破的请求。所以，防火墙是面对外部入侵的第一道防线。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="19安全防御工具-防火墙：如何和黑客“划清界限”？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/09/19%E5%AE%89%E5%85%A8%E9%98%B2%E5%BE%A1%E5%B7%A5%E5%85%B7-%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%9A%E5%A6%82%E4%BD%95%E5%92%8C%E9%BB%91%E5%AE%A2%E2%80%9C%E5%88%92%E6%B8%85%E7%95%8C%E9%99%90%E2%80%9D%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="黑客在网络攻击时，第一步会扫描系统对外开放的端口，尝试发起连接或者攻击。比如，黑客可以扫描公司公网IP的22端口（SSH服务），然后尝试爆破登录。这个时候，通过防火墙，我们既可以屏蔽掉开放的22端口，也能拦截爆破的请求。所以，防火墙是面对外部入侵的第一道防线。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/19%E5%AE%89%E5%85%A8%E9%98%B2%E5%BE%A1%E5%B7%A5%E5%85%B7-%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%9A%E5%A6%82%E4%BD%95%E5%92%8C%E9%BB%91%E5%AE%A2%E2%80%9C%E5%88%92%E6%B8%85%E7%95%8C%E9%99%90%E2%80%9D%EF%BC%9F/20200817111458952.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/19%E5%AE%89%E5%85%A8%E9%98%B2%E5%BE%A1%E5%B7%A5%E5%85%B7-%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%9A%E5%A6%82%E4%BD%95%E5%92%8C%E9%BB%91%E5%AE%A2%E2%80%9C%E5%88%92%E6%B8%85%E7%95%8C%E9%99%90%E2%80%9D%EF%BC%9F/20200817111608195.png">
+<meta property="article:published_time" content="2023-09-19T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-09-19T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="安全攻防技能30讲">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/09/19%E5%AE%89%E5%85%A8%E9%98%B2%E5%BE%A1%E5%B7%A5%E5%85%B7-%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%9A%E5%A6%82%E4%BD%95%E5%92%8C%E9%BB%91%E5%AE%A2%E2%80%9C%E5%88%92%E6%B8%85%E7%95%8C%E9%99%90%E2%80%9D%EF%BC%9F/20200817111458952.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/09/19%E5%AE%89%E5%85%A8%E9%98%B2%E5%BE%A1%E5%B7%A5%E5%85%B7-%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%9A%E5%A6%82%E4%BD%95%E5%92%8C%E9%BB%91%E5%AE%A2%E2%80%9C%E5%88%92%E6%B8%85%E7%95%8C%E9%99%90%E2%80%9D%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/09/19%E5%AE%89%E5%85%A8%E9%98%B2%E5%BE%A1%E5%B7%A5%E5%85%B7-%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%9A%E5%A6%82%E4%BD%95%E5%92%8C%E9%BB%91%E5%AE%A2%E2%80%9C%E5%88%92%E6%B8%85%E7%95%8C%E9%99%90%E2%80%9D%EF%BC%9F/","path":"article/2023/09/19安全防御工具-防火墙：如何和黑客“划清界限”？/","title":"19安全防御工具-防火墙：如何和黑客“划清界限”？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>19安全防御工具-防火墙：如何和黑客“划清界限”？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%98%B2%E7%81%AB%E5%A2%99%E5%A6%82%E4%BD%95%E4%B8%BA%E7%BD%91%E7%BB%9C%E6%8F%90%E4%BE%9B%E4%BF%9D%E6%8A%A4%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">防火墙如何为网络提供保护？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%8C%85%E8%BF%87%E6%BB%A4%E9%98%B2%E7%81%AB%E5%A2%99"><span class="nav-number">1.1.</span> <span class="nav-text">1.包过滤防火墙</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%BA%94%E7%94%A8%E7%BD%91%E5%85%B3%E9%98%B2%E7%81%AB%E5%A2%99"><span class="nav-number">1.2.</span> <span class="nav-text">2.应用网关防火墙</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E7%8A%B6%E6%80%81%E6%A3%80%E6%B5%8B%E9%98%B2%E7%81%AB%E5%A2%99"><span class="nav-number">1.3.</span> <span class="nav-text">3.状态检测防火墙</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%98%B2%E7%81%AB%E5%A2%99%E5%8F%AF%E4%BB%A5%E4%B8%BA%E7%BD%91%E7%BB%9C%E8%BE%B9%E7%95%8C%E6%8F%90%E4%BE%9B%E5%93%AA%E4%BA%9B%E4%BF%9D%E6%8A%A4%E5%91%A2%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">防火墙可以为网络边界提供哪些保护呢？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E4%BF%9D%E6%8A%A4%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%BC%8F%E6%B4%9E"><span class="nav-number">2.1.</span> <span class="nav-text">1.保护操作系统的漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E9%98%BB%E6%AD%A2%E9%9D%9E%E6%B3%95%E7%9A%84%E4%BF%A1%E6%81%AF%E6%B5%81%E5%8A%A8"><span class="nav-number">2.2.</span> <span class="nav-text">2.阻止非法的信息流动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E9%99%90%E5%88%B6%E5%8F%AF%E8%AE%BF%E9%97%AE%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%92%8C%E5%AE%A1%E8%AE%A1"><span class="nav-number">2.3.</span> <span class="nav-text">3.限制可访问的服务和审计</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%98%B2%E7%81%AB%E5%A2%99%E6%9C%89%E5%93%AA%E4%BA%9B%E9%98%B2%E5%BE%A1%E7%9B%B2%E5%8C%BA%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">防火墙有哪些防御盲区？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%9D%E8%80%83%E9%A2%98"><span class="nav-number">5.</span> <span class="nav-text">思考题</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/09/19%E5%AE%89%E5%85%A8%E9%98%B2%E5%BE%A1%E5%B7%A5%E5%85%B7-%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%9A%E5%A6%82%E4%BD%95%E5%92%8C%E9%BB%91%E5%AE%A2%E2%80%9C%E5%88%92%E6%B8%85%E7%95%8C%E9%99%90%E2%80%9D%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="19安全防御工具-防火墙：如何和黑客“划清界限”？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          19安全防御工具-防火墙：如何和黑客“划清界限”？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-09-19 08:00:00" itemprop="dateCreated datePublished" datetime="2023-09-19T08:00:00+08:00">2023-09-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" itemprop="url" rel="index"><span itemprop="name">安全攻防技能30讲</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>黑客在网络攻击时，第一步会扫描系统对外开放的端口，尝试发起连接或者攻击。比如，黑客可以扫描公司公网IP的22端口（SSH服务），然后尝试爆破登录。这个时候，通过防火墙，我们既可以屏蔽掉开放的22端口，也能拦截爆破的请求。所以，防火墙是面对外部入侵的第一道防线。</p>
+<span id="more"></span>
+
+<p>当然，这只是个简单的例子，现实中黑客的攻击手段更多，攻击场景也更加复杂。那这个时候，防火墙是如何为系统和网络提供保护的呢？具体来说，防火墙能够拦截哪些攻击呢？它的盲区又是什么呢？今天，我们就一起来学习，如何通过防火墙进行安全防护。</p>
+<h1 id="防火墙如何为网络提供保护？"><a href="#防火墙如何为网络提供保护？" class="headerlink" title="防火墙如何为网络提供保护？"></a>防火墙如何为网络提供保护？</h1><p>你对防火墙应该不陌生。为了咱们统一一下思想，方便学习后面的内容，这里我还是再和你啰嗦几句。</p>
+<p>防火墙是部署在网络边界上的一种安全设备，其概念比较宽泛，根据需求不同可以工作在OSI（Open System Interconnection，开放式系统互联） 网络模型的一层或多层上。一般情况下，防火墙会和路由器搭配使用（或者说路由器能够承担部分防火墙的功能），来对网络进行隔离。</p>
+<p>根据实现方式和功能的不同，防火墙可以分为三种类型：包过滤防火墙、应用网关防火墙和状态检测防火墙。不同的防火墙在性能和防护能力上都有各自的特点，适用于不同的场景。下面我们一一来看。</p>
+<h2 id="1-包过滤防火墙"><a href="#1-包过滤防火墙" class="headerlink" title="1.包过滤防火墙"></a>1.包过滤防火墙</h2><p>包过滤防火墙工作在网络层和传输层上。在这两个层级中，网络请求都是以TCP或者UDP数据包的形式进行流动的。因此，包过滤防火墙是通过检测并拦截所有流经防火墙的TCP和UDP数据包，来对系统提供保护。它能够获取到的信息包括：源IP和端口、目标IP和端口、协议号等。由于大部分的路由器甚至Linux系统本身（Iptables）也具备类似的功能。因此，通常情况下，我们不需要采购额外的设备部署包过滤防火墙，只需要直接对网络边界的路由器进行设置，就能够满足最基本的拦截需求了。</p>
+<p>但是，在防护能力上，包过滤防火墙是比较弱的，它只能提供最基础的安全防护。这是因为，包过滤防火墙的过滤规则基本都是静态的。也就是说，包过滤防火墙只能够通过匹配IP地址和端口号，判断这些信息是否命中特定的规则来进行过滤。比如，禁止外网IP访问80和443以外的公司IP端口。所以，现在大部分的包过滤防火墙都进行了升级，引入了诸如“连接状态”等概念，也就变成了状态检测防火墙。</p>
+<h2 id="2-应用网关防火墙"><a href="#2-应用网关防火墙" class="headerlink" title="2.应用网关防火墙"></a>2.应用网关防火墙</h2><p>应用网关防火墙以代理的模式工作在应用层。所谓“代理”，即接收客户端发出的请求，然后以客户端的身份将请求再发往服务端。大部分的系统和应用都是工作在应用层的，因此，应用网关防火墙能够获取到系统和应用的全部信息，从而实现更复杂的功能，如：内容监控、认证、协议限制甚至缓存。</p>
+<p>在包过滤防火墙中，防火墙直接对流经的TCP和UDP包进行处理。而应用网关防火墙需要对TCP和UDP包进行解析，处理成应用层的数据协议，如HTTP。因此应用网关防火墙对于网络的性能会产生负面影响，而且不是所有的应用都能够很好地兼容代理的存在，所以部署应用网关防火墙有可能对系统的可用性产生影响。除此之外，在应用网关防火墙中，服务端看到的请求都来自于代理，这会导致服务端无法有效地追踪请求的来源。</p>
+<p>尽管应用网关防火墙有这些潜在的危害存在，但是它能处理的信息最多，能够提供的安全防护能力也最强。由于Web攻击是黑客常见的攻击手段，因此，应用网关防火墙也逐渐演变成了专门的Web防火墙，在之后的课程中，我们会详细介绍，这里暂时就不多说啦。</p>
+<h2 id="3-状态检测防火墙"><a href="#3-状态检测防火墙" class="headerlink" title="3.状态检测防火墙"></a>3.状态检测防火墙</h2><p>状态检测防火墙是包过滤防火墙的一种升级，它同样工作在网络层和传输层之上。状态检测和包过滤防火墙最大的不同在于，它会以连接的形式来“看待”低层级的TCP和UDP数据包。怎么理解呢？我来举个简单的例子。</p>
+<p>当客户端发起一次完整的HTTP请求时，会需要进行“TCP三次握手”建立连接（SYN+ACK数据包），HTTP请求和响应的数据往往也是通过多个数据包才能完整发送。传统的包过滤防火墙只能基于每一个数据包进行判断，比如在“握手”的过程中，包过滤防火墙会分别看到SYN、SYN+ACK、ACK这三个数据包，并对每一个数据包进行判断。而事实上，这三个数据包（SYN、SYN+ACK、ACK）代表的是一次握手请求。所以，状态检测防火墙会尝试将这一连串的数据包组成一次完整的连接请求，从而获得一个更全面的视角，大大提高其安全性。</p>
+<p>对比应用网关防火墙，状态检测防火墙通常不会尝试将数据包构建成高层级的数据，也就是说它不会尝试去解析整个HTTP请求中的内容。因此，状态检测防火墙能获得更优的性能。目前市面上普遍采用的，都是状态检测防火墙。</p>
+<p><img src="/article/2023/09/19%E5%AE%89%E5%85%A8%E9%98%B2%E5%BE%A1%E5%B7%A5%E5%85%B7-%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%9A%E5%A6%82%E4%BD%95%E5%92%8C%E9%BB%91%E5%AE%A2%E2%80%9C%E5%88%92%E6%B8%85%E7%95%8C%E9%99%90%E2%80%9D%EF%BC%9F/20200817111458952.png" alt="img"></p>
+<h1 id="防火墙可以为网络边界提供哪些保护呢？"><a href="#防火墙可以为网络边界提供哪些保护呢？" class="headerlink" title="防火墙可以为网络边界提供哪些保护呢？"></a>防火墙可以为网络边界提供哪些保护呢？</h1><p>网络边界之间的信用层级通常是不一样的，因此，我们需要利用防火墙在网络边界上提供必要的保护，使得跨越边界的数据和连接相对可信。那防火墙究竟可以为网络边界提供哪些保护呢？下面，我就详细来讲一讲。</p>
+<h2 id="1-保护操作系统的漏洞"><a href="#1-保护操作系统的漏洞" class="headerlink" title="1.保护操作系统的漏洞"></a>1.保护操作系统的漏洞</h2><p>在操作系统的发展历程中，出现过很多臭名昭著的漏洞。比如：由于对网络请求处理不当，导致的DDoS攻击（如死亡之PING、SYN洪泛等）；由于高危服务默认开放导致的代码执行（如熊猫烧香扫描的是135和445端口的弱密钥）；由于服务漏洞导致的代码执行（如永恒之蓝利用的SMB漏洞）。</p>
+<p>如果在这些漏洞曝光时，我们能即时更新操作系统补丁、关闭对应服务，那自然是能够避免系统和应用受到侵害。但是，在通常情况下，尤其是当公司扩大规模的时候，服务器管理员意识到问题并采取措施的这段响应时间，已经足够病毒或者蠕虫进行大规模的传播了。</p>
+<p>这时，防火墙的存在就很有必要了。一方面，防火墙可以迅速对全网的服务器进行保护，拒绝向高危端口发起的请求，如Windows中的135、137和445等，这也就是我们之前所说的“虚拟补丁”。另一方面，更加智能的防火墙，能够检测到整体流量中的异常变化，比如，突然出现了针对某个端口的大量请求，这就说明系统或者应用中很可能出现了新的漏洞，这时，防火墙可以产生报警甚至自动对异常的请求进行拦截，及时避免网络中的操作系统受到攻击。</p>
+<h2 id="2-阻止非法的信息流动"><a href="#2-阻止非法的信息流动" class="headerlink" title="2.阻止非法的信息流动"></a>2.阻止非法的信息流动</h2><p>在网络边界之间流动的数据，往往都会受到一定的规则约束。最著名的有中国的防火长城（Great Firewall）。防火长城的主要目的不是为了防止国外对中国发起网络攻击，而是根据法律法规，防止国内网民访问国外违法的数据信息。同样地，美国也存在类似的防火墙设备，比如：根据美国儿童网络保护法令（CHIPA），学校和图书馆的网络必须限制学生可以浏览的网页。</p>
+<p>除了防止非法地获取数据，防火墙同样能够防止敏感数据的流出。比如，防火墙可以对部分关键词或者敏感词进行检测阻止其外流。如果数据安全做得好一些的公司，可以对公司内的全部数据打上标签，然后根据标签的安全等级对跨越安全边界的数据进行处理。</p>
+<p>需要注意的是，防火墙能够提供的数据安全保护是有限的。原因在于，大部分防火墙都是用来处理较低层级的数据，且很多连接会对数据本身进行加密（VPN、HTTPS）。这就导致了防火墙实际能够看到的可识别数据并不多，拦截能力因此下降。其实，这种绕过防火墙的例子很常见，各类“梯子”能翻墙访问Google就是基于这个原理实现的。</p>
+<h2 id="3-限制可访问的服务和审计"><a href="#3-限制可访问的服务和审计" class="headerlink" title="3.限制可访问的服务和审计"></a>3.限制可访问的服务和审计</h2><p>防火墙作为安全策略的一部分，还可以帮助公司落地安全制度。公司所有对于网络方面的限制和要求，基本都可以在防火墙上进行实现。比如：限制外网开放的服务只能是HTTP服务，那么所有非HTTP的请求就会被拦截；再比如，防火墙也可以对带宽的使用进行限制，避免某个服务抢占全部的带宽资源。</p>
+<p>除此之外，防火墙作为网络安全设备，它的日志功能通常比路由器等常规网络设备更加完备。因此，在网络攻击发生之后，我们需要进行事件调查时，防火墙日志是很关键的信息来源。</p>
+<h1 id="防火墙有哪些防御盲区？"><a href="#防火墙有哪些防御盲区？" class="headerlink" title="防火墙有哪些防御盲区？"></a>防火墙有哪些防御盲区？</h1><p>我们知道，防火墙不仅是网络安全中很重要的组成部分，也是我们最为熟知的安全工具。但是，<strong>在安全领域中不存在绝对</strong>，所以防火墙对于某些攻击也同样无能为力。接下来，我会主要讲解防火墙不能防御的攻击手段，在了解这些攻击之后，我们才能提高对防火墙和网络安全的整体认识。</p>
+<p>首先，防火墙只位于网络边界。因此，防火墙只能用来对跨越边界的请求进行检测和拦截。当请求通过后，后续发起的攻击请求对于防火墙来说，就是不可见的。比如，当黑客利用弱密钥，通过合法的SSH登录到服务器之后，就相当于穿透了防火墙的保护，之后黑客再通过SSH执行的命令，防火墙都无法检测和拦截。<strong>所以，防火墙不能防御已授权服务中的恶意攻击。</strong></p>
+<p>其次，尽管防火墙位于网络边界，但这并不意味着所有的请求都会经过防火墙。比如，直接通过物理网线接入到服务器，黑客就可以在不经过防火墙的情况下进入内网。在这种情况下，防火墙自然也起不到任何作用了。同样地，在网络内部发生的攻击行为，也不在防火墙的保护范围内。也就是说，<strong>防火墙不能防御不通过防火墙的访问。</strong></p>
+<p>最后，作为边界设备，防火墙自身其实是暴露在外界的。因此，防火墙会遭受到黑客的直接攻击。如果<strong>防火墙自身的操作系统存在缺陷</strong>，那么，黑客就能够直接攻击并控制防火墙，然后关闭防火墙的防护功能，轻松突破边界。正是因为如此，部分防火墙厂商会为防火墙设备专门设计和开发一个加固过的专用操作系统，以此来提高防火墙的安全性。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>好了，今天的内容讲完了。我们来一起总结回顾一下，你需要掌握的重点内容。</p>
+<p>防火墙作为最基础的网络安全设备之一，广泛存在于各种网络边界上，是网络安全的第一道防线。</p>
+<p>在业务相对简单时，我们可以通过IP、端口和协议等参数，配置简单的黑白名单规则来阻挡恶意的网络请求；在业务逐渐复杂时，开放的端口协议变多，我们对防火墙的技术实现和配置复杂度都会有较高要求，需要由专业的人员或者团队来进行维护。</p>
+<p>因此，尽管防火墙是我们最熟悉的安全设备，但实际上，防火墙是一个专业性较强的安全产品，开发或者运维人员一般不需要对其进行直接操作或者配置，具体的部署和配置工作都是交给防火墙厂商来完成和定期维护的。</p>
+<p><img src="/article/2023/09/19%E5%AE%89%E5%85%A8%E9%98%B2%E5%BE%A1%E5%B7%A5%E5%85%B7-%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%9A%E5%A6%82%E4%BD%95%E5%92%8C%E9%BB%91%E5%AE%A2%E2%80%9C%E5%88%92%E6%B8%85%E7%95%8C%E9%99%90%E2%80%9D%EF%BC%9F/20200817111608195.png" alt="img"></p>
+<h1 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h1><p>最后，给你留一个思考题。</p>
+<p>你可以检查一下你的服务器或者网络设备中，对外开放的端口有哪些。这些端口中，有哪些不需要对外开放，有哪些可以限制源IP？你能否通过防火墙（或者路由器、Iptables等）对这些端口进行限制呢？</p>
+<p>欢迎留言和我分享你的思考和疑惑，也欢迎你把文章分享给你的朋友。我们下一讲再见！</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" rel="tag"># 安全攻防技能30讲</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/09/18%E5%AE%89%E5%85%A8%E9%98%B2%E5%BE%A1%E5%B7%A5%E5%85%B7-%E5%AE%89%E5%85%A8%E6%A0%87%E5%87%86%E5%92%8C%E6%A1%86%E6%9E%B6%EF%BC%9A%E6%80%8E%E6%A0%B7%E4%BE%9D%E2%80%9C%E8%91%AB%E8%8A%A6%E2%80%9D%E7%94%BB%E5%87%BA%E5%A5%BD%E2%80%9C%E7%93%A2%E2%80%9D%EF%BC%9F/" rel="prev" title="18安全防御工具-安全标准和框架：怎样依“葫芦”画出好“瓢”？">
+                  <i class="fa fa-angle-left"></i> 18安全防御工具-安全标准和框架：怎样依“葫芦”画出好“瓢”？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/09/20%E5%AE%89%E5%85%A8%E9%98%B2%E5%BE%A1%E5%B7%A5%E5%85%B7-WAF%EF%BC%9A%E5%A6%82%E4%BD%95%E4%B8%BA%E6%BC%8F%E6%B4%9E%E7%99%BE%E5%87%BA%E7%9A%84Web%E5%BA%94%E7%94%A8%E4%BF%9D%E9%A9%BE%E6%8A%A4%E8%88%AA%EF%BC%9F/" rel="next" title="20安全防御工具-WAF：如何为漏洞百出的Web应用保驾护航？">
+                  20安全防御工具-WAF：如何为漏洞百出的Web应用保驾护航？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

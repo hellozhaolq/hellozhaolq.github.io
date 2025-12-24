@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="欢迎来到安全专栏的第5次加餐时间。 随着科技的快速发展，各种新的技术和概念不断出现，持续出现的新技术会不断推动安全的发展。虽然，每一个新技术都会衍生出新的安全威胁和隐患，但是，这些新的安全问题也正是安全行业保持活力的源泉。所以，对于安全人员来说，这些新技术的出现既是一种挑战，也是一种机遇。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="38特别加餐-加餐5   安全新技术：IoT、IPv6、区块链中的安全新问题">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/10/38%E7%89%B9%E5%88%AB%E5%8A%A0%E9%A4%90-%E5%8A%A0%E9%A4%905%20%20%20%E5%AE%89%E5%85%A8%E6%96%B0%E6%8A%80%E6%9C%AF%EF%BC%9AIoT%E3%80%81IPv6%E3%80%81%E5%8C%BA%E5%9D%97%E9%93%BE%E4%B8%AD%E7%9A%84%E5%AE%89%E5%85%A8%E6%96%B0%E9%97%AE%E9%A2%98/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="欢迎来到安全专栏的第5次加餐时间。 随着科技的快速发展，各种新的技术和概念不断出现，持续出现的新技术会不断推动安全的发展。虽然，每一个新技术都会衍生出新的安全威胁和隐患，但是，这些新的安全问题也正是安全行业保持活力的源泉。所以，对于安全人员来说，这些新技术的出现既是一种挑战，也是一种机遇。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/10/38%E7%89%B9%E5%88%AB%E5%8A%A0%E9%A4%90-%E5%8A%A0%E9%A4%905%20%20%20%E5%AE%89%E5%85%A8%E6%96%B0%E6%8A%80%E6%9C%AF%EF%BC%9AIoT%E3%80%81IPv6%E3%80%81%E5%8C%BA%E5%9D%97%E9%93%BE%E4%B8%AD%E7%9A%84%E5%AE%89%E5%85%A8%E6%96%B0%E9%97%AE%E9%A2%98/ef3afbdebca141cebf4e9e7147bded0f.jpg">
+<meta property="article:published_time" content="2023-10-08T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-10-08T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="安全攻防技能30讲">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/10/38%E7%89%B9%E5%88%AB%E5%8A%A0%E9%A4%90-%E5%8A%A0%E9%A4%905%20%20%20%E5%AE%89%E5%85%A8%E6%96%B0%E6%8A%80%E6%9C%AF%EF%BC%9AIoT%E3%80%81IPv6%E3%80%81%E5%8C%BA%E5%9D%97%E9%93%BE%E4%B8%AD%E7%9A%84%E5%AE%89%E5%85%A8%E6%96%B0%E9%97%AE%E9%A2%98/ef3afbdebca141cebf4e9e7147bded0f.jpg">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/10/38%E7%89%B9%E5%88%AB%E5%8A%A0%E9%A4%90-%E5%8A%A0%E9%A4%905%20%20%20%E5%AE%89%E5%85%A8%E6%96%B0%E6%8A%80%E6%9C%AF%EF%BC%9AIoT%E3%80%81IPv6%E3%80%81%E5%8C%BA%E5%9D%97%E9%93%BE%E4%B8%AD%E7%9A%84%E5%AE%89%E5%85%A8%E6%96%B0%E9%97%AE%E9%A2%98/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/10/38%E7%89%B9%E5%88%AB%E5%8A%A0%E9%A4%90-%E5%8A%A0%E9%A4%905%20%20%20%E5%AE%89%E5%85%A8%E6%96%B0%E6%8A%80%E6%9C%AF%EF%BC%9AIoT%E3%80%81IPv6%E3%80%81%E5%8C%BA%E5%9D%97%E9%93%BE%E4%B8%AD%E7%9A%84%E5%AE%89%E5%85%A8%E6%96%B0%E9%97%AE%E9%A2%98/","path":"article/2023/10/38特别加餐-加餐5   安全新技术：IoT、IPv6、区块链中的安全新问题/","title":"38特别加餐-加餐5   安全新技术：IoT、IPv6、区块链中的安全新问题"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>38特别加餐-加餐5   安全新技术：IoT、IPv6、区块链中的安全新问题 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%8B%AC%E7%89%B9%E7%9A%84IoT%E5%AE%89%E5%85%A8"><span class="nav-number">1.</span> <span class="nav-text">独特的IoT安全</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IPv6%E5%AF%B9%E5%AE%89%E5%85%A8%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="nav-number">2.</span> <span class="nav-text">IPv6对安全的影响</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8C%BA%E5%9D%97%E9%93%BE%E4%B8%AD%E7%9A%84%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98"><span class="nav-number">3.</span> <span class="nav-text">区块链中的安全问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%9D%E8%80%83%E9%A2%98"><span class="nav-number">5.</span> <span class="nav-text">思考题</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/10/38%E7%89%B9%E5%88%AB%E5%8A%A0%E9%A4%90-%E5%8A%A0%E9%A4%905%20%20%20%E5%AE%89%E5%85%A8%E6%96%B0%E6%8A%80%E6%9C%AF%EF%BC%9AIoT%E3%80%81IPv6%E3%80%81%E5%8C%BA%E5%9D%97%E9%93%BE%E4%B8%AD%E7%9A%84%E5%AE%89%E5%85%A8%E6%96%B0%E9%97%AE%E9%A2%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="38特别加餐-加餐5   安全新技术：IoT、IPv6、区块链中的安全新问题 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          38特别加餐-加餐5   安全新技术：IoT、IPv6、区块链中的安全新问题
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-10-08 08:00:00" itemprop="dateCreated datePublished" datetime="2023-10-08T08:00:00+08:00">2023-10-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" itemprop="url" rel="index"><span itemprop="name">安全攻防技能30讲</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>欢迎来到安全专栏的第5次加餐时间。</p>
+<p>随着科技的快速发展，各种新的技术和概念不断出现，持续出现的新技术会不断推动安全的发展。虽然，每一个新技术都会衍生出新的安全威胁和隐患，但是，这些新的安全问题也正是安全行业保持活力的源泉。所以，对于安全人员来说，这些新技术的出现既是一种挑战，也是一种机遇。</p>
+<span id="more"></span>
+
+<p>近几年，IoT、IPv6和区块链是三个热度很高的新技术，我也最常听到三个热词。今天，我们就一起来探讨一下，这几个新技术都面临哪些独特的安全问题。</p>
+<h1 id="独特的IoT安全"><a href="#独特的IoT安全" class="headerlink" title="独特的IoT安全"></a>独特的IoT安全</h1><p>毫无疑问，IoT（Internet of Things，物联网）是最近十年来比较火热的一个技术。对比于当前的网络环境，IoT的网络主要有以下几个特点：</p>
+<ul>
+<li>设备更多：每一件小的物品都有可能成为联入互联网的设备</li>
+<li>设备性能更低：受限于体积和供电量，单台设备能够搭载的硬件配置都不高</li>
+<li>更加开放：由于设备的数量和类型众多，无法统一标准，因此IoT的网络环境也更加开放</li>
+</ul>
+<p>那么，这些特点会给安全性带来哪些新的挑战呢？关于这个问题，我推荐你玩一玩《看门狗》这款游戏，它很好地描绘了一个未来IoT城市中会面临的各类安全问题。那在此之前，我先和你分享一下我对这些新挑战的思考。</p>
+<p><strong>我认为最明显的问题就是认证更加复杂了。</strong></p>
+<p>在使用电脑或者手机连入网络的时候，我们可以手动输入密码来完成认证。但是，当我们想要将各类小硬件连入网络的时候，没有键盘和屏幕可以供我们输入密码。为了解决这个认证问题，目前小米等IoT厂商的解决方案是，先让手机直接控制设备，配置好WiFi密码后，再让设备连入网络。</p>
+<p>但是，这其实又引发了一个新的问题，如何确认是你本人在控制设备，而不是黑客呢？针对这个问题，现在也有对应的解决方案，那就是在短时间内开放设备的控制权限，限制手机在这个时间内完成对设备的控制。</p>
+<p>仔细观察的话，你会发现这个解决方案有一个假设前提：黑客没办法在短时间内发现并控制设备。在当前的环境下，这个前提是成立的。但是随着技术的发展，IoT设备可能充斥在我们身边的每一个角落里，当有一个设备被黑客控制了之后，它很可能会时刻监控这周围的环境，一旦发现其他的设备开放控制权限，就会立即黑入。可以说，通过这样的攻击方式，任何一个设备都有可能被黑客所控制。</p>
+<p>因此，<strong>如何确保IoT中设备与网络、设备与设备之间的通信是可信的</strong>，是未来认证技术需要面临的主要挑战之一。</p>
+<p><strong>其次，我认为物理攻击会越来越流行。</strong></p>
+<p>物理攻击实际上是安全领域内的<strong>降维打击。</strong> 换句话说，当底层的硬件被黑客控制之后，我们就无法保障运行在硬件之上的系统和软件的安全性了。</p>
+<p>IoT的发展，事实上正让物理攻击变得越来越容易。我总结了一张物理攻击的发展过程图，你可以看到，随着IoT越来越小、越来越智能，和我们的联系越来越紧密，物理攻击的难度也变得越来越低。在未来，公共区域内的所有设备甚至都有可以成为黑客的囊中之物。</p>
+<p><img src="/article/2023/10/38%E7%89%B9%E5%88%AB%E5%8A%A0%E9%A4%90-%E5%8A%A0%E9%A4%905%20%20%20%E5%AE%89%E5%85%A8%E6%96%B0%E6%8A%80%E6%9C%AF%EF%BC%9AIoT%E3%80%81IPv6%E3%80%81%E5%8C%BA%E5%9D%97%E9%93%BE%E4%B8%AD%E7%9A%84%E5%AE%89%E5%85%A8%E6%96%B0%E9%97%AE%E9%A2%98/ef3afbdebca141cebf4e9e7147bded0f.jpg" alt="img"></p>
+<p>因此，<strong>如何对物理攻击进行有效的防控</strong>，也是未来安全中需要解决的主要挑战之一。</p>
+<p><strong>除了带来新的安全挑战，IoT能够造成的安全威胁也变得更加复杂了</strong>。</p>
+<p>目前来说，黑客利用IoT设备发起的最主要的攻击还是DDoS攻击，即黑客利用海量的IoT设备向目标服务器发送巨大的网络流量，导致服务器无法响应正常请求。</p>
+<p>随着IoT的发展，黑客能够控制的设备越来越多，能够导致的影响也会越来越大。你一定在很多电影中看到过类似的情景，比如，黑客通过操纵汽车控制医疗设备等方式，导致人员伤亡。</p>
+<p>因此，<strong>如何保护IoT设备免受黑客的攻击</strong>，同样会成为未来安全的主要挑战之一。</p>
+<h1 id="IPv6对安全的影响"><a href="#IPv6对安全的影响" class="headerlink" title="IPv6对安全的影响"></a>IPv6对安全的影响</h1><p>因为IPv4的地址空间短缺问题，IPv6是国家重点推进的一个技术方向。目前三大运营商已经完成了改造，各大互联网公司也已经接到了兼容IPv6的强制要求，我相信国内应该会很快推广和普及IPv6。</p>
+<p>IPv6和IPv4相比最大区别就是IP地址变得非常庞大了。那么，庞大的IP地址对于安全来说，又意味着什么呢？</p>
+<p>我认为对于黑客来说，最大的影响就是<strong>网络扫描不再可能</strong>。</p>
+<p>我们知道，找到攻击目标是黑客发起攻击的第一步。因此，很多黑客会通过扫描网络来发现目标。目前，性能最优的扫描工具是<a target="_blank" rel="noopener" href="https://github.com/robertdavidgraham/masscan">M</a><a target="_blank" rel="noopener" href="https://github.com/robertdavidgraham/masscan">asscan</a>，它能够在5分钟内扫遍全部IPv4的地址空间。</p>
+<p>而IPv6的地址空间是IPv4的2^96倍，黑客想要利用现有的扫描工具快速遍历IPv6的地址空间，显然是不可能的。因此，黑客就只能通过其他方式去精准定位目标了。</p>
+<p>除了对黑客有影响以外，<strong>庞大的IP地址对公司安全来说，也同样是一种负担</strong>。</p>
+<p>IP地址变多就意味着黑客手中的IP资源变多了，同时，IPv6的高变化频率还会让同一个设备的IP经常性地发生变化。因此，使用了IPv6之后，我们就很难利用黑名单对IP进行标记和处罚了。</p>
+<p>另外，仍然有待观察的一点是，<strong>IPv6的复用性是否会比IPv4更低</strong>。</p>
+<p>IPv4由于地址匮乏，有很高的复用性（一个学校可能都在共用一个IP地址），这让我们很难根据IP去定位到一个具体的位置或者人。</p>
+<p>而IPv6的地址空间是足够的（每一粒沙子都能分配到一个IP地址），因此，IP复用就不再是一个刚需了。所以，如果IPv6的复用性远低于IPv4的话，就能让IP的定位变得更准确。那么对于安全工作来说，想要找到黑客也会更加容易。</p>
+<h1 id="区块链中的安全问题"><a href="#区块链中的安全问题" class="headerlink" title="区块链中的安全问题"></a>区块链中的安全问题</h1><p>最后，我们再来聊一聊近两年兴起的区块链。目前，区块链最成功的应用形式，就是以比特币为代表的各类虚拟货币。那么，比特币和区块链的安全性如何呢？它们又面临什么样的安全威胁呢？下面，我们一起来看。</p>
+<p>我们都知道，区块链的思想是去中心化，即将数据和算力分散到每一个小的计算节点中，最终，以少数服从多数的形式来完成数据的计算和存储。这实际上是一种对完整性的保障。这么说你可能还不理解，我举个例子。</p>
+<p>以货币为例，我们现在通过支付宝、微信等电子货币来完成日常交易，事实上是将钱交由支付宝和微信这样的中心机构进行集中保管。而对于支付宝、微信来说，理论上是可以对用户的余额进行篡改的，不过，因为受到了多方面限制，这一操作是无法实现的。</p>
+<p>但是在比特币中，因为不存在中心机构，每个用户的余额由所有人共同保管，因此没有任何一个节点可以实现篡改。</p>
+<p>但如果你仔细想想的话，就会发现这种近乎完美的完整性保障，是通过牺牲机密性来完成的。也就是说，在支付宝中，你无法知道其他用户的余额，但是在比特币中，每一笔交易和每一个用户的余额都是公开的信息，因此比特币不提供任何针对机密性的保护措施（比如，你可以在<a target="_blank" rel="noopener" href="https://www.blockchain.com/explorer?view=btc_blocks">blockchain</a>看到所有的比特币信息）。</p>
+<p>尽管比特币本身的完整性无可挑剔，但仍然无法阻止由于用户个人密钥丢失而导致的资产损失。这就好比你安装了一个特别结实的门，但只要钥匙丢了，门的存在就毫无意义了。事实上，目前大部分的比特币安全事件，都是黑客成功盗取了用户或者公司系统的比特币密钥之后，再去盗取对应账号的余额。</p>
+<p>另外，比特币是目前黑客们主要使用的货币之一。其原因在于，它是匿名的（注意：匿名不是机密性，匿名是指你无法通过比特币的账号，关联到某个具体的人）。这也就保证了，即使警方知道了黑客的账户，也没办法抓到黑客。而且，由于比特币的去中心化，警方也没办法封停黑客的账户，追回被盗的比特币。</p>
+<p>所以，比特币这样一种去中心化且匿名的货币体系，既不保险，也不利于政府的管控，因此国内对于以区块链为基础的电子货币落地，始终不认可。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>今天，我们主要对 IoT、IPv6和区块链这三个热门技术及其安全性进行了盘点。这些新的技术都具备其独特的应用场景，也都带有独特的安全问题。这些问题既可能是这些技术本身所存在的一些缺陷，也可能是对已有的安全防御工作产生的威胁。</p>
+<p>我们不仅要对这些新技术进行持续的关注，还要思考它们会产生的新安全需求，然后去学习对应的新知识。这也是安全人员提升自我价值，保持思维活力的有效手段。</p>
+<h1 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h1><p>最后，咱们来看一道思考题。</p>
+<p>除了我们今天讲的这三种技术，你还接触过哪些新的技术呢？不妨和我的一样，把你对这些新技术的安全思考都写下来。</p>
+<p>欢迎留言和我分享你的思考和疑惑，也欢迎你把文章分享给你的朋友。我们下一讲再见！</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" rel="tag"># 安全攻防技能30讲</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/10/37%E7%89%B9%E5%88%AB%E5%8A%A0%E9%A4%90-%E5%8A%A0%E9%A4%904%20%20%E4%B8%AA%E4%BA%BA%E6%88%90%E9%95%BF%EF%BC%9A%E5%AD%A6%E4%B9%A0%E5%AE%89%E5%85%A8%EF%BC%8C%E5%93%AA%E4%BA%9B%E8%B5%84%E6%BA%90%E6%88%91%E5%BF%85%E9%A1%BB%E8%A6%81%E7%9F%A5%E9%81%93%EF%BC%9F/" rel="prev" title="37特别加餐-加餐4  个人成长：学习安全，哪些资源我必须要知道？">
+                  <i class="fa fa-angle-left"></i> 37特别加餐-加餐4  个人成长：学习安全，哪些资源我必须要知道？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/10/39%E7%BB%93%E6%9D%9F%E8%AF%AD-%E5%9C%A8%E4%B8%8E%E9%BB%91%E5%AE%A2%E7%9A%84%E6%88%98%E5%BD%B9%E4%B8%AD%EF%BC%8C%E6%88%91%E4%BB%AC%E9%83%BD%E6%98%AF%E7%9B%9F%E5%8F%8B%EF%BC%81/" rel="next" title="39结束语-在与黑客的战役中，我们都是盟友！">
+                  39结束语-在与黑客的战役中，我们都是盟友！ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

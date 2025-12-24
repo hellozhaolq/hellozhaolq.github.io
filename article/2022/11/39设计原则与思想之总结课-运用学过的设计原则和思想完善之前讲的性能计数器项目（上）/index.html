@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="在第25节、第26节中，我们讲了如何对一个性能计数器框架进行分析、设计与实现，并且实践了之前学过的一些设计原则和设计思想。当时我们提到，小步快跑、逐步迭代是一种非常实用的开发模式。所以，针对这个框架的开发，我们分多个版本来逐步完善。 在第25、26节课中，我们实现了框架的第一个版本，它只包含最基本的一些功能，在设计与实现上还有很多不足。所以，接下来，我会针对这些不足，继续迭代开发两个版本：版本2和">
+<meta property="og:type" content="article">
+<meta property="og:title" content="39设计原则与思想之总结课-运用学过的设计原则和思想完善之前讲的性能计数器项目（上）">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/11/39%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E6%80%BB%E7%BB%93%E8%AF%BE-%E8%BF%90%E7%94%A8%E5%AD%A6%E8%BF%87%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E5%92%8C%E6%80%9D%E6%83%B3%E5%AE%8C%E5%96%84%E4%B9%8B%E5%89%8D%E8%AE%B2%E7%9A%84%E6%80%A7%E8%83%BD%E8%AE%A1%E6%95%B0%E5%99%A8%E9%A1%B9%E7%9B%AE%EF%BC%88%E4%B8%8A%EF%BC%89/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="在第25节、第26节中，我们讲了如何对一个性能计数器框架进行分析、设计与实现，并且实践了之前学过的一些设计原则和设计思想。当时我们提到，小步快跑、逐步迭代是一种非常实用的开发模式。所以，针对这个框架的开发，我们分多个版本来逐步完善。 在第25、26节课中，我们实现了框架的第一个版本，它只包含最基本的一些功能，在设计与实现上还有很多不足。所以，接下来，我会针对这些不足，继续迭代开发两个版本：版本2和">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/11/39%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E6%80%BB%E7%BB%93%E8%AF%BE-%E8%BF%90%E7%94%A8%E5%AD%A6%E8%BF%87%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E5%92%8C%E6%80%9D%E6%83%B3%E5%AE%8C%E5%96%84%E4%B9%8B%E5%89%8D%E8%AE%B2%E7%9A%84%E6%80%A7%E8%83%BD%E8%AE%A1%E6%95%B0%E5%99%A8%E9%A1%B9%E7%9B%AE%EF%BC%88%E4%B8%8A%EF%BC%89/1030087-20210601161808497-626787059.png">
+<meta property="article:published_time" content="2022-11-09T00:00:00.000Z">
+<meta property="article:modified_time" content="2022-11-09T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2022/11/39%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E6%80%BB%E7%BB%93%E8%AF%BE-%E8%BF%90%E7%94%A8%E5%AD%A6%E8%BF%87%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E5%92%8C%E6%80%9D%E6%83%B3%E5%AE%8C%E5%96%84%E4%B9%8B%E5%89%8D%E8%AE%B2%E7%9A%84%E6%80%A7%E8%83%BD%E8%AE%A1%E6%95%B0%E5%99%A8%E9%A1%B9%E7%9B%AE%EF%BC%88%E4%B8%8A%EF%BC%89/1030087-20210601161808497-626787059.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/11/39%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E6%80%BB%E7%BB%93%E8%AF%BE-%E8%BF%90%E7%94%A8%E5%AD%A6%E8%BF%87%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E5%92%8C%E6%80%9D%E6%83%B3%E5%AE%8C%E5%96%84%E4%B9%8B%E5%89%8D%E8%AE%B2%E7%9A%84%E6%80%A7%E8%83%BD%E8%AE%A1%E6%95%B0%E5%99%A8%E9%A1%B9%E7%9B%AE%EF%BC%88%E4%B8%8A%EF%BC%89/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/11/39%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E6%80%BB%E7%BB%93%E8%AF%BE-%E8%BF%90%E7%94%A8%E5%AD%A6%E8%BF%87%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E5%92%8C%E6%80%9D%E6%83%B3%E5%AE%8C%E5%96%84%E4%B9%8B%E5%89%8D%E8%AE%B2%E7%9A%84%E6%80%A7%E8%83%BD%E8%AE%A1%E6%95%B0%E5%99%A8%E9%A1%B9%E7%9B%AE%EF%BC%88%E4%B8%8A%EF%BC%89/","path":"article/2022/11/39设计原则与思想之总结课-运用学过的设计原则和思想完善之前讲的性能计数器项目（上）/","title":"39设计原则与思想之总结课-运用学过的设计原则和思想完善之前讲的性能计数器项目（上）"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>39设计原则与思想之总结课-运用学过的设计原则和思想完善之前讲的性能计数器项目（上） | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9B%9E%E9%A1%BE%E7%89%88%E6%9C%AC1%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.</span> <span class="nav-text">回顾版本1的设计与实现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%92%88%E5%AF%B9%E7%89%88%E6%9C%AC1%E7%9A%84%E9%97%AE%E9%A2%98%E8%BF%9B%E8%A1%8C%E9%87%8D%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">针对版本1的问题进行重构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Review%E7%89%88%E6%9C%AC2%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.</span> <span class="nav-text">Review版本2的设计与实现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE"><span class="nav-number">4.</span> <span class="nav-text">重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%A0%82%E8%AE%A8%E8%AE%BA"><span class="nav-number">5.</span> <span class="nav-text">课堂讨论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/11/39%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E6%80%BB%E7%BB%93%E8%AF%BE-%E8%BF%90%E7%94%A8%E5%AD%A6%E8%BF%87%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E5%92%8C%E6%80%9D%E6%83%B3%E5%AE%8C%E5%96%84%E4%B9%8B%E5%89%8D%E8%AE%B2%E7%9A%84%E6%80%A7%E8%83%BD%E8%AE%A1%E6%95%B0%E5%99%A8%E9%A1%B9%E7%9B%AE%EF%BC%88%E4%B8%8A%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="39设计原则与思想之总结课-运用学过的设计原则和思想完善之前讲的性能计数器项目（上） | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          39设计原则与思想之总结课-运用学过的设计原则和思想完善之前讲的性能计数器项目（上）
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-11-09 08:00:00" itemprop="dateCreated datePublished" datetime="2022-11-09T08:00:00+08:00">2022-11-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/179644">第25节</a>、<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/179673">第26节</a>中，我们讲了如何对一个性能计数器框架进行分析、设计与实现，并且实践了之前学过的一些设计原则和设计思想。当时我们提到，小步快跑、逐步迭代是一种非常实用的开发模式。所以，针对这个框架的开发，我们分多个版本来逐步完善。</p>
+<p>在第25、26节课中，我们实现了框架的第一个版本，它只包含最基本的一些功能，在设计与实现上还有很多不足。所以，接下来，我会针对这些不足，继续迭代开发两个版本：版本2和版本3，分别对应第39节和第40节的内容。</p>
+<p>在版本2中，我们会利用之前学过的重构方法，对版本1的设计与实现进行重构，解决版本1存在的设计问题，让它满足之前学过的设计原则、思想、编程规范。在版本3中，我们再对版本2进行迭代，并且完善框架的功能和非功能需求，让其满足第25节课中罗列的所有需求。</p>
+<p>话不多说，让我们正式开始版本2的设计与实现吧！</p>
+<span id="more"></span>
+
+<h1 id="回顾版本1的设计与实现"><a href="#回顾版本1的设计与实现" class="headerlink" title="回顾版本1的设计与实现"></a>回顾版本1的设计与实现</h1><p>首先，让我们一块回顾一下版本1的设计与实现。当然，如果时间充足，你最好能再重新看一下第25、26节的内容。在版本1中，整个框架的代码被划分为下面这几个类。</p>
+<ul>
+<li>MetricsCollector：负责打点采集原始数据，包括记录每次接口请求的响应时间和请求时间戳，并调用MetricsStorage提供的接口来存储这些原始数据。</li>
+<li>MetricsStorage和RedisMetricsStorage：负责原始数据的存储和读取。</li>
+<li>Aggregator：是一个工具类，负责各种统计数据的计算，比如响应时间的最大值、最小值、平均值、百分位值、接口访问次数、tps。</li>
+<li>ConsoleReporter和EmailReporter：相当于一个上帝类（God Class），定时根据给定的时间区间，从数据库中取出数据，借助Aggregator类完成统计工作，并将统计结果输出到相应的终端，比如命令行、邮件。</li>
+</ul>
+<p>MetricCollector、MetricsStorage、RedisMetricsStorage的设计与实现比较简单，不是版本2重构的重点。今天，我们重点来看一下Aggregator和ConsoleReporter、EmailReporter这几个类。</p>
+<p><strong>我们先来看一下Aggregator类存在的问题。</strong></p>
+<p>Aggregator类里面只有一个静态函数，有50行左右的代码量，负责各种统计数据的计算。当要添加新的统计功能的时候，我们需要修改aggregate()函数代码。一旦越来越多的统计功能添加进来之后，这个函数的代码量会持续增加，可读性、可维护性就变差了。因此，我们需要在版本2中对其进行重构。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Aggregator</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> RequestStat <span class="title function_">aggregate</span><span class="params">(List&lt;RequestInfo&gt; requestInfos, <span class="type">long</span> durationInMillis)</span> &#123;</span><br><span class="line">    <span class="type">double</span> <span class="variable">maxRespTime</span> <span class="operator">=</span> Double.MIN_VALUE;</span><br><span class="line">    <span class="type">double</span> <span class="variable">minRespTime</span> <span class="operator">=</span> Double.MAX_VALUE;</span><br><span class="line">    <span class="type">double</span> <span class="variable">avgRespTime</span> <span class="operator">=</span> -<span class="number">1</span>;</span><br><span class="line">    <span class="type">double</span> <span class="variable">p999RespTime</span> <span class="operator">=</span> -<span class="number">1</span>;</span><br><span class="line">    <span class="type">double</span> <span class="variable">p99RespTime</span> <span class="operator">=</span> -<span class="number">1</span>;</span><br><span class="line">    <span class="type">double</span> <span class="variable">sumRespTime</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    <span class="type">long</span> <span class="variable">count</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (RequestInfo requestInfo : requestInfos) &#123;</span><br><span class="line">      ++count;</span><br><span class="line">      <span class="type">double</span> <span class="variable">respTime</span> <span class="operator">=</span> requestInfo.getResponseTime();</span><br><span class="line">      <span class="keyword">if</span> (maxRespTime &lt; respTime) &#123;</span><br><span class="line">        maxRespTime = respTime;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (minRespTime &gt; respTime) &#123;</span><br><span class="line">        minRespTime = respTime;</span><br><span class="line">      &#125;</span><br><span class="line">      sumRespTime += respTime;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (count != <span class="number">0</span>) &#123;</span><br><span class="line">      avgRespTime = sumRespTime / count;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">long</span> <span class="variable">tps</span> <span class="operator">=</span> (<span class="type">long</span>)(count / durationInMillis * <span class="number">1000</span>);</span><br><span class="line">    Collections.sort(requestInfos, <span class="keyword">new</span> <span class="title class_">Comparator</span>&lt;RequestInfo&gt;() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">compare</span><span class="params">(RequestInfo o1, RequestInfo o2)</span> &#123;</span><br><span class="line">        <span class="type">double</span> <span class="variable">diff</span> <span class="operator">=</span> o1.getResponseTime() - o2.getResponseTime();</span><br><span class="line">        <span class="keyword">if</span> (diff &lt; <span class="number">0.0</span>) &#123;</span><br><span class="line">          <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (diff &gt; <span class="number">0.0</span>) &#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">if</span> (count != <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="type">int</span> <span class="variable">idx999</span> <span class="operator">=</span> (<span class="type">int</span>)(count * <span class="number">0.999</span>);</span><br><span class="line">      <span class="type">int</span> <span class="variable">idx99</span> <span class="operator">=</span> (<span class="type">int</span>)(count * <span class="number">0.99</span>);</span><br><span class="line">      p999RespTime = requestInfos.get(idx999).getResponseTime();</span><br><span class="line">      p99RespTime = requestInfos.get(idx99).getResponseTime();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">RequestStat</span> <span class="variable">requestStat</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RequestStat</span>();</span><br><span class="line">    requestStat.setMaxResponseTime(maxRespTime);</span><br><span class="line">    requestStat.setMinResponseTime(minRespTime);</span><br><span class="line">    requestStat.setAvgResponseTime(avgRespTime);</span><br><span class="line">    requestStat.setP999ResponseTime(p999RespTime);</span><br><span class="line">    requestStat.setP99ResponseTime(p99RespTime);</span><br><span class="line">    requestStat.setCount(count);</span><br><span class="line">    requestStat.setTps(tps);</span><br><span class="line">    <span class="keyword">return</span> requestStat;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RequestStat</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">double</span> maxResponseTime;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">double</span> minResponseTime;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">double</span> avgResponseTime;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">double</span> p999ResponseTime;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">double</span> p99ResponseTime;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">long</span> count;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">long</span> tps;</span><br><span class="line">  <span class="comment">//...省略getter/setter方法...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>我们再来看一下ConsoleReporter和EmailReporter这两个类存在的问题。</strong></p>
+<p>ConsoleReporter和EmailReporter两个类中存在代码重复问题。在这两个类中，从数据库中取数据、做统计的逻辑都是相同的，可以抽取出来复用，否则就违反了DRY原则。</p>
+<p>整个类负责的事情比较多，不相干的逻辑糅合在里面，职责不够单一。特别是显示部分的代码可能会比较复杂（比如Email的显示方式），最好能将这部分显示逻辑剥离出来，设计成一个独立的类。</p>
+<p>除此之外，因为代码中涉及线程操作，并且调用了Aggregator的静态函数，所以代码的可测试性也有待提高。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ConsoleReporter</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> MetricsStorage metricsStorage;</span><br><span class="line">  <span class="keyword">private</span> ScheduledExecutorService executor;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">ConsoleReporter</span><span class="params">(MetricsStorage metricsStorage)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.metricsStorage = metricsStorage;</span><br><span class="line">    <span class="built_in">this</span>.executor = Executors.newSingleThreadScheduledExecutor();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">startRepeatedReport</span><span class="params">(<span class="type">long</span> periodInSeconds, <span class="type">long</span> durationInSeconds)</span> &#123;</span><br><span class="line">    executor.scheduleAtFixedRate(<span class="keyword">new</span> <span class="title class_">Runnable</span>() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">long</span> <span class="variable">durationInMillis</span> <span class="operator">=</span> durationInSeconds * <span class="number">1000</span>;</span><br><span class="line">        <span class="type">long</span> <span class="variable">endTimeInMillis</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="type">long</span> <span class="variable">startTimeInMillis</span> <span class="operator">=</span> endTimeInMillis - durationInMillis;</span><br><span class="line">        Map&lt;String, List&lt;RequestInfo&gt;&gt; requestInfos =</span><br><span class="line">                metricsStorage.getRequestInfos(startTimeInMillis, endTimeInMillis);</span><br><span class="line">        Map&lt;String, RequestStat&gt; stats = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">        <span class="keyword">for</span> (Map.Entry&lt;String, List&lt;RequestInfo&gt;&gt; entry : requestInfos.entrySet()) &#123;</span><br><span class="line">          <span class="type">String</span> <span class="variable">apiName</span> <span class="operator">=</span> entry.getKey();</span><br><span class="line">          List&lt;RequestInfo&gt; requestInfosPerApi = entry.getValue();</span><br><span class="line">          <span class="type">RequestStat</span> <span class="variable">requestStat</span> <span class="operator">=</span> Aggregator.aggregate(requestInfosPerApi, durationInMillis);</span><br><span class="line">          stats.put(apiName, requestStat);</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(<span class="string">&quot;Time Span: [&quot;</span> + startTimeInMillis + <span class="string">&quot;, &quot;</span> + endTimeInMillis + <span class="string">&quot;]&quot;</span>);</span><br><span class="line">        <span class="type">Gson</span> <span class="variable">gson</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Gson</span>();</span><br><span class="line">        System.out.println(gson.toJson(stats));</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;, <span class="number">0</span>, periodInSeconds, TimeUnit.SECONDS);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EmailReporter</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Long</span> <span class="variable">DAY_HOURS_IN_SECONDS</span> <span class="operator">=</span> <span class="number">86400L</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> MetricsStorage metricsStorage;</span><br><span class="line">  <span class="keyword">private</span> EmailSender emailSender;</span><br><span class="line">  <span class="keyword">private</span> List&lt;String&gt; toAddresses = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">EmailReporter</span><span class="params">(MetricsStorage metricsStorage)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>(metricsStorage, <span class="keyword">new</span> <span class="title class_">EmailSender</span>(<span class="comment">/*省略参数*/</span>));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">EmailReporter</span><span class="params">(MetricsStorage metricsStorage, EmailSender emailSender)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.metricsStorage = metricsStorage;</span><br><span class="line">    <span class="built_in">this</span>.emailSender = emailSender;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addToAddress</span><span class="params">(String address)</span> &#123;</span><br><span class="line">    toAddresses.add(address);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">startDailyReport</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">Calendar</span> <span class="variable">calendar</span> <span class="operator">=</span> Calendar.getInstance();</span><br><span class="line">    calendar.add(Calendar.DATE, <span class="number">1</span>);</span><br><span class="line">    calendar.set(Calendar.HOUR_OF_DAY, <span class="number">0</span>);</span><br><span class="line">    calendar.set(Calendar.MINUTE, <span class="number">0</span>);</span><br><span class="line">    calendar.set(Calendar.SECOND, <span class="number">0</span>);</span><br><span class="line">    calendar.set(Calendar.MILLISECOND, <span class="number">0</span>);</span><br><span class="line">    <span class="type">Date</span> <span class="variable">firstTime</span> <span class="operator">=</span> calendar.getTime(); </span><br><span class="line">    <span class="type">Timer</span> <span class="variable">timer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Timer</span>();</span><br><span class="line">    timer.schedule(<span class="keyword">new</span> <span class="title class_">TimerTask</span>() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">long</span> <span class="variable">durationInMillis</span> <span class="operator">=</span> DAY_HOURS_IN_SECONDS * <span class="number">1000</span>;</span><br><span class="line">        <span class="type">long</span> <span class="variable">endTimeInMillis</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="type">long</span> <span class="variable">startTimeInMillis</span> <span class="operator">=</span> endTimeInMillis - durationInMillis;</span><br><span class="line">        Map&lt;String, List&lt;RequestInfo&gt;&gt; requestInfos =</span><br><span class="line">                metricsStorage.getRequestInfos(startTimeInMillis, endTimeInMillis);</span><br><span class="line">        Map&lt;String, RequestStat&gt; stats = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">        <span class="keyword">for</span> (Map.Entry&lt;String, List&lt;RequestInfo&gt;&gt; entry : requestInfos.entrySet()) &#123;</span><br><span class="line">          <span class="type">String</span> <span class="variable">apiName</span> <span class="operator">=</span> entry.getKey();</span><br><span class="line">          List&lt;RequestInfo&gt; requestInfosPerApi = entry.getValue();</span><br><span class="line">          <span class="type">RequestStat</span> <span class="variable">requestStat</span> <span class="operator">=</span> Aggregator.aggregate(requestInfosPerApi, durationInMillis);</span><br><span class="line">          stats.put(apiName, requestStat);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// <span class="doctag">TODO:</span> 格式化为html格式，并且发送邮件</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;, firstTime, DAY_HOURS_IN_SECONDS * <span class="number">1000</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="针对版本1的问题进行重构"><a href="#针对版本1的问题进行重构" class="headerlink" title="针对版本1的问题进行重构"></a>针对版本1的问题进行重构</h1><p>Aggregator类和ConsoleReporter、EmailReporter类主要负责统计显示的工作。在第26节中，我们提到，如果我们把统计显示所要完成的功能逻辑细分一下，主要包含下面4点：</p>
+<ol>
+<li>根据给定的时间区间，从数据库中拉取数据；</li>
+<li>根据原始数据，计算得到统计数据；</li>
+<li>将统计数据显示到终端（命令行或邮件）；</li>
+<li>定时触发以上三个过程的执行。</li>
+</ol>
+<p>之前的划分方法是将所有的逻辑都放到ConsoleReporter和EmailReporter这两个上帝类中，而Aggregator只是一个包含静态方法的工具类。这样的划分方法存在前面提到的一些问题，我们需要对其进行重新划分。</p>
+<p>面向对象设计中的最后一步是组装类并提供执行入口，所以，组装前三部分逻辑的上帝类是必须要有的。我们可以将上帝类做的很轻量级，把核心逻辑都剥离出去，形成独立的类，上帝类只负责组装类和串联执行流程。这样做的好处是，代码结构更加清晰，底层核心逻辑更容易被复用。按照这个设计思路，具体的重构工作包含以下4个方面。</p>
+<ul>
+<li>第1个逻辑：根据给定时间区间，从数据库中拉取数据。这部分逻辑已经被封装在MetricsStorage类中了，所以这部分不需要处理。</li>
+<li>第2个逻辑：根据原始数据，计算得到统计数据。我们可以将这部分逻辑移动到Aggregator类中。这样Aggregator类就不仅仅是只包含统计方法的工具类了。按照这个思路，重构之后的代码如下所示：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Aggregator</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> Map&lt;String, RequestStat&gt; <span class="title function_">aggregate</span><span class="params">(</span></span><br><span class="line"><span class="params">          Map&lt;String, List&lt;RequestInfo&gt;&gt; requestInfos, <span class="type">long</span> durationInMillis)</span> &#123;</span><br><span class="line">    Map&lt;String, RequestStat&gt; requestStats = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    <span class="keyword">for</span> (Map.Entry&lt;String, List&lt;RequestInfo&gt;&gt; entry : requestInfos.entrySet()) &#123;</span><br><span class="line">      <span class="type">String</span> <span class="variable">apiName</span> <span class="operator">=</span> entry.getKey();</span><br><span class="line">      List&lt;RequestInfo&gt; requestInfosPerApi = entry.getValue();</span><br><span class="line">      <span class="type">RequestStat</span> <span class="variable">requestStat</span> <span class="operator">=</span> doAggregate(requestInfosPerApi, durationInMillis);</span><br><span class="line">      requestStats.put(apiName, requestStat);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> requestStats;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> RequestStat <span class="title function_">doAggregate</span><span class="params">(List&lt;RequestInfo&gt; requestInfos, <span class="type">long</span> durationInMillis)</span> &#123;</span><br><span class="line">    List&lt;Double&gt; respTimes = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">    <span class="keyword">for</span> (RequestInfo requestInfo : requestInfos) &#123;</span><br><span class="line">      <span class="type">double</span> <span class="variable">respTime</span> <span class="operator">=</span> requestInfo.getResponseTime();</span><br><span class="line">      respTimes.add(respTime);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">RequestStat</span> <span class="variable">requestStat</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RequestStat</span>();</span><br><span class="line">    requestStat.setMaxResponseTime(max(respTimes));</span><br><span class="line">    requestStat.setMinResponseTime(min(respTimes));</span><br><span class="line">    requestStat.setAvgResponseTime(avg(respTimes));</span><br><span class="line">    requestStat.setP999ResponseTime(percentile999(respTimes));</span><br><span class="line">    requestStat.setP99ResponseTime(percentile99(respTimes));</span><br><span class="line">    requestStat.setCount(respTimes.size());</span><br><span class="line">    requestStat.setTps((<span class="type">long</span>) tps(respTimes.size(), durationInMillis/<span class="number">1000</span>));</span><br><span class="line">    <span class="keyword">return</span> requestStat;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 以下的函数的代码实现均省略...</span></span><br><span class="line">  <span class="keyword">private</span> <span class="type">double</span> <span class="title function_">max</span><span class="params">(List&lt;Double&gt; dataset)</span> &#123;&#125;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">double</span> <span class="title function_">min</span><span class="params">(List&lt;Double&gt; dataset)</span> &#123;&#125;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">double</span> <span class="title function_">avg</span><span class="params">(List&lt;Double&gt; dataset)</span> &#123;&#125;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">double</span> <span class="title function_">tps</span><span class="params">(<span class="type">int</span> count, <span class="type">double</span> duration)</span> &#123;&#125;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">double</span> <span class="title function_">percentile999</span><span class="params">(List&lt;Double&gt; dataset)</span> &#123;&#125;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">double</span> <span class="title function_">percentile99</span><span class="params">(List&lt;Double&gt; dataset)</span> &#123;&#125;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">double</span> <span class="title function_">percentile</span><span class="params">(List&lt;Double&gt; dataset, <span class="type">double</span> ratio)</span> &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第3个逻辑：将统计数据显示到终端。我们将这部分逻辑剥离出来，设计成两个类：ConsoleViewer类和EmailViewer类，分别负责将统计结果显示到命令行和邮件中。具体的代码实现如下所示：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">StatViewer</span> &#123;</span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">output</span><span class="params">(Map&lt;String, RequestStat&gt; requestStats, <span class="type">long</span> startTimeInMillis, <span class="type">long</span> endTimeInMills)</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ConsoleViewer</span> <span class="keyword">implements</span> <span class="title class_">StatViewer</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">output</span><span class="params">(</span></span><br><span class="line"><span class="params">          Map&lt;String, RequestStat&gt; requestStats, <span class="type">long</span> startTimeInMillis, <span class="type">long</span> endTimeInMills)</span> &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;Time Span: [&quot;</span> + startTimeInMillis + <span class="string">&quot;, &quot;</span> + endTimeInMills + <span class="string">&quot;]&quot;</span>);</span><br><span class="line">    <span class="type">Gson</span> <span class="variable">gson</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Gson</span>();</span><br><span class="line">    System.out.println(gson.toJson(requestStats));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EmailViewer</span> <span class="keyword">implements</span> <span class="title class_">StatViewer</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> EmailSender emailSender;</span><br><span class="line">  <span class="keyword">private</span> List&lt;String&gt; toAddresses = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">EmailViewer</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.emailSender = <span class="keyword">new</span> <span class="title class_">EmailSender</span>(<span class="comment">/*省略参数*/</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">EmailViewer</span><span class="params">(EmailSender emailSender)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.emailSender = emailSender;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addToAddress</span><span class="params">(String address)</span> &#123;</span><br><span class="line">    toAddresses.add(address);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">output</span><span class="params">(</span></span><br><span class="line"><span class="params">          Map&lt;String, RequestStat&gt; requestStats, <span class="type">long</span> startTimeInMillis, <span class="type">long</span> endTimeInMills)</span> &#123;</span><br><span class="line">    <span class="comment">// format the requestStats to HTML style.</span></span><br><span class="line">    <span class="comment">// send it to email toAddresses.</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第4个逻辑：组装类并定时触发执行统计显示。在将核心逻辑剥离出来之后，这个类的代码变得更加简洁、清晰，只负责组装各个类（MetricsStorage、Aggegrator、StatViewer）来完成整个工作流程。重构之后的代码如下所示：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ConsoleReporter</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> MetricsStorage metricsStorage;</span><br><span class="line">  <span class="keyword">private</span> Aggregator aggregator;</span><br><span class="line">  <span class="keyword">private</span> StatViewer viewer;</span><br><span class="line">  <span class="keyword">private</span> ScheduledExecutorService executor;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">ConsoleReporter</span><span class="params">(MetricsStorage metricsStorage, Aggregator aggregator, StatViewer viewer)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.metricsStorage = metricsStorage;</span><br><span class="line">    <span class="built_in">this</span>.aggregator = aggregator;</span><br><span class="line">    <span class="built_in">this</span>.viewer = viewer;</span><br><span class="line">    <span class="built_in">this</span>.executor = Executors.newSingleThreadScheduledExecutor();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">startRepeatedReport</span><span class="params">(<span class="type">long</span> periodInSeconds, <span class="type">long</span> durationInSeconds)</span> &#123;</span><br><span class="line">    executor.scheduleAtFixedRate(<span class="keyword">new</span> <span class="title class_">Runnable</span>() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">long</span> <span class="variable">durationInMillis</span> <span class="operator">=</span> durationInSeconds * <span class="number">1000</span>;</span><br><span class="line">        <span class="type">long</span> <span class="variable">endTimeInMillis</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="type">long</span> <span class="variable">startTimeInMillis</span> <span class="operator">=</span> endTimeInMillis - durationInMillis;</span><br><span class="line">        Map&lt;String, List&lt;RequestInfo&gt;&gt; requestInfos =</span><br><span class="line">                metricsStorage.getRequestInfos(startTimeInMillis, endTimeInMillis);</span><br><span class="line">        Map&lt;String, RequestStat&gt; requestStats = aggregator.aggregate(requestInfos, durationInMillis);</span><br><span class="line">        viewer.output(requestStats, startTimeInMillis, endTimeInMillis);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;, <span class="number">0L</span>, periodInSeconds, TimeUnit.SECONDS);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EmailReporter</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Long</span> <span class="variable">DAY_HOURS_IN_SECONDS</span> <span class="operator">=</span> <span class="number">86400L</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> MetricsStorage metricsStorage;</span><br><span class="line">  <span class="keyword">private</span> Aggregator aggregator;</span><br><span class="line">  <span class="keyword">private</span> StatViewer viewer;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">EmailReporter</span><span class="params">(MetricsStorage metricsStorage, Aggregator aggregator, StatViewer viewer)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.metricsStorage = metricsStorage;</span><br><span class="line">    <span class="built_in">this</span>.aggregator = aggregator;</span><br><span class="line">    <span class="built_in">this</span>.viewer = viewer;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">startDailyReport</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">Calendar</span> <span class="variable">calendar</span> <span class="operator">=</span> Calendar.getInstance();</span><br><span class="line">    calendar.add(Calendar.DATE, <span class="number">1</span>);</span><br><span class="line">    calendar.set(Calendar.HOUR_OF_DAY, <span class="number">0</span>);</span><br><span class="line">    calendar.set(Calendar.MINUTE, <span class="number">0</span>);</span><br><span class="line">    calendar.set(Calendar.SECOND, <span class="number">0</span>);</span><br><span class="line">    calendar.set(Calendar.MILLISECOND, <span class="number">0</span>);</span><br><span class="line">    <span class="type">Date</span> <span class="variable">firstTime</span> <span class="operator">=</span> calendar.getTime();</span><br><span class="line">    <span class="type">Timer</span> <span class="variable">timer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Timer</span>();</span><br><span class="line">    timer.schedule(<span class="keyword">new</span> <span class="title class_">TimerTask</span>() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">long</span> <span class="variable">durationInMillis</span> <span class="operator">=</span> DAY_HOURS_IN_SECONDS * <span class="number">1000</span>;</span><br><span class="line">        <span class="type">long</span> <span class="variable">endTimeInMillis</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="type">long</span> <span class="variable">startTimeInMillis</span> <span class="operator">=</span> endTimeInMillis - durationInMillis;</span><br><span class="line">        Map&lt;String, List&lt;RequestInfo&gt;&gt; requestInfos =</span><br><span class="line">                metricsStorage.getRequestInfos(startTimeInMillis, endTimeInMillis);</span><br><span class="line">        Map&lt;String, RequestStat&gt; stats = aggregator.aggregate(requestInfos, durationInMillis);</span><br><span class="line">        viewer.output(stats, startTimeInMillis, endTimeInMillis);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;, firstTime, DAY_HOURS_IN_SECONDS * <span class="number">1000</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<p>经过上面的重构之后，我们现在再来看一下，现在框架该如何来使用。</p>
+<p>我们需要在应用启动的时候，创建好ConsoleReporter对象，并且调用它的startRepeatedReport()函数，来启动定时统计并输出数据到终端。同理，我们还需要创建好EmailReporter对象，并且调用它的startDailyReport()函数，来启动每日统计并输出数据到制定邮件地址。我们通过MetricsCollector类来收集接口的访问情况，这部分收集代码会跟业务逻辑代码耦合在一起，或者统一放到类似Spring AOP的切面中完成。具体的使用代码示例如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PerfCounterTest</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="type">MetricsStorage</span> <span class="variable">storage</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RedisMetricsStorage</span>();</span><br><span class="line">    <span class="type">Aggregator</span> <span class="variable">aggregator</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Aggregator</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 定时触发统计并将结果显示到终端</span></span><br><span class="line">    <span class="type">ConsoleViewer</span> <span class="variable">consoleViewer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ConsoleViewer</span>();</span><br><span class="line">    <span class="type">ConsoleReporter</span> <span class="variable">consoleReporter</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ConsoleReporter</span>(storage, aggregator, consoleViewer);</span><br><span class="line">    consoleReporter.startRepeatedReport(<span class="number">60</span>, <span class="number">60</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 定时触发统计并将结果输出到邮件</span></span><br><span class="line">    <span class="type">EmailViewer</span> <span class="variable">emailViewer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">EmailViewer</span>();</span><br><span class="line">    emailViewer.addToAddress(<span class="string">&quot;wangzheng@xzg.com&quot;</span>);</span><br><span class="line">    <span class="type">EmailReporter</span> <span class="variable">emailReporter</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">EmailReporter</span>(storage, aggregator, emailViewer);</span><br><span class="line">    emailReporter.startDailyReport();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 收集接口访问数据</span></span><br><span class="line">    <span class="type">MetricsCollector</span> <span class="variable">collector</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MetricsCollector</span>(storage);</span><br><span class="line">    collector.recordRequest(<span class="keyword">new</span> <span class="title class_">RequestInfo</span>(<span class="string">&quot;register&quot;</span>, <span class="number">123</span>, <span class="number">10234</span>));</span><br><span class="line">    collector.recordRequest(<span class="keyword">new</span> <span class="title class_">RequestInfo</span>(<span class="string">&quot;register&quot;</span>, <span class="number">223</span>, <span class="number">11234</span>));</span><br><span class="line">    collector.recordRequest(<span class="keyword">new</span> <span class="title class_">RequestInfo</span>(<span class="string">&quot;register&quot;</span>, <span class="number">323</span>, <span class="number">12334</span>));</span><br><span class="line">    collector.recordRequest(<span class="keyword">new</span> <span class="title class_">RequestInfo</span>(<span class="string">&quot;login&quot;</span>, <span class="number">23</span>, <span class="number">12434</span>));</span><br><span class="line">    collector.recordRequest(<span class="keyword">new</span> <span class="title class_">RequestInfo</span>(<span class="string">&quot;login&quot;</span>, <span class="number">1223</span>, <span class="number">14234</span>));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      Thread.sleep(<span class="number">100000</span>);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">      e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Review版本2的设计与实现"><a href="#Review版本2的设计与实现" class="headerlink" title="Review版本2的设计与实现"></a>Review版本2的设计与实现</h1><p>现在，我们Review一下，针对版本1重构之后，版本2的设计与实现。</p>
+<p>重构之后，MetricsStorage负责存储，Aggregator负责统计，StatViewer（ConsoleViewer、EmailViewer）负责显示，三个类各司其职。ConsoleReporter和EmailReporter负责组装这三个类，将获取原始数据、聚合统计、显示统计结果到终端这三个阶段的工作串联起来，定时触发执行。</p>
+<p>除此之外，MetricsStorage、Aggregator、StatViewer三个类的设计也符合迪米特法则。它们只与跟自己有直接相关的数据进行交互。MetricsStorage输出的是RequestInfo相关数据。Aggregator类输入的是RequestInfo数据，输出的是RequestStat数据。StatViewer输入的是RequestStat数据。</p>
+<p>针对版本1和版本2，我画了一张它们的类之间依赖关系的对比图，如下所示。从图中，我们可以看出，重构之后的代码结构更加清晰、有条理。这也印证了之前提到的：面向对象设计和实现要做的事情，就是把合适的代码放到合适的类中。</p>
+<p><img src="/article/2022/11/39%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E6%80%BB%E7%BB%93%E8%AF%BE-%E8%BF%90%E7%94%A8%E5%AD%A6%E8%BF%87%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E5%92%8C%E6%80%9D%E6%83%B3%E5%AE%8C%E5%96%84%E4%B9%8B%E5%89%8D%E8%AE%B2%E7%9A%84%E6%80%A7%E8%83%BD%E8%AE%A1%E6%95%B0%E5%99%A8%E9%A1%B9%E7%9B%AE%EF%BC%88%E4%B8%8A%EF%BC%89/1030087-20210601161808497-626787059.png" alt="img"></p>
+<p>刚刚我们分析了代码的整体结构和依赖关系，我们现在再来具体看每个类的设计。</p>
+<p>Aggregator类从一个只包含一个静态函数的工具类，变成了一个普通的聚合统计类。现在，我们可以通过依赖注入的方式，将其组装进ConsoleReporter和EmailReporter类中，这样就更加容易编写单元测试。</p>
+<p>Aggregator类在重构前，所有的逻辑都集中在aggregate()函数内，代码行数较多，代码的可读性和可维护性较差。在重构之后，我们将每个统计逻辑拆分成独立的函数，aggregate()函数变得比较单薄，可读性提高了。尽管我们要添加新的统计功能，还是要修改aggregate()函数，但现在的aggregate()函数代码行数很少，结构非常清晰，修改起来更加容易，可维护性提高。</p>
+<p>目前来看，Aggregator的设计还算合理。但是，如果随着更多的统计功能的加入，Aggregator类的代码会越来越多。这个时候，我们可以将统计函数剥离出来，设计成独立的类，以解决Aggregator类的无限膨胀问题。不过，暂时来说没有必要这么做，毕竟将每个统计函数独立成类，会增加类的个数，也会影响到代码的可读性和可维护性。</p>
+<p>ConsoleReporter和EmailReporter经过重构之后，代码的重复问题变小了，但仍然没有完全解决。尽管这两个类不再调用Aggregator的静态方法，但因为涉及多线程和时间相关的计算，代码的测试性仍然不够好。这两个问题我们留在下一节课中解决，你也可以留言说说的你解决方案。</p>
+<h1 id="重点回顾"><a href="#重点回顾" class="headerlink" title="重点回顾"></a>重点回顾</h1><p>好了，今天的内容到此就讲完了。我们一块来总结回顾一下，你需要掌握的重点内容。</p>
+<p>面向对象设计中的最后一步是组装类并提供执行入口，也就是上帝类要做的事情。这个上帝类是没办法去掉的，但我们可以将上帝类做得很轻量级，把核心逻辑都剥离出去，下沉形成独立的类。上帝类只负责组装类和串联执行流程。这样做的好处是，代码结构更加清晰，底层核心逻辑更容易被复用。</p>
+<p>面向对象设计和实现要做的事情，就是把合适的代码放到合适的类中。当我们要实现某个功能的时候，不管如何设计，所需要编写的代码量基本上是一样的，唯一的区别就是如何将这些代码划分到不同的类中。不同的人有不同的划分方法，对应得到的代码结构（比如类与类之间交互等）也不尽相同。</p>
+<p>好的设计一定是结构清晰、有条理、逻辑性强，看起来一目了然，读完之后常常有一种原来如此的感觉。差的设计往往逻辑、代码乱塞一通，没有什么设计思路可言，看起来莫名其妙，读完之后一头雾水。</p>
+<h1 id="课堂讨论"><a href="#课堂讨论" class="headerlink" title="课堂讨论"></a>课堂讨论</h1><ol>
+<li>今天我们提到，重构之后的ConsoleReporter和EmailReporter仍然存在代码重复和可测试性差的问题，你可以思考一下，应该如何解决呢？</li>
+<li>从上面的使用示例中，我们可以看出，框架易用性有待提高：ConsoleReporter和EmailReporter的创建过程比较复杂，使用者需要正确地组装各种类才行。对于框架的易用性，你有没有什么办法改善一下呢？</li>
+</ol>
+<p>欢迎在留言区写下你的思考和想法，和同学一起交流和分享。如果有收获，也欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/11/38%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E6%80%BB%E7%BB%93%E8%AF%BE-%E6%80%BB%E7%BB%93%E5%9B%9E%E9%A1%BE%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E3%80%81%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E3%80%81%E7%BC%96%E7%A8%8B%E8%A7%84%E8%8C%83%E3%80%81%E9%87%8D%E6%9E%84%E6%8A%80%E5%B7%A7%E7%AD%89%E7%9F%A5%E8%AF%86%E7%82%B9/" rel="prev" title="38设计原则与思想之总结课-总结回顾面向对象、设计原则、编程规范、重构技巧等知识点">
+                  <i class="fa fa-angle-left"></i> 38设计原则与思想之总结课-总结回顾面向对象、设计原则、编程规范、重构技巧等知识点
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/11/40%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E6%80%BB%E7%BB%93%E8%AF%BE-%E8%BF%90%E7%94%A8%E5%AD%A6%E8%BF%87%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E5%92%8C%E6%80%9D%E6%83%B3%E5%AE%8C%E5%96%84%E4%B9%8B%E5%89%8D%E8%AE%B2%E7%9A%84%E6%80%A7%E8%83%BD%E8%AE%A1%E6%95%B0%E5%99%A8%E9%A1%B9%E7%9B%AE%EF%BC%88%E4%B8%8B%EF%BC%89/" rel="next" title="40设计原则与思想之总结课-运用学过的设计原则和思想完善之前讲的性能计数器项目（下）">
+                  40设计原则与思想之总结课-运用学过的设计原则和思想完善之前讲的性能计数器项目（下） <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

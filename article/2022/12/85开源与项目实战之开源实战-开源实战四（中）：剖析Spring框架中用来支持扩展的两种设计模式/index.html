@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="上一节课中，我们学习了Spring框架背后蕴藏的一些经典设计思想，比如约定优于配置、低侵入松耦合、模块化轻量级等等。我们可以将这些设计思想借鉴到其他框架开发中，在大的设计层面提高框架的代码质量。这也是我们在专栏中讲解这部分内容的原因。 除了上一节课中讲到的设计思想，实际上，可扩展也是大部分框架应该具备的一个重要特性。所谓的框架可扩展，我们之前也提到过，意思就是，框架使用者在不修改框架源码的情况下，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="85开源与项目实战之开源实战-开源实战四（中）：剖析Spring框架中用来支持扩展的两种设计模式">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/12/85%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E5%9B%9B%EF%BC%88%E4%B8%AD%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90Spring%E6%A1%86%E6%9E%B6%E4%B8%AD%E7%94%A8%E6%9D%A5%E6%94%AF%E6%8C%81%E6%89%A9%E5%B1%95%E7%9A%84%E4%B8%A4%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="上一节课中，我们学习了Spring框架背后蕴藏的一些经典设计思想，比如约定优于配置、低侵入松耦合、模块化轻量级等等。我们可以将这些设计思想借鉴到其他框架开发中，在大的设计层面提高框架的代码质量。这也是我们在专栏中讲解这部分内容的原因。 除了上一节课中讲到的设计思想，实际上，可扩展也是大部分框架应该具备的一个重要特性。所谓的框架可扩展，我们之前也提到过，意思就是，框架使用者在不修改框架源码的情况下，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/12/85%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E5%9B%9B%EF%BC%88%E4%B8%AD%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90Spring%E6%A1%86%E6%9E%B6%E4%B8%AD%E7%94%A8%E6%9D%A5%E6%94%AF%E6%8C%81%E6%89%A9%E5%B1%95%E7%9A%84%E4%B8%A4%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/dbddbba511c1444d99925f860c2aeee3.png">
+<meta property="article:published_time" content="2022-12-25T00:00:00.000Z">
+<meta property="article:modified_time" content="2022-12-25T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2022/12/85%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E5%9B%9B%EF%BC%88%E4%B8%AD%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90Spring%E6%A1%86%E6%9E%B6%E4%B8%AD%E7%94%A8%E6%9D%A5%E6%94%AF%E6%8C%81%E6%89%A9%E5%B1%95%E7%9A%84%E4%B8%A4%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/dbddbba511c1444d99925f860c2aeee3.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/12/85%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E5%9B%9B%EF%BC%88%E4%B8%AD%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90Spring%E6%A1%86%E6%9E%B6%E4%B8%AD%E7%94%A8%E6%9D%A5%E6%94%AF%E6%8C%81%E6%89%A9%E5%B1%95%E7%9A%84%E4%B8%A4%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/12/85%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E5%9B%9B%EF%BC%88%E4%B8%AD%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90Spring%E6%A1%86%E6%9E%B6%E4%B8%AD%E7%94%A8%E6%9D%A5%E6%94%AF%E6%8C%81%E6%89%A9%E5%B1%95%E7%9A%84%E4%B8%A4%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/","path":"article/2022/12/85开源与项目实战之开源实战-开源实战四（中）：剖析Spring框架中用来支持扩展的两种设计模式/","title":"85开源与项目实战之开源实战-开源实战四（中）：剖析Spring框架中用来支持扩展的两种设计模式"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>85开源与项目实战之开源实战-开源实战四（中）：剖析Spring框架中用来支持扩展的两种设计模式 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F%E5%9C%A8Spring%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">1.</span> <span class="nav-text">观察者模式在Spring中的应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F%E5%9C%A8Spring%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">模板模式在Spring中的应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE"><span class="nav-number">3.</span> <span class="nav-text">重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%A0%82%E8%AE%A8%E8%AE%BA"><span class="nav-number">4.</span> <span class="nav-text">课堂讨论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/12/85%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E5%9B%9B%EF%BC%88%E4%B8%AD%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90Spring%E6%A1%86%E6%9E%B6%E4%B8%AD%E7%94%A8%E6%9D%A5%E6%94%AF%E6%8C%81%E6%89%A9%E5%B1%95%E7%9A%84%E4%B8%A4%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="85开源与项目实战之开源实战-开源实战四（中）：剖析Spring框架中用来支持扩展的两种设计模式 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          85开源与项目实战之开源实战-开源实战四（中）：剖析Spring框架中用来支持扩展的两种设计模式
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-12-25 08:00:00" itemprop="dateCreated datePublished" datetime="2022-12-25T08:00:00+08:00">2022-12-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>上一节课中，我们学习了Spring框架背后蕴藏的一些经典设计思想，比如约定优于配置、低侵入松耦合、模块化轻量级等等。我们可以将这些设计思想借鉴到其他框架开发中，在大的设计层面提高框架的代码质量。这也是我们在专栏中讲解这部分内容的原因。</p>
+<p>除了上一节课中讲到的设计思想，实际上，可扩展也是大部分框架应该具备的一个重要特性。所谓的框架可扩展，我们之前也提到过，意思就是，框架使用者在不修改框架源码的情况下，基于扩展点定制扩展新的功能。</p>
+<p>前面在理论部分，我们也讲到，常用来实现扩展特性的设计模式有：观察者模式、模板模式、职责链模式、策略模式等。今天，我们再剖析Spring框架为了支持可扩展特性用的2种设计模式：观察者模式和模板模式。</p>
+<p>话不多说，让我们正式开始今天的学习吧！</p>
+<span id="more"></span>
+
+<h1 id="观察者模式在Spring中的应用"><a href="#观察者模式在Spring中的应用" class="headerlink" title="观察者模式在Spring中的应用"></a>观察者模式在Spring中的应用</h1><p>在前面我们讲到，Java、Google Guava都提供了观察者模式的实现框架。Java提供的框架比较简单，只包含java.util.Observable和java.util.Observer两个类。Google Guava提供的框架功能比较完善和强大：通过EventBus事件总线来实现观察者模式。实际上，Spring也提供了观察者模式的实现框架。今天，我们就再来讲一讲它。</p>
+<p>Spring中实现的观察者模式包含三部分：Event事件（相当于消息）、Listener监听者（相当于观察者）、Publisher发送者（相当于被观察者）。我们通过一个例子来看下，Spring提供的观察者模式是怎么使用的。代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Event事件</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DemoEvent</span> <span class="keyword">extends</span> <span class="title class_">ApplicationEvent</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> String message;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">DemoEvent</span><span class="params">(Object source, String message)</span> &#123;</span><br><span class="line">    <span class="built_in">super</span>(source);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> String <span class="title function_">getMessage</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.message;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Listener监听者</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DemoListener</span> <span class="keyword">implements</span> <span class="title class_">ApplicationListener</span>&lt;DemoEvent&gt; &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onApplicationEvent</span><span class="params">(DemoEvent demoEvent)</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">message</span> <span class="operator">=</span> demoEvent.getMessage();</span><br><span class="line">    System.out.println(message);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Publisher发送者</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DemoPublisher</span> &#123;</span><br><span class="line">  <span class="meta">@Autowired</span></span><br><span class="line">  <span class="keyword">private</span> ApplicationContext applicationContext;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">publishEvent</span><span class="params">(DemoEvent demoEvent)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.applicationContext.publishEvent(demoEvent);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从代码中，我们可以看出，框架使用起来并不复杂，主要包含三部分工作：定义一个继承ApplicationEvent的事件（DemoEvent）；定义一个实现了ApplicationListener的监听器（DemoListener）；定义一个发送者（DemoPublisher），发送者调用ApplicationContext来发送事件消息。</p>
+<p>其中，ApplicationEvent和ApplicationListener的代码实现都非常简单，内部并不包含太多属性和方法。实际上，它们最大的作用是做类型标识之用（继承自ApplicationEvent的类是事件，实现ApplicationListener的类是监听器）。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">ApplicationEvent</span> <span class="keyword">extends</span> <span class="title class_">EventObject</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">serialVersionUID</span> <span class="operator">=</span> <span class="number">7099057708183571937L</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">timestamp</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">ApplicationEvent</span><span class="params">(Object source)</span> &#123;</span><br><span class="line">    <span class="built_in">super</span>(source);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">final</span> <span class="type">long</span> <span class="title function_">getTimestamp</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.timestamp;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EventObject</span> <span class="keyword">implements</span> <span class="title class_">java</span>.io.Serializable &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">serialVersionUID</span> <span class="operator">=</span> <span class="number">5516075349620653480L</span>;</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">transient</span> Object  source;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">EventObject</span><span class="params">(Object source)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (source == <span class="literal">null</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;null source&quot;</span>);</span><br><span class="line">        <span class="built_in">this</span>.source = source;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Object <span class="title function_">getSource</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> source;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">toString</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> getClass().getName() + <span class="string">&quot;[source=&quot;</span> + source + <span class="string">&quot;]&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ApplicationListener</span>&lt;E <span class="keyword">extends</span> <span class="title class_">ApplicationEvent</span>&gt; <span class="keyword">extends</span> <span class="title class_">EventListener</span> &#123;</span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">onApplicationEvent</span><span class="params">(E var1)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在前面讲到观察者模式的时候，我们提到，观察者需要事先注册到被观察者（JDK的实现方式）或者事件总线（EventBus的实现方式）中。那在Spring的实现中，观察者注册到了哪里呢？又是如何注册的呢？</p>
+<p>我想你应该猜到了，我们把观察者注册到了ApplicationContext对象中。这里的ApplicationContext就相当于Google EventBus框架中的“事件总线”。不过，稍微提醒一下，ApplicationContext这个类并不只是为观察者模式服务的。它底层依赖BeanFactory（IOC的主要实现类），提供应用启动、运行时的上下文信息，是访问这些信息的最顶层接口。</p>
+<p>实际上，具体到源码来说，ApplicationContext只是一个接口，具体的代码实现包含在它的实现类AbstractApplicationContext中。我把跟观察者模式相关的代码，摘抄到了下面。你只需要关注它是如何发送事件和注册监听者就好，其他细节不需要细究。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">AbstractApplicationContext</span> extends ... &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Set&lt;ApplicationListener&lt;?&gt;&gt; applicationListeners;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">AbstractApplicationContext</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.applicationListeners = <span class="keyword">new</span> <span class="title class_">LinkedHashSet</span>();</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">publishEvent</span><span class="params">(ApplicationEvent event)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.publishEvent(event, (ResolvableType)<span class="literal">null</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">publishEvent</span><span class="params">(Object event)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.publishEvent(event, (ResolvableType)<span class="literal">null</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">publishEvent</span><span class="params">(Object event, ResolvableType eventType)</span> &#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    Object applicationEvent;</span><br><span class="line">    <span class="keyword">if</span> (event <span class="keyword">instanceof</span> ApplicationEvent) &#123;</span><br><span class="line">      applicationEvent = (ApplicationEvent)event;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      applicationEvent = <span class="keyword">new</span> <span class="title class_">PayloadApplicationEvent</span>(<span class="built_in">this</span>, event);</span><br><span class="line">      <span class="keyword">if</span> (eventType == <span class="literal">null</span>) &#123;</span><br><span class="line">        eventType = ((PayloadApplicationEvent)applicationEvent).getResolvableType();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.earlyApplicationEvents != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="built_in">this</span>.earlyApplicationEvents.add(applicationEvent);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="built_in">this</span>.getApplicationEventMulticaster().multicastEvent(</span><br><span class="line">            (ApplicationEvent)applicationEvent, eventType);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.parent != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">if</span> (<span class="built_in">this</span>.parent <span class="keyword">instanceof</span> AbstractApplicationContext) &#123;</span><br><span class="line">        ((AbstractApplicationContext)<span class="built_in">this</span>.parent).publishEvent(event, eventType);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.parent.publishEvent(event);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addApplicationListener</span><span class="params">(ApplicationListener&lt;?&gt; listener)</span> &#123;</span><br><span class="line">    Assert.notNull(listener, <span class="string">&quot;ApplicationListener must not be null&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.applicationEventMulticaster != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="built_in">this</span>.applicationEventMulticaster.addApplicationListener(listener);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="built_in">this</span>.applicationListeners.add(listener);</span><br><span class="line">    &#125;  </span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">public</span> Collection&lt;ApplicationListener&lt;?&gt;&gt; getApplicationListeners() &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.applicationListeners;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">registerListeners</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">Iterator</span> <span class="variable">var1</span> <span class="operator">=</span> <span class="built_in">this</span>.getApplicationListeners().iterator();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(var1.hasNext()) &#123;</span><br><span class="line">      ApplicationListener&lt;?&gt; listener = (ApplicationListener)var1.next();     <span class="built_in">this</span>.getApplicationEventMulticaster().addApplicationListener(listener);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    String[] listenerBeanNames = <span class="built_in">this</span>.getBeanNamesForType(ApplicationListener.class, <span class="literal">true</span>, <span class="literal">false</span>);</span><br><span class="line">    String[] var7 = listenerBeanNames;</span><br><span class="line">    <span class="type">int</span> <span class="variable">var3</span> <span class="operator">=</span> listenerBeanNames.length;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> <span class="variable">var4</span> <span class="operator">=</span> <span class="number">0</span>; var4 &lt; var3; ++var4) &#123;</span><br><span class="line">      <span class="type">String</span> <span class="variable">listenerBeanName</span> <span class="operator">=</span> var7[var4];</span><br><span class="line">      <span class="built_in">this</span>.getApplicationEventMulticaster().addApplicationListenerBean(listenerBeanName);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Set&lt;ApplicationEvent&gt; earlyEventsToProcess = <span class="built_in">this</span>.earlyApplicationEvents;</span><br><span class="line">    <span class="built_in">this</span>.earlyApplicationEvents = <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (earlyEventsToProcess != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="type">Iterator</span> <span class="variable">var9</span> <span class="operator">=</span> earlyEventsToProcess.iterator();</span><br><span class="line"></span><br><span class="line">      <span class="keyword">while</span>(var9.hasNext()) &#123;</span><br><span class="line">        <span class="type">ApplicationEvent</span> <span class="variable">earlyEvent</span> <span class="operator">=</span> (ApplicationEvent)var9.next();</span><br><span class="line">        <span class="built_in">this</span>.getApplicationEventMulticaster().multicastEvent(earlyEvent);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从上面的代码中，我们发现，真正的消息发送，实际上是通过ApplicationEventMulticaster这个类来完成的。这个类的源码我只摘抄了最关键的一部分，也就是multicastEvent()这个消息发送函数。不过，它的代码也并不复杂，我就不多解释了。这里我稍微提示一下，它通过线程池，支持异步非阻塞、同步阻塞这两种类型的观察者模式。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">multicastEvent</span><span class="params">(ApplicationEvent event)</span> &#123;</span><br><span class="line">  <span class="built_in">this</span>.multicastEvent(event, <span class="built_in">this</span>.resolveDefaultEventType(event));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">multicastEvent</span><span class="params">(<span class="keyword">final</span> ApplicationEvent event, ResolvableType eventType)</span> &#123;</span><br><span class="line">  <span class="type">ResolvableType</span> <span class="variable">type</span> <span class="operator">=</span> eventType != <span class="literal">null</span> ? eventType : <span class="built_in">this</span>.resolveDefaultEventType(event);</span><br><span class="line">  <span class="type">Iterator</span> <span class="variable">var4</span> <span class="operator">=</span> <span class="built_in">this</span>.getApplicationListeners(event, type).iterator();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span>(var4.hasNext()) &#123;</span><br><span class="line">    <span class="keyword">final</span> ApplicationListener&lt;?&gt; listener = (ApplicationListener)var4.next();</span><br><span class="line">    <span class="type">Executor</span> <span class="variable">executor</span> <span class="operator">=</span> <span class="built_in">this</span>.getTaskExecutor();</span><br><span class="line">    <span class="keyword">if</span> (executor != <span class="literal">null</span>) &#123;</span><br><span class="line">      executor.execute(<span class="keyword">new</span> <span class="title class_">Runnable</span>() &#123;</span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">          SimpleApplicationEventMulticaster.<span class="built_in">this</span>.invokeListener(listener, event);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="built_in">this</span>.invokeListener(listener, event);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>借助Spring提供的观察者模式的骨架代码，如果我们要在Spring下实现某个事件的发送和监听，只需要做很少的工作，定义事件、定义监听器、往ApplicationContext中发送事件就可以了，剩下的工作都由Spring框架来完成。实际上，这也体现了Spring框架的扩展性，也就是在不需要修改任何代码的情况下，扩展新的事件和监听。</p>
+<h1 id="模板模式在Spring中的应用"><a href="#模板模式在Spring中的应用" class="headerlink" title="模板模式在Spring中的应用"></a>模板模式在Spring中的应用</h1><p>刚刚讲的是观察者模式在Spring中的应用，现在我们再讲下模板模式。</p>
+<p>我们来看下一下经常在面试中被问到的一个问题：请你说下Spring Bean的创建过程包含哪些主要的步骤。这其中就涉及模板模式。它也体现了Spring的扩展性。利用模板模式，Spring能让用户定制Bean的创建过程。</p>
+<p>Spring Bean的创建过程，可以大致分为两大步：对象的创建和对象的初始化。</p>
+<p>对象的创建是通过反射来动态生成对象，而不是new方法。不管是哪种方式，说白了，总归还是调用构造函数来生成对象，没有什么特殊的。对象的初始化有两种实现方式。一种是在类中自定义一个初始化函数，并且通过配置文件，显式地告知Spring，哪个函数是初始化函数。我举了一个例子解释一下。如下所示，在配置文件中，我们通过init-method属性来指定初始化函数。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DemoClass</span> &#123;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">  </span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">initDemo</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">//...初始化..</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 配置：需要通过init-method显式地指定初始化方法</span></span><br><span class="line">&lt;bean id=<span class="string">&quot;demoBean&quot;</span> class=<span class="string">&quot;com.xzg.cd.DemoClass&quot;</span> init-method=<span class="string">&quot;initDemo&quot;</span>&gt;&lt;/bean&gt;</span><br></pre></td></tr></table></figure>
+
+<p>这种初始化方式有一个缺点，初始化函数并不固定，由用户随意定义，这就需要Spring通过反射，在运行时动态地调用这个初始化函数。而反射又会影响代码执行的性能，那有没有替代方案呢？</p>
+<p>Spring提供了另外一个定义初始化函数的方法，那就是让类实现Initializingbean接口。这个接口包含一个固定的初始化函数定义（afterPropertiesSet()函数）。Spring在初始化Bean的时候，可以直接通过bean.afterPropertiesSet()的方式，调用Bean对象上的这个函数，而不需要使用反射来调用了。我举个例子解释一下，代码如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DemoClass</span> <span class="keyword">implements</span> <span class="title class_">InitializingBean</span>&#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="comment">//...初始化...      </span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 配置：不需要显式地指定初始化方法</span></span><br><span class="line">&lt;bean id=<span class="string">&quot;demoBean&quot;</span> class=<span class="string">&quot;com.xzg.cd.DemoClass&quot;</span>&gt;&lt;/bean&gt;</span><br></pre></td></tr></table></figure>
+
+<p>尽管这种实现方式不会用到反射，执行效率提高了，但业务代码（DemoClass）跟框架代码（InitializingBean）耦合在了一起。框架代码侵入到了业务代码中，替换框架的成本就变高了。所以，我并不是太推荐这种写法。</p>
+<p>实际上，在Spring对Bean整个生命周期的管理中，还有一个跟初始化相对应的过程，那就是Bean的销毁过程。我们知道，在Java中，对象的回收是通过JVM来自动完成的。但是，我们可以在将Bean正式交给JVM垃圾回收前，执行一些销毁操作（比如关闭文件句柄等等）。</p>
+<p>销毁过程跟初始化过程非常相似，也有两种实现方式。一种是通过配置destroy-method指定类中的销毁函数，另一种是让类实现DisposableBean接口。因为destroy-method、DisposableBean跟init-method、InitializingBean非常相似，所以，这部分我们就不详细讲解了，你可以自行研究下。</p>
+<p>实际上，Spring针对对象的初始化过程，还做了进一步的细化，将它拆分成了三个小步骤：初始化前置操作、初始化、初始化后置操作。其中，中间的初始化操作就是我们刚刚讲的那部分，初始化的前置和后置操作，定义在接口BeanPostProcessor中。BeanPostProcessor的接口定义如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">BeanPostProcessor</span> &#123;</span><br><span class="line">  Object <span class="title function_">postProcessBeforeInitialization</span><span class="params">(Object var1, String var2)</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line"></span><br><span class="line">  Object <span class="title function_">postProcessAfterInitialization</span><span class="params">(Object var1, String var2)</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们再来看下，如何通过BeanPostProcessor来定义初始化前置和后置操作？</p>
+<p>我们只需要定义一个实现了BeanPostProcessor接口的处理器类，并在配置文件中像配置普通Bean一样去配置就可以了。Spring中的ApplicationContext会自动检测在配置文件中实现了BeanPostProcessor接口的所有Bean，并把它们注册到BeanPostProcessor处理器列表中。在Spring容器创建Bean的过程中，Spring会逐一去调用这些处理器。</p>
+<p>通过上面的分析，我们基本上弄清楚了Spring Bean的整个生命周期（创建加销毁）。针对这个过程，我画了一张图，你可以结合着刚刚讲解一块看下。</p>
+<p><img src="/article/2022/12/85%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E5%9B%9B%EF%BC%88%E4%B8%AD%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90Spring%E6%A1%86%E6%9E%B6%E4%B8%AD%E7%94%A8%E6%9D%A5%E6%94%AF%E6%8C%81%E6%89%A9%E5%B1%95%E7%9A%84%E4%B8%A4%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/dbddbba511c1444d99925f860c2aeee3.png" alt="img"></p>
+<p>不过，你可能会说，这里哪里用到了模板模式啊？模板模式不是需要定义一个包含模板方法的抽象模板类，以及定义子类实现模板方法吗？</p>
+<p>实际上，这里的模板模式的实现，并不是标准的抽象类的实现方式，而是有点类似我们前面讲到的Callback回调的实现方式，也就是将要执行的函数封装成对象（比如，初始化方法封装成InitializingBean对象），传递给模板（BeanFactory）来执行。</p>
+<h1 id="重点回顾"><a href="#重点回顾" class="headerlink" title="重点回顾"></a>重点回顾</h1><p>好了，今天的内容到此就讲完了。我们一块来总结回顾一下，你需要重点掌握的内容。</p>
+<p>今天我讲到了Spring中用到的两种支持扩展的设计模式，观察者模式和模板模式。</p>
+<p>其中，观察者模式在Java、Google Guava、Spring中都有提供相应的实现代码。在平时的项目开发中，基于这些实现代码，我们可以轻松地实现一个观察者模式。</p>
+<p>Java提供的框架比较简单，只包含java.util.Observable和java.util.Observer两个类。Google Guava提供的框架功能比较完善和强大，可以通过EventBus事件总线来实现观察者模式。Spring提供了观察者模式包含Event事件、Listener监听者、Publisher发送者三部分。事件发送到ApplicationContext中，然后，ApplicationConext将消息发送给事先注册好的监听者。</p>
+<p>除此之外，我们还讲到模板模式在Spring中的一个典型应用，那就是Bean的创建过程。Bean的创建包含两个大的步骤，对象的创建和对象的初始化。其中，对象的初始化又可以分解为3个小的步骤：初始化前置操作、初始化、初始化后置操作。</p>
+<h1 id="课堂讨论"><a href="#课堂讨论" class="headerlink" title="课堂讨论"></a>课堂讨论</h1><p>在Google Guava的EventBus实现中，被观察者发送消息到事件总线，事件总线根据消息的类型，将消息发送给可匹配的观察者。那在Spring提供的观察者模式的实现中，是否也支持按照消息类型匹配观察者呢？如果能，它是如何实现的？如果不能，你有什么方法可以让它支持吗？</p>
+<p>欢迎留言和我分享你的想法。如果有收获，也欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/12/84%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E5%9B%9B%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E5%89%96%E6%9E%90Spring%E6%A1%86%E6%9E%B6%E4%B8%AD%E8%95%B4%E5%90%AB%E7%9A%84%E7%BB%8F%E5%85%B8%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3%E6%88%96%E5%8E%9F%E5%88%99/" rel="prev" title="84开源与项目实战之开源实战-开源实战四（上）：剖析Spring框架中蕴含的经典设计思想或原则">
+                  <i class="fa fa-angle-left"></i> 84开源与项目实战之开源实战-开源实战四（上）：剖析Spring框架中蕴含的经典设计思想或原则
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/12/86%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E5%9B%9B%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E6%80%BB%E7%BB%93Spring%E6%A1%86%E6%9E%B6%E7%94%A8%E5%88%B0%E7%9A%8411%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="next" title="86开源与项目实战之开源实战-开源实战四（下）：总结Spring框架用到的11种设计模式">
+                  86开源与项目实战之开源实战-开源实战四（下）：总结Spring框架用到的11种设计模式 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

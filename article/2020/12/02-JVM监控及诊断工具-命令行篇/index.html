@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="JVM监控及诊断工具-命令行篇">
+<meta property="og:type" content="article">
+<meta property="og:title" content="02-JVM监控及诊断工具-命令行篇">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="JVM监控及诊断工具-命令行篇">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/resize,l_1200,m_lfit.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/resize,l_1200,m_lfit-1733382514065-1.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/resize,l_1200,m_lfit-1733382514065-2.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/svg+xml;base64,PHN2ZyBpZD0iU3ZnanNTdmcxMDA2IiB3aWR0aD0iNjQ4IiBoZWlnaHQ9IjI2MyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxuczpzdmdqcz0iaHR0cDovL3N2Z2pzLmNvbS9zdmdqcyI+PGRlZnMgaWQ9IlN2Z2pzRGVmczEwMDciPjxwYXR0ZXJuIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIGlkPSJwYXR0ZXJuX21hcmtfMCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzMDAiPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmaWxsPSJyZ2JhKDIyOSwyMjksMjI5LDAuOCkiIGZvbnQtc2l6ZT0iMTgiIHRyYW5zZm9ybT0icm90YXRlKC00NSwgMTUwLCAxNTApIiBzdHlsZT0iZG9taW5hbnQtYmFzZWxpbmU6IG1pZGRsZTsgdGV4dC1hbmNob3I6IG1pZGRsZTsiPjwvdGV4dD48L3BhdHRlcm4+PHBhdHRlcm4gcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgaWQ9InBhdHRlcm5fbWFya18xIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCI+PHRleHQgeD0iMTUwIiB5PSIyMDAiIGZpbGw9InJnYmEoMjI5LDIyOSwyMjksMC44KSIgZm9udC1zaXplPSIxOCIgdHJhbnNmb3JtPSJyb3RhdGUoLTQ1LCAxNTAsIDE1MCkiIHN0eWxlPSJkb21pbmFudC1iYXNlbGluZTogbWlkZGxlOyB0ZXh0LWFuY2hvcjogbWlkZGxlOyI+PC90ZXh0PjwvcGF0dGVybj48bWFya2VyIGlkPSJTdmdqc01hcmtlcjEwNDUiIG1hcmtlcldpZHRoPSIxMyIgbWFya2VySGVpZ2h0PSI5IiByZWZYPSIzLjUiIHJlZlk9IjQuNSIgdmlld0JveD0iMCAwIDEzIDkiIG9yaWVudD0iMCIgbWFya2VyVW5pdHM9InVzZXJTcGFjZU9uVXNlIiBzdHJva2UtZGFzaGFycmF5PSIwLDAiPjxwYXRoIGlkPSJTdmdqc1BhdGgxMDQ2IiBkPSJNMTMsMCBMMCw0LjUgTDEzLDkgTDEzLDAiIGZpbGw9IiMzMjMyMzIiIHN0cm9rZT0iIzMyMzIzMiIgc3Ryb2tlLXdpZHRoPSIxIj48L3BhdGg+PC9tYXJrZXI+PG1hcmtlciBpZD0iU3ZnanNNYXJrZXIxMDQ3IiBtYXJrZXJXaWR0aD0iMTMiIG1hcmtlckhlaWdodD0iOSIgcmVmWD0iOS41IiByZWZZPSI0LjUiIHZpZXdCb3g9IjAgMCAxMyA5IiBvcmllbnQ9ImF1dG8iIG1hcmtlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgc3Ryb2tlLWRhc2hhcnJheT0iMCwwIj48cGF0aCBpZD0iU3ZnanNQYXRoMTA0OCIgZD0iTTAsMCBMMTMsNC41IEwwLDkgTDAsMCIgZmlsbD0iIzMyMzIzMiIgc3Ryb2tlPSIjMzIzMjMyIiBzdHJva2Utd2lkdGg9IjEiPjwvcGF0aD48L21hcmtlcj48L2RlZnM+PHJlY3QgaWQ9InN2Z2JhY2tncm91bmRpZCIgd2lkdGg9IjY0OCIgaGVpZ2h0PSIyNjMiIGZpbGw9InRyYW5zcGFyZW50Ij48L3JlY3Q+PHJlY3QgaWQ9IlN2Z2pzUmVjdDEwMDkiIHdpZHRoPSI2NDgiIGhlaWdodD0iMjYzIiBmaWxsPSJ1cmwoI3BhdHRlcm5fbWFya18wKSI+PC9yZWN0PjxyZWN0IGlkPSJTdmdqc1JlY3QxMDEwIiB3aWR0aD0iNjQ4IiBoZWlnaHQ9IjI2MyIgZmlsbD0idXJsKCNwYXR0ZXJuX21hcmtfMSkiPjwvcmVjdD48ZyBpZD0iU3ZnanNHMTAxMSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjUsMjUpIj48cGF0aCBpZD0iU3ZnanNQYXRoMTAxMiIgZD0iTSAwIDBMIDIxNCAwTCAyMTQgMjEzTCAwIDIxM1oiIHN0cm9rZT0icmdiYSgzMyw0MSw0OCwxKSIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGwtb3BhY2l0eT0iMSIgZmlsbD0iI2M4ZmFmZiI+PC9wYXRoPjxnIGlkPSJTdmdqc0cxMDEzIj48dGV4dCBpZD0iU3ZnanNUZXh0MTAxNCIgZm9udC1mYW1pbHk9IiZxdW90O01pY3Jvc29mdCBZYUhlaSZxdW90Oywg5b6u6L2v6ZuF6buRLCBBcmlhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxM3B4IiB3aWR0aD0iMTk0cHgiIGZpbGw9IiMzMjMyMzIiIGZvbnQtd2VpZ2h0PSI0MDAiIGFsaWduPSJtaWRkbGUiIGxpbmVIZWlnaHQ9IjEyNSUiIGFuY2hvcj0ibWlkZGxlIiBmYW1pbHk9IiZxdW90O01pY3Jvc29mdCBZYUhlaSZxdW90Oywg5b6u6L2v6ZuF6buRLCBBcmlhbCIgc2l6ZT0iMTNweCIgd2VpZ2h0PSI0MDAiIGZvbnQtc3R5bGU9IiIgb3BhY2l0eT0iMSIgeT0iOTUuODc1IiB0cmFuc2Zvcm09InJvdGF0ZSgwKSI+PC90ZXh0PjwvZz48L2c+PGcgaWQ9IlN2Z2pzRzEwMTUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUyLDYyKSI+PHBhdGggaWQ9IlN2Z2pzUGF0aDEwMTYiIGQ9Ik0gMCAwTCAxNjEgMEwgMTYxIDQzTCAwIDQzWiIgc3Ryb2tlPSJyZ2JhKDAsMCwwLDEpIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbC1vcGFjaXR5PSIxIiBmaWxsPSIjZmZhMzk5Ij48L3BhdGg+PGcgaWQ9IlN2Z2pzRzEwMTciPjx0ZXh0IGlkPSJTdmdqc1RleHQxMDE4IiBmb250LWZhbWlseT0iJnF1b3Q7TWljcm9zb2Z0IFlhSGVpJnF1b3Q7LCDlvq7ova/pm4Xpu5EsIEFyaWFsIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjEzcHgiIHdpZHRoPSIxNDFweCIgZmlsbD0iIzMyMzIzMiIgZm9udC13ZWlnaHQ9IjQwMCIgYWxpZ249Im1pZGRsZSIgbGluZUhlaWdodD0iMTI1JSIgYW5jaG9yPSJtaWRkbGUiIGZhbWlseT0iJnF1b3Q7TWljcm9zb2Z0IFlhSGVpJnF1b3Q7LCDlvq7ova/pm4Xpu5EsIEFyaWFsIiBzaXplPSIxM3B4IiB3ZWlnaHQ9IjQwMCIgZm9udC1zdHlsZT0iIiBvcGFjaXR5PSIxIiB5PSIxMC44NzUiIHRyYW5zZm9ybT0icm90YXRlKDApIj48dHNwYW4gaWQ9IlN2Z2pzVHNwYW4xMDE5IiBkeT0iMTYuMjUiIHg9IjgwLjUiPjx0c3BhbiBpZD0iU3ZnanNUc3BhbjEwMjAiIHN0eWxlPSIiPkphdmHlupTnlKjnqIvluo88L3RzcGFuPjwvdHNwYW4+PC90ZXh0PjwvZz48L2c+PGcgaWQ9IlN2Z2pzRzEwMjEiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUyLDE1NCkiPjxwYXRoIGlkPSJTdmdqc1BhdGgxMDIyIiBkPSJNIDAgMEwgMTYxIDBMIDE2MSA0M0wgMCA0M1oiIHN0cm9rZT0icmdiYSgzMyw0MSw0OCwxKSIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGwtb3BhY2l0eT0iMSIgZmlsbD0iI2ZmY2U5NiI+PC9wYXRoPjxnIGlkPSJTdmdqc0cxMDIzIj48dGV4dCBpZD0iU3ZnanNUZXh0MTAyNCIgZm9udC1mYW1pbHk9IiZxdW90O01pY3Jvc29mdCBZYUhlaSZxdW90Oywg5b6u6L2v6ZuF6buRLCBBcmlhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxM3B4IiB3aWR0aD0iMTQxcHgiIGZpbGw9IiMzMjMyMzIiIGZvbnQtd2VpZ2h0PSI0MDAiIGFsaWduPSJtaWRkbGUiIGxpbmVIZWlnaHQ9IjEyNSUiIGFuY2hvcj0ibWlkZGxlIiBmYW1pbHk9IiZxdW90O01pY3Jvc29mdCBZYUhlaSZxdW90Oywg5b6u6L2v6ZuF6buRLCBBcmlhbCIgc2l6ZT0iMTNweCIgd2VpZ2h0PSI0MDAiIGZvbnQtc3R5bGU9IiIgb3BhY2l0eT0iMSIgeT0iMTAuODc1IiB0cmFuc2Zvcm09InJvdGF0ZSgwKSI+PHRzcGFuIGlkPSJTdmdqc1RzcGFuMTAyNSIgZHk9IjE2LjI1IiB4PSI4MC41Ij48dHNwYW4gaWQ9IlN2Z2pzVHNwYW4xMDI2IiBzdHlsZT0iIj5qc3RhdGQ8L3RzcGFuPjwvdHNwYW4+PC90ZXh0PjwvZz48L2c+PGcgaWQ9IlN2Z2pzRzEwMjciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQwOSwyNSkiPjxwYXRoIGlkPSJTdmdqc1BhdGgxMDI4IiBkPSJNIDAgMEwgMjE0IDBMIDIxNCAyMTNMIDAgMjEzWiIgc3Ryb2tlPSJyZ2JhKDMzLDQxLDQ4LDEpIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbC1vcGFjaXR5PSIxIiBmaWxsPSIjZmZlNmNhIj48L3BhdGg+PGcgaWQ9IlN2Z2pzRzEwMjkiPjx0ZXh0IGlkPSJTdmdqc1RleHQxMDMwIiBmb250LWZhbWlseT0iJnF1b3Q7TWljcm9zb2Z0IFlhSGVpJnF1b3Q7LCDlvq7ova/pm4Xpu5EsIEFyaWFsIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjEzcHgiIHdpZHRoPSIxOTRweCIgZmlsbD0iIzMyMzIzMiIgZm9udC13ZWlnaHQ9IjQwMCIgYWxpZ249Im1pZGRsZSIgbGluZUhlaWdodD0iMTI1JSIgYW5jaG9yPSJtaWRkbGUiIGZhbWlseT0iJnF1b3Q7TWljcm9zb2Z0IFlhSGVpJnF1b3Q7LCDlvq7ova/pm4Xpu5EsIEFyaWFsIiBzaXplPSIxM3B4IiB3ZWlnaHQ9IjQwMCIgZm9udC1zdHlsZT0iIiBvcGFjaXR5PSIxIiB5PSI5NS44NzUiIHRyYW5zZm9ybT0icm90YXRlKDApIj48L3RleHQ+PC9nPjwvZz48ZyBpZD0iU3ZnanNHMTAzMSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDM2LDE1NCkiPjxwYXRoIGlkPSJTdmdqc1BhdGgxMDMyIiBkPSJNIDAgMEwgNjMgMEwgNjMgNDNMIDAgNDNaIiBzdHJva2U9InJnYmEoMzMsNDEsNDgsMSkiIHN0cm9rZS13aWR0aD0iMS41IiBmaWxsLW9wYWNpdHk9IjEiIGZpbGw9IiNmZmY3NjAiPjwvcGF0aD48ZyBpZD0iU3ZnanNHMTAzMyI+PHRleHQgaWQ9IlN2Z2pzVGV4dDEwMzQiIGZvbnQtZmFtaWx5PSImcXVvdDtNaWNyb3NvZnQgWWFIZWkmcXVvdDssIOW+rui9r+mbhem7kSwgQXJpYWwiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTNweCIgd2lkdGg9IjQzcHgiIGZpbGw9IiMzMjMyMzIiIGZvbnQtd2VpZ2h0PSI0MDAiIGFsaWduPSJtaWRkbGUiIGxpbmVIZWlnaHQ9IjEyNSUiIGFuY2hvcj0ibWlkZGxlIiBmYW1pbHk9IiZxdW90O01pY3Jvc29mdCBZYUhlaSZxdW90Oywg5b6u6L2v6ZuF6buRLCBBcmlhbCIgc2l6ZT0iMTNweCIgd2VpZ2h0PSI0MDAiIGZvbnQtc3R5bGU9IiIgb3BhY2l0eT0iMSIgeT0iMTAuODc1IiB0cmFuc2Zvcm09InJvdGF0ZSgwKSI+PHRzcGFuIGlkPSJTdmdqc1RzcGFuMTAzNSIgZHk9IjE2LjI1IiB4PSIzMS41Ij48dHNwYW4gaWQ9IlN2Z2pzVHNwYW4xMDM2IiBzdHlsZT0iIj5qcHM8L3RzcGFuPjwvdHNwYW4+PC90ZXh0PjwvZz48L2c+PGcgaWQ9IlN2Z2pzRzEwMzciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUzMiwxNTQpIj48cGF0aCBpZD0iU3ZnanNQYXRoMTAzOCIgZD0iTSAwIDBMIDYzIDBMIDYzIDQzTCAwIDQzWiIgc3Ryb2tlPSJyZ2JhKDMzLDQxLDQ4LDEpIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbC1vcGFjaXR5PSIxIiBmaWxsPSIjZmZmNzYwIj48L3BhdGg+PGcgaWQ9IlN2Z2pzRzEwMzkiPjx0ZXh0IGlkPSJTdmdqc1RleHQxMDQwIiBmb250LWZhbWlseT0iJnF1b3Q7TWljcm9zb2Z0IFlhSGVpJnF1b3Q7LCDlvq7ova/pm4Xpu5EsIEFyaWFsIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjEzcHgiIHdpZHRoPSI0M3B4IiBmaWxsPSIjMzIzMjMyIiBmb250LXdlaWdodD0iNDAwIiBhbGlnbj0ibWlkZGxlIiBsaW5lSGVpZ2h0PSIxMjUlIiBhbmNob3I9Im1pZGRsZSIgZmFtaWx5PSImcXVvdDtNaWNyb3NvZnQgWWFIZWkmcXVvdDssIOW+rui9r+mbhem7kSwgQXJpYWwiIHNpemU9IjEzcHgiIHdlaWdodD0iNDAwIiBmb250LXN0eWxlPSIiIG9wYWNpdHk9IjEiIHk9IjEwLjg3NSIgdHJhbnNmb3JtPSJyb3RhdGUoMCkiPjx0c3BhbiBpZD0iU3ZnanNUc3BhbjEwNDEiIGR5PSIxNi4yNSIgeD0iMzEuNSI+PHRzcGFuIGlkPSJTdmdqc1RzcGFuMTA0MiIgc3R5bGU9IiI+anN0YXQ8L3RzcGFuPjwvdHNwYW4+PC90ZXh0PjwvZz48L2c+PGcgaWQ9IlN2Z2pzRzEwNDMiPjxwYXRoIGlkPSJTdmdqc1BhdGgxMDQ0IiBkPSJNMjE1LjcgMTc1LjVMMzExIDE3NS41TDMxMSAxNzUuNUw0MDYuMjk5OTk5OTk5OTk5OTUgMTc1LjUiIHN0cm9rZT0iIzMyMzIzMiIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiIG1hcmtlci1zdGFydD0idXJsKCNTdmdqc01hcmtlcjEwNDUpIiBtYXJrZXItZW5kPSJ1cmwoI1N2Z2pzTWFya2VyMTA0NykiPjwvcGF0aD48L2c+PGcgaWQ9IlN2Z2pzRzEwNDkiPjwvZz48L3N2Zz4=">
+<meta property="article:published_time" content="2020-12-02T01:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-02T01:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="JVM下篇：性能监控与调优篇">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/resize,l_1200,m_lfit.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/","path":"article/2020/12/02-JVM监控及诊断工具-命令行篇/","title":"02-JVM监控及诊断工具-命令行篇"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>02-JVM监控及诊断工具-命令行篇 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%B7%A5%E5%85%B7"><span class="nav-number">1.1.</span> <span class="nav-text">简单命令行工具</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#jps-%E6%9F%A5%E7%9C%8B%E6%AD%A3%E5%9C%A8%E8%BF%90%E8%A1%8C%E7%9A%84Java%E8%BF%9B%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">jps 查看正在运行的Java进程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95"><span class="nav-number">2.1.</span> <span class="nav-text">测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95"><span class="nav-number">2.2.</span> <span class="nav-text">基本语法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#options-%E5%8F%82%E6%95%B0"><span class="nav-number">2.2.1.</span> <span class="nav-text">options 参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#hostid-%E5%8F%82%E6%95%B0"><span class="nav-number">2.2.2.</span> <span class="nav-text">hostid 参数</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#jstat-%E6%9F%A5%E7%9C%8BJVM%E7%BB%9F%E8%AE%A1%E4%BF%A1%E6%81%AF"><span class="nav-number">3.</span> <span class="nav-text">jstat 查看JVM统计信息</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95-1"><span class="nav-number">3.1.</span> <span class="nav-text">基本语法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#options-%E5%8F%82%E6%95%B0-1"><span class="nav-number">3.1.1.</span> <span class="nav-text">options 参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#interval%E5%8F%82%E6%95%B0"><span class="nav-number">3.1.2.</span> <span class="nav-text">interval参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#count%E5%8F%82%E6%95%B0"><span class="nav-number">3.1.3.</span> <span class="nav-text">count参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#t%E5%8F%82%E6%95%B0"><span class="nav-number">3.1.4.</span> <span class="nav-text">-t参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#h%E5%8F%82%E6%95%B0"><span class="nav-number">3.1.5.</span> <span class="nav-text">-h参数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A5%E5%85%85"><span class="nav-number">3.2.</span> <span class="nav-text">补充</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#jinfo-%E5%AE%9E%E6%97%B6%E6%9F%A5%E7%9C%8B%E5%92%8C%E4%BF%AE%E6%94%B9JVM%E9%85%8D%E7%BD%AE%E5%8F%82%E6%95%B0"><span class="nav-number">4.</span> <span class="nav-text">jinfo 实时查看和修改JVM配置参数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95"><span class="nav-number">4.1.</span> <span class="nav-text">基本用法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B"><span class="nav-number">4.1.1.</span> <span class="nav-text">查看</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#jinfo-sysprops"><span class="nav-number">4.1.1.1.</span> <span class="nav-text">jinfo -sysprops &lt;pid&gt;</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#jinfo-flags"><span class="nav-number">4.1.1.2.</span> <span class="nav-text">jinfo -flags &lt;pid&gt;</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#jinfo-flag"><span class="nav-number">4.1.1.3.</span> <span class="nav-text">jinfo -flag &lt;参数名称&gt; &lt;pid&gt;</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9"><span class="nav-number">4.1.2.</span> <span class="nav-text">修改</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%92%88%E5%AF%B9boolean%E7%B1%BB%E5%9E%8B"><span class="nav-number">4.1.2.1.</span> <span class="nav-text">针对boolean类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%92%88%E5%AF%B9%E9%9D%9Eboolean%E7%B1%BB%E5%9E%8B"><span class="nav-number">4.1.2.2.</span> <span class="nav-text">针对非boolean类型</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8B%93%E5%B1%95"><span class="nav-number">4.2.</span> <span class="nav-text">拓展</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#java-XX-PrintFlagsInitial"><span class="nav-number">4.2.1.</span> <span class="nav-text">java -XX:+PrintFlagsInitial</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#java-XX-PrintFlagsFinal"><span class="nav-number">4.2.2.</span> <span class="nav-text">java -XX:+PrintFlagsFinal</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#java-%E5%8F%82%E6%95%B0%E5%90%8D%E7%A7%B0-PrintCommandLineFlags"><span class="nav-number">4.2.3.</span> <span class="nav-text">java -参数名称:+PrintCommandLineFlags</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#jmap-%E5%AF%BC%E5%87%BA%E5%86%85%E5%AD%98%E6%98%A0%E5%83%8F%E6%96%87%E4%BB%B6-%E5%86%85%E5%AD%98%E4%BD%BF%E7%94%A8%E6%83%85%E5%86%B5"><span class="nav-number">5.</span> <span class="nav-text">jmap 导出内存映像文件&amp;内存使用情况</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95-2"><span class="nav-number">5.1.</span> <span class="nav-text">基本语法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A81%EF%BC%9A%E5%AF%BC%E5%87%BA%E5%86%85%E5%AD%98%E6%98%A0%E5%83%8F%E6%96%87%E4%BB%B6"><span class="nav-number">5.2.</span> <span class="nav-text">使用1：导出内存映像文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%8B%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">5.2.1.</span> <span class="nav-text">手动方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">5.2.2.</span> <span class="nav-text">自动方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A82%EF%BC%9A%E6%98%BE%E7%A4%BA%E5%A0%86%E5%86%85%E5%AD%98%E7%9B%B8%E5%85%B3%E4%BF%A1%E6%81%AF"><span class="nav-number">5.3.</span> <span class="nav-text">使用2：显示堆内存相关信息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A83%EF%BC%9A%E5%85%B6%E4%BB%96%E4%BD%9C%E7%94%A8"><span class="nav-number">5.4.</span> <span class="nav-text">使用3：其他作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">5.5.</span> <span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#jhat-JDK%E8%87%AA%E5%B8%A6%E5%A0%86%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7"><span class="nav-number">6.</span> <span class="nav-text">jhat JDK自带堆分析工具</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#jstack-%E6%89%93%E5%8D%B0JVM%E4%B8%AD%E7%BA%BF%E7%A8%8B%E5%BF%AB%E7%85%A7"><span class="nav-number">7.</span> <span class="nav-text">jstack 打印JVM中线程快照</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95-3"><span class="nav-number">7.1.</span> <span class="nav-text">基本语法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Options"><span class="nav-number">7.2.</span> <span class="nav-text">Options</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#jcmd-%E5%A4%9A%E5%8A%9F%E8%83%BD%E5%91%BD%E4%BB%A4%E8%A1%8C"><span class="nav-number">8.</span> <span class="nav-text">jcmd 多功能命令行</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95-4"><span class="nav-number">8.1.</span> <span class="nav-text">基本语法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#jstatd-%E8%BF%9C%E7%A8%8B%E4%B8%BB%E6%9C%BA%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86"><span class="nav-number">9.</span> <span class="nav-text">jstatd 远程主机信息收集</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="02-JVM监控及诊断工具-命令行篇 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          02-JVM监控及诊断工具-命令行篇
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-12-02 09:00:00" itemprop="dateCreated datePublished" datetime="2020-12-02T09:00:00+08:00">2020-12-02</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>JVM监控及诊断工具-命令行篇</p>
+<span id="more"></span>
+
+<h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>性能诊断是软件工程师在日常工作中需要经常面对和解决的问题，在用户体验至上的今天，解决好应用的性能问题能带来非常大的收益。</p>
+<p>Java 作为最流行的编程语言之一，其应用性能诊断一直受到业界广泛关注。可能造成 Java 应用出现性能问题的因素非常多，例如线程控制、磁盘读写、数据库访问、网络I&#x2F;O、垃圾收集等。想要定位这些问题，一款优秀的性能诊断工具必不可少。</p>
+<p><strong>体会1：使用数据说明问题，使用知识分析问题，使用工具处理问题。</strong><br><strong>体会2：无监控、不调优！</strong></p>
+<h2 id="简单命令行工具"><a href="#简单命令行工具" class="headerlink" title="简单命令行工具"></a>简单命令行工具</h2><p>在我们刚接触java学习的时候，大家肯定最先了解的两个命令就是javac，java，那么除此之外，还有没有其他的命令可以供我们使用呢？</p>
+<p>我们进入到安装jdk的bin目录，发现还有一系列辅助工具。这些辅助工具用来获取目标 JVM 不同方面、不同层次的信息，帮助开发人员很好地解决Java应用程序的一些疑难杂症。</p>
+<p><img src="/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/resize,l_1200,m_lfit.png" alt="img"></p>
+<blockquote>
+<p>不同版本JDK可能会有所差异，以上为JDK 11 中的工具，JDK 8 中的工具在 JDK 11 中有的已被删除。</p>
+</blockquote>
+<p>官方源码地址：<a target="_blank" rel="noopener" href="http://hg.openjdk.java.net/jdk/jdk11/file/1ddf9a99e4ad/src/jdk.jcmd/share/classes/sun/tools">http://hg.openjdk.java.net/jdk/jdk11/file/1ddf9a99e4ad/src/jdk.jcmd/share/classes/sun/tools</a></p>
+<h1 id="jps-查看正在运行的Java进程"><a href="#jps-查看正在运行的Java进程" class="headerlink" title="jps 查看正在运行的Java进程"></a><code>jps</code> 查看正在运行的Java进程</h1><p><strong><code>jps</code>(Java Process Status):</strong></p>
+<p>显示指定系统内所有的HotSpot虚拟机进程（查看虚拟机进程信息），可用于查询正在运行的虚拟机进程。</p>
+<p>说明：对于本地虚拟机进程来说，进程的本地虚拟机ID与操作系统的进程ID是一致的，是唯一的。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jps -h</span><br><span class="line">usage: jps [--help]</span><br><span class="line">       jps [-q] [-mlvV] [&lt;hostid&gt;]</span><br><span class="line"></span><br><span class="line">Definitions:</span><br><span class="line">    &lt;hostid&gt;:      &lt;hostname&gt;[:&lt;port&gt;]</span><br><span class="line">    -? -h --help -help: Print this help message and exit.</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jps</span><br><span class="line">27600</span><br><span class="line">32972 Jps</span><br><span class="line"></span><br><span class="line">C:\Users\Administrator&gt;jps -l</span><br><span class="line">27600</span><br><span class="line">28536 jdk.jcmd/sun.tools.jps.Jps</span><br><span class="line"></span><br><span class="line">C:\Users\Administrator&gt;jps -lv</span><br><span class="line">27600  exit -XX:ErrorFile=C:\Users\Administrator\\java_error_in_webstorm64_%p.log -XX:HeapDumpPath=C:\Users\Administrator\\java_error_in_webstorm64.hprof -Xms128m -Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -XX:-OmitStackTraceInFastThrow -XX:+IgnoreUnrecognizedVMOptions -ea -Dsun.io.useCanonCaches=false -Dsun.java2d.metal=true -Djbr.catch.SIGABRT=true -Djdk.http.auth.tunneling.disabledSchemes=&quot;&quot; -Djdk.attach.allowAttachSelf=true -Djdk.module.illegalAccess.silent=true -Dkotlinx.coroutines.debug=off -XX:CICompilerCount=2 -XX:ReservedCodeCacheSize=512m -XX:CompileCommand=exclude,com/intellij/openapi/vfs/impl/FilePartNodeRoot,trieDescend -XX:SoftRefLRUPolicyMSPerMB=50 --add-opens=java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED --add-opens=java.base/jdk.internal.org.objectweb.asm.tree=ALL-UNNAMED -javaagent:D:/Crack/jetbra/ja-netfilter.jar -Djb.vmOptionsFile=C:\Users\Administrator\AppData\Roaming\\JetBrains\\WebStorm2024.1\webstorm64.exe.vmoptions -Djava.system.class.loader=com.intellij.util.lang.PathClassLoader -Dide</span><br><span class="line">35532 jdk.jcmd/sun.tools.jps.Jps -Denv.class.path=D:\Java\jdk-17.0.8\lib;.; -Dapplication.home=D:\Java\jdk-17.0.8 -Xms8m -Djdk.module.main=jdk.jcmd</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="基本语法"><a href="#基本语法" class="headerlink" title="基本语法"></a>基本语法</h2><h3 id="options-参数"><a href="#options-参数" class="headerlink" title="options 参数"></a>options 参数</h3><ul>
+<li><code>-q</code>：仅仅显示LVMID（local virtual machine id），即本地虚拟机唯一id。不显示主类的名称等</li>
+<li><code>-l</code>：输出应用程序主类的全类名 或 如果进程执行的是jar包，则输出jar完整路径</li>
+<li><code>-m</code>：输出虚拟机进程启动时传递给主类<code>main()</code>的参数</li>
+<li><code>-v</code>：列出虚拟机进程启动时的JVM参数。比如：<code>-Xms20m -Xmx50m</code>是启动程序指定的jvm参数。</li>
+</ul>
+<p>说明：以上参数可以综合使用。</p>
+<p>补充：如果某 Java 进程关闭了默认开启的<code>UsePerfData</code>参数（即使用参数<code>-XX：-UsePerfData</code>），那么jps命令（以及下面介绍的jstat）将无法探知该Java 进程。</p>
+<blockquote>
+<p>[!NOTE]</p>
+<p><code>jps -l -m</code> 等价于 <code>jps -lm</code></p>
+</blockquote>
+<h3 id="hostid-参数"><a href="#hostid-参数" class="headerlink" title="hostid 参数"></a>hostid 参数</h3><p>RMI注册表中注册的主机名。如果想要远程监控主机上的 java 程序，需要安装 jstatd。</p>
+<p>对于具有更严格的安全实践的网络场所而言，可能使用一个自定义的策略文件来显示对特定的可信主机或网络的访问，尽管<strong>这种技术容易受到IP地址欺诈攻击</strong>。</p>
+<p>如果安全问题无法使用一个定制的策略文件来处理，那么最安全的操作是不运行jstatd服务器，而是在本地使用jstat和jps工具。</p>
+<h1 id="jstat-查看JVM统计信息"><a href="#jstat-查看JVM统计信息" class="headerlink" title="jstat 查看JVM统计信息"></a><code>jstat</code> 查看JVM统计信息</h1><p><code>jstat</code>（JVM Statistics Monitoring Tool）：用于监视虚拟机各种运行状态信息的命令行工具。它可以显示本地或者远程虚拟机进程中的类装载、内存、垃圾收集、JIT编译等运行数据。在没有GUI图形界面，只提供了纯文本控制台环境的服务器上，它将是运行期定位虚拟机性能问题的首选工具。常用于检测垃圾回收问题以及内存泄漏问题。</p>
+<p>官方文档：<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/technotes/tools/unix/jstat.html">https://docs.oracle.com/javase/8/docs/technotes/tools/unix/jstat.html</a></p>
+<h2 id="基本语法-1"><a href="#基本语法-1" class="headerlink" title="基本语法"></a>基本语法</h2><p>基本使用语法为：<code>jstat -&lt;option&gt; [-t] [-h&lt;lines&gt;] &lt;vmid&gt; [&lt;interval&gt; [&lt;count&gt;]]</code></p>
+<p>查看命令相关参数：<code>jstat -h</code> 或 <code>jstat -help</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jstat -h</span><br><span class="line">Usage: jstat --help|-options</span><br><span class="line">       jstat -&lt;option&gt; [-t] [-h&lt;lines&gt;] &lt;vmid&gt; [&lt;interval&gt; [&lt;count&gt;]]</span><br><span class="line"></span><br><span class="line">Definitions:</span><br><span class="line">  &lt;option&gt;      An option reported by the -options option</span><br><span class="line">  &lt;vmid&gt;        Virtual Machine Identifier. A vmid takes the following form:</span><br><span class="line">                     &lt;lvmid&gt;[@&lt;hostname&gt;[:&lt;port&gt;]]</span><br><span class="line">                Where &lt;lvmid&gt; is the local vm identifier for the target</span><br><span class="line">                Java virtual machine, typically a process id; &lt;hostname&gt; is</span><br><span class="line">                the name of the host running the target Java virtual machine;</span><br><span class="line">                and &lt;port&gt; is the port number for the rmiregistry on the</span><br><span class="line">                target host. See the jvmstat documentation for a more complete</span><br><span class="line">                description of the Virtual Machine Identifier.</span><br><span class="line">  &lt;lines&gt;       Number of samples between header lines.</span><br><span class="line">  &lt;interval&gt;    Sampling interval. The following forms are allowed:</span><br><span class="line">                    &lt;n&gt;[&quot;ms&quot;|&quot;s&quot;]</span><br><span class="line">                Where &lt;n&gt; is an integer and the suffix specifies the units as</span><br><span class="line">                milliseconds(&quot;ms&quot;) or seconds(&quot;s&quot;). The default units are &quot;ms&quot;.</span><br><span class="line">  &lt;count&gt;       Number of samples to take before terminating.</span><br><span class="line">  -J&lt;flag&gt;      Pass &lt;flag&gt; directly to the runtime system.</span><br><span class="line">  -? -h --help  Prints this help message.</span><br><span class="line">  -help         Prints this help message.</span><br></pre></td></tr></table></figure>
+
+
+
+<p>其中<code>&lt;vmid&gt;</code>是进程id号，也就是jps之后看到的前面的号码，如下：</p>
+<p><img src="/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/resize,l_1200,m_lfit-1733382514065-1.png" alt="img"></p>
+<h3 id="options-参数-1"><a href="#options-参数-1" class="headerlink" title="options 参数"></a>options 参数</h3><p>选项option可以由以下值构成。</p>
+<p>类装载相关的：</p>
+<ul>
+<li><code>-class</code>：显示<code>ClassLoader</code>的相关信息：类的装载、卸载数量、总空间、类装载所消耗的时间等</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jstat -class 37464</span><br><span class="line">Loaded   Bytes  Unloaded  Bytes     Time</span><br><span class="line">  6969 13231.4         0    0.0      0.84</span><br></pre></td></tr></table></figure>
+
+
+
+<p>垃圾回收相关的：</p>
+<ul>
+<li><code>-gc</code>：显示与GC相关的堆信息。包括Eden区、两个Survivor区、老年代、永久代等的容量、已用空间、GC时间合计等信息。</li>
+<li><code>-gccapacity</code>：显示内容与-gc基本相同，但输出主要关注Java堆各个区域使用到的最大、最小空间。</li>
+<li><code>-gcutil</code>：显示内容与-gc基本相同，但输出主要关注已使用空间占总空间的百分比。</li>
+<li><code>-gccause</code>：与-gcutil功能一样，但是会额外输出导致最后一次或当前正在发生的GC产生的原因。</li>
+<li><code>-gcnew</code>：显示新生代GC状况</li>
+<li><code>-gcnewcapacity</code>：显示内容与-gcnew基本相同，输出主要关注使用到的最大、最小空间</li>
+<li><code>-geold</code>：显示老年代GC状况</li>
+<li><code>-gcoldcapacity</code>：显示内容与-gcold基本相同，输出主要关注使用到的最大、最小空间</li>
+<li><code>-gcpermcapacity</code>：显示永久代使用到的最大、最小空间。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jstat -gc 37464</span><br><span class="line">    S0C         S1C         S0U         S1U          EC           EU           OC           OU          MC         MU       CCSC      CCSU     YGC     YGCT     FGC    FGCT     CGC    CGCT       GCT</span><br><span class="line">    0.0      8192.0         0.0      5046.9      16384.0          0.0      57344.0       9276.5    27840.0    27353.7    3968.0    3751.7      4     0.022     0     0.000     2     0.001     0.023</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>新生代相关<ul>
+<li>S0C是第一个幸存者区的大小（字节）</li>
+<li>S1C是第二个幸存者区的大小（字节）</li>
+<li>S0U是第一个幸存者区已使用的大小（字节）</li>
+<li>S1U是第二个幸存者区已使用的大小（字节）</li>
+<li>EC是Eden空间的大小（字节）</li>
+<li>EU是Eden空间已使用大小（字节）</li>
+</ul>
+</li>
+<li>老年代相关<ul>
+<li>OC是老年代的大小（字节）</li>
+<li>OU是老年代已使用的大小（字节）</li>
+</ul>
+</li>
+<li>方法区（元空间）相关<ul>
+<li>MC是方法区的大小</li>
+<li>MU是方法区已使用的大小</li>
+<li>CCSC是压缩类空间的大小</li>
+<li>CCSU是压缩类空间已使用的大小</li>
+</ul>
+</li>
+<li>其他<ul>
+<li>YGC是从应用程序启动到采样时young gc的次数</li>
+<li>YGCT是指从应用程序启动到采样时young gc消耗时间（秒）</li>
+<li>FGC是从应用程序启动到采样时full gc的次数</li>
+<li>FGCT是从应用程序启动到采样时的full gc的消耗时间（秒）</li>
+<li>GCT是从应用程序启动到采样时gc的总时间</li>
+</ul>
+</li>
+</ul>
+<p>JIT相关的：</p>
+<ul>
+<li><code>-compiler</code>：显示JIT编译器编译过的方法、耗时等信息</li>
+<li><code>-printcompilation</code>：输出已经被JIT编译的方法</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jstat -compiler 37464</span><br><span class="line">Compiled Failed Invalid   Time   FailedType FailedMethod</span><br><span class="line">    3555      1       0     0.52          1 java/util/HashMap putVal</span><br><span class="line">    </span><br><span class="line">C:\Users\Administrator&gt;jstat -printcompilation 37464</span><br><span class="line">Compiled  Size  Type Method</span><br><span class="line">    3555     38    1 sun/nio/ch/SelectorImpl keys</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="interval参数"><a href="#interval参数" class="headerlink" title="interval参数"></a>interval参数</h3><p>用于指定输出统计数据的周期，单位为毫秒。即：查询间隔</p>
+<h3 id="count参数"><a href="#count参数" class="headerlink" title="count参数"></a>count参数</h3><p>用于指定查询的总次数</p>
+<h3 id="t参数"><a href="#t参数" class="headerlink" title="-t参数"></a>-t参数</h3><p>可以在输出信息前加上一个Timestamp列，显示程序的运行时间。单位：秒</p>
+<p><strong>经验</strong></p>
+<p>我们可以比较 Java 进程的启动时间以及总 GC 时间 （GCT 列），或量词测量的间隔时间以及总 GC 时间的增量，来得出 GC 时间占运行时间的比例。</p>
+<p>如果该比例超过 20%，则说明目前堆的压力较大；如果比例超过 90%，则说明堆里几乎没有可用空间，随时都可能抛出 OOM 异常。</p>
+<p>我们执行<code>jstat -gc -t 13152 1000 10</code>，这代表1秒打印出1行，一共10行，-t代表打印出Timestamp总运行时间，结果如下所示：</p>
+<p><img src="/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/resize,l_1200,m_lfit-1733382514065-2.png" alt="img"></p>
+<p>上方红色框框中代表Timestamp，而蓝色框框中代表垃圾回收时间，单位都是秒，如果让红色框框中的某两个值相减，假设这个值是n1<em>n</em>1，然后让对应行的蓝色框框中的另外两个值相减，假设这个值是n2<em>n</em>2，之后让 n2&#x2F;n1<em>n</em>2&#x2F;<em>n</em>1，得出的差值就是上述所说的GC时间占运行时间的比例</p>
+<p>虽然这种方式比较繁琐，但是在项目部署之后就需要使用命令行去看了，就没有可视化界面了，所以这种方式也要会</p>
+<h3 id="h参数"><a href="#h参数" class="headerlink" title="-h参数"></a>-h参数</h3><p>可以在周期性数据输出时，输出多少行数据后输出一个表头信息</p>
+<h2 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h2><p>jstat还可以用来判断是否出现内存泄漏。</p>
+<ul>
+<li><strong>第1步：</strong><br>在长时间运行的 Java 程序中，我们可以运行jstat命令连续获取多行性能数据，并取这几行数据中 OU 列（即已占用的老年代内存）的最小值。</li>
+<li><strong>第2步：</strong><br>然后，我们每隔一段较长的时间重复一次上述操作，来获得多组 OU 最小值。如果这些值呈上涨趋势，则说明该 Java 程序的老年代内存已使用量在不断上涨，这意味着无法回收的对象在不断增加，因此很有可能存在内存泄漏。</li>
+</ul>
+<h1 id="jinfo-实时查看和修改JVM配置参数"><a href="#jinfo-实时查看和修改JVM配置参数" class="headerlink" title="jinfo 实时查看和修改JVM配置参数"></a><code>jinfo</code> 实时查看和修改JVM配置参数</h1><p><strong><code>jinfo</code> (Configuration Info for Java)</strong></p>
+<p>查看虚拟机配置参数信息，也可用于调整虚拟机的配置参数。</p>
+<p>在很多情况卡，Java应用程序不会指定所有的Java虚拟机参数。而此时，开发人员可能不知道某一个具体的Java虚拟机参数的默认值。在这种情况下，可能需要通过查找文档获取某个参数的默认值。这个查找过程可能是非常艰难的。但有了jinfo工具，开发人员可以很方便地找到Java虚拟机参数的当前值。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jinfo</span><br><span class="line">Usage:</span><br><span class="line">    jinfo &lt;option&gt; &lt;pid&gt;</span><br><span class="line">       (to connect to a running process)</span><br><span class="line"></span><br><span class="line">where &lt;option&gt; is one of:</span><br><span class="line">    -flag &lt;name&gt;         to print the value of the named VM flag</span><br><span class="line">    -flag [+|-]&lt;name&gt;    to enable or disable the named VM flag</span><br><span class="line">    -flag &lt;name&gt;=&lt;value&gt; to set the named VM flag to the given value</span><br><span class="line">    -flags               to print VM flags</span><br><span class="line">    -sysprops            to print Java system properties</span><br><span class="line">    &lt;no option&gt;          to print both VM flags and system properties</span><br><span class="line">    -? | -h | --help | -help to print this help message</span><br></pre></td></tr></table></figure>
+
+
+
+<p>官方帮助文档：<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/tools/jinfo.html">https://docs.oracle.com/en/java/javase/11/tools/jinfo.html</a></p>
+<h2 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h2><h3 id="查看"><a href="#查看" class="headerlink" title="查看"></a>查看</h3><h4 id="jinfo-sysprops"><a href="#jinfo-sysprops" class="headerlink" title="jinfo -sysprops &lt;pid&gt;"></a><code>jinfo -sysprops &lt;pid&gt;</code></h4><p>可以查看由System.getProperties()取得的参数</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jinfo -sysprops 37464</span><br><span class="line">Java System Properties:</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">Wed May 22 22:58:04 CST 2024</span></span><br><span class="line">java.specification.version=17</span><br><span class="line">sun.cpu.isalist=amd64</span><br><span class="line">sun.jnu.encoding=GBK</span><br><span class="line">java.class.path=H\:\\IdeaProjects\\spring-webmvc-demo\\target\\classes;G\:\\Maven\\repo\\org\\springframework\\boot\\spring-boot-starter-web\\3.2.3\\spring-boot-starter-web-3.2.3.jar;G\:\\Maven\\repo\\org\\springframework\\boot\\spring-boot-starter\\3.2.3\\spring-boot-starter-3.2.3.jar;G\:\\Maven\\repo\\org\\springframework\\boot\\spring-boot\\3.2.3\\spring-boot-3.2.3.jar;G\:\\Maven\\repo\\org\\springframework\\boot\\spring-boot-autoconfigure\\3.2.3\\spring-boot-autoconfigure-3.2.3.jar;G\:\\Maven\\repo\\org\\springframework\\boot\\spring-boot-starter-logging\\3.2.3\\spring-boot-starter-logging-3.2.3.jar;G\:\\Maven\\repo\\ch\\qos\\logback\\logback-classic\\1.4.14\\logback-classic-1.4.14.jar;G\:\\Maven\\repo\\ch\\qos\\logback\\logback-core\\1.4.14\\logback-core-1.4.14.jar;G\:\\Maven\\repo\\org\\apache\\logging\\log4j\\log4j-to-slf4j\\2.21.1\\log4j-to-slf4j-2.21.1.jar;G\:\\Maven\\repo\\org\\apache\\logging\\log4j\\log4j-api\\2.21.1\\log4j-api-2.21.1.jar;G\:\\Maven\\repo\\org\\slf4j\\jul-to-slf4j\\2.0.12\\jul-to-slf4j-2.0.12.jar;G\:\\Maven\\repo\\jakarta\\annotation\\jakarta.annotation-api\\2.1.1\\jakarta.annotation-api-2.1.1.jar;G\:\\Maven\\repo\\org\\yaml\\snakeyaml\\2.2\\snakeyaml-2.2.jar;G\:\\Maven\\repo\\org\\springframework\\boot\\spring-boot-starter-json\\3.2.3\\spring-boot-starter-json-3.2.3.jar;G\:\\Maven\\repo\\com\\fasterxml\\jackson\\core\\jackson-databind\\2.15.4\\jackson-databind-2.15.4.jar;G\:\\Maven\\repo\\com\\fasterxml\\jackson\\core\\jackson-annotations\\2.15.4\\jackson-annotations-2.15.4.jar;G\:\\Maven\\repo\\com\\fasterxml\\jackson\\core\\jackson-core\\2.15.4\\jackson-core-2.15.4.jar;G\:\\Maven\\repo\\com\\fasterxml\\jackson\\datatype\\jackson-datatype-jdk8\\2.15.4\\jackson-datatype-jdk8-2.15.4.jar;G\:\\Maven\\repo\\com\\fasterxml\\jackson\\datatype\\jackson-datatype-jsr310\\2.15.4\\jackson-datatype-jsr310-2.15.4.jar;G\:\\Maven\\repo\\com\\fasterxml\\jackson\\module\\jackson-module-parameter-names\\2.15.4\\jackson-module-parameter-names-2.15.4.jar;G\:\\Maven\\repo\\org\\springframework\\boot\\spring-boot-starter-tomcat\\3.2.3\\spring-boot-starter-tomcat-3.2.3.jar;G\:\\Maven\\repo\\org\\apache\\tomcat\\embed\\tomcat-embed-core\\10.1.19\\tomcat-embed-core-10.1.19.jar;G\:\\Maven\\repo\\org\\apache\\tomcat\\embed\\tomcat-embed-el\\10.1.19\\tomcat-embed-el-10.1.19.jar;G\:\\Maven\\repo\\org\\apache\\tomcat\\embed\\tomcat-embed-websocket\\10.1.19\\tomcat-embed-websocket-10.1.19.jar;G\:\\Maven\\repo\\org\\springframework\\spring-web\\6.1.4\\spring-web-6.1.4.jar;G\:\\Maven\\repo\\org\\springframework\\spring-beans\\6.1.4\\spring-beans-6.1.4.jar;G\:\\Maven\\repo\\io\\micrometer\\micrometer-observation\\1.12.3\\micrometer-observation-1.12.3.jar;G\:\\Maven\\repo\\io\\micrometer\\micrometer-commons\\1.12.3\\micrometer-commons-1.12.3.jar;G\:\\Maven\\repo\\org\\springframework\\spring-webmvc\\6.1.4\\spring-webmvc-6.1.4.jar;G\:\\Maven\\repo\\org\\springframework\\spring-aop\\6.1.4\\spring-aop-6.1.4.jar;G\:\\Maven\\repo\\org\\springframework\\spring-context\\6.1.4\\spring-context-6.1.4.jar;G\:\\Maven\\repo\\org\\springframework\\spring-expression\\6.1.4\\spring-expression-6.1.4.jar;G\:\\Maven\\repo\\org\\springframework\\boot\\spring-boot-configuration-processor\\3.2.3\\spring-boot-configuration-processor-3.2.3.jar;G\:\\Maven\\repo\\org\\projectlombok\\lombok\\1.18.30\\lombok-1.18.30.jar;G\:\\Maven\\repo\\org\\slf4j\\slf4j-api\\2.0.12\\slf4j-api-2.0.12.jar;G\:\\Maven\\repo\\org\\springframework\\spring-core\\6.1.4\\spring-core-6.1.4.jar;G\:\\Maven\\repo\\org\\springframework\\spring-jcl\\6.1.4\\spring-jcl-6.1.4.jar</span><br><span class="line">java.vm.vendor=Oracle Corporation</span><br><span class="line">sun.arch.data.model=64</span><br><span class="line">user.variant=</span><br><span class="line">catalina.useNaming=false</span><br><span class="line">java.vendor.url=https\://java.oracle.com/</span><br><span class="line">user.timezone=Asia/Shanghai</span><br><span class="line">os.name=Windows 11</span><br><span class="line">java.vm.specification.version=17</span><br><span class="line">sun.java.launcher=SUN_STANDARD</span><br><span class="line">user.country=CN</span><br><span class="line">sun.boot.library.path=D\:\\Java\\jdk-17.0.8\\bin</span><br><span class="line">sun.java.command=org.depsea.springwebmvcdemo.SpringWebmvcDemoApplication</span><br><span class="line">spring.application.admin.enabled=true</span><br><span class="line">com.sun.management.jmxremote=</span><br><span class="line">jdk.debug=release</span><br><span class="line">spring.liveBeansView.mbeanDomain=</span><br><span class="line">sun.cpu.endian=little</span><br><span class="line">user.home=C\:\\Users\\Administrator</span><br><span class="line">user.language=zh</span><br><span class="line">java.specification.vendor=Oracle Corporation</span><br><span class="line">java.version.date=2023-07-18</span><br><span class="line">java.home=D\:\\Java\\jdk-17.0.8</span><br><span class="line">spring.output.ansi.enabled=always</span><br><span class="line">file.separator=\\</span><br><span class="line">java.vm.compressedOopsMode=Zero based</span><br><span class="line">line.separator=\r\n</span><br><span class="line">java.vm.specification.vendor=Oracle Corporation</span><br><span class="line">java.specification.name=Java Platform API Specification</span><br><span class="line">FILE_LOG_CHARSET=UTF-8</span><br><span class="line">java.awt.headless=true</span><br><span class="line">user.script=</span><br><span class="line">sun.management.compiler=HotSpot 64-Bit Tiered Compilers</span><br><span class="line">java.runtime.version=17.0.8+9-LTS-211</span><br><span class="line">user.name=Administrator</span><br><span class="line">spring.jmx.enabled=true</span><br><span class="line">path.separator=;</span><br><span class="line">management.endpoints.jmx.exposure.include=*</span><br><span class="line">os.version=10.0</span><br><span class="line">java.runtime.name=Java(TM) SE Runtime Environment</span><br><span class="line">file.encoding=UTF-8</span><br><span class="line">java.vm.name=Java HotSpot(TM) 64-Bit Server VM</span><br><span class="line">java.vendor.url.bug=https\://bugreport.java.com/bugreport/</span><br><span class="line">java.io.tmpdir=C\:\\Users\\Administrator\\AppData\\Local\\Temp\\</span><br><span class="line">catalina.home=C\:\\Users\\Administrator\\AppData\\Local\\Temp\\tomcat.8080.12439771490002140328</span><br><span class="line">java.version=17.0.8</span><br><span class="line">user.dir=H\:\\IdeaProjects\\spring-webmvc-demo</span><br><span class="line">os.arch=amd64</span><br><span class="line">java.vm.specification.name=Java Virtual Machine Specification</span><br><span class="line">PID=37464</span><br><span class="line">sun.os.patch.level=</span><br><span class="line">CONSOLE_LOG_CHARSET=UTF-8</span><br><span class="line">catalina.base=C\:\\Users\\Administrator\\AppData\\Local\\Temp\\tomcat.8080.12439771490002140328</span><br><span class="line">native.encoding=GBK</span><br><span class="line">java.library.path=D\:\\Java\\jdk-17.0.8\\bin;C\:\\Windows\\Sun\\Java\\bin;C\:\\Windows\\system32;C\:\\Windows;C\:\\Program Files (x86)\\Common Files\\Intel\\Shared Libraries\\redist\\intel64\\compiler;D\:\\Program Files (x86)\\VMware\\VMware Workstation\\bin\\;C\:\\Windows\\system32;C\:\\Windows;C\:\\Windows\\System32\\Wbem;C\:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C\:\\Windows\\System32\\OpenSSH\\;C\:\\Program Files\\Wolfram Research\\WolframScript\\;D\:\\Program Files (x86)\\NetSarang\\Xshell 7\\;D\:\\Program Files (x86)\\NetSarang\\Xftp 7\\;D\:\\Program Files (x86)\\NetSarang\\Xmanager 7\\;D\:\\Program Files (x86)\\NetSarang\\Xlpd 7\\;D\:\\Java\\jdk-17.0.8\\bin;C\:\\Program Files\\Docker\\Docker\\resources\\bin;D\:\\ProgramData\\anaconda3;D\:\\ProgramData\\anaconda3\\Scripts;D\:\\ProgramData\\anaconda3\\condabin;D\:\\ProgramData\\anaconda3\\Library\\bin;D\:\\ProgramData\\anaconda3\\Library\\mingw-w64\\bin;D\:\\Program Files\\Git\\cmd;D\:\\Program Files\\netcat-win32-1.12;D\:\\Program Files\\MATLAB\\R2023a\\runtime\\win64;D\:\\Program Files\\MATLAB\\R2023a\\bin;D\:\\Program Files\\MiKTeX\\miktex\\bin\\x64\\;C\:\\Program Files\\Pandoc\\;C\:\\ProgramData\\chocolatey\\bin;D\:\\Program Files\\Go\\bin;D\:\\Program Files\\nodejs\\;;C\:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C\:\\Program Files\\NVIDIA Corporation\\NVIDIA NvDLISR;D\:\\Program Files\\Calibre2\\;C\:\\Users\\Administrator\\AppData\\Local\\Microsoft\\WindowsApps;;D\:\\Program Files\\JetBrains\\PyCharm 2023.1.3\\bin;;D\:\\Program Files\\JetBrains\\IntelliJ IDEA 2023.1.3\\bin;;D\:\\Program Files\\JetBrains\\WebStorm 2023.1.3\\bin;;D\:\\Program Files\\Microsoft VS Code\\bin;D\:\\Program Files\\Fiddler;D\:\\Program Files\\JetBrains\\DataSpell 2023.2\\bin;;D\:\\Program Files\\JetBrains\\Aqua 232.8660.199\\bin;;D\:\\Program Files\\JetBrains\\GoLand 2023.2\\bin;;C\:\\Users\\Administrator\\go\\bin;C\:\\Users\\Administrator\\AppData\\Roaming\\npm;.</span><br><span class="line">java.vm.info=mixed mode, emulated-client, sharing</span><br><span class="line">java.vendor=Oracle Corporation</span><br><span class="line">java.vm.version=17.0.8+9-LTS-211</span><br><span class="line">java.rmi.server.randomIDs=true</span><br><span class="line">sun.io.unicode.encoding=UnicodeLittle</span><br><span class="line">java.class.version=61.0</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="jinfo-flags"><a href="#jinfo-flags" class="headerlink" title="jinfo -flags &lt;pid&gt;"></a><code>jinfo -flags &lt;pid&gt;</code></h4><p>查看曾经赋过值的一些参数</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jinfo -flags 37464</span><br><span class="line">VM Flags:</span><br><span class="line">-XX:CICompilerCount=15 -XX:ConcGCThreads=6 -XX:G1ConcRefinementThreads=23 -XX:G1EagerReclaimRemSetThreshold=64 -XX:G1HeapRegionSize=8388608 -XX:GCDrainStackTargetSize=64 -XX:InitialHeapSize=1073741824 -XX:+ManagementServer -XX:MarkStackSize=4194304 -XX:MaxHeapSize=17137926144 -XX:MaxNewSize=10276044800 -XX:MinHeapDeltaBytes=8388608 -XX:MinHeapSize=8388608 -XX:NonProfiledCodeHeapSize=0 -XX:-ProfileInterpreter -XX:ProfiledCodeHeapSize=0 -XX:SoftMaxHeapSize=17137926144 -XX:TieredStopAtLevel=1 -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseG1GC -XX:-UseLargePagesIndividualAllocation</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="jinfo-flag"><a href="#jinfo-flag" class="headerlink" title="jinfo -flag &lt;参数名称&gt; &lt;pid&gt;"></a><code>jinfo -flag &lt;参数名称&gt; &lt;pid&gt;</code></h4><p>查看某个java进程的具体参数信息</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jinfo -flag UseG1GC 37464</span><br><span class="line">-XX:+UseG1GC</span><br><span class="line"></span><br><span class="line">C:\Users\Administrator&gt;jinfo -flag MaxHeapSize 37464</span><br><span class="line">-XX:MaxHeapSize=17137926144</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="修改"><a href="#修改" class="headerlink" title="修改"></a>修改</h3><p><code>jifno</code> 不仅可以查看运行时某一个Java虚拟机参数的实际取值，甚至可以在运行时修改部分参数，并使之立即生效。</p>
+<p>但是，并非所有参数都支持动态修改。参数只有被标记为 <code>manageable</code> 的 flag 可以被实时修改。其实，这个修改能力是极其有限的。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\Administrator&gt; java -XX:+PrintFlagsFinal -version | findstr manageable</span><br><span class="line">java version &quot;11.0.19&quot; 2023-04-18 LTS</span><br><span class="line">Java(TM) SE Runtime Environment 18.9 (build 11.0.19+9-LTS-224)</span><br><span class="line">Java HotSpot(TM) 64-Bit Server VM 18.9 (build 11.0.19+9-LTS-224, mixed mode)</span><br><span class="line">     intx CMSAbortablePrecleanWaitMillis           = 100                                    &#123;manageable&#125; &#123;default&#125;</span><br><span class="line">     intx CMSTriggerInterval                       = -1                                     &#123;manageable&#125; &#123;default&#125;</span><br><span class="line">     intx CMSWaitDuration                          = 2000                                   &#123;manageable&#125; &#123;default&#125;</span><br><span class="line">     bool HeapDumpAfterFullGC                      = false                                  &#123;manageable&#125; &#123;default&#125;</span><br><span class="line">     bool HeapDumpBeforeFullGC                     = false                                  &#123;manageable&#125; &#123;default&#125;</span><br><span class="line">     bool HeapDumpOnOutOfMemoryError               = false                                  &#123;manageable&#125; &#123;default&#125;</span><br><span class="line">    ccstr HeapDumpPath                             =                                        &#123;manageable&#125; &#123;default&#125;</span><br><span class="line">    uintx MaxHeapFreeRatio                         = 70                                     &#123;manageable&#125; &#123;default&#125;</span><br><span class="line">    uintx MinHeapFreeRatio                         = 40                                     &#123;manageable&#125; &#123;default&#125;</span><br><span class="line">     bool PrintClassHistogram                      = false                                  &#123;manageable&#125; &#123;default&#125;</span><br><span class="line">     bool PrintConcurrentLocks                     = false                                  &#123;manageable&#125; &#123;default&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>[!NOTE]</p>
+<p>Windows的管道命令中使用 <code>findstr</code> 查找字符串，而 Linux 或 MAC 则使用 <code>grep</code> 查找字符串。上面的命令在 Linux 或 MAC 系统中应为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -XX:+PrintFlagsFinal -version | grep manageable</span><br></pre></td></tr></table></figure></blockquote>
+<h4 id="针对boolean类型"><a href="#针对boolean类型" class="headerlink" title="针对boolean类型"></a>针对<code>boolean</code>类型</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jinfo -flag [+|-]&lt;参数名称&gt; &lt;pid&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\Administrator&gt; jinfo -flag PrintClassHistogram 37464</span><br><span class="line">-XX:-PrintClassHistogram # 这里是 - 号，说明值是 false</span><br><span class="line"></span><br><span class="line">PS C:\Users\Administrator&gt; jinfo -flag +PrintClassHistogram 37464 # 设置 PrintClassHistogram 为 true</span><br><span class="line">PS C:\Users\Administrator&gt; jinfo -flag PrintClassHistogram 37464 # 查看 PrintClassHistogram 参数</span><br><span class="line">-XX:+PrintClassHistogram # 这里变成 + 号，说明值已变为 true</span><br><span class="line"></span><br><span class="line">PS C:\Users\Administrator&gt; jinfo -flag -PrintClassHistogram 37464 # 设置 PrintClassHistogram 为 false</span><br><span class="line">PS C:\Users\Administrator&gt; jinfo -flag PrintClassHistogram 37464 # 查看 PrintClassHistogram 参数</span><br><span class="line">-XX:-PrintClassHistogram # 这里是 - 号，说明值是 false</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="针对非boolean类型"><a href="#针对非boolean类型" class="headerlink" title="针对非boolean类型"></a>针对非<code>boolean</code>类型</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jinfo -flag &lt;参数名称&gt;=&lt;参数值&gt; &lt;pid&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\Administrator&gt; jinfo -flag MaxHeapFreeRatio 37464</span><br><span class="line">-XX:MaxHeapFreeRatio=70</span><br><span class="line">PS C:\Users\Administrator&gt; jinfo -flag MaxHeapFreeRatio=75 37464</span><br><span class="line">PS C:\Users\Administrator&gt; jinfo -flag MaxHeapFreeRatio 37464</span><br><span class="line">-XX:MaxHeapFreeRatio=75</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="拓展"><a href="#拓展" class="headerlink" title="拓展"></a>拓展</h2><h3 id="java-XX-PrintFlagsInitial"><a href="#java-XX-PrintFlagsInitial" class="headerlink" title="java -XX:+PrintFlagsInitial"></a><code>java -XX:+PrintFlagsInitial</code></h3><p>查看所有JVM参数启动的初始值</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[Global flags]</span><br><span class="line">     intx ActiveProcessorCount                      = -1                                  &#123;product&#125;</span><br><span class="line">    uintx AdaptiveSizeDecrementScaleFactor          = 4                                   &#123;product&#125;</span><br><span class="line">    uintx AdaptiveSizeMajorGCDecayTimeScale         = 10                                  &#123;product&#125;</span><br><span class="line">    uintx AdaptiveSizePausePolicy                   = 0                                   &#123;product&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="java-XX-PrintFlagsFinal"><a href="#java-XX-PrintFlagsFinal" class="headerlink" title="java -XX:+PrintFlagsFinal"></a><code>java -XX:+PrintFlagsFinal</code></h3><p>查看所有JVM参数的最终值</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\Administrator&gt; java -XX:+PrintFlagsFinal -version</span><br><span class="line">[Global flags]</span><br><span class="line">      int ActiveProcessorCount                     = -1                                        &#123;product&#125; &#123;default&#125;</span><br><span class="line">    uintx AdaptiveSizeDecrementScaleFactor         = 4                                         &#123;product&#125; &#123;default&#125;</span><br><span class="line">    uintx AdaptiveSizeMajorGCDecayTimeScale        = 10                                        &#123;product&#125; &#123;default&#125;</span><br><span class="line">    uintx AdaptiveSizePolicyCollectionCostMargin   = 50                                        &#123;product&#125; &#123;default&#125;</span><br><span class="line">    uintx AdaptiveSizePolicyInitializingSteps      = 20                                        &#123;product&#125; &#123;default&#125;</span><br><span class="line">    uintx AdaptiveSizePolicyOutputInterval         = 0                                         &#123;product&#125; &#123;default&#125;</span><br><span class="line">    uintx AdaptiveSizePolicyWeight                 = 10                                        &#123;product&#125; &#123;default&#125;</span><br><span class="line">    uintx AdaptiveSizeThroughPutPolicy             = 0                                         &#123;product&#125; &#123;default&#125;</span><br><span class="line">    uintx AdaptiveTimeWeight                       = 25                                        &#123;product&#125; &#123;default&#125;</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="java-参数名称-PrintCommandLineFlags"><a href="#java-参数名称-PrintCommandLineFlags" class="headerlink" title="java -参数名称:+PrintCommandLineFlags"></a><code>java -参数名称:+PrintCommandLineFlags</code></h3><p>查看那些已经被用户或者JVM设置过的详细的XX参数的名称和值</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\Administrator&gt; java  -XX:+PrintCommandLineFlags -version</span><br><span class="line">-XX:G1ConcRefinementThreads=23 -XX:GCDrainStackTargetSize=64 -XX:InitialHeapSize=1070677888 -XX:MaxHeapSize=17130846208 -XX:+PrintCommandLineFlags -XX:ReservedCodeCacheSize=251658240 -XX:+SegmentedCodeCache -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseG1GC -XX:-UseLargePagesIndividualAllocation</span><br><span class="line">java version &quot;11.0.19&quot; 2023-04-18 LTS</span><br><span class="line">Java(TM) SE Runtime Environment 18.9 (build 11.0.19+9-LTS-224)</span><br><span class="line">Java HotSpot(TM) 64-Bit Server VM 18.9 (build 11.0.19+9-LTS-224, mixed mode)</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="jmap-导出内存映像文件-内存使用情况"><a href="#jmap-导出内存映像文件-内存使用情况" class="headerlink" title="jmap 导出内存映像文件&amp;内存使用情况"></a><code>jmap</code> 导出内存映像文件&amp;内存使用情况</h1><p><strong><code>jmap</code>（JVM Memory Map）</strong>：作用一方面是获取dump文件（堆转储快照文件，二进制文件），它还可以获取目标Java进程的内存相关信息，包括Java堆各区域的使用情况、堆中对象的统计信息、类加载信息等。开发人员可以在控制台中输入命令“jmap -help”查阅jmap工具的具体使用方式和一些标准选项配置。</p>
+<p>官方帮助文档：<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/tools/jmap.html">https://docs.oracle.com/en/java/javase/11/tools/jmap.html</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jmap -help</span><br><span class="line">Usage:</span><br><span class="line">    jmap -clstats &lt;pid&gt;</span><br><span class="line">        to connect to running process and print class loader statistics</span><br><span class="line">    jmap -finalizerinfo &lt;pid&gt;</span><br><span class="line">        to connect to running process and print information on objects awaiting finalization</span><br><span class="line">    jmap -histo[:live] &lt;pid&gt;</span><br><span class="line">        to connect to running process and print histogram of java object heap</span><br><span class="line">        if the &quot;live&quot; suboption is specified, only count live objects</span><br><span class="line">    jmap -dump:&lt;dump-options&gt; &lt;pid&gt;</span><br><span class="line">        to connect to running process and dump java heap</span><br><span class="line">    jmap -? -h --help</span><br><span class="line">        to print this help message</span><br><span class="line"></span><br><span class="line">    dump-options:</span><br><span class="line">      live         dump only live objects; if not specified,</span><br><span class="line">                   all objects in the heap are dumped.</span><br><span class="line">      format=b     binary format</span><br><span class="line">      file=&lt;file&gt;  dump heap to &lt;file&gt;</span><br><span class="line"></span><br><span class="line">    Example: jmap -dump:live,format=b,file=heap.bin &lt;pid&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="基本语法-2"><a href="#基本语法-2" class="headerlink" title="基本语法"></a>基本语法</h2><ul>
+<li><code>jmap [option] &lt;pid&gt;</code></li>
+<li><code>jmap [option] &lt;executable &lt;core&gt;</code></li>
+<li><code>jmap [option] [server_id@] &lt;remote server IP or hostname&gt;</code></li>
+</ul>
+<p>参数说明：</p>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-dump</td>
+<td>生成dump文件（Java堆转储快照），-dump:live只保存堆中的存活对象</td>
+</tr>
+<tr>
+<td>-heap</td>
+<td>输出整个堆空间的详细信息，包括GC的使用、堆配置信息，以及内存的使用信息等</td>
+</tr>
+<tr>
+<td>-histo</td>
+<td>输出堆空间中对象的统计信息，包括类、实例数量和合计容量，-histo:live只统计堆中的存活对象</td>
+</tr>
+<tr>
+<td>-J <flag></flag></td>
+<td>传递参数给jmap启动的jvm</td>
+</tr>
+<tr>
+<td>-finalizerinfo</td>
+<td>显示在F-Queue中等待Finalizer线程执行finalize方法的对象，仅linux&#x2F;solaris平台有效</td>
+</tr>
+<tr>
+<td>-permstat</td>
+<td>以ClassLoader为统计口径输出永久代的内存状态信息，仅linux&#x2F;solaris平台有效</td>
+</tr>
+<tr>
+<td>-F</td>
+<td>当虚拟机进程对-dump选项没有任何响应时，强制执行生成dump文件，仅linux&#x2F;solaris平台有效</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>[!NOTE]</p>
+<ol>
+<li>使用语法可以通过在DOS窗口中使用<code>jmap/jmap -h/jmap -help</code>查看</li>
+<li><code>&lt;executable &lt;core&gt;</code>代表可执行的代码，比如使用 <code>&gt; 文件名称</code> 来指定生成的dump文件的生成位置</li>
+<li><code>[server_id@]&lt;……&gt;</code> 是为远程连接准备的</li>
+</ol>
+</blockquote>
+<h2 id="使用1：导出内存映像文件"><a href="#使用1：导出内存映像文件" class="headerlink" title="使用1：导出内存映像文件"></a>使用1：导出内存映像文件</h2><h3 id="手动方式"><a href="#手动方式" class="headerlink" title="手动方式"></a>手动方式</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">jmap -dump:format=b,file=&lt;filename.hprof&gt; &lt;pid&gt;</span><br><span class="line">jmap -dump:live,format=b,file=&lt;filename.hprof&gt; &lt;pid&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<ol>
+<li><code>&lt;filename.hprof&gt;</code> 中的 filename 是文件名称，而 .hprof 是后缀名</li>
+<li><code>format=b</code>表示生成的是标准的dump文件，用来进行格式限定</li>
+</ol>
+<p>生成堆中所有对象的快照：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jmap -dump:format=b,file=G:\dump\1.hprof 37464</span><br><span class="line">Dumping heap to G:\dump\1.hprof ...</span><br><span class="line">Heap dump file created [31893698 bytes in 0.079 secs]</span><br></pre></td></tr></table></figure>
+
+
+
+<p>生成堆中存活对象的快照：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jmap -dump:live,format=b,file=G:\dump\2.hprof 37464</span><br><span class="line">Dumping heap to G:\dump\2.hprof ...</span><br><span class="line">Heap dump file created [26761056 bytes in 0.098 secs]</span><br></pre></td></tr></table></figure>
+
+
+
+<p>一般使用的是第二种方式，也就是生成堆中存活对象的快照，毕竟这种方式生成的dump文件更小，我们传输处理都更方便</p>
+<h3 id="自动方式"><a href="#自动方式" class="headerlink" title="自动方式"></a>自动方式</h3><p>当程序发生 OOM 退出系统时，一些瞬时信息都随着程序的终止而消失，而重现 OOM 问题往往比较困难或者耗时。此时若能在 OOM 时，自动导出dump文件就显得非常迫切。</p>
+<p>这里介绍一种比较常用的取得堆快照文件的方法，即使用:</p>
+<ul>
+<li><code>-XX:+HeapDumpOn0utOfMemoryError</code>:在程序发生 OOM 时，导出应用程序的当前堆快照。</li>
+<li><code>-XX:HeapDumpPath</code>:可以指定堆快照的保存位置。</li>
+</ul>
+<p>比如:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-Xmx100m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=D:\m.hprof</span><br></pre></td></tr></table></figure>
+
+<p>text</p>
+<h2 id="使用2：显示堆内存相关信息"><a href="#使用2：显示堆内存相关信息" class="headerlink" title="使用2：显示堆内存相关信息"></a>使用2：显示堆内存相关信息</h2><p><strong><code>jmap -heap &lt;pid&gt;</code></strong></p>
+<p>只是时间点上的堆信息，而jstat后面可以添加参数，可以指定时间动态观察数据改变情况，而图形化界面工具，例如<a target="_blank" rel="noopener" href="https://visualvm.github.io/">VisualVM</a>等，它们可以用图表的方式动态展示出相关信息，更加直观明了</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jmap -heap 3540 &gt; a.txt</span><br></pre></td></tr></table></figure>
+
+
+
+<p>JDK 8 以后需要使用 <code>jhsdb jmap</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jhsdb jmap --help</span><br><span class="line">    &lt;no option&gt;             To print same info as Solaris pmap.</span><br><span class="line">    --heap                  To print java heap summary.</span><br><span class="line">    --binaryheap            To dump java heap in hprof binary format.</span><br><span class="line">    --dumpfile &lt;name&gt;       The name of the dump file.</span><br><span class="line">    --histo                 To print histogram of java object heap.</span><br><span class="line">    --clstats               To print class loader statistics.</span><br><span class="line">    --finalizerinfo         To print information on objects awaiting finalization.</span><br><span class="line">    --pid &lt;pid&gt;             To attach to and operate on the given live process.</span><br><span class="line">    --core &lt;corefile&gt;       To operate on the given core file.</span><br><span class="line">    --exe &lt;executable for corefile&gt;</span><br><span class="line">    --connect [&lt;id&gt;@]&lt;host&gt; To connect to a remote debug server (debugd).</span><br><span class="line"></span><br><span class="line">    The --core and --exe options must be set together to give the core</span><br><span class="line">    file, and associated executable, to operate on. They can use</span><br><span class="line">    absolute or relative paths.</span><br><span class="line">    The --pid option can be set to operate on a live process.</span><br><span class="line">    The --connect option can be set to connect to a debug server (debugd).</span><br><span class="line">    --core, --pid, and --connect are mutually exclusive.</span><br><span class="line"></span><br><span class="line">    Examples: jhsdb jmap --pid 1234</span><br><span class="line">          or  jhsdb jmap --core ./core.1234 --exe ./myexe</span><br><span class="line">          or  jhsdb jmap --connect debugserver</span><br><span class="line">          or  jhsdb jmap --connect id@debugserver</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如上命令需要改为</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jhsdb jmap --heap --pid 37464</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>[!CAUTION]</p>
+<p>请确保此工具的 JDK 版本和程序的 JDK 版本一致，否则会出现下面的错误</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jhsdb jmap --heap --pid 37464</span><br><span class="line">Attaching to process ID 37464, please wait...</span><br><span class="line">Exception in thread &quot;main&quot; java.lang.RuntimeException: Type &quot;GenericGrowableArray&quot;, referenced in VMStructs::localHotSpotVMStructs in the remote VM, was not present in the remote VMStructs::localHotSpotVMTypes table (should have been caught in the debug build of that VM). Can not continue.</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.HotSpotTypeDataBase.lookupOrFail(HotSpotTypeDataBase.java:596)</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.HotSpotTypeDataBase.lookupType(HotSpotTypeDataBase.java:120)</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.HotSpotTypeDataBase.lookupOrCreateClass(HotSpotTypeDataBase.java:631)</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.HotSpotTypeDataBase.createType(HotSpotTypeDataBase.java:751)</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.HotSpotTypeDataBase.readVMTypes(HotSpotTypeDataBase.java:195)</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.HotSpotTypeDataBase.&lt;init&gt;(HotSpotTypeDataBase.java:89)</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.HotSpotAgent.setupVM(HotSpotAgent.java:393)</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.HotSpotAgent.go(HotSpotAgent.java:307)</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.HotSpotAgent.attach(HotSpotAgent.java:142)</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.tools.Tool.start(Tool.java:185)</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.tools.Tool.execute(Tool.java:118)</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.tools.JMap.main(JMap.java:176)</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.SALauncher.runJMAP(SALauncher.java:369)</span><br><span class="line">        at jdk.hotspot.agent/sun.jvm.hotspot.SALauncher.main(SALauncher.java:538)</span><br></pre></td></tr></table></figure></blockquote>
+<p>如果出现了上述错误，可以直接进入对应版本 JDK 的 bin 目录执行</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">D:\Java\jdk-17.0.8\bin&gt;jhsdb jmap --heap --pid 37464</span><br><span class="line">Attaching to process ID 37464, please wait...</span><br><span class="line">Debugger attached successfully.</span><br><span class="line">Server compiler detected.</span><br><span class="line">JVM version is 17.0.8+9-LTS-211</span><br><span class="line"></span><br><span class="line">using thread-local object allocation.</span><br><span class="line">Garbage-First (G1) GC with 23 thread(s)</span><br><span class="line"></span><br><span class="line">Heap Configuration:</span><br><span class="line">   MinHeapFreeRatio         = 40</span><br><span class="line">   MaxHeapFreeRatio         = 75</span><br><span class="line">   MaxHeapSize              = 17137926144 (16344.0MB)</span><br><span class="line">   NewSize                  = 1363144 (1.2999954223632812MB)</span><br><span class="line">   MaxNewSize               = 10276044800 (9800.0MB)</span><br><span class="line">   OldSize                  = 5452592 (5.1999969482421875MB)</span><br><span class="line">   NewRatio                 = 2</span><br><span class="line">   SurvivorRatio            = 8</span><br><span class="line">   MetaspaceSize            = 22020096 (21.0MB)</span><br><span class="line">   CompressedClassSpaceSize = 1073741824 (1024.0MB)</span><br><span class="line">   MaxMetaspaceSize         = 17592186044415 MB</span><br><span class="line">   G1HeapRegionSize         = 8388608 (8.0MB)</span><br><span class="line"></span><br><span class="line">Heap Usage:</span><br><span class="line">G1 Heap:</span><br><span class="line">   regions  = 2043</span><br><span class="line">   capacity = 17137926144 (16344.0MB)</span><br><span class="line">   used     = 13493056 (12.86798095703125MB)</span><br><span class="line">   free     = 17124433088 (16331.132019042969MB)</span><br><span class="line">   0.07873213997204631% used</span><br><span class="line">G1 Young Generation:</span><br><span class="line">Eden Space:</span><br><span class="line">   regions  = 0</span><br><span class="line">   capacity = 33554432 (32.0MB)</span><br><span class="line">   used     = 0 (0.0MB)</span><br><span class="line">   free     = 33554432 (32.0MB)</span><br><span class="line">   0.0% used</span><br><span class="line">Survivor Space:</span><br><span class="line">   regions  = 0</span><br><span class="line">   capacity = 0 (0.0MB)</span><br><span class="line">   used     = 0 (0.0MB)</span><br><span class="line">   free     = 0 (0.0MB)</span><br><span class="line">   0.0% used</span><br><span class="line">G1 Old Generation:</span><br><span class="line">   regions  = 2</span><br><span class="line">   capacity = 33554432 (32.0MB)</span><br><span class="line">   used     = 13493056 (12.86798095703125MB)</span><br><span class="line">   free     = 20061376 (19.13201904296875MB)</span><br><span class="line">   40.212440490722656% used</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong><code>jmap -histo &lt;pid&gt;</code></strong></p>
+<p>输出堆中对象的同级信息，包括类、实例数量和合计容量，也是这一时刻的内存中的对象信息</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jmap -histo 3540 &gt; b.txt</span><br></pre></td></tr></table></figure>
+
+
+
+<p>与 <code>-heap</code> 一样，如果是 JDK 8 以上版本，则需要使用 <code>jhsdb jmap</code> 代替。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">D:\Java\jdk-17.0.8\bin&gt;jhsdb jmap --histo --pid 37464</span><br><span class="line">Attaching to process ID 37464, please wait...</span><br><span class="line">Debugger attached successfully.</span><br><span class="line">Server compiler detected.</span><br><span class="line">JVM version is 17.0.8+9-LTS-211</span><br><span class="line">Iterating over heap. This may take a while...</span><br><span class="line">Object Histogram:</span><br><span class="line"></span><br><span class="line">num       #instances    #bytes  Class description</span><br><span class="line">--------------------------------------------------------------------------</span><br><span class="line">1:              47456   4326168 byte[]</span><br><span class="line">2:              45062   1081488 java.lang.String</span><br><span class="line">3:              7516    893384  java.lang.Class</span><br><span class="line">4:              22728   727296  java.util.concurrent.ConcurrentHashMap$Node</span><br><span class="line">5:              7450    655600  java.lang.reflect.Method</span><br><span class="line">6:              8036    439304  java.lang.Object[]</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="使用3：其他作用"><a href="#使用3：其他作用" class="headerlink" title="使用3：其他作用"></a>使用3：其他作用</h2><ul>
+<li><code>jmap -permstat &lt;pid&gt;</code>：查看系统的ClassLoader信息</li>
+<li><code>jmap -finalizerinfo</code>：查看堆积在finalizer队列中的对象</li>
+</ul>
+<p>这两个指令仅 Linux&#x2F;Solaris 平台有效</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>由于jmap将访问堆中的所有对象，为了保证在此过程中不被应用线程干扰，jmap需要借助安全点机制，让所有线程停留在不改变堆中数据的状态。也就是说，由jmap导出的堆快照必定是安全点位置的。这可能导致基于该堆快照的分析结果存在偏差。</p>
+<p>举个例子，假设在编译生成的机器码中，某些对象的生命周期在两个安全点之间，那么:live选项将无法探知到这些对象。</p>
+<p>另外，如果某个线程长时间无法跑到安全点，jmap将一直等下去。与前面讲的jstat则不同，垃圾回收器会主动将jstat所需要的摘要数据保存至固定位置之中，而jstat只需直接读取即可。</p>
+<h1 id="jhat-JDK自带堆分析工具"><a href="#jhat-JDK自带堆分析工具" class="headerlink" title="jhat JDK自带堆分析工具"></a><code>jhat</code> JDK自带堆分析工具</h1><p><strong><code>jhat</code>(JVM Heap Analysis Tool)</strong></p>
+<p>Sun JDK提供的<code>jhat</code>命令与<code>jmap</code>命令搭配使用，用于分析<code>jmap</code>生成的heap dump文件（堆转储快照）。<code>jhat</code>内置了一个微型的HTTP&#x2F;HTML服务器，生成dump文件的分析结果后，用户可以在浏览器中查看分析结果（分析虚拟机转储快照信息）。</p>
+<p>使用了<code>jhat</code>命令，就启动了一个http服务，端口是7000，即 <code>http://localhost:7000/</code> ，就可以在浏览器里分析。</p>
+<blockquote>
+<p>[!WARNING]</p>
+<p>说明：<code>jhat</code>命令在JDK9、JDK10中已经被删除，官方建议用VisualVM代替。</p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">D:\Java\jdk-1.8\bin&gt;jhat -help</span><br><span class="line">Usage:  jhat [-stack &lt;bool&gt;] [-refs &lt;bool&gt;] [-port &lt;port&gt;] [-baseline &lt;file&gt;] [-debug &lt;int&gt;] [-version] [-h|-help] &lt;file&gt;</span><br><span class="line"></span><br><span class="line">        -J&lt;flag&gt;          Pass &lt;flag&gt; directly to the runtime system. For</span><br><span class="line">                          example, -J-mx512m to use a maximum heap size of 512MB</span><br><span class="line">        -stack false:     Turn off tracking object allocation call stack.</span><br><span class="line">        -refs false:      Turn off tracking of references to objects</span><br><span class="line">        -port &lt;port&gt;:     Set the port for the HTTP server.  Defaults to 7000</span><br><span class="line">        -exclude &lt;file&gt;:  Specify a file that lists data members that should</span><br><span class="line">                          be excluded from the reachableFrom query.</span><br><span class="line">        -baseline &lt;file&gt;: Specify a baseline object dump.  Objects in</span><br><span class="line">                          both heap dumps with the same ID and same class will</span><br><span class="line">                          be marked as not being &quot;new&quot;.</span><br><span class="line">        -debug &lt;int&gt;:     Set debug level.</span><br><span class="line">                            0:  No debug output</span><br><span class="line">                            1:  Debug hprof file parsing</span><br><span class="line">                            2:  Debug hprof file parsing, no server</span><br><span class="line">        -version          Report version number</span><br><span class="line">        -h|-help          Print this help and exit</span><br><span class="line">        &lt;file&gt;            The file to read</span><br><span class="line"></span><br><span class="line">For a dump file that contains multiple heap dumps,</span><br><span class="line">you may specify which dump in the file</span><br><span class="line">by appending &quot;#&lt;number&gt;&quot; to the file name, i.e. &quot;foo.hprof#3&quot;.</span><br><span class="line"></span><br><span class="line">All boolean options default to &quot;true&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>基本适用语法：<code>jhat &lt;option&gt; &lt;dumpfile&gt;</code></p>
+<table>
+<thead>
+<tr>
+<th>option参数</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-stack false｜true</td>
+<td>关闭｜打开对象分配调用栈跟踪</td>
+</tr>
+<tr>
+<td>-refs false｜true</td>
+<td>关闭｜打开对象引用跟踪</td>
+</tr>
+<tr>
+<td>-port port-number</td>
+<td>设置jhat HTTP Server的端口号，默认7000</td>
+</tr>
+<tr>
+<td>-exclude exclude-file</td>
+<td>执行对象查询时需要排除的数据成员</td>
+</tr>
+<tr>
+<td>-baseline exclude-file</td>
+<td>指定一个基准堆转储</td>
+</tr>
+<tr>
+<td>-debug int</td>
+<td>设置debug级别</td>
+</tr>
+<tr>
+<td>-version</td>
+<td>启动后显示版本信息就退出</td>
+</tr>
+<tr>
+<td>-J <flag></flag></td>
+<td>传入启动参数，比如-J-Xmx512m</td>
+</tr>
+</tbody></table>
+<p>举例如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">jhat -stack false d:\1.hprof</span><br><span class="line">jhat -port 6565 d:\1.hprof</span><br><span class="line">jhat -version</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="jstack-打印JVM中线程快照"><a href="#jstack-打印JVM中线程快照" class="headerlink" title="jstack 打印JVM中线程快照"></a><code>jstack</code> 打印JVM中线程快照</h1><p><strong><code>jstack</code>（JVM Stack Trace）</strong>：用于生成虚拟机指定进程当前时刻的线程快照（虚拟机堆栈跟踪）。线程快照就是当前虚拟机内指定进程的每一条线程正在执行的方法堆栈的集合。</p>
+<p>生成线程快照的作用：可用于定位线程出现长时间停顿的原因，如线程间死锁、死循环、请求外部资源导致的长时间等待等问题。这些都是导致线程长时间停顿的常见原因。当线程出现停顿时，就可以用<code>jstack</code>显示各个线程调用的堆栈情况。</p>
+<p>官方帮助文档：<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/tools/jstack.html">https://docs.oracle.com/en/java/javase/11/tools/jstack.html</a></p>
+<p>在thread dump中，要留意下面几种状态</p>
+<ul>
+<li><font color="red">死锁，Deadlock（重点关注）</font></li>
+<li><font color="red">等待资源，Waiting on condition（重点关注）</font></li>
+<li><font color="red">等待获取监视器，Waiting on monitor entry（重点关注）</font></li>
+<li><font color="red">阻塞，Blocked（重点关注）</font></li>
+<li>执行中，Runnable</li>
+<li>暂停，Suspended</li>
+<li>对象等待中，Object.wait() 或 TIMED＿WAITING</li>
+<li>停止，Parked</li>
+</ul>
+<p>option参数 作用<br>-F 当正常输出的请求不被响应时，强制输出线程堆栈<br>-l 除堆栈外，显示关于锁的附加信息<br>-m 如果调用本地方法的话，可以显示C&#x2F;C++的堆栈</p>
+<h2 id="基本语法-3"><a href="#基本语法-3" class="headerlink" title="基本语法"></a>基本语法</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jstack -help</span><br><span class="line">Usage:</span><br><span class="line">    jstack [-l][-e] &lt;pid&gt;</span><br><span class="line">        (to connect to running process)</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line">    -l  long listing. Prints additional information about locks</span><br><span class="line">    -e  extended listing. Prints additional information about threads</span><br><span class="line">    -? -h --help -help to print this help message</span><br></pre></td></tr></table></figure>
+
+
+
+<p>它的基本用法为：<code>jstack &lt;options&gt; &lt;pid&gt;</code>，如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">jstack 13500 &gt; 1.txt</span><br><span class="line">jstack -l 13500 &gt; 1.txt</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>jstack</code> 管理远程进程的话，需要在远程程序的启动参数中增加：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-Djava.rmi.server.hostname=&lt;...&gt;</span><br><span class="line">-Dcom.sun.management.jmxremote</span><br><span class="line">-Dcom.sun.management.jmxremote.port=<span class="number">9999</span></span><br><span class="line">-Dcom.sun.management.jmxremote.authenticate=<span class="literal">false</span></span><br><span class="line">-Dcom.sun.management.jmxremote.ssl=<span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+<p>java</p>
+<h2 id="Options"><a href="#Options" class="headerlink" title="Options"></a>Options</h2><ul>
+<li><code>-F</code>：当正常输出的请求不被响应时，强制输出线程堆栈</li>
+<li><code>-l</code>：除堆栈外，显示关于锁的附加信息</li>
+<li><code>-m</code>：如果调用本地方法的话，可以显示C&#x2F;C++的堆栈</li>
+<li><code>-h</code>：帮助操作</li>
+</ul>
+<h1 id="jcmd-多功能命令行"><a href="#jcmd-多功能命令行" class="headerlink" title="jcmd 多功能命令行"></a><code>jcmd</code> 多功能命令行</h1><p>在JDK 1.7以后，新增了一个命令行工具<code>jcmd</code>。它是一个多功能的工具，可以用来实现前面除了<code>jstat</code>之外所有命令的功能。比如：用它来导出堆、内存使用、查看Java进程、导出线程信息、执行GC、JVM运行时间等。</p>
+<p>官方帮助文档：<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/11/tools/jcmd.html">https://docs.oracle.com/en/java/javase/11/tools/jcmd.html</a></p>
+<p><code>jcmd</code>拥有<code>jmap</code>的大部分功能，并且在Oracle的官方网站上也推荐使用<code>jcmd</code>命令代<code>jmap</code>命令</p>
+<h2 id="基本语法-4"><a href="#基本语法-4" class="headerlink" title="基本语法"></a>基本语法</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jcmd -help</span><br><span class="line">Usage: jcmd &lt;pid | main class&gt; &lt;command ...|PerfCounter.print|-f file&gt;</span><br><span class="line">   or: jcmd -l</span><br><span class="line">   or: jcmd -h</span><br><span class="line"></span><br><span class="line">  command must be a valid jcmd command for the selected jvm.</span><br><span class="line">  Use the command &quot;help&quot; to see which commands are available.</span><br><span class="line">  If the pid is 0, commands will be sent to all Java processes.</span><br><span class="line">  The main class argument will be used to match (either partially</span><br><span class="line">  or fully) the class used to start Java.</span><br><span class="line">  If no options are given, lists Java processes (same as -l).</span><br><span class="line"></span><br><span class="line">  PerfCounter.print display the counters exposed by this process</span><br><span class="line">  -f  read and execute commands from the file</span><br><span class="line">  -l  list JVM processes on the local machine</span><br><span class="line">  -? -h --help print this help message</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong><code>jcmd -l</code> 列出所有的JVM进程</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jcmd -l</span><br><span class="line">37492 org.jetbrains.jps.cmdline.Launcher D:/Program Files/JetBrains/IntelliJ IDEA 2023.1.3/plugins/java/lib/jps-builders.jar;D:/Program Files/JetBrains/IntelliJ IDEA 2023.1.3/plugins/java/lib/jps-builders-6.jar;D:/Program Files/JetBrains/IntelliJ IDEA 2023.1.3/plugins/java/lib/jps-javac-extension.jar;D:/Program Files/JetBrains/IntelliJ IDEA 2023.1.3/lib/util-8.jar;D:/Program Files/JetBrains/IntelliJ IDEA 2023.1.3/lib/util_rt.jar;D:/Program Files/JetBrains/IntelliJ IDEA 2023.1.3/lib/platform-loader.jar;D:/Program Files/JetBrains/IntelliJ IDEA 2023.1.3/lib/annotations.jar;D:/Program Files/JetBrains/IntelliJ IDEA 2023.1.3/lib/trove.jar;D:/Program Files/JetBrains/IntelliJ IDEA 2023.1.3/plugins/java/lib/jetbrains.kotlinx.metadata.jvm.jar;D:/Program Files/JetBrains/IntelliJ IDEA 2023.1.3/lib/protobuf.jar;D:/Program Files/JetBrains/IntelliJ IDEA 2023.1.3/lib/jps-model.jar;D:/Program Files/JetBrains/IntelliJ IDEA 2023.1.3/plugins/java/lib/javac2.jar;D:/Program Files/JetBrains/IntelliJ IDEA 2023.1.3/lib/forms_rt.jar;D:/Prog</span><br><span class="line">37464 org.depsea.springwebmvcdemo.SpringWebmvcDemoApplication</span><br><span class="line">49420 jdk.jcmd/sun.tools.jcmd.JCmd -l</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong><code>jcmd &lt;pid&gt; help</code> 针对指定的进程，列出支持的所有具体命令</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jcmd 37464 help</span><br><span class="line">37464:</span><br><span class="line">The following commands are available:</span><br><span class="line">Compiler.CodeHeap_Analytics</span><br><span class="line">Compiler.codecache</span><br><span class="line">Compiler.codelist</span><br><span class="line">Compiler.directives_add</span><br><span class="line">Compiler.directives_clear</span><br><span class="line">Compiler.directives_print</span><br><span class="line">Compiler.directives_remove</span><br><span class="line">Compiler.queue</span><br><span class="line">...</span><br><span class="line">VM.set_flag</span><br><span class="line">VM.stringtable</span><br><span class="line">VM.symboltable</span><br><span class="line">VM.system_properties</span><br><span class="line">VM.systemdictionary</span><br><span class="line">VM.uptime</span><br><span class="line">VM.version</span><br><span class="line">help</span><br><span class="line"></span><br><span class="line">For more information about a specific command use &#x27;help &lt;command&gt;&#x27;.</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>jcmd 37464 help &lt;command&gt;</code> 查看命令的详细信息</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jcmd 37464 help VM.version</span><br><span class="line">37464:</span><br><span class="line">VM.version</span><br><span class="line">Print JVM version information.</span><br><span class="line"></span><br><span class="line">Impact: Low</span><br><span class="line"></span><br><span class="line">Permission: java.util.PropertyPermission(java.vm.version, read)</span><br><span class="line"></span><br><span class="line">Syntax: VM.version</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong><code>jcmd &lt;pid&gt; &lt;command&gt;</code> 显示指定进程的指令命令的数据</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jcmd 37464 VM.version</span><br><span class="line">37464:</span><br><span class="line">Java HotSpot(TM) 64-Bit Server VM version 17.0.8+9-LTS-211</span><br><span class="line">JDK 17.0.8</span><br><span class="line"></span><br><span class="line">C:\Users\Administrator&gt;jcmd 37464 VM.uptime</span><br><span class="line">37464:</span><br><span class="line">173610.496 s</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li><code>Thread.print</code> 可以替换 <code>jstack</code> 指令</li>
+<li><code>GC.class_histogram</code> 可以替换 <code>jmap</code> 中的 <code>-histo</code> 操作</li>
+<li><code>GC.heap_dump</code> 可以替换 <code>jmap</code> 中的 <code>-dump</code> 操作</li>
+<li><code>GC.run</code> 可以查看GC的执行情况</li>
+<li><code>VM.uptime</code> 可以查看程序的总执行时间，可以替换 <code>jstat</code> 指令中的 <code>-t</code> 操作</li>
+<li><code>VM.system_properties</code> 可以替换 <code>jinfo -sysprops 进程id</code></li>
+<li><code>VM.flags</code> 可以获取JVM的配置参数信息</li>
+</ul>
+<h1 id="jstatd-远程主机信息收集"><a href="#jstatd-远程主机信息收集" class="headerlink" title="jstatd 远程主机信息收集"></a><code>jstatd</code> 远程主机信息收集</h1><p>之前的指令只涉及到监控本机的Java应用程序，而在这些工具中，一些监控工具也支持对远程计算机的监控（如<code>jps</code>、<code>jstat</code>）。为了启用远程监控，则需要配合使用<code>jstatd</code> 工具。</p>
+<p>命令<code>jstatd</code>是一个RMI服务端程序，它的作用相当于代理服务器，建立本地计算机与远程监控工具的通信。<code>jstatd</code>服务器将本机的Java应用程序信息传递到远程计算机。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\Administrator&gt;jstatd -help</span><br><span class="line">usage: jstatd [-nr] [-p port] [-n rminame]</span><br><span class="line">       jstatd -?|-h|--help</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="/article/2020/12/02-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%AF%87/svg+xml;base64,PHN2ZyBpZD0iU3ZnanNTdmcxMDA2IiB3aWR0aD0iNjQ4IiBoZWlnaHQ9IjI2MyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxuczpzdmdqcz0iaHR0cDovL3N2Z2pzLmNvbS9zdmdqcyI+PGRlZnMgaWQ9IlN2Z2pzRGVmczEwMDciPjxwYXR0ZXJuIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIGlkPSJwYXR0ZXJuX21hcmtfMCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzMDAiPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmaWxsPSJyZ2JhKDIyOSwyMjksMjI5LDAuOCkiIGZvbnQtc2l6ZT0iMTgiIHRyYW5zZm9ybT0icm90YXRlKC00NSwgMTUwLCAxNTApIiBzdHlsZT0iZG9taW5hbnQtYmFzZWxpbmU6IG1pZGRsZTsgdGV4dC1hbmNob3I6IG1pZGRsZTsiPjwvdGV4dD48L3BhdHRlcm4+PHBhdHRlcm4gcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgaWQ9InBhdHRlcm5fbWFya18xIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCI+PHRleHQgeD0iMTUwIiB5PSIyMDAiIGZpbGw9InJnYmEoMjI5LDIyOSwyMjksMC44KSIgZm9udC1zaXplPSIxOCIgdHJhbnNmb3JtPSJyb3RhdGUoLTQ1LCAxNTAsIDE1MCkiIHN0eWxlPSJkb21pbmFudC1iYXNlbGluZTogbWlkZGxlOyB0ZXh0LWFuY2hvcjogbWlkZGxlOyI+PC90ZXh0PjwvcGF0dGVybj48bWFya2VyIGlkPSJTdmdqc01hcmtlcjEwNDUiIG1hcmtlcldpZHRoPSIxMyIgbWFya2VySGVpZ2h0PSI5IiByZWZYPSIzLjUiIHJlZlk9IjQuNSIgdmlld0JveD0iMCAwIDEzIDkiIG9yaWVudD0iMCIgbWFya2VyVW5pdHM9InVzZXJTcGFjZU9uVXNlIiBzdHJva2UtZGFzaGFycmF5PSIwLDAiPjxwYXRoIGlkPSJTdmdqc1BhdGgxMDQ2IiBkPSJNMTMsMCBMMCw0LjUgTDEzLDkgTDEzLDAiIGZpbGw9IiMzMjMyMzIiIHN0cm9rZT0iIzMyMzIzMiIgc3Ryb2tlLXdpZHRoPSIxIj48L3BhdGg+PC9tYXJrZXI+PG1hcmtlciBpZD0iU3ZnanNNYXJrZXIxMDQ3IiBtYXJrZXJXaWR0aD0iMTMiIG1hcmtlckhlaWdodD0iOSIgcmVmWD0iOS41IiByZWZZPSI0LjUiIHZpZXdCb3g9IjAgMCAxMyA5IiBvcmllbnQ9ImF1dG8iIG1hcmtlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgc3Ryb2tlLWRhc2hhcnJheT0iMCwwIj48cGF0aCBpZD0iU3ZnanNQYXRoMTA0OCIgZD0iTTAsMCBMMTMsNC41IEwwLDkgTDAsMCIgZmlsbD0iIzMyMzIzMiIgc3Ryb2tlPSIjMzIzMjMyIiBzdHJva2Utd2lkdGg9IjEiPjwvcGF0aD48L21hcmtlcj48L2RlZnM+PHJlY3QgaWQ9InN2Z2JhY2tncm91bmRpZCIgd2lkdGg9IjY0OCIgaGVpZ2h0PSIyNjMiIGZpbGw9InRyYW5zcGFyZW50Ij48L3JlY3Q+PHJlY3QgaWQ9IlN2Z2pzUmVjdDEwMDkiIHdpZHRoPSI2NDgiIGhlaWdodD0iMjYzIiBmaWxsPSJ1cmwoI3BhdHRlcm5fbWFya18wKSI+PC9yZWN0PjxyZWN0IGlkPSJTdmdqc1JlY3QxMDEwIiB3aWR0aD0iNjQ4IiBoZWlnaHQ9IjI2MyIgZmlsbD0idXJsKCNwYXR0ZXJuX21hcmtfMSkiPjwvcmVjdD48ZyBpZD0iU3ZnanNHMTAxMSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjUsMjUpIj48cGF0aCBpZD0iU3ZnanNQYXRoMTAxMiIgZD0iTSAwIDBMIDIxNCAwTCAyMTQgMjEzTCAwIDIxM1oiIHN0cm9rZT0icmdiYSgzMyw0MSw0OCwxKSIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGwtb3BhY2l0eT0iMSIgZmlsbD0iI2M4ZmFmZiI+PC9wYXRoPjxnIGlkPSJTdmdqc0cxMDEzIj48dGV4dCBpZD0iU3ZnanNUZXh0MTAxNCIgZm9udC1mYW1pbHk9IiZxdW90O01pY3Jvc29mdCBZYUhlaSZxdW90Oywg5b6u6L2v6ZuF6buRLCBBcmlhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxM3B4IiB3aWR0aD0iMTk0cHgiIGZpbGw9IiMzMjMyMzIiIGZvbnQtd2VpZ2h0PSI0MDAiIGFsaWduPSJtaWRkbGUiIGxpbmVIZWlnaHQ9IjEyNSUiIGFuY2hvcj0ibWlkZGxlIiBmYW1pbHk9IiZxdW90O01pY3Jvc29mdCBZYUhlaSZxdW90Oywg5b6u6L2v6ZuF6buRLCBBcmlhbCIgc2l6ZT0iMTNweCIgd2VpZ2h0PSI0MDAiIGZvbnQtc3R5bGU9IiIgb3BhY2l0eT0iMSIgeT0iOTUuODc1IiB0cmFuc2Zvcm09InJvdGF0ZSgwKSI+PC90ZXh0PjwvZz48L2c+PGcgaWQ9IlN2Z2pzRzEwMTUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUyLDYyKSI+PHBhdGggaWQ9IlN2Z2pzUGF0aDEwMTYiIGQ9Ik0gMCAwTCAxNjEgMEwgMTYxIDQzTCAwIDQzWiIgc3Ryb2tlPSJyZ2JhKDAsMCwwLDEpIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbC1vcGFjaXR5PSIxIiBmaWxsPSIjZmZhMzk5Ij48L3BhdGg+PGcgaWQ9IlN2Z2pzRzEwMTciPjx0ZXh0IGlkPSJTdmdqc1RleHQxMDE4IiBmb250LWZhbWlseT0iJnF1b3Q7TWljcm9zb2Z0IFlhSGVpJnF1b3Q7LCDlvq7ova/pm4Xpu5EsIEFyaWFsIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjEzcHgiIHdpZHRoPSIxNDFweCIgZmlsbD0iIzMyMzIzMiIgZm9udC13ZWlnaHQ9IjQwMCIgYWxpZ249Im1pZGRsZSIgbGluZUhlaWdodD0iMTI1JSIgYW5jaG9yPSJtaWRkbGUiIGZhbWlseT0iJnF1b3Q7TWljcm9zb2Z0IFlhSGVpJnF1b3Q7LCDlvq7ova/pm4Xpu5EsIEFyaWFsIiBzaXplPSIxM3B4IiB3ZWlnaHQ9IjQwMCIgZm9udC1zdHlsZT0iIiBvcGFjaXR5PSIxIiB5PSIxMC44NzUiIHRyYW5zZm9ybT0icm90YXRlKDApIj48dHNwYW4gaWQ9IlN2Z2pzVHNwYW4xMDE5IiBkeT0iMTYuMjUiIHg9IjgwLjUiPjx0c3BhbiBpZD0iU3ZnanNUc3BhbjEwMjAiIHN0eWxlPSIiPkphdmHlupTnlKjnqIvluo88L3RzcGFuPjwvdHNwYW4+PC90ZXh0PjwvZz48L2c+PGcgaWQ9IlN2Z2pzRzEwMjEiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUyLDE1NCkiPjxwYXRoIGlkPSJTdmdqc1BhdGgxMDIyIiBkPSJNIDAgMEwgMTYxIDBMIDE2MSA0M0wgMCA0M1oiIHN0cm9rZT0icmdiYSgzMyw0MSw0OCwxKSIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGwtb3BhY2l0eT0iMSIgZmlsbD0iI2ZmY2U5NiI+PC9wYXRoPjxnIGlkPSJTdmdqc0cxMDIzIj48dGV4dCBpZD0iU3ZnanNUZXh0MTAyNCIgZm9udC1mYW1pbHk9IiZxdW90O01pY3Jvc29mdCBZYUhlaSZxdW90Oywg5b6u6L2v6ZuF6buRLCBBcmlhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxM3B4IiB3aWR0aD0iMTQxcHgiIGZpbGw9IiMzMjMyMzIiIGZvbnQtd2VpZ2h0PSI0MDAiIGFsaWduPSJtaWRkbGUiIGxpbmVIZWlnaHQ9IjEyNSUiIGFuY2hvcj0ibWlkZGxlIiBmYW1pbHk9IiZxdW90O01pY3Jvc29mdCBZYUhlaSZxdW90Oywg5b6u6L2v6ZuF6buRLCBBcmlhbCIgc2l6ZT0iMTNweCIgd2VpZ2h0PSI0MDAiIGZvbnQtc3R5bGU9IiIgb3BhY2l0eT0iMSIgeT0iMTAuODc1IiB0cmFuc2Zvcm09InJvdGF0ZSgwKSI+PHRzcGFuIGlkPSJTdmdqc1RzcGFuMTAyNSIgZHk9IjE2LjI1IiB4PSI4MC41Ij48dHNwYW4gaWQ9IlN2Z2pzVHNwYW4xMDI2IiBzdHlsZT0iIj5qc3RhdGQ8L3RzcGFuPjwvdHNwYW4+PC90ZXh0PjwvZz48L2c+PGcgaWQ9IlN2Z2pzRzEwMjciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQwOSwyNSkiPjxwYXRoIGlkPSJTdmdqc1BhdGgxMDI4IiBkPSJNIDAgMEwgMjE0IDBMIDIxNCAyMTNMIDAgMjEzWiIgc3Ryb2tlPSJyZ2JhKDMzLDQxLDQ4LDEpIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbC1vcGFjaXR5PSIxIiBmaWxsPSIjZmZlNmNhIj48L3BhdGg+PGcgaWQ9IlN2Z2pzRzEwMjkiPjx0ZXh0IGlkPSJTdmdqc1RleHQxMDMwIiBmb250LWZhbWlseT0iJnF1b3Q7TWljcm9zb2Z0IFlhSGVpJnF1b3Q7LCDlvq7ova/pm4Xpu5EsIEFyaWFsIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjEzcHgiIHdpZHRoPSIxOTRweCIgZmlsbD0iIzMyMzIzMiIgZm9udC13ZWlnaHQ9IjQwMCIgYWxpZ249Im1pZGRsZSIgbGluZUhlaWdodD0iMTI1JSIgYW5jaG9yPSJtaWRkbGUiIGZhbWlseT0iJnF1b3Q7TWljcm9zb2Z0IFlhSGVpJnF1b3Q7LCDlvq7ova/pm4Xpu5EsIEFyaWFsIiBzaXplPSIxM3B4IiB3ZWlnaHQ9IjQwMCIgZm9udC1zdHlsZT0iIiBvcGFjaXR5PSIxIiB5PSI5NS44NzUiIHRyYW5zZm9ybT0icm90YXRlKDApIj48L3RleHQ+PC9nPjwvZz48ZyBpZD0iU3ZnanNHMTAzMSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDM2LDE1NCkiPjxwYXRoIGlkPSJTdmdqc1BhdGgxMDMyIiBkPSJNIDAgMEwgNjMgMEwgNjMgNDNMIDAgNDNaIiBzdHJva2U9InJnYmEoMzMsNDEsNDgsMSkiIHN0cm9rZS13aWR0aD0iMS41IiBmaWxsLW9wYWNpdHk9IjEiIGZpbGw9IiNmZmY3NjAiPjwvcGF0aD48ZyBpZD0iU3ZnanNHMTAzMyI+PHRleHQgaWQ9IlN2Z2pzVGV4dDEwMzQiIGZvbnQtZmFtaWx5PSImcXVvdDtNaWNyb3NvZnQgWWFIZWkmcXVvdDssIOW+rui9r+mbhem7kSwgQXJpYWwiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTNweCIgd2lkdGg9IjQzcHgiIGZpbGw9IiMzMjMyMzIiIGZvbnQtd2VpZ2h0PSI0MDAiIGFsaWduPSJtaWRkbGUiIGxpbmVIZWlnaHQ9IjEyNSUiIGFuY2hvcj0ibWlkZGxlIiBmYW1pbHk9IiZxdW90O01pY3Jvc29mdCBZYUhlaSZxdW90Oywg5b6u6L2v6ZuF6buRLCBBcmlhbCIgc2l6ZT0iMTNweCIgd2VpZ2h0PSI0MDAiIGZvbnQtc3R5bGU9IiIgb3BhY2l0eT0iMSIgeT0iMTAuODc1IiB0cmFuc2Zvcm09InJvdGF0ZSgwKSI+PHRzcGFuIGlkPSJTdmdqc1RzcGFuMTAzNSIgZHk9IjE2LjI1IiB4PSIzMS41Ij48dHNwYW4gaWQ9IlN2Z2pzVHNwYW4xMDM2IiBzdHlsZT0iIj5qcHM8L3RzcGFuPjwvdHNwYW4+PC90ZXh0PjwvZz48L2c+PGcgaWQ9IlN2Z2pzRzEwMzciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUzMiwxNTQpIj48cGF0aCBpZD0iU3ZnanNQYXRoMTAzOCIgZD0iTSAwIDBMIDYzIDBMIDYzIDQzTCAwIDQzWiIgc3Ryb2tlPSJyZ2JhKDMzLDQxLDQ4LDEpIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbC1vcGFjaXR5PSIxIiBmaWxsPSIjZmZmNzYwIj48L3BhdGg+PGcgaWQ9IlN2Z2pzRzEwMzkiPjx0ZXh0IGlkPSJTdmdqc1RleHQxMDQwIiBmb250LWZhbWlseT0iJnF1b3Q7TWljcm9zb2Z0IFlhSGVpJnF1b3Q7LCDlvq7ova/pm4Xpu5EsIEFyaWFsIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjEzcHgiIHdpZHRoPSI0M3B4IiBmaWxsPSIjMzIzMjMyIiBmb250LXdlaWdodD0iNDAwIiBhbGlnbj0ibWlkZGxlIiBsaW5lSGVpZ2h0PSIxMjUlIiBhbmNob3I9Im1pZGRsZSIgZmFtaWx5PSImcXVvdDtNaWNyb3NvZnQgWWFIZWkmcXVvdDssIOW+rui9r+mbhem7kSwgQXJpYWwiIHNpemU9IjEzcHgiIHdlaWdodD0iNDAwIiBmb250LXN0eWxlPSIiIG9wYWNpdHk9IjEiIHk9IjEwLjg3NSIgdHJhbnNmb3JtPSJyb3RhdGUoMCkiPjx0c3BhbiBpZD0iU3ZnanNUc3BhbjEwNDEiIGR5PSIxNi4yNSIgeD0iMzEuNSI+PHRzcGFuIGlkPSJTdmdqc1RzcGFuMTA0MiIgc3R5bGU9IiI+anN0YXQ8L3RzcGFuPjwvdHNwYW4+PC90ZXh0PjwvZz48L2c+PGcgaWQ9IlN2Z2pzRzEwNDMiPjxwYXRoIGlkPSJTdmdqc1BhdGgxMDQ0IiBkPSJNMjE1LjcgMTc1LjVMMzExIDE3NS41TDMxMSAxNzUuNUw0MDYuMjk5OTk5OTk5OTk5OTUgMTc1LjUiIHN0cm9rZT0iIzMyMzIzMiIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiIG1hcmtlci1zdGFydD0idXJsKCNTdmdqc01hcmtlcjEwNDUpIiBtYXJrZXItZW5kPSJ1cmwoI1N2Z2pzTWFya2VyMTA0NykiPjwvcGF0aD48L2c+PGcgaWQ9IlN2Z2pzRzEwNDkiPjwvZz48L3N2Zz4=" alt="jstatd"></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/JVM%E4%B8%8B%E7%AF%87%EF%BC%9A%E6%80%A7%E8%83%BD%E7%9B%91%E6%8E%A7%E4%B8%8E%E8%B0%83%E4%BC%98%E7%AF%87/" rel="tag"># JVM下篇：性能监控与调优篇</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2020/12/01-%E6%80%A7%E8%83%BD%E7%9B%91%E6%8E%A7%E4%B8%8E%E8%B0%83%E4%BC%98%E6%A6%82%E8%BF%B0/" rel="prev" title="01-性能监控与调优概述">
+                  <i class="fa fa-angle-left"></i> 01-性能监控与调优概述
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2020/12/03-JVM%E7%9B%91%E6%8E%A7%E5%8F%8A%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7-GUI%E7%AF%87/" rel="next" title="03-JVM监控及诊断工具-GUI篇">
+                  03-JVM监控及诊断工具-GUI篇 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

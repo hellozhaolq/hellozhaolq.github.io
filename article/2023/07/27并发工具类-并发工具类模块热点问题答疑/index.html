@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="前面我们用13篇文章的内容介绍了Java SDK提供的并发工具类，这些工具类都是久经考验的，所以学好用好它们对于解决并发问题非常重要。我们在介绍这些工具类的时候，重点介绍了这些工具类的产生背景、应用场景以及实现原理，目的就是让你在面对并发问题的时候，有思路，有办法。只有思路、办法有了，才谈得上开始动手解决问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="27并发工具类-并发工具类模块热点问题答疑">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/07/27%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="前面我们用13篇文章的内容介绍了Java SDK提供的并发工具类，这些工具类都是久经考验的，所以学好用好它们对于解决并发问题非常重要。我们在介绍这些工具类的时候，重点介绍了这些工具类的产生背景、应用场景以及实现原理，目的就是让你在面对并发问题的时候，有思路，有办法。只有思路、办法有了，才谈得上开始动手解决问题。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-07-27T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-07-27T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Java并发编程实战">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/07/27%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/07/27%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/","path":"article/2023/07/27并发工具类-并发工具类模块热点问题答疑/","title":"27并发工具类-并发工具类模块热点问题答疑"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>27并发工具类-并发工具类模块热点问题答疑 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-while-true-%E6%80%BB%E4%B8%8D%E8%AE%A9%E4%BA%BA%E7%9C%81%E5%BF%83"><span class="nav-number">1.</span> <span class="nav-text">1. while(true) 总不让人省心</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-signalAll-%E6%80%BB%E8%AE%A9%E4%BA%BA%E7%9C%81%E5%BF%83"><span class="nav-number">2.</span> <span class="nav-text">2. signalAll() 总让人省心</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-Semaphore%E9%9C%80%E8%A6%81%E9%94%81%E4%B8%AD%E9%94%81"><span class="nav-number">3.</span> <span class="nav-text">3. Semaphore需要锁中锁</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E9%94%81%E7%9A%84%E7%94%B3%E8%AF%B7%E5%92%8C%E9%87%8A%E6%94%BE%E8%A6%81%E6%88%90%E5%AF%B9%E5%87%BA%E7%8E%B0"><span class="nav-number">4.</span> <span class="nav-text">4. 锁的申请和释放要成对出现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%9B%9E%E8%B0%83%E6%80%BB%E8%A6%81%E5%85%B3%E5%BF%83%E6%89%A7%E8%A1%8C%E7%BA%BF%E7%A8%8B%E6%98%AF%E8%B0%81"><span class="nav-number">5.</span> <span class="nav-text">5. 回调总要关心执行线程是谁</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E5%85%B1%E4%BA%AB%E7%BA%BF%E7%A8%8B%E6%B1%A0%EF%BC%9A%E6%9C%89%E7%A6%8F%E5%90%8C%E4%BA%AB%E5%B0%B1%E8%A6%81%E6%9C%89%E9%9A%BE%E5%90%8C%E5%BD%93"><span class="nav-number">6.</span> <span class="nav-text">6. 共享线程池：有福同享就要有难同当</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D%E7%9A%84%E5%88%A9%E5%99%A8%EF%BC%9A%E7%BA%BF%E7%A8%8B%E6%A0%88dump"><span class="nav-number">7.</span> <span class="nav-text">7. 线上问题定位的利器：线程栈dump</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">8.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/07/27%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="27并发工具类-并发工具类模块热点问题答疑 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          27并发工具类-并发工具类模块热点问题答疑
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-07-27 08:00:00" itemprop="dateCreated datePublished" datetime="2023-07-27T08:00:00+08:00">2023-07-27</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">Java并发编程实战</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>前面我们用13篇文章的内容介绍了Java SDK提供的并发工具类，这些工具类都是久经考验的，所以学好用好它们对于解决并发问题非常重要。我们在介绍这些工具类的时候，重点介绍了这些工具类的产生背景、应用场景以及实现原理，目的就是让你在面对并发问题的时候，有思路，有办法。只有思路、办法有了，才谈得上开始动手解决问题。</p>
+<span id="more"></span>
+
+<p>当然了，只有思路和办法还不足以把问题解决，最终还是要动手实践的，我觉得在实践中有两方面的问题需要重点关注：<strong>细节问题与最佳实践</strong>。千里之堤毁于蚁穴，细节虽然不能保证成功，但是可以导致失败，所以我们一直都强调要关注细节。而最佳实践是前人的经验总结，可以帮助我们不要阴沟里翻船，所以没有十足的理由，一定要遵守。</p>
+<p>为了让你学完即学即用，我在每篇文章的最后都给你留了道思考题。这13篇文章的13个思考题，基本上都是相关工具类在使用中需要特别注意的一些细节问题，工作中容易碰到且费神费力，所以咱们今天就来一一分析。</p>
+<h1 id="1-while-true-总不让人省心"><a href="#1-while-true-总不让人省心" class="headerlink" title="1. while(true) 总不让人省心"></a>1. while(true) 总不让人省心</h1><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/87779">《14 | Lock&amp;Condition（上）：隐藏在并发包中的管程》</a>的思考题，本意是通过破坏不可抢占条件来避免死锁问题，但是它的实现中有一个致命的问题，那就是： while(true) 没有break条件，从而导致了死循环。除此之外，这个实现虽然不存在死锁问题，但还是存在活锁问题的，解决活锁问题很简单，只需要随机等待一小段时间就可以了。</p>
+<p>修复后的代码如下所示，我仅仅修改了两个地方，一处是转账成功之后break，另一处是在while循环体结束前增加了<code>Thread.sleep(随机时间)</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Account</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">int</span> balance;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Lock</span> <span class="variable">lock</span></span><br><span class="line">          <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ReentrantLock</span>();</span><br><span class="line">  <span class="comment">// 转账</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">transfer</span><span class="params">(Account tar, <span class="type">int</span> amt)</span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">      <span class="keyword">if</span>(<span class="built_in">this</span>.lock.tryLock()) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          <span class="keyword">if</span> (tar.lock.tryLock()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">              <span class="built_in">this</span>.balance -= amt;</span><br><span class="line">              tar.balance += amt;</span><br><span class="line">              <span class="comment">//新增：退出循环</span></span><br><span class="line">              <span class="keyword">break</span>;</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">              tar.lock.unlock();</span><br><span class="line">            &#125;</span><br><span class="line">          &#125;<span class="comment">//if</span></span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">          <span class="built_in">this</span>.lock.unlock();</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;<span class="comment">//if</span></span><br><span class="line">      <span class="comment">//新增：sleep一个随机时间避免活锁</span></span><br><span class="line">      Thread.sleep(随机时间);</span><br><span class="line">    &#125;<span class="comment">//while</span></span><br><span class="line">  &#125;<span class="comment">//transfer</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个思考题里面的while(true)问题还是比较容易看出来的，<strong>但不是所有的while(true)问题都这么显而易见的</strong>，很多都隐藏得比较深。</p>
+<p>例如，<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/90515">《21 | 原子类：无锁工具类的典范》</a>的思考题本质上也是一个while(true)，不过它隐藏得就比较深了。看上去 <code>while(!rf.compareAndSet(or, nr))</code> 是有终止条件的，而且跑单线程测试一直都没有问题。实际上却存在严重的并发问题，问题就出在对or的赋值在while循环之外，这样每次循环or的值都不会发生变化，所以一旦有一次循环rf.compareAndSet(or, nr)的值等于false，那之后无论循环多少次，都会等于false。也就是说在特定场景下，变成了while(true)问题。既然找到了原因，修改就很简单了，只要把对or的赋值移到while循环之内就可以了，修改后的代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SafeWM</span> &#123;</span><br><span class="line">  <span class="keyword">class</span> <span class="title class_">WMRange</span>&#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> upper;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> lower;</span><br><span class="line">    WMRange(<span class="type">int</span> upper,<span class="type">int</span> lower)&#123;</span><br><span class="line">    <span class="comment">//省略构造函数实现</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">final</span> AtomicReference&lt;WMRange&gt;</span><br><span class="line">    rf = <span class="keyword">new</span> <span class="title class_">AtomicReference</span>&lt;&gt;(</span><br><span class="line">      <span class="keyword">new</span> <span class="title class_">WMRange</span>(<span class="number">0</span>,<span class="number">0</span>)</span><br><span class="line">    );</span><br><span class="line">  <span class="comment">// 设置库存上限</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">setUpper</span><span class="params">(<span class="type">int</span> v)</span>&#123;</span><br><span class="line">    WMRange nr;</span><br><span class="line">    WMRange or;</span><br><span class="line">    <span class="comment">//原代码在这里</span></span><br><span class="line">    <span class="comment">//WMRange or=rf.get();</span></span><br><span class="line">    <span class="keyword">do</span>&#123;</span><br><span class="line">      <span class="comment">//移动到此处</span></span><br><span class="line">      <span class="comment">//每个回合都需要重新获取旧值</span></span><br><span class="line">      or = rf.get();</span><br><span class="line">      <span class="comment">// 检查参数合法性</span></span><br><span class="line">      <span class="keyword">if</span>(v &lt; or.lower)&#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>();</span><br><span class="line">      &#125;</span><br><span class="line">      nr = <span class="keyword">new</span></span><br><span class="line">        <span class="title class_">WMRange</span>(v, or.lower);</span><br><span class="line">    &#125;<span class="keyword">while</span>(!rf.compareAndSet(or, nr));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="2-signalAll-总让人省心"><a href="#2-signalAll-总让人省心" class="headerlink" title="2. signalAll() 总让人省心"></a>2. signalAll() 总让人省心</h1><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/88487">《15 | Lock&amp;Condition（下）：Dubbo如何用管程实现异步转同步？》</a>的思考题是关于signal()和signalAll()的，Dubbo最近已经把signal()改成signalAll()了，我觉得用signal()也不能说错，但的确是<strong>用signalAll()会更安全</strong>。我个人也倾向于使用signalAll()，因为我们写程序，不是做数学题，而是在搞工程，工程中会有很多不稳定的因素，更有很多你预料不到的情况发生，所以不要让你的代码铤而走险，尽量使用更稳妥的方案和设计。Dubbo修改后的相关代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// RPC结果返回时调用该方法   </span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">doReceived</span><span class="params">(Response res)</span> &#123;</span><br><span class="line">  lock.lock();</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    response = res;</span><br><span class="line">    done.signalAll();</span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    lock.unlock();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="3-Semaphore需要锁中锁"><a href="#3-Semaphore需要锁中锁" class="headerlink" title="3. Semaphore需要锁中锁"></a>3. Semaphore需要锁中锁</h1><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/88499">《16 | Semaphore：如何快速实现一个限流器？》</a>的思考题是对象池的例子中Vector能否换成ArrayList，答案是不可以的。Semaphore可以允许多个线程访问一个临界区，那就意味着可能存在多个线程同时访问ArrayList，而ArrayList不是线程安全的，所以对象池的例子中是不能够将Vector换成ArrayList的。<strong>Semaphore允许多个线程访问一个临界区，这也是一把双刃剑</strong>，当多个线程进入临界区时，如果需要访问共享变量就会存在并发问题，所以必须<strong>加锁</strong>，也就是说Semaphore需要锁中锁。</p>
+<h1 id="4-锁的申请和释放要成对出现"><a href="#4-锁的申请和释放要成对出现" class="headerlink" title="4. 锁的申请和释放要成对出现"></a>4. 锁的申请和释放要成对出现</h1><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/89456">《18 | StampedLock：有没有比读写锁更快的锁？》</a>思考题的Bug出在没有正确地释放锁。锁的申请和释放要成对出现，对此我们有一个最佳实践，就是使用<strong>try{}finally{}</strong>，但是try{}finally{}并不能解决所有锁的释放问题。比如示例代码中，锁的升级会生成新的stamp ，而finally中释放锁用的是锁升级前的stamp，本质上这也属于锁的申请和释放没有成对出现，只是它隐藏得有点深。解决这个问题倒也很简单，只需要对stamp 重新赋值就可以了，修复后的代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="type">double</span> x, y;</span><br><span class="line"><span class="keyword">final</span> <span class="type">StampedLock</span> <span class="variable">sl</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StampedLock</span>();</span><br><span class="line"><span class="comment">// 存在问题的方法</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">moveIfAtOrigin</span><span class="params">(<span class="type">double</span> newX, <span class="type">double</span> newY)</span>&#123;</span><br><span class="line"> <span class="type">long</span> <span class="variable">stamp</span> <span class="operator">=</span> sl.readLock();</span><br><span class="line"> <span class="keyword">try</span> &#123;</span><br><span class="line">  <span class="keyword">while</span>(x == <span class="number">0.0</span> &amp;&amp; y == <span class="number">0.0</span>)&#123;</span><br><span class="line">    <span class="type">long</span> <span class="variable">ws</span> <span class="operator">=</span> sl.tryConvertToWriteLock(stamp);</span><br><span class="line">    <span class="keyword">if</span> (ws != <span class="number">0L</span>) &#123;</span><br><span class="line">      <span class="comment">//问题出在没有对stamp重新赋值</span></span><br><span class="line">      <span class="comment">//新增下面一行</span></span><br><span class="line">      stamp = ws;</span><br><span class="line">      x = newX;</span><br><span class="line">      y = newY;</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      sl.unlockRead(stamp);</span><br><span class="line">      stamp = sl.writeLock();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"> &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">  <span class="comment">//此处unlock的是stamp</span></span><br><span class="line">  sl.unlock(stamp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="5-回调总要关心执行线程是谁"><a href="#5-回调总要关心执行线程是谁" class="headerlink" title="5. 回调总要关心执行线程是谁"></a>5. 回调总要关心执行线程是谁</h1><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/89461">《19 | CountDownLatch和CyclicBarrier：如何让多线程步调一致？》</a>的思考题是：CyclicBarrier的回调函数使用了一个固定大小为1的线程池，是否合理？我觉得是合理的，可以从以下两个方面来分析。</p>
+<p>第一个是线程池大小是1，只有1个线程，主要原因是check()方法的耗时比getPOrders()和getDOrders()都要短，所以没必要用多个线程，同时单线程能保证访问的数据不存在并发问题。</p>
+<p>第二个是使用了线程池，如果不使用，直接在回调函数里调用check()方法是否可以呢？绝对不可以。为什么呢？这个要分析一下回调函数和唤醒等待线程之间的关系。下面是CyclicBarrier相关的源码，通过源码你会发现CyclicBarrier是同步调用回调函数之后才唤醒等待的线程，如果我们在回调函数里直接调用check()方法，那就意味着在执行check()的时候，是不能同时执行getPOrders()和getDOrders()的，这样就起不到提升性能的作用。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">  <span class="comment">//barrierCommand是回调函数</span></span><br><span class="line">  <span class="keyword">final</span> <span class="type">Runnable</span> <span class="variable">command</span> <span class="operator">=</span> barrierCommand;</span><br><span class="line">  <span class="comment">//调用回调函数</span></span><br><span class="line">  <span class="keyword">if</span> (command != <span class="literal">null</span>)</span><br><span class="line">	command.run();</span><br><span class="line">  ranAction = <span class="literal">true</span>;</span><br><span class="line">  <span class="comment">//唤醒等待的线程</span></span><br><span class="line">  nextGeneration();</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (!ranAction)</span><br><span class="line">	breakBarrier();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以，当遇到回调函数的时候，你应该本能地问自己：执行回调函数的线程是哪一个？这个在多线程场景下非常重要。因为不同线程ThreadLocal里的数据是不同的，有些框架比如Spring就用ThreadLocal来管理事务，如果不清楚回调函数用的是哪个线程，很可能会导致错误的事务管理，并最终导致数据不一致。</p>
+<p>CyclicBarrier的回调函数究竟是哪个线程执行的呢？如果你分析源码，你会发现执行回调函数的线程是将CyclicBarrier内部计数器减到 0 的那个线程。所以我们前面讲执行check()的时候，是不能同时执行getPOrders()和getDOrders()，因为执行这两个方法的线程一个在等待，一个正在忙着执行check()。</p>
+<p>再次强调一下：<strong>当看到回调函数的时候，一定问一问执行回调函数的线程是谁</strong>。</p>
+<h1 id="6-共享线程池：有福同享就要有难同当"><a href="#6-共享线程池：有福同享就要有难同当" class="headerlink" title="6. 共享线程池：有福同享就要有难同当"></a>6. 共享线程池：有福同享就要有难同当</h1><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/91569">《24 | CompletableFuture：异步编程没那么难》</a>的思考题是下列代码是否有问题。很多同学都发现这段代码的问题了，例如没有异常处理、逻辑不严谨等等，不过我更想让你关注的是：findRuleByJdbc()这个方法隐藏着一个阻塞式I&#x2F;O，这意味着会阻塞调用线程。默认情况下所有的CompletableFuture共享一个ForkJoinPool，当有阻塞式I&#x2F;O时，可能导致所有的ForkJoinPool线程都阻塞，进而影响整个系统的性能。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//采购订单</span></span><br><span class="line">PurchersOrder po;</span><br><span class="line">CompletableFuture&lt;Boolean&gt; cf = </span><br><span class="line">  CompletableFuture.supplyAsync(()-&gt;&#123;</span><br><span class="line">    <span class="comment">//在数据库中查询规则</span></span><br><span class="line">    <span class="keyword">return</span> findRuleByJdbc();</span><br><span class="line">  &#125;).thenApply(r -&gt; &#123;</span><br><span class="line">    <span class="comment">//规则校验</span></span><br><span class="line">    <span class="keyword">return</span> check(po, r);</span><br><span class="line">&#125;);</span><br><span class="line"><span class="type">Boolean</span> <span class="variable">isOk</span> <span class="operator">=</span> cf.join();</span><br></pre></td></tr></table></figure>
+
+<p>利用共享，往往能让我们快速实现功能，所谓是有福同享，但是代价就是有难要同当。在强调高可用的今天，大多数人更倾向于使用隔离的方案。</p>
+<h1 id="7-线上问题定位的利器：线程栈dump"><a href="#7-线上问题定位的利器：线程栈dump" class="headerlink" title="7. 线上问题定位的利器：线程栈dump"></a>7. 线上问题定位的利器：线程栈dump</h1><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/88909">《17 | ReadWriteLock：如何快速实现一个完备的缓存？》</a>和<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/90201">《20 | 并发容器：都有哪些“坑”需要我们填？》</a>的思考题，本质上都是定位线上并发问题，方案很简单，就是通过查看线程栈来定位问题。重点是查看线程状态，分析线程进入该状态的原因是否合理，你可以参考<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/86366">《09 | Java线程（上）：Java线程的生命周期》</a>来加深理解。</p>
+<p>为了便于分析定位线程问题，你需要给线程赋予一个有意义的名字，对于线程池可以通过自定义ThreadFactory来给线程池中的线程赋予有意义的名字，也可以在执行run()方法时通过<code>Thread.currentThread().setName();</code>来给线程赋予一个更贴近业务的名字。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>Java并发工具类到今天为止，就告一段落了，由于篇幅原因，不能每个工具类都详细介绍。Java并发工具类内容繁杂，熟练使用是需要一个过程的，而且需要多加实践。希望你学完这个模块之后，遇到并发问题时最起码能知道用哪些工具可以解决。至于工具使用的细节和最佳实践，我总结的也只是我认为重要的。由于每个人的思维方式和编码习惯不同，也许我认为不重要的，恰恰是你的短板，所以这部分内容更多地还是需要你去实践，在实践中养成良好的编码习惯，不断纠正错误的思维方式。</p>
+<p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" rel="tag"># Java并发编程实战</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/07/26%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-ForkJoin%EF%BC%9A%E5%8D%95%E6%9C%BA%E7%89%88%E7%9A%84MapReduce/" rel="prev" title="26并发工具类-ForkJoin：单机版的MapReduce">
+                  <i class="fa fa-angle-left"></i> 26并发工具类-ForkJoin：单机版的MapReduce
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/07/28%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-Immutability%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%E4%B8%8D%E5%8F%98%E6%80%A7%E8%A7%A3%E5%86%B3%E5%B9%B6%E5%8F%91%E9%97%AE%E9%A2%98%EF%BC%9F/" rel="next" title="28并发设计模式-Immutability模式：如何利用不变性解决并发问题？">
+                  28并发设计模式-Immutability模式：如何利用不变性解决并发问题？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

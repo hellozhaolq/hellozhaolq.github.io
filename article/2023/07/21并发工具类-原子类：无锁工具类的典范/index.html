@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="前面我们多次提到一个累加器的例子，示例代码如下。在这个例子中，add10K()这个方法不是线程安全的，问题就出在变量count的可见性和count+&#x3D;1的原子性上。可见性问题可以用volatile来解决，而原子性问题我们前面一直都是采用的互斥锁方案。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="21并发工具类-原子类：无锁工具类的典范">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/07/21%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-%E5%8E%9F%E5%AD%90%E7%B1%BB%EF%BC%9A%E6%97%A0%E9%94%81%E5%B7%A5%E5%85%B7%E7%B1%BB%E7%9A%84%E5%85%B8%E8%8C%83/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="前面我们多次提到一个累加器的例子，示例代码如下。在这个例子中，add10K()这个方法不是线程安全的，问题就出在变量count的可见性和count+&#x3D;1的原子性上。可见性问题可以用volatile来解决，而原子性问题我们前面一直都是采用的互斥锁方案。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/07/21%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-%E5%8E%9F%E5%AD%90%E7%B1%BB%EF%BC%9A%E6%97%A0%E9%94%81%E5%B7%A5%E5%85%B7%E7%B1%BB%E7%9A%84%E5%85%B8%E8%8C%83/20210401203935418.png">
+<meta property="article:published_time" content="2023-07-21T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-07-21T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Java并发编程实战">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/07/21%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-%E5%8E%9F%E5%AD%90%E7%B1%BB%EF%BC%9A%E6%97%A0%E9%94%81%E5%B7%A5%E5%85%B7%E7%B1%BB%E7%9A%84%E5%85%B8%E8%8C%83/20210401203935418.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/07/21%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-%E5%8E%9F%E5%AD%90%E7%B1%BB%EF%BC%9A%E6%97%A0%E9%94%81%E5%B7%A5%E5%85%B7%E7%B1%BB%E7%9A%84%E5%85%B8%E8%8C%83/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/07/21%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-%E5%8E%9F%E5%AD%90%E7%B1%BB%EF%BC%9A%E6%97%A0%E9%94%81%E5%B7%A5%E5%85%B7%E7%B1%BB%E7%9A%84%E5%85%B8%E8%8C%83/","path":"article/2023/07/21并发工具类-原子类：无锁工具类的典范/","title":"21并发工具类-原子类：无锁工具类的典范"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>21并发工具类-原子类：无锁工具类的典范 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%97%A0%E9%94%81%E6%96%B9%E6%A1%88%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">无锁方案的实现原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%9C%8BJava%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%8E%9F%E5%AD%90%E5%8C%96%E7%9A%84count-1"><span class="nav-number">2.</span> <span class="nav-text">看Java如何实现原子化的count +&#x3D; 1</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8E%9F%E5%AD%90%E7%B1%BB%E6%A6%82%E8%A7%88"><span class="nav-number">3.</span> <span class="nav-text">原子类概览</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%8E%9F%E5%AD%90%E5%8C%96%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="nav-number">3.1.</span> <span class="nav-text">1. 原子化的基本数据类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%8E%9F%E5%AD%90%E5%8C%96%E7%9A%84%E5%AF%B9%E8%B1%A1%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B"><span class="nav-number">3.2.</span> <span class="nav-text">2. 原子化的对象引用类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%8E%9F%E5%AD%90%E5%8C%96%E6%95%B0%E7%BB%84"><span class="nav-number">3.3.</span> <span class="nav-text">3. 原子化数组</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E5%8E%9F%E5%AD%90%E5%8C%96%E5%AF%B9%E8%B1%A1%E5%B1%9E%E6%80%A7%E6%9B%B4%E6%96%B0%E5%99%A8"><span class="nav-number">3.4.</span> <span class="nav-text">4. 原子化对象属性更新器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E5%8E%9F%E5%AD%90%E5%8C%96%E7%9A%84%E7%B4%AF%E5%8A%A0%E5%99%A8"><span class="nav-number">3.5.</span> <span class="nav-text">5. 原子化的累加器</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%90%8E%E6%80%9D%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">课后思考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/07/21%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-%E5%8E%9F%E5%AD%90%E7%B1%BB%EF%BC%9A%E6%97%A0%E9%94%81%E5%B7%A5%E5%85%B7%E7%B1%BB%E7%9A%84%E5%85%B8%E8%8C%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="21并发工具类-原子类：无锁工具类的典范 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          21并发工具类-原子类：无锁工具类的典范
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-07-21 08:00:00" itemprop="dateCreated datePublished" datetime="2023-07-21T08:00:00+08:00">2023-07-21</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">Java并发编程实战</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>前面我们多次提到一个累加器的例子，示例代码如下。在这个例子中，add10K()这个方法不是线程安全的，问题就出在变量count的可见性和count+&#x3D;1的原子性上。可见性问题可以用volatile来解决，而原子性问题我们前面一直都是采用的互斥锁方案。</p>
+<span id="more"></span>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Test</span> &#123;</span><br><span class="line">  <span class="type">long</span> <span class="variable">count</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">add10K</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">idx</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span>(idx++ &lt; <span class="number">10000</span>) &#123;</span><br><span class="line">      count += <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实对于简单的原子性问题，还有一种<strong>无锁方案</strong>。Java SDK并发包将这种无锁方案封装提炼之后，实现了一系列的原子类。不过，在深入介绍原子类的实现之前，我们先看看如何利用原子类解决累加器问题，这样你会对原子类有个初步的认识。</p>
+<p>在下面的代码中，我们将原来的long型变量count替换为了原子类AtomicLong，原来的 <code>count +=1</code> 替换成了 count.getAndIncrement()，仅需要这两处简单的改动就能使add10K()方法变成线程安全的，原子类的使用还是挺简单的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Test</span> &#123;</span><br><span class="line">  <span class="type">AtomicLong</span> <span class="variable">count</span> <span class="operator">=</span> </span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">AtomicLong</span>(<span class="number">0</span>);</span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">add10K</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">idx</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span>(idx++ &lt; <span class="number">10000</span>) &#123;</span><br><span class="line">      count.getAndIncrement();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>无锁方案相对互斥锁方案，最大的好处就是<strong>性能</strong>。互斥锁方案为了保证互斥性，需要执行加锁、解锁操作，而加锁、解锁操作本身就消耗性能；同时拿不到锁的线程还会进入阻塞状态，进而触发线程切换，线程切换对性能的消耗也很大。 相比之下，无锁方案则完全没有加锁、解锁的性能消耗，同时还能保证互斥性，既解决了问题，又没有带来新的问题，可谓绝佳方案。那它是如何做到的呢？</p>
+<h1 id="无锁方案的实现原理"><a href="#无锁方案的实现原理" class="headerlink" title="无锁方案的实现原理"></a>无锁方案的实现原理</h1><p>其实原子类性能高的秘密很简单，硬件支持而已。CPU为了解决并发问题，提供了CAS指令（CAS，全称是Compare And Swap，即“比较并交换”）。CAS指令包含3个参数：共享变量的内存地址A、用于比较的值B和共享变量的新值C；并且只有当内存中地址A处的值等于B时，才能将内存中地址A处的值更新为新值C。<strong>作为一条CPU指令，CAS指令本身是能够保证原子性的</strong>。</p>
+<p>你可以通过下面CAS指令的模拟代码来理解CAS的工作原理。在下面的模拟程序中有两个参数，一个是期望值expect，另一个是需要写入的新值newValue，<strong>只有当目前count的值和期望值expect相等时，才会将count更新为newValue</strong>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SimulatedCAS</span>&#123;</span><br><span class="line">  <span class="type">int</span> count;</span><br><span class="line">  <span class="keyword">synchronized</span> <span class="type">int</span> <span class="title function_">cas</span><span class="params">(</span></span><br><span class="line"><span class="params">    <span class="type">int</span> expect, <span class="type">int</span> newValue)</span>&#123;</span><br><span class="line">    <span class="comment">// 读目前count的值</span></span><br><span class="line">    <span class="type">int</span> <span class="variable">curValue</span> <span class="operator">=</span> count;</span><br><span class="line">    <span class="comment">// 比较目前count值是否==期望值</span></span><br><span class="line">    <span class="keyword">if</span>(curValue == expect)&#123;</span><br><span class="line">      <span class="comment">// 如果是，则更新count的值</span></span><br><span class="line">      count = newValue;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 返回写入前的值</span></span><br><span class="line">    <span class="keyword">return</span> curValue;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>你仔细地再次思考一下这句话，“<strong>只有当目前count的值和期望值expect相等时，才会将count更新为newValue。</strong>”要怎么理解这句话呢？</p>
+<p>对于前面提到的累加器的例子，<code>count += 1</code> 的一个核心问题是：基于内存中count的当前值A计算出来的count+&#x3D;1为A+1，在将A+1写入内存的时候，很可能此时内存中count已经被其他线程更新过了，这样就会导致错误地覆盖其他线程写入的值（如果你觉得理解起来还有困难，建议你再重新看看<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/83682">《01 | 可见性、原子性和有序性问题：并发编程Bug的源头》</a>）。也就是说，只有当内存中count的值等于期望值A时，才能将内存中count的值更新为计算结果A+1，这不就是CAS的语义吗！</p>
+<p>使用CAS来解决并发问题，一般都会伴随着自旋，而所谓自旋，其实就是循环尝试。例如，实现一个线程安全的<code>count += 1</code>操作，“CAS+自旋”的实现方案如下所示，首先计算newValue &#x3D; count+1，如果cas(count,newValue)返回的值不等于count，则意味着线程在执行完代码①处之后，执行代码②处之前，count的值被其他线程更新过。那此时该怎么处理呢？可以采用自旋方案，就像下面代码中展示的，可以重新读count最新的值来计算newValue并尝试再次更新，直到成功。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SimulatedCAS</span>&#123;</span><br><span class="line">  <span class="keyword">volatile</span> <span class="type">int</span> count;</span><br><span class="line">  <span class="comment">// 实现count+=1</span></span><br><span class="line">  addOne()&#123;</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">      newValue = count+<span class="number">1</span>; <span class="comment">//①</span></span><br><span class="line">    &#125;<span class="keyword">while</span>(count !=</span><br><span class="line">      cas(count,newValue) <span class="comment">//②</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 模拟实现CAS，仅用来帮助理解</span></span><br><span class="line">  <span class="keyword">synchronized</span> <span class="type">int</span> <span class="title function_">cas</span><span class="params">(</span></span><br><span class="line"><span class="params">    <span class="type">int</span> expect, <span class="type">int</span> newValue)</span>&#123;</span><br><span class="line">    <span class="comment">// 读目前count的值</span></span><br><span class="line">    <span class="type">int</span> <span class="variable">curValue</span> <span class="operator">=</span> count;</span><br><span class="line">    <span class="comment">// 比较目前count值是否==期望值</span></span><br><span class="line">    <span class="keyword">if</span>(curValue == expect)&#123;</span><br><span class="line">      <span class="comment">// 如果是，则更新count的值</span></span><br><span class="line">      count= newValue;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 返回写入前的值</span></span><br><span class="line">    <span class="keyword">return</span> curValue;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过上面的示例代码，想必你已经发现了，CAS这种无锁方案，完全没有加锁、解锁操作，即便两个线程完全同时执行addOne()方法，也不会有线程被阻塞，所以相对于互斥锁方案来说，性能好了很多。</p>
+<p>但是在CAS方案中，有一个问题可能会常被你忽略，那就是<strong>ABA</strong>的问题。什么是ABA问题呢？</p>
+<p>前面我们提到“如果cas(count,newValue)返回的值<strong>不等于</strong>count，意味着线程在执行完代码①处之后，执行代码②处之前，count的值被其他线程<strong>更新过</strong>”，那如果cas(count,newValue)返回的值<strong>等于</strong>count，是否就能够认为count的值没有被其他线程<strong>更新过</strong>呢？显然不是的，假设count原本是A，线程T1在执行完代码①处之后，执行代码②处之前，有可能count被线程T2更新成了B，之后又被T3更新回了A，这样线程T1虽然看到的一直是A，但是其实已经被其他线程更新过了，这就是ABA问题。</p>
+<p>可能大多数情况下我们并不关心ABA问题，例如数值的原子递增，但也不能所有情况下都不关心，例如原子化的更新对象很可能就需要关心ABA问题，因为两个A虽然相等，但是第二个A的属性可能已经发生变化了。所以在使用CAS方案的时候，一定要先check一下。</p>
+<h1 id="看Java如何实现原子化的count-1"><a href="#看Java如何实现原子化的count-1" class="headerlink" title="看Java如何实现原子化的count +&#x3D; 1"></a>看Java如何实现原子化的count +&#x3D; 1</h1><p>在本文开始部分，我们使用原子类AtomicLong的getAndIncrement()方法替代了<code>count += 1</code>，从而实现了线程安全。原子类AtomicLong的getAndIncrement()方法内部就是基于CAS实现的，下面我们来看看Java是如何使用CAS来实现原子化的<code>count += 1</code>的。</p>
+<p>在Java 1.8版本中，getAndIncrement()方法会转调unsafe.getAndAddLong()方法。这里this和valueOffset两个参数可以唯一确定共享变量的内存地址。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="type">long</span> <span class="title function_">getAndIncrement</span><span class="params">()</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> unsafe.getAndAddLong(</span><br><span class="line">    <span class="built_in">this</span>, valueOffset, <span class="number">1L</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>unsafe.getAndAddLong()方法的源码如下，该方法首先会在内存中读取共享变量的值，之后循环调用compareAndSwapLong()方法来尝试设置共享变量的值，直到成功为止。compareAndSwapLong()是一个native方法，只有当内存中共享变量的值等于expected时，才会将共享变量的值更新为x，并且返回true；否则返回fasle。compareAndSwapLong的语义和CAS指令的语义的差别仅仅是返回值不同而已。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="type">long</span> <span class="title function_">getAndAddLong</span><span class="params">(</span></span><br><span class="line"><span class="params">  Object o, <span class="type">long</span> offset, <span class="type">long</span> delta)</span>&#123;</span><br><span class="line">  <span class="type">long</span> v;</span><br><span class="line">  <span class="keyword">do</span> &#123;</span><br><span class="line">    <span class="comment">// 读取内存中的值</span></span><br><span class="line">    v = getLongVolatile(o, offset);</span><br><span class="line">  &#125; <span class="keyword">while</span> (!compareAndSwapLong(</span><br><span class="line">      o, offset, v, v + delta));</span><br><span class="line">  <span class="keyword">return</span> v;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//原子性地将变量更新为x</span></span><br><span class="line"><span class="comment">//条件是内存中的值等于expected</span></span><br><span class="line"><span class="comment">//更新成功则返回true</span></span><br><span class="line"><span class="keyword">native</span> <span class="type">boolean</span> <span class="title function_">compareAndSwapLong</span><span class="params">(</span></span><br><span class="line"><span class="params">  Object o, <span class="type">long</span> offset, </span></span><br><span class="line"><span class="params">  <span class="type">long</span> expected,</span></span><br><span class="line"><span class="params">  <span class="type">long</span> x)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>另外，需要你注意的是，getAndAddLong()方法的实现，基本上就是CAS使用的经典范例。所以请你再次体会下面这段抽象后的代码片段，它在很多无锁程序中经常出现。Java提供的原子类里面CAS一般被实现为compareAndSet()，compareAndSet()的语义和CAS指令的语义的差别仅仅是返回值不同而已，compareAndSet()里面如果更新成功，则会返回true，否则返回false。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">do</span> &#123;</span><br><span class="line">  <span class="comment">// 获取当前值</span></span><br><span class="line">  oldV = xxxx；</span><br><span class="line">  <span class="comment">// 根据当前值计算新值</span></span><br><span class="line">  newV = ...oldV...</span><br><span class="line">&#125;<span class="keyword">while</span>(!compareAndSet(oldV,newV);</span><br></pre></td></tr></table></figure>
+
+<h1 id="原子类概览"><a href="#原子类概览" class="headerlink" title="原子类概览"></a>原子类概览</h1><p>Java SDK并发包里提供的原子类内容很丰富，我们可以将它们分为五个类别：<strong>原子化的基本数据类型、原子化的对象引用类型、原子化数组、原子化对象属性更新器</strong>和<strong>原子化的累加器</strong>。这五个类别提供的方法基本上是相似的，并且每个类别都有若干原子类，你可以通过下面的原子类组成概览图来获得一个全局的印象。下面我们详细解读这五个类别。</p>
+<p><img src="/article/2023/07/21%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-%E5%8E%9F%E5%AD%90%E7%B1%BB%EF%BC%9A%E6%97%A0%E9%94%81%E5%B7%A5%E5%85%B7%E7%B1%BB%E7%9A%84%E5%85%B8%E8%8C%83/20210401203935418.png" alt="img"></p>
+<p>原子类组成概览图</p>
+<h2 id="1-原子化的基本数据类型"><a href="#1-原子化的基本数据类型" class="headerlink" title="1. 原子化的基本数据类型"></a>1. 原子化的基本数据类型</h2><p>相关实现有AtomicBoolean、AtomicInteger和AtomicLong，提供的方法主要有以下这些，详情你可以参考SDK的源代码，都很简单，这里就不详细介绍了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">getAndIncrement() <span class="comment">//原子化i++</span></span><br><span class="line">getAndDecrement() <span class="comment">//原子化的i--</span></span><br><span class="line">incrementAndGet() <span class="comment">//原子化的++i</span></span><br><span class="line">decrementAndGet() <span class="comment">//原子化的--i</span></span><br><span class="line"><span class="comment">//当前值+=delta，返回+=前的值</span></span><br><span class="line">getAndAdd(delta) </span><br><span class="line"><span class="comment">//当前值+=delta，返回+=后的值</span></span><br><span class="line">addAndGet(delta)</span><br><span class="line"><span class="comment">//CAS操作，返回是否成功</span></span><br><span class="line">compareAndSet(expect, update)</span><br><span class="line"><span class="comment">//以下四个方法</span></span><br><span class="line"><span class="comment">//新值可以通过传入func函数来计算</span></span><br><span class="line">getAndUpdate(func)</span><br><span class="line">updateAndGet(func)</span><br><span class="line">getAndAccumulate(x,func)</span><br><span class="line">accumulateAndGet(x,func)</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-原子化的对象引用类型"><a href="#2-原子化的对象引用类型" class="headerlink" title="2. 原子化的对象引用类型"></a>2. 原子化的对象引用类型</h2><p>相关实现有AtomicReference、AtomicStampedReference和AtomicMarkableReference，利用它们可以实现对象引用的原子化更新。AtomicReference提供的方法和原子化的基本数据类型差不多，这里不再赘述。不过需要注意的是，对象引用的更新需要重点关注ABA问题，AtomicStampedReference和AtomicMarkableReference这两个原子类可以解决ABA问题。</p>
+<p>解决ABA问题的思路其实很简单，增加一个版本号维度就可以了，这个和我们在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/89456">《18 | StampedLock：有没有比读写锁更快的锁？》</a>介绍的乐观锁机制很类似，每次执行CAS操作，附加再更新一个版本号，只要保证版本号是递增的，那么即便A变成B之后再变回A，版本号也不会变回来（版本号递增的）。AtomicStampedReference实现的CAS方法就增加了版本号参数，方法签名如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="title function_">compareAndSet</span><span class="params">(</span></span><br><span class="line"><span class="params">  V expectedReference,</span></span><br><span class="line"><span class="params">  V newReference,</span></span><br><span class="line"><span class="params">  <span class="type">int</span> expectedStamp,</span></span><br><span class="line"><span class="params">  <span class="type">int</span> newStamp)</span> </span><br></pre></td></tr></table></figure>
+
+<p>AtomicMarkableReference的实现机制则更简单，将版本号简化成了一个Boolean值，方法签名如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="title function_">compareAndSet</span><span class="params">(</span></span><br><span class="line"><span class="params">  V expectedReference,</span></span><br><span class="line"><span class="params">  V newReference,</span></span><br><span class="line"><span class="params">  <span class="type">boolean</span> expectedMark,</span></span><br><span class="line"><span class="params">  <span class="type">boolean</span> newMark)</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="3-原子化数组"><a href="#3-原子化数组" class="headerlink" title="3. 原子化数组"></a>3. 原子化数组</h2><p>相关实现有AtomicIntegerArray、AtomicLongArray和AtomicReferenceArray，利用这些原子类，我们可以原子化地更新数组里面的每一个元素。这些类提供的方法和原子化的基本数据类型的区别仅仅是：每个方法多了一个数组的索引参数，所以这里也不再赘述了。</p>
+<h2 id="4-原子化对象属性更新器"><a href="#4-原子化对象属性更新器" class="headerlink" title="4. 原子化对象属性更新器"></a>4. 原子化对象属性更新器</h2><p>相关实现有AtomicIntegerFieldUpdater、AtomicLongFieldUpdater和AtomicReferenceFieldUpdater，利用它们可以原子化地更新对象的属性，这三个方法都是利用反射机制实现的，创建更新器的方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;U&gt;</span><br><span class="line">AtomicXXXFieldUpdater&lt;U&gt; </span><br><span class="line"><span class="title function_">newUpdater</span><span class="params">(Class&lt;U&gt; tclass, </span></span><br><span class="line"><span class="params">  String fieldName)</span></span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是，<strong>对象属性必须是volatile类型的，只有这样才能保证可见性</strong>；如果对象属性不是volatile类型的，newUpdater()方法会抛出IllegalArgumentException这个运行时异常。</p>
+<p>你会发现newUpdater()的方法参数只有类的信息，没有对象的引用，而更新<strong>对象</strong>的属性，一定需要对象的引用，那这个参数是在哪里传入的呢？是在原子操作的方法参数中传入的。例如compareAndSet()这个原子操作，相比原子化的基本数据类型多了一个对象引用obj。原子化对象属性更新器相关的方法，相比原子化的基本数据类型仅仅是多了对象引用参数，所以这里也不再赘述了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="title function_">compareAndSet</span><span class="params">(</span></span><br><span class="line"><span class="params">  T obj, </span></span><br><span class="line"><span class="params">  <span class="type">int</span> expect, </span></span><br><span class="line"><span class="params">  <span class="type">int</span> update)</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="5-原子化的累加器"><a href="#5-原子化的累加器" class="headerlink" title="5. 原子化的累加器"></a>5. 原子化的累加器</h2><p>DoubleAccumulator、DoubleAdder、LongAccumulator和LongAdder，这四个类仅仅用来执行累加操作，相比原子化的基本数据类型，速度更快，但是不支持compareAndSet()方法。如果你仅仅需要累加操作，使用原子化的累加器性能会更好。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>无锁方案相对于互斥锁方案，优点非常多，首先性能好，其次是基本不会出现死锁问题（但可能出现饥饿和活锁问题，因为自旋会反复重试）。Java提供的原子类大部分都实现了compareAndSet()方法，基于compareAndSet()方法，你可以构建自己的无锁数据结构，但是<strong>建议你不要这样做，这个工作最好还是让大师们去完成</strong>，原因是无锁算法没你想象的那么简单。</p>
+<p>Java提供的原子类能够解决一些简单的原子性问题，但你可能会发现，上面我们所有原子类的方法都是针对一个共享变量的，如果你需要解决多个变量的原子性问题，建议还是使用互斥锁方案。原子类虽好，但使用要慎之又慎。</p>
+<h1 id="课后思考"><a href="#课后思考" class="headerlink" title="课后思考"></a>课后思考</h1><p>下面的示例代码是合理库存的原子化实现，仅实现了设置库存上限setUpper()方法，你觉得setUpper()方法的实现是否正确呢？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SafeWM</span> &#123;</span><br><span class="line">  <span class="keyword">class</span> <span class="title class_">WMRange</span>&#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> upper;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> lower;</span><br><span class="line">    WMRange(<span class="type">int</span> upper,<span class="type">int</span> lower)&#123;</span><br><span class="line">    <span class="comment">//省略构造函数实现</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">final</span> AtomicReference&lt;WMRange&gt;</span><br><span class="line">    rf = <span class="keyword">new</span> <span class="title class_">AtomicReference</span>&lt;&gt;(</span><br><span class="line">      <span class="keyword">new</span> <span class="title class_">WMRange</span>(<span class="number">0</span>,<span class="number">0</span>)</span><br><span class="line">    );</span><br><span class="line">  <span class="comment">// 设置库存上限</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">setUpper</span><span class="params">(<span class="type">int</span> v)</span>&#123;</span><br><span class="line">    WMRange nr;</span><br><span class="line">    <span class="type">WMRange</span> <span class="variable">or</span> <span class="operator">=</span> rf.get();</span><br><span class="line">    <span class="keyword">do</span>&#123;</span><br><span class="line">      <span class="comment">// 检查参数合法性</span></span><br><span class="line">      <span class="keyword">if</span>(v &lt; or.lower)&#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>();</span><br><span class="line">      &#125;</span><br><span class="line">      nr = <span class="keyword">new</span></span><br><span class="line">        <span class="title class_">WMRange</span>(v, or.lower);</span><br><span class="line">    &#125;<span class="keyword">while</span>(!rf.compareAndSet(or, nr));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" rel="tag"># Java并发编程实战</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/07/20%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-%E5%B9%B6%E5%8F%91%E5%AE%B9%E5%99%A8%EF%BC%9A%E9%83%BD%E6%9C%89%E5%93%AA%E4%BA%9B%E2%80%9C%E5%9D%91%E2%80%9D%E9%9C%80%E8%A6%81%E6%88%91%E4%BB%AC%E5%A1%AB%EF%BC%9F/" rel="prev" title="20并发工具类-并发容器：都有哪些“坑”需要我们填？">
+                  <i class="fa fa-angle-left"></i> 20并发工具类-并发容器：都有哪些“坑”需要我们填？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/07/22%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-Executor%E4%B8%8E%E7%BA%BF%E7%A8%8B%E6%B1%A0%EF%BC%9A%E5%A6%82%E4%BD%95%E5%88%9B%E5%BB%BA%E6%AD%A3%E7%A1%AE%E7%9A%84%E7%BA%BF%E7%A8%8B%E6%B1%A0%EF%BC%9F/" rel="next" title="22并发工具类-Executor与线程池：如何创建正确的线程池？">
+                  22并发工具类-Executor与线程池：如何创建正确的线程池？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

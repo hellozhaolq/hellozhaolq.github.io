@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="JDK5中的注解注解（@）注解就相当于一种标记，在程序中加了注解就等于为程序加了某种标记。（JDK1.5新特性）。 作用告诉javac编译器或者java开发工具……向其传递某种信息，作为一个标记。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java8新特性-重复注解与类型注解">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2018/08/Java8%E6%96%B0%E7%89%B9%E6%80%A7-%E9%87%8D%E5%A4%8D%E6%B3%A8%E8%A7%A3%E4%B8%8E%E7%B1%BB%E5%9E%8B%E6%B3%A8%E8%A7%A3/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="JDK5中的注解注解（@）注解就相当于一种标记，在程序中加了注解就等于为程序加了某种标记。（JDK1.5新特性）。 作用告诉javac编译器或者java开发工具……向其传递某种信息，作为一个标记。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-08-04T02:50:25.000Z">
+<meta property="article:modified_time" content="2018-08-04T02:50:25.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="JDK">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2018/08/Java8%E6%96%B0%E7%89%B9%E6%80%A7-%E9%87%8D%E5%A4%8D%E6%B3%A8%E8%A7%A3%E4%B8%8E%E7%B1%BB%E5%9E%8B%E6%B3%A8%E8%A7%A3/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2018/08/Java8%E6%96%B0%E7%89%B9%E6%80%A7-%E9%87%8D%E5%A4%8D%E6%B3%A8%E8%A7%A3%E4%B8%8E%E7%B1%BB%E5%9E%8B%E6%B3%A8%E8%A7%A3/","path":"article/2018/08/Java8新特性-重复注解与类型注解/","title":"Java8新特性-重复注解与类型注解"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Java8新特性-重复注解与类型注解 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#JDK5%E4%B8%AD%E7%9A%84%E6%B3%A8%E8%A7%A3"><span class="nav-number">1.</span> <span class="nav-text">JDK5中的注解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E8%A7%A3%EF%BC%88-%EF%BC%89"><span class="nav-number">1.1.</span> <span class="nav-text">注解（@）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%9C%E7%94%A8"><span class="nav-number">1.2.</span> <span class="nav-text">作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3%E6%B3%A8%E8%A7%A3%EF%BC%9F"><span class="nav-number">1.3.</span> <span class="nav-text">如何理解注解？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E6%B3%A8%E8%A7%A3"><span class="nav-number">1.4.</span> <span class="nav-text">关于注解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E8%A7%A3%E5%88%86%E4%B8%BA%E4%B8%89%E4%B8%AA%E9%98%B6%E6%AE%B5"><span class="nav-number">1.5.</span> <span class="nav-text">注解分为三个阶段</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E8%A7%A3%E7%9A%84%E5%B1%9E%E6%80%A7%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.6.</span> <span class="nav-text">注解的属性类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E6%B3%A8%E8%A7%A3%E5%A2%9E%E5%8A%A0%E5%B1%9E%E6%80%A7"><span class="nav-number">1.7.</span> <span class="nav-text">为注解增加属性</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Java8%E4%B8%AD%E7%9A%84%E6%B3%A8%E8%A7%A3"><span class="nav-number">2.</span> <span class="nav-text">Java8中的注解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B1%BB%E5%9E%8B%E6%B3%A8%E8%A7%A3"><span class="nav-number">2.1.</span> <span class="nav-text">类型注解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%A4%8D%E6%B3%A8%E8%A7%A3"><span class="nav-number">2.2.</span> <span class="nav-text">重复注解</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Java8%E5%AF%B9%E6%B3%A8%E8%A7%A3%E7%9A%84%E5%A2%9E%E5%BC%BA"><span class="nav-number">3.</span> <span class="nav-text">Java8对注解的增强</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2018/08/Java8%E6%96%B0%E7%89%B9%E6%80%A7-%E9%87%8D%E5%A4%8D%E6%B3%A8%E8%A7%A3%E4%B8%8E%E7%B1%BB%E5%9E%8B%E6%B3%A8%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Java8新特性-重复注解与类型注解 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java8新特性-重复注解与类型注解
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2018-08-04 10:50:25" itemprop="dateCreated datePublished" datetime="2018-08-04T10:50:25+08:00">2018-08-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="JDK5中的注解"><a href="#JDK5中的注解" class="headerlink" title="JDK5中的注解"></a>JDK5中的注解</h1><h2 id="注解（-）"><a href="#注解（-）" class="headerlink" title="注解（@）"></a>注解（@）</h2><p>注解就相当于一种标记，在程序中加了注解就等于为程序加了某种标记。（JDK1.5新特性）。</p>
+<h2 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h2><p>告诉javac编译器或者java开发工具……向其传递某种信息，作为一个标记。</p>
+<span id="more"></span>
+
+<h2 id="如何理解注解？"><a href="#如何理解注解？" class="headerlink" title="如何理解注解？"></a>如何理解注解？</h2><p>一个注解就是一个类。</p>
+<p>标记可以加在包、类、字段、方法，方法参数以及局部变量上。可以同时存在多个注解。</p>
+<p>每一个注解结尾都没有“；”或者其他特别符号。</p>
+<p>定义注解需要的基础注解信息如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SuppressWarnings(&quot;deprecation&quot;)</span>  <span class="comment">//编译器警告过时（source阶段）</span></span><br><span class="line"><span class="meta">@Deprecated</span>						<span class="comment">//过时（Runtime阶段）</span></span><br><span class="line"><span class="meta">@Override</span>						<span class="comment">//重写（source阶段）</span></span><br><span class="line"><span class="meta">@Retention(RetentionPolicy.RUNTIME)</span>	</span><br><span class="line"><span class="comment">//保留注解到程序运行时。（Runtime阶段）</span></span><br><span class="line"><span class="meta">@Target(&#123;ElementType.METHOD,ElementType.TYPE&#125;)</span></span><br><span class="line"><span class="comment">//标记既能定义在方法上，又能定义在类、接口、枚举上等。</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>注意：</strong></p>
+<p>1）添加注解需要有注解类。RetentionPolicy是一个枚举类（有三个成员）。</p>
+<p>2）Target中可以存放数组。它的默认值为任何元素。</p>
+<ul>
+<li>ElementType.METHOD：表示只能标记在方法上。</li>
+<li>ElementType.TYPE：表示只能标记定义在类上、接口上、枚举上等</li>
+</ul>
+<p>3）ElementType也是枚举类。成员包括：ANNOTATION_TYPE（注解）、CONSTRUCTOR（构造方法）、FIEID（成员变量）、LOCAL_VARIABLE（变量）、METHOD（方法）、PACKAGE（包）、PARAMETER（参数）、TYPE。</p>
+<h2 id="关于注解"><a href="#关于注解" class="headerlink" title="关于注解"></a>关于注解</h2><ul>
+<li>元注解：注解的注解（理解：给一个注解类再加注解）</li>
+<li>元数据：数据的数据</li>
+<li>元信息：信息的信息</li>
+</ul>
+<h2 id="注解分为三个阶段"><a href="#注解分为三个阶段" class="headerlink" title="注解分为三个阶段"></a>注解分为三个阶段</h2><p>java源文件–&gt; class文件 –&gt; 内存中的字节码。</p>
+<p>Retention的注解有三种取值：(分别对应注解的三个阶段)</p>
+<ul>
+<li>RetentionPolicy.SOURCE</li>
+<li>RetentionPolicy.CLASS</li>
+<li>RetentionPolicy.RUNTIME</li>
+</ul>
+<p>注意：注解的默认阶段是Class。</p>
+<h2 id="注解的属性类型"><a href="#注解的属性类型" class="headerlink" title="注解的属性类型"></a>注解的属性类型</h2><p>原始类型（就是八个基本数据类型）、String类型、Class类型、数组类型、枚举类型、注解类型。</p>
+<h2 id="为注解增加属性"><a href="#为注解增加属性" class="headerlink" title="为注解增加属性"></a>为注解增加属性</h2><p>value：是一个特殊的属性，若在设置值时只有一个value属性需要设置或者其他属性都采用默认值时 ，那么value&#x3D;可以省略，直接写所设置的值即可。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">例如：<span class="meta">@SuppressWarnings(&quot;deprecation&quot;)</span></span><br><span class="line"></span><br><span class="line">为属性指定缺省值（默认值）：</span><br><span class="line">例如：String <span class="title function_">value</span><span class="params">()</span> <span class="keyword">default</span> <span class="string">&quot;blue&quot;</span>; <span class="comment">//定义在注解类中</span></span><br><span class="line"></span><br><span class="line">数组类型的属性:</span><br><span class="line">例如：<span class="type">int</span>[] arrayArr() <span class="keyword">default</span> &#123;<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">5</span>&#125;;<span class="comment">//定义在注解类中</span></span><br><span class="line">SunAnnotation(arrayArr=&#123;<span class="number">3</span>,<span class="number">9</span>,<span class="number">8</span>&#125;) <span class="comment">//设置数组值</span></span><br><span class="line">注意:如果数组属性中只有一个元素时，属性值部分可以省略大括号。</span><br><span class="line">例如：SunAnnotation(arrayArr=<span class="number">9</span>)</span><br><span class="line"></span><br><span class="line">枚举类型的属性：</span><br><span class="line">例如：EnumDemo.TrafficLamp <span class="title function_">lamp</span><span class="params">()</span></span><br><span class="line"><span class="comment">////枚举类型属性, 定义在注解类中，这里使用了自定义的枚举类EnumDemo.java并没有给出相关代码，这里只是举个例子</span></span><br><span class="line"><span class="keyword">default</span> EnumDemo.TrafficLamp.RED;</span><br><span class="line"></span><br><span class="line">注解类型的属性：</span><br><span class="line">例如：MetaAnnotation <span class="title function_">annotationAttr</span><span class="params">()</span></span><br><span class="line"><span class="comment">//定义在一个注解类中,并指定缺省值，</span></span><br><span class="line"><span class="comment">//此属性关联到注解类：MetaAnnotation.java, </span></span><br><span class="line"><span class="keyword">default</span> <span class="meta">@MetaAnnotation(&quot;lhm&quot;)</span>;</span><br><span class="line"><span class="comment">//设置注解属性值</span></span><br><span class="line"><span class="meta">@SunAnnotation(annotationAttr=@MetaAnnotation(&quot;flx&quot;))</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="Java8中的注解"><a href="#Java8中的注解" class="headerlink" title="Java8中的注解"></a>Java8中的注解</h1><p>对于注解（也被称做元数据），Java 8 主要有两点改进：类型注解和重复注解。</p>
+<h2 id="类型注解"><a href="#类型注解" class="headerlink" title="类型注解"></a>类型注解</h2><p>1）Java 8 的类型注解扩展了注解使用的范围。</p>
+<p>在java 8之前，注解只能是在声明的地方所使用，java8开始，注解可以应用在任何地方。</p>
+<p>例如：</p>
+<p>创建类实例</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">new</span> <span class="meta">@Interned</span> MyObject();</span><br></pre></td></tr></table></figure>
+
+<p>类型映射</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">myString = (<span class="meta">@NonNull</span> String) str;</span><br></pre></td></tr></table></figure>
+
+<p>implements 语句中</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">UnmodifiableList</span>&lt;T&gt; implements<span class="meta">@Readonly</span> List&lt;<span class="meta">@Readonly</span> T&gt; &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+
+<p>throw exception声明</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">monitorTemperature</span><span class="params">()</span> <span class="keyword">throws</span><span class="meta">@Critical</span> TemperatureException &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意：</p>
+<p>在Java 8里面，当类型转化甚至分配新对象的时候，都可以在声明变量或者参数的时候使用注解。<br>Java注解可以支持任意类型。</p>
+<p>类型注解只是语法而不是语义，并不会影响java的编译时间，加载时间，以及运行时间，也就是说，编译成class文件的时候并不包含类型注解。</p>
+<p>2）新增ElementType.TYPE_USE 和ElementType.TYPE_PARAMETER（在Target上）</p>
+<p>新增的两个注释的程序元素类型 ElementType.TYPE_USE 和 ElementType.TYPE_PARAMETER用来描述注解的新场合。</p>
+<ul>
+<li>ElementType.TYPE_PARAMETER 表示该注解能写在类型变量的声明语句中。</li>
+<li>ElementType.TYPE_USE 表示该注解能写在使用类型的任何语句中（例如：声明语句、泛型和强制转换语句中的类型）。</li>
+</ul>
+<p>例如，下面的示例。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target(&#123;ElementType.TYPE_PARAMETER, ElementType.TYPE_USE&#125;)</span></span><br><span class="line"><span class="meta">@interface</span> MyAnnotation &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>3)类型注解的作用</p>
+<p>类型注解被用来支持在Java的程序中做强类型检查。配合第三方插件工具Checker Framework（注：此插件so easy,这里不介绍了），可以在编译的时候检测出runtime error（例如：UnsupportedOperationException； NumberFormatException；NullPointerException异常等都是runtime error），以提高代码质量。这就是类型注解的作用。</p>
+<p>注意：使用Checker Framework可以找到类型注解出现的地方并检查。</p>
+<p>例如下面的代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> checkers.nullness.quals.*;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">TestDemo</span>&#123;</span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">sample</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="meta">@NonNull</span> <span class="type">Object</span> <span class="variable">my</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用javac编译上面的类：（当然若下载了Checker Framework插件就不需要这么麻烦了）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">javac -processor checkers.nullness.NullnessChecker TestDemo.java</span><br></pre></td></tr></table></figure>
+
+<p>上面编译是通过的，但若修改代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@NonNull</span> <span class="type">Object</span> <span class="variable">my</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br></pre></td></tr></table></figure>
+
+<p>但若不想使用类型注解检测出来错误，则不需要processor，正常javac TestDemo.java是可以通过编译的，但是运行时会报 NullPointerException 异常。</p>
+<p>为了能在编译期间就自动检查出这类异常，可以通过类型注解结合 Checker Framework 提前排查出来错误异常。</p>
+<p>注意java 5,6,7版本是不支持注解@NonNull，但checker framework 有个向下兼容的解决方案，就是将类型注解@NonNull 用&#x2F;**&#x2F;注释起来。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> checkers.nullness.quals.*;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">TestDemo</span>&#123;</span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">sample</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="comment">/*@NonNull*/</span> <span class="type">Object</span> <span class="variable">my</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样javac编译器就会忽略掉注释块，但用checker framework里面的javac编译器同样能够检测出@NonNull错误。<br>通过 类型注解 + checker framework 可以在编译时就找到runtime error。</p>
+<h2 id="重复注解"><a href="#重复注解" class="headerlink" title="重复注解"></a>重复注解</h2><p>允许在同一声明类型（类，属性，或方法）上多次使用同一个注解。</p>
+<p>Java8以前的版本使用注解有一个限制是相同的注解在同一位置只能使用一次，不能使用多次。</p>
+<p>Java 8 引入了重复注解机制，这样相同的注解可以在同一地方使用多次。重复注解机制本身必须用 @Repeatable 注解。</p>
+<p>实际上，重复注解不是一个语言上的改变，只是编译器层面的改动，技术层面仍然是一样的。</p>
+<p>例如，我们可以使用如下示例来具体对比Java8之前的版本和Java8中的注解。</p>
+<p>**1）**自定义一个包装类Hints注解用来放置一组具体的Hint注解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@interface</span> MyHints &#123;</span><br><span class="line">    Hint[] value();</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="meta">@Repeatable(MyHints.class)</span></span><br><span class="line"><span class="meta">@interface</span> Hint &#123;</span><br><span class="line">    String <span class="title function_">value</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用包装类当容器来存多个注解（旧版本方法）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@MyHints(&#123;@Hint(&quot;hint1&quot;), @Hint(&quot;hint2&quot;)&#125;)</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用多重注解（新方法）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Hint(&quot;hint1&quot;)</span></span><br><span class="line"><span class="meta">@Hint(&quot;hint2&quot;)</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>**2)**完整类测试如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RepeatingAnnotations</span> &#123;</span><br><span class="line">    <span class="meta">@Target(ElementType.TYPE)</span></span><br><span class="line">    <span class="meta">@Retention(RetentionPolicy.RUNTIME)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="meta">@interface</span> Filters &#123;</span><br><span class="line">        Filter[] value();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Target(ElementType.TYPE)</span></span><br><span class="line">    <span class="meta">@Retention(RetentionPolicy.RUNTIME)</span></span><br><span class="line">    <span class="meta">@Repeatable(Filters.class)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="meta">@interface</span> Filter &#123;</span><br><span class="line">        String <span class="title function_">value</span><span class="params">()</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Filter(&quot;filter1&quot;)</span></span><br><span class="line">    <span class="meta">@Filter(&quot;filter2&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Filterable</span> &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="keyword">for</span> (Filter filter : Filterable.class.getAnnotationsByType(Filter.class)) &#123;</span><br><span class="line">            System.out.println(filter.value());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出结果：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">filter1</span><br><span class="line">filter2</span><br></pre></td></tr></table></figure>
+
+<p><strong>分析：</strong></p>
+<p>注释Filter被@Repeatable( Filters.class )注释。Filters 只是一个容器，它持有Filter, 编译器尽力向程序员隐藏它的存在。通过这样的方式，Filterable接口可以被Filter注释两次。</p>
+<p>另外，反射的API提供一个新方法getAnnotationsByType() 来返回重复注释的类型（注意Filterable.class.getAnnotation( Filters.class )将会返回编译器注入的Filters实例。</p>
+<p>**3）**java 8之前也有重复使用注解的解决方案，但可读性不好。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> MyAnnotation &#123;  </span><br><span class="line">     String <span class="title function_">role</span><span class="params">()</span>;  </span><br><span class="line">&#125;  </span><br><span class="line"> </span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Annotations &#123;  </span><br><span class="line">    MyAnnotation[] value();  </span><br><span class="line">&#125;  </span><br><span class="line"> </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RepeatAnnotationUseOldVersion</span> &#123;  </span><br><span class="line">    <span class="meta">@Annotations(&#123;@MyAnnotation(role=&quot;Admin&quot;),@MyAnnotation(role=&quot;Manager&quot;)&#125;)</span>  </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doSomeThing</span><span class="params">()</span>&#123;  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Java8的实现方式</strong>（由另一个注解来存储重复注解，在使用时候，用存储注解来扩展重复注解）<strong>，可读性更强。</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Repeatable(Annotations.class)</span> </span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> MyAnnotation &#123;  </span><br><span class="line">     String <span class="title function_">role</span><span class="params">()</span>;  </span><br><span class="line">&#125;  </span><br><span class="line"> </span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Annotations &#123;  </span><br><span class="line">    MyAnnotation[] value();  </span><br><span class="line">&#125;  </span><br><span class="line"> </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RepeatAnnotationUseOldVersion</span> &#123;  </span><br><span class="line">	<span class="meta">@MyAnnotation(role=&quot;Admin&quot;)</span>  </span><br><span class="line">    <span class="meta">@MyAnnotation(role=&quot;Manager&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doSomeThing</span><span class="params">()</span>&#123;  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<p><strong>什么？没看懂？那就再来一波！！！</strong></p>
+<h1 id="Java8对注解的增强"><a href="#Java8对注解的增强" class="headerlink" title="Java8对注解的增强"></a>Java8对注解的增强</h1><p>Java 8对注解处理提供了两点改进：可重复的注解及可用于类型的注解。总体来说，比较简单，下面，我们就以实例的形式来说明Java8中的重复注解和类型注解。</p>
+<p>首先，我们来定义一个注解类MyAnnotation，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Repeatable(Annotations.class)</span></span><br><span class="line"><span class="meta">@Target(&#123;ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.CONSTRUCTOR, ElementType.LOCAL_VARIABLE,ElementType.TYPE_PARAMETER&#125;)</span></span><br><span class="line"><span class="meta">@Retention(RetentionPolicy.RUNTIME)</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> MyAnnotation &#123;</span><br><span class="line">    String <span class="title function_">value</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意：在MyAnnotation注解类上比普通的注解多了一个@Repeatable(Annotations.class)注解，有小伙伴会问：这个是啥啊？这个就是Java8中定义可重复注解的关键，至于Annotations.class，大家别急，继续往下看就明白了。</p>
+<p>接下来，咱们定义一个Annotations注解类，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target(&#123;ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.CONSTRUCTOR, ElementType.LOCAL_VARIABLE,ElementType.TYPE_PARAMETER&#125;)</span></span><br><span class="line"><span class="meta">@Retention(RetentionPolicy.RUNTIME)</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Annotations &#123;</span><br><span class="line">    MyAnnotation[] value();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>看到这里，大家明白了吧！！没错，Annotations也是一个注解类，它相比于MyAnnotation注解类来说，少了一个@Repeatable(Annotations.class)注解，也就是说，Annotations注解类的定义与普通的注解几乎没啥区别。值得注意的是，我们在Annotations注解类中，定义了一个MyAnnotation注解类的数组，也就是说，在Annotations注解类中，包含有多个MyAnnotation注解。所以，在MyAnnotation注解类上指定@Repeatable(Annotations.class)来说明可以在类、字段、方法、参数、构造方法、参数上重复使用MyAnnotation注解。</p>
+<p>接下来，我们创建一个UseAnno类，在UseAnno类中定义一个init()方法，在init方法上，重复使用@MyAnnotation注解指定相应的数据，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@MyAnnotation(&quot;useAnno&quot;)</span></span><br><span class="line"><span class="meta">@MyAnnotation(&quot;class&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UseAnno</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@MyAnnotation(&quot;init&quot;)</span></span><br><span class="line">    <span class="meta">@MyAnnotation(&quot;method&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">()</span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>到此，我们就可以测试重复注解了，创建类Test，对重复注解进行测试，如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Test</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> NoSuchMethodException &#123;</span><br><span class="line">        Class&lt;Binghe&gt; clazz = UseAnno.class;</span><br><span class="line">        MyAnnotation[] annotations = clazz.getAnnotationsByType(MyAnnotation.class);</span><br><span class="line">        System.out.println(<span class="string">&quot;类上的重复注解如下：&quot;</span>);</span><br><span class="line">        Arrays.stream(annotations).forEach((a) -&gt; System.out.print(a.value() + <span class="string">&quot; &quot;</span>));</span><br><span class="line"></span><br><span class="line">        System.out.println();</span><br><span class="line">        System.out.println(<span class="string">&quot;=============================&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">Method</span> <span class="variable">method</span> <span class="operator">=</span> clazz.getMethod(<span class="string">&quot;init&quot;</span>);</span><br><span class="line">        annotations = method.getAnnotationsByType(MyAnnotation.class);</span><br><span class="line">        System.out.println(<span class="string">&quot;方法上的重复注解如下：&quot;</span>);</span><br><span class="line">        Arrays.stream(annotations).forEach((a) -&gt; System.out.print(a.value() + <span class="string">&quot; &quot;</span>));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行main()方法，输出如下的结果信息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">类上的重复注解如下：</span><br><span class="line">useAnno class </span><br><span class="line">=============================</span><br><span class="line">方法上的重复注解如下：</span><br><span class="line">init method </span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/JDK/" rel="tag"># JDK</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2018/08/Java8%E6%96%B0%E7%89%B9%E6%80%A7/" rel="prev" title="Java8新特性">
+                  <i class="fa fa-angle-left"></i> Java8新特性
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2018/08/Java9%E6%96%B0%E7%89%B9%E6%80%A7/" rel="next" title="Java9新特性">
+                  Java9新特性 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="在前面的课程中，我们介绍了IPDRR的前三个部分，并且着重讲解了风控系统的框架、算法以及设备指纹的相关技术。学会了这些机制和手段，你已经能够识别出大部分的黑产了。那我们是不是可以直接将识别的结果抛给业务，让业务自行处理呢？">
+<meta property="og:type" content="article">
+<meta property="og:title" content="30业务安全-安全运营：“黑灰产”打了又来，如何正确处置？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/09/30%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5%EF%BC%9A%E2%80%9C%E9%BB%91%E7%81%B0%E4%BA%A7%E2%80%9D%E6%89%93%E4%BA%86%E5%8F%88%E6%9D%A5%EF%BC%8C%E5%A6%82%E4%BD%95%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%BD%AE%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="在前面的课程中，我们介绍了IPDRR的前三个部分，并且着重讲解了风控系统的框架、算法以及设备指纹的相关技术。学会了这些机制和手段，你已经能够识别出大部分的黑产了。那我们是不是可以直接将识别的结果抛给业务，让业务自行处理呢？">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/30%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5%EF%BC%9A%E2%80%9C%E9%BB%91%E7%81%B0%E4%BA%A7%E2%80%9D%E6%89%93%E4%BA%86%E5%8F%88%E6%9D%A5%EF%BC%8C%E5%A6%82%E4%BD%95%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%BD%AE%EF%BC%9F/20200816222258165.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/30%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5%EF%BC%9A%E2%80%9C%E9%BB%91%E7%81%B0%E4%BA%A7%E2%80%9D%E6%89%93%E4%BA%86%E5%8F%88%E6%9D%A5%EF%BC%8C%E5%A6%82%E4%BD%95%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%BD%AE%EF%BC%9F/20200816222327732.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/30%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5%EF%BC%9A%E2%80%9C%E9%BB%91%E7%81%B0%E4%BA%A7%E2%80%9D%E6%89%93%E4%BA%86%E5%8F%88%E6%9D%A5%EF%BC%8C%E5%A6%82%E4%BD%95%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%BD%AE%EF%BC%9F/20200816222504489.png">
+<meta property="article:published_time" content="2023-09-30T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-09-30T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="安全攻防技能30讲">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/09/30%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5%EF%BC%9A%E2%80%9C%E9%BB%91%E7%81%B0%E4%BA%A7%E2%80%9D%E6%89%93%E4%BA%86%E5%8F%88%E6%9D%A5%EF%BC%8C%E5%A6%82%E4%BD%95%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%BD%AE%EF%BC%9F/20200816222258165.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/09/30%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5%EF%BC%9A%E2%80%9C%E9%BB%91%E7%81%B0%E4%BA%A7%E2%80%9D%E6%89%93%E4%BA%86%E5%8F%88%E6%9D%A5%EF%BC%8C%E5%A6%82%E4%BD%95%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%BD%AE%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/09/30%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5%EF%BC%9A%E2%80%9C%E9%BB%91%E7%81%B0%E4%BA%A7%E2%80%9D%E6%89%93%E4%BA%86%E5%8F%88%E6%9D%A5%EF%BC%8C%E5%A6%82%E4%BD%95%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%BD%AE%EF%BC%9F/","path":"article/2023/09/30业务安全-安全运营：“黑灰产”打了又来，如何正确处置？/","title":"30业务安全-安全运营：“黑灰产”打了又来，如何正确处置？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>30业务安全-安全运营：“黑灰产”打了又来，如何正确处置？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%9A%E5%8A%A1%E4%B8%AD%E5%A4%84%E7%90%86%E9%BB%91%E4%BA%A7%E7%9A%84%E6%89%8B%E6%AE%B5"><span class="nav-number">1.</span> <span class="nav-text">业务中处理黑产的手段</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E7%9B%B4%E6%8E%A5%E6%8B%A6%E6%88%AA"><span class="nav-number">1.1.</span> <span class="nav-text">1. 直接拦截</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E9%AA%8C%E8%AF%81%E6%8B%A6%E6%88%AA"><span class="nav-number">1.2.</span> <span class="nav-text">2. 验证拦截</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%81%87%E6%95%B0%E6%8D%AE%E6%8B%A6%E6%88%AA"><span class="nav-number">1.3.</span> <span class="nav-text">3. 假数据拦截</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%9A%E5%8A%A1%E4%B9%8B%E5%A4%96%E5%A4%84%E7%90%86%E9%BB%91%E4%BA%A7%E7%9A%84%E8%BF%90%E8%90%A5%E6%89%8B%E6%AE%B5"><span class="nav-number">2.</span> <span class="nav-text">业务之外处理黑产的运营手段</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E6%83%85%E6%8A%A5%E6%94%B6%E9%9B%86"><span class="nav-number">2.1.</span> <span class="nav-text">1. 情报收集</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E9%92%93%E9%B1%BC%E6%89%A7%E6%B3%95"><span class="nav-number">2.2.</span> <span class="nav-text">2. 钓鱼执法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E6%A1%88%E4%BB%B6%E6%89%93%E5%87%BB"><span class="nav-number">2.3.</span> <span class="nav-text">3. 案件打击</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%9D%E8%80%83%E9%A2%98"><span class="nav-number">4.</span> <span class="nav-text">思考题</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/09/30%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5%EF%BC%9A%E2%80%9C%E9%BB%91%E7%81%B0%E4%BA%A7%E2%80%9D%E6%89%93%E4%BA%86%E5%8F%88%E6%9D%A5%EF%BC%8C%E5%A6%82%E4%BD%95%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%BD%AE%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="30业务安全-安全运营：“黑灰产”打了又来，如何正确处置？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          30业务安全-安全运营：“黑灰产”打了又来，如何正确处置？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-09-30 08:00:00" itemprop="dateCreated datePublished" datetime="2023-09-30T08:00:00+08:00">2023-09-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" itemprop="url" rel="index"><span itemprop="name">安全攻防技能30讲</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>在前面的课程中，我们介绍了IPDRR的前三个部分，并且着重讲解了风控系统的框架、算法以及设备指纹的相关技术。学会了这些机制和手段，你已经能够识别出大部分的黑产了。那我们是不是可以直接将识别的结果抛给业务，让业务自行处理呢？</p>
+<span id="more"></span>
+
+<p>在一个专业的业务安全方案中，这当然不可以。因为，识别出黑产仅仅是第一步，采取合适的手段处理黑产，才是业务安全长治久安的根本。</p>
+<p>那么，针对黑产的处理，我们有三个参照原则：</p>
+<ul>
+<li>采取适当的拦截策略，防止黑产快速绕过业务安全策略</li>
+<li>给予一定震慑，防止黑产变本加厉</li>
+<li>保持情报收集，做好和黑产持续对抗的准备</li>
+</ul>
+<p>今天，我们就结合这三个原则来看一下，有哪些运营手段可以对业务安全起到正向作用，切实打击黑产。</p>
+<h1 id="业务中处理黑产的手段"><a href="#业务中处理黑产的手段" class="headerlink" title="业务中处理黑产的手段"></a>业务中处理黑产的手段</h1><p>在识别出黑产之后，运营的第一步一定是在业务中对黑产进行处理。处理的手段有很多种，它们能起到的效果也截然不同。接下来，我们就来具体分析一下这些手段的特点和它们能产生的效果。</p>
+<h2 id="1-直接拦截"><a href="#1-直接拦截" class="headerlink" title="1. 直接拦截"></a>1. 直接拦截</h2><p>在27讲中我们讲过，在不同的识别模式下，黑产的拦截方案也不同：同步模式下，我们可以直接拒绝黑产的当次登录请求；异步和离线模式下，我们可以拒绝对应的账号在登录后继续使用业务。这都属于直接拦截，拦截之后，黑产都将无法继续使用业务，自然也就无法对业务产生任何影响了。</p>
+<p>尽管直接拦截的方案简单有效，但是我们依然需要注意，因为出现误伤而损伤用户体验的问题。因此，通常只有在风控识别准确度较高的时候，我们才会采用直接的拦截处理。</p>
+<h2 id="2-验证拦截"><a href="#2-验证拦截" class="headerlink" title="2. 验证拦截"></a>2. 验证拦截</h2><p>验证黑产的方式有两种：<strong>人机验证和同人验证</strong>。</p>
+<p>首先是人机验证。</p>
+<p>人机验证的目的是区分人和机器的操作，防止黑产利用机器去自动化刷取业务的利益。</p>
+<p>人机验证的验证码，你应该很熟悉，最常见的是图片验证码。在进行图片验证的时候，我们可以轻易地认出变形后的数字和字母，但是机器却不能。</p>
+<p>不过，随着深度学习的发展，图像识别技术越来越准确，图片验证码已经不那么可靠了。近几年比较流行的滑块验证码。</p>
+<p>在进行滑块验证的时候，会要求我们拖动滑块滑至目标点。但是人在滑动过程中不可能匀速直线运动，所以滑动轨迹在速度、方向等特性上会存在一定的波动，而机器则会产生笔直的滑动轨迹。通过这个特征，我们就可以来判定是人还是机器在拖动滑块。</p>
+<p>说完了人机验证，我们再来说说同人验证。</p>
+<p>同人验证主要是区分进行操作的是不是用户本人，防止账号被盗用。</p>
+<p>比如，当我们异地登录邮箱的时候，网站经常要求我们进行短信验证。这是因为我们的登录操作，被同步模式下的风控系统判定为可疑，所以网站才会通过短信来验证你是不是本人在操作。</p>
+<p><img src="/article/2023/09/30%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5%EF%BC%9A%E2%80%9C%E9%BB%91%E7%81%B0%E4%BA%A7%E2%80%9D%E6%89%93%E4%BA%86%E5%8F%88%E6%9D%A5%EF%BC%8C%E5%A6%82%E4%BD%95%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%BD%AE%EF%BC%9F/20200816222258165.png" alt="img"></p>
+<p>除了短信验证还有很多常见的产品方案，比如：异地登录的时候，微信会要求你从一堆用户列表中找出你的好友；美团会要求你从一堆订单中找出自己下过的订单等。</p>
+<p>另外，像人脸识别、声纹识别这种基于生物信息的验证方式，也进一步丰富了同人验证的方式。并且，因为其极优的用户体验感，目前各大应用都重点采用了它们。</p>
+<p>因为验证不会阻拦正常用户使用业务，而且，即使出现误伤，验证能产生的影响也相对较小，因此它使用的场景更加广泛。</p>
+<p>但是，是否选择验证方式进行拦截，还要取决于验证方式本身的安全性，也就是验证方式是否能够起到阻拦黑产的效果。如果黑产能够以较低的成本通过验证，就起不到任何的拦截效果和作用了，也就不是最佳拦截方案。</p>
+<h2 id="3-假数据拦截"><a href="#3-假数据拦截" class="headerlink" title="3. 假数据拦截"></a>3. 假数据拦截</h2><p>直接拦截和验证拦截都是生活中比较常见的拦截方式，那这里，我再讲一种在爬虫场景中比较常见的拦截方式，就是通过假数据的形式来拦截黑产的行为。</p>
+<p>比如说，像是酒店、机票这样的业务，通常会尝试去爬取竞争对手的价格数据，让自己的价格在竞争中更占优势。所以，当风控识别到请求是来自于爬虫的时候，会直接返回一个虚假的价格数据，来误导爬虫。</p>
+<p>针对爬虫场景，我们之所以不采用直接拦截或者验证拦截的方式，就是因为这些拦截方式会被爬虫发现，然后爬虫就会想尽办法绕过这两种方式。但是，如果使用假数据，爬虫可能认为自己已经成功爬取了数据，就不会特意绕过了。</p>
+<p>而且，在抓取业务数据的过程中，爬虫并不会直接攻击业务的正常流程。所以，这些假数据被爬取，并不会给我们造成任何损失。</p>
+<p>尽管优势非常明显，但是使用假数据的成本很高。这是因为，机票和酒店这样的业务中都会有成千上万的价格数据，如何设置一个合理的假数据，使其既不明显偏离正常值，被爬虫发现，又不过度接近真实值，泄露机密信息。这必然需要业务方投入足够的精力来设置。</p>
+<p>为了帮助你理解这三种拦截手段，我把它们的特点总结成一张表格，供你参考。</p>
+<p><img src="/article/2023/09/30%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5%EF%BC%9A%E2%80%9C%E9%BB%91%E7%81%B0%E4%BA%A7%E2%80%9D%E6%89%93%E4%BA%86%E5%8F%88%E6%9D%A5%EF%BC%8C%E5%A6%82%E4%BD%95%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%BD%AE%EF%BC%9F/20200816222327732.png" alt="img"></p>
+<p>总结来说，风控系统识别到黑产之后，可以在业务中采取拦截、验证和假数据的形式处理。相比较而言，验证是适用范围最广的处理方式，我们可以根据不同的场景需求和风控的准确性，选取不同的验证方式。</p>
+<h1 id="业务之外处理黑产的运营手段"><a href="#业务之外处理黑产的运营手段" class="headerlink" title="业务之外处理黑产的运营手段"></a>业务之外处理黑产的运营手段</h1><p>所谓知己知彼，百战不殆，想要做好业务安全，除了在业务中采取合适的手段处理黑产以外，我们还需要了解黑产。这就需要我们采取一些业务之外的运营手段去获取黑产的信息，有的时候，业务之外的运营手段甚至可以从根本上铲除黑产。常见的运营手段有3种，分别是情报收集、钓鱼执法和案件打击。下面，我们一一来看。</p>
+<h2 id="1-情报收集"><a href="#1-情报收集" class="headerlink" title="1. 情报收集"></a>1. 情报收集</h2><p>掌握和了解黑产的动向和手段，是做好业务安全防御的必要基础。情报收集需要运营人员对微博、贴吧等公开信息源保持监控，加入一些“羊毛群”，甚至打入一些黑产交流群。</p>
+<p>通过这些方式，你就能够知道外界是否对你的业务发起了攻击，从而及时发现漏洞，补全业务安全防御体系。</p>
+<h2 id="2-钓鱼执法"><a href="#2-钓鱼执法" class="headerlink" title="2. 钓鱼执法"></a>2. 钓鱼执法</h2><p>情报收集需要我们打入黑产内部，但是打入内部需要一定的运气，并没有什么固定的方法能够帮助我们找到黑产团伙。因此，面对狡猾的黑产，我们可以采取钓鱼执法这样的手段。</p>
+<p>比如说，在微博上，你经常会看到有人提供买小号、买粉丝这样的服务。毫无疑问，这些服务对业务来说是非法的。那业务安全就需要知道这些黑产是如何突破防御体系，进而发起攻击的。</p>
+<p>这个时候，钓鱼执法就是一个非常有效的方案了。举个例子，我们可以花钱去买一批小号，这样，我们就得到了一批被黑产掌握的账号，然后就可以去分析这些账号的历史行为了。</p>
+<p>具体怎么分析呢？比如，我们可能会发现这批账号都在某一个时刻修改了密码，那么，我们就可以推测这些账号是在这个时刻被盗号的。在明确了盗号的时间和方式之后，你就可以有针对性地分析当时的数据情况，从而能发现黑产突破业务安全的防御体系的方式，然后有针对性地去完善即可。</p>
+<p>这里有一点需要你注意，钓鱼执法的结果只能够帮助你完善业务安全能力，并不能作为案件打击的依据。如果你想要对这类已知的黑产进行打击，就必须基于钓鱼获得的部分信息，去挖掘出黑产整体的行为，才能够找到被法律认可的犯罪事实。</p>
+<h2 id="3-案件打击"><a href="#3-案件打击" class="headerlink" title="3. 案件打击"></a>3. 案件打击</h2><p>随着《网络安全法》的推出，国家对于安全的把控越来越严格，各地的网安、网信办等机构，都纷纷出手开始打击黑产团伙。因此，对于业务运营来说，借助法律方式打击黑产也是一个十分有效的方案。比如去年微博成功打击的<a target="_blank" rel="noopener" href="https://baijiahao.baidu.com/s?id=1636105500763479864&wfr=spider&for=pc">“星援”案件</a>，就是警方直接抓捕了刷明星热度的一伙黑产。</p>
+<p>那接下来，我就结合这个案件和你一起分析一下，想要成功发起一次案件打击，需要具备的基础条件。</p>
+<p><strong>首先，想要打击黑产，你得知道黑产是谁</strong>。你可能会认为这是警方的工作。但事实上，警方不熟悉你的业务，无法接触你的系统，排查起来会很困难。因此，通常需要由业务人员找出打击的目标是谁，再交由警方进行后续的处理。</p>
+<p>比如，微博业务人员先是发现有人在刷转发、评论、点赞等，然后基于对这些账号的行为分析和用户的访谈，发现这些操作是由“星缘”这款App产生的，而“星缘”App又对应到了一家公司。排查到这里，警方就可以对这家公司进行线下抓捕和打击了。</p>
+<p>**其次，你要明确业务损失的金额或者黑产的收益金额。**因为法院的最终判决主要还是依靠直接金额的大小，只有金额明确了，你才能够推动警方去协助你打击黑产。</p>
+<p>现金类业务（如：红包、优惠券、支付等）的金额很好衡量，我们直接统计黑产成功获取的金额即可。但是，对于非现金类的业务（如：登录、评论等），我们无法准确地衡量一个用户或者一次评论的价值，因此很难给出一个可信的金额损失数目。</p>
+<p>这个时候，我们可以通过黑产的收益来评估，比如黑产通过盗号或者刷评论，赚取了多少收益。这些收益属于非法收益，可以用来作为法院评判犯罪事实的参考依据。</p>
+<p>在“星缘”一案中，最终评判的依据就是黑产通过提供非法服务获利上百万元。</p>
+<p><strong>最后，当你找到了目标、明确了损失的金额之后，你还要提供证据</strong>。但是对于网络犯罪来说，需要提供什么样的证据，其实是一个相对模糊的部分。尽管如此，我还是根据经验总结了3种常见的证据形式。</p>
+<p>1.黑产服务器上的日志和其名下的资产记录是最有力的证据，它们是由警方实施抓捕后获得的信息，因此具备极高的可信度。同时，黑产的日志也能够直接表明它们的所作所为，不存在任何狡辩的空间。</p>
+<p>2.在内容侵权相关的案件中比较常见的公开侵权数据。比如，竞争对手的信息流中，出现了自家公司生产的内容，这就是竞争对手采取恶意手段爬取我方数据，侵犯我方版权的明确证据。</p>
+<p>3.自身服务器日志。在案件打击过程中，公司也同样需要提供一份日志作为黑产发起攻击的证明。在大部分的案件打击中，前两种证据已经能够提供直接证明了，公司提供的自身服务器日志，更多的是为警方办案提供辅助支持。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>好了，今天的内容讲完了。我们一起来回顾一下，你需要掌握的重点内容。</p>
+<p>和基础安全一样，运营工作对于业务安全的长期发展意义重大。业务安全中的运营工作主要分为两个方面：业务中的黑产处理和业务之外对黑产信息的挖掘和打击。</p>
+<p>在业务中处理黑产时，我们采取更加间接的方式，比如，验证码和返回假数据，能够大大降低风控误伤对正常用户的影响，同时也能够增加黑产绕过风控的难度。</p>
+<p>在业务之外，通过情报收集和钓鱼执法，能够为风控系统提供持续的数据支撑，帮助风控系统完善自身的策略。除此之外，还能够通过司法手段，对黑产实施线下打击，从根本上打击黑产的嚣张气焰。</p>
+<p><img src="/article/2023/09/30%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E5%AE%89%E5%85%A8%E8%BF%90%E8%90%A5%EF%BC%9A%E2%80%9C%E9%BB%91%E7%81%B0%E4%BA%A7%E2%80%9D%E6%89%93%E4%BA%86%E5%8F%88%E6%9D%A5%EF%BC%8C%E5%A6%82%E4%BD%95%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%BD%AE%EF%BC%9F/20200816222504489.png" alt="img"></p>
+<h1 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h1><p>最后，我们来看一道思考题。</p>
+<p>除了我今天讲的这几种验证方式，你还见过哪些验证方式，它们的用户体验和难度如何？你能够想办法自动化地进行验证吗？</p>
+<p>欢迎留言和我分享你的思考和疑惑，也欢迎你把文章分享给你的朋友。我们下一讲再见！</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" rel="tag"># 安全攻防技能30讲</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/09/29%E4%B8%9A%E5%8A%A1%E5%AE%89%E5%85%A8-%E8%AE%BE%E5%A4%87%E6%8C%87%E7%BA%B9%EF%BC%9A%E9%9D%A2%E5%AF%B9%E5%90%84%E7%A7%8D%E8%99%9A%E6%8B%9F%E8%AE%BE%E5%A4%87%EF%BC%8C%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8C%E5%AF%B9%E6%8A%97%EF%BC%9F/" rel="prev" title="29业务安全-设备指纹：面对各种虚拟设备，如何进行对抗？">
+                  <i class="fa fa-angle-left"></i> 29业务安全-设备指纹：面对各种虚拟设备，如何进行对抗？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/10/31%E7%9F%A5%E8%AF%86%E4%B8%B2%E8%AE%B2-%E6%A8%A1%E5%9D%97%E4%B8%B2%E8%AE%B2%EF%BC%88%E4%B8%80%EF%BC%89%20Web%E5%AE%89%E5%85%A8%EF%BC%9A%E5%A6%82%E4%BD%95%E8%AF%84%E4%BC%B0%E7%94%A8%E6%88%B7%E6%95%B0%E6%8D%AE%E5%92%8C%E8%B5%84%E4%BA%A7%E6%95%B0%E6%8D%AE%E9%9D%A2%E4%B8%B4%E7%9A%84%E5%A8%81%E8%83%81%EF%BC%9F/" rel="next" title="31知识串讲-模块串讲（一） Web安全：如何评估用户数据和资产数据面临的威胁？">
+                  31知识串讲-模块串讲（一） Web安全：如何评估用户数据和资产数据面临的威胁？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

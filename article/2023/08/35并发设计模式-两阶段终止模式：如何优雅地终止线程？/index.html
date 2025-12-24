@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="前面两篇文章我们讲述的内容，从纯技术的角度看，都是启动多线程去执行一个异步任务。既启动，那又该如何终止呢？今天咱们就从技术的角度聊聊如何优雅地终止线程，正所谓有始有终。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="35并发设计模式-两阶段终止模式：如何优雅地终止线程？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/08/35%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E4%B8%A4%E9%98%B6%E6%AE%B5%E7%BB%88%E6%AD%A2%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%9C%B0%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="前面两篇文章我们讲述的内容，从纯技术的角度看，都是启动多线程去执行一个异步任务。既启动，那又该如何终止呢？今天咱们就从技术的角度聊聊如何优雅地终止线程，正所谓有始有终。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/08/35%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E4%B8%A4%E9%98%B6%E6%AE%B5%E7%BB%88%E6%AD%A2%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%9C%B0%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B%EF%BC%9F/a10f743b518d7baaf1dc3b65af34ffb9.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/08/35%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E4%B8%A4%E9%98%B6%E6%AE%B5%E7%BB%88%E6%AD%A2%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%9C%B0%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B%EF%BC%9F/1ead764a9cb7871ef50b986feb3b3f5c.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/08/35%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E4%B8%A4%E9%98%B6%E6%AE%B5%E7%BB%88%E6%AD%A2%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%9C%B0%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B%EF%BC%9F/b2582e5e4401c2bd3658fcb51860b472.png">
+<meta property="article:published_time" content="2023-08-05T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-08-05T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Java并发编程实战">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/08/35%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E4%B8%A4%E9%98%B6%E6%AE%B5%E7%BB%88%E6%AD%A2%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%9C%B0%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B%EF%BC%9F/a10f743b518d7baaf1dc3b65af34ffb9.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/08/35%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E4%B8%A4%E9%98%B6%E6%AE%B5%E7%BB%88%E6%AD%A2%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%9C%B0%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/08/35%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E4%B8%A4%E9%98%B6%E6%AE%B5%E7%BB%88%E6%AD%A2%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%9C%B0%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B%EF%BC%9F/","path":"article/2023/08/35并发设计模式-两阶段终止模式：如何优雅地终止线程？/","title":"35并发设计模式-两阶段终止模式：如何优雅地终止线程？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>35并发设计模式-两阶段终止模式：如何优雅地终止线程？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3%E4%B8%A4%E9%98%B6%E6%AE%B5%E7%BB%88%E6%AD%A2%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.</span> <span class="nav-text">如何理解两阶段终止模式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%94%A8%E4%B8%A4%E9%98%B6%E6%AE%B5%E7%BB%88%E6%AD%A2%E6%A8%A1%E5%BC%8F%E7%BB%88%E6%AD%A2%E7%9B%91%E6%8E%A7%E6%93%8D%E4%BD%9C"><span class="nav-number">2.</span> <span class="nav-text">用两阶段终止模式终止监控操作</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%9C%B0%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B%E6%B1%A0"><span class="nav-number">3.</span> <span class="nav-text">如何优雅地终止线程池</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%90%8E%E6%80%9D%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">课后思考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/08/35%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E4%B8%A4%E9%98%B6%E6%AE%B5%E7%BB%88%E6%AD%A2%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%9C%B0%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="35并发设计模式-两阶段终止模式：如何优雅地终止线程？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          35并发设计模式-两阶段终止模式：如何优雅地终止线程？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-08-05 08:00:00" itemprop="dateCreated datePublished" datetime="2023-08-05T08:00:00+08:00">2023-08-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">Java并发编程实战</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>前面两篇文章我们讲述的内容，从纯技术的角度看，都是<strong>启动</strong>多线程去执行一个异步任务。既启动，那又该如何终止呢？今天咱们就从技术的角度聊聊如何优雅地<strong>终止</strong>线程，正所谓有始有终。</p>
+<span id="more"></span>
+
+<p>在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/86366">《09 | Java线程（上）：Java线程的生命周期》</a>中，我曾讲过：线程执行完或者出现异常就会进入终止状态。这样看，终止一个线程看上去很简单啊！一个线程执行完自己的任务，自己进入终止状态，这的确很简单。不过我们今天谈到的“优雅地终止线程”，不是自己终止自己，而是在一个线程T1中，终止线程T2；这里所谓的“优雅”，指的是给T2一个机会料理后事，而不是被一剑封喉。</p>
+<p>Java语言的Thread类中曾经提供了一个stop()方法，用来终止线程，可是早已不建议使用了，原因是这个方法用的就是一剑封喉的做法，被终止的线程没有机会料理后事。</p>
+<p>既然不建议使用stop()方法，那在Java领域，我们又该如何优雅地终止线程呢？</p>
+<h1 id="如何理解两阶段终止模式"><a href="#如何理解两阶段终止模式" class="headerlink" title="如何理解两阶段终止模式"></a>如何理解两阶段终止模式</h1><p>前辈们经过认真对比分析，已经总结出了一套成熟的方案，叫做<strong>两阶段终止模式</strong>。顾名思义，就是将终止过程分成两个阶段，其中第一个阶段主要是线程T1向线程T2<strong>发送终止指令</strong>，而第二阶段则是线程T2<strong>响应终止指令</strong>。</p>
+<p><img src="/article/2023/08/35%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E4%B8%A4%E9%98%B6%E6%AE%B5%E7%BB%88%E6%AD%A2%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%9C%B0%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B%EF%BC%9F/a10f743b518d7baaf1dc3b65af34ffb9.png" alt="img"></p>
+<p>两阶段终止模式示意图</p>
+<p>那在Java语言里，终止指令是什么呢？这个要从Java线程的状态转换过程说起。我们在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/86366">《09 | Java线程（上）：Java线程的生命周期》</a>中曾经提到过Java线程的状态转换图，如下图所示。</p>
+<p><img src="/article/2023/08/35%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E4%B8%A4%E9%98%B6%E6%AE%B5%E7%BB%88%E6%AD%A2%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%9C%B0%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B%EF%BC%9F/1ead764a9cb7871ef50b986feb3b3f5c.png" alt="img"></p>
+<p>Java中的线程状态转换图</p>
+<p>从这个图里你会发现，Java线程进入终止状态的前提是线程进入RUNNABLE状态，而实际上线程也可能处在休眠状态，也就是说，我们要想终止一个线程，首先要把线程的状态从休眠状态转换到RUNNABLE状态。如何做到呢？这个要靠Java Thread类提供的<strong>interrupt()方法</strong>，它可以将休眠状态的线程转换到RUNNABLE状态。</p>
+<p>线程转换到RUNNABLE状态之后，我们如何再将其终止呢？RUNNABLE状态转换到终止状态，优雅的方式是让Java线程自己执行完 run() 方法，所以一般我们采用的方法是<strong>设置一个标志位</strong>，然后线程会在合适的时机检查这个标志位，如果发现符合终止条件，则自动退出run()方法。这个过程其实就是我们前面提到的第二阶段：<strong>响应终止指令</strong>。</p>
+<p>综合上面这两点，我们能总结出终止指令，其实包括两方面内容：<strong>interrupt()方法</strong>和<strong>线程终止的标志位</strong>。</p>
+<p>理解了两阶段终止模式之后，下面我们看一个实际工作中的案例。</p>
+<h1 id="用两阶段终止模式终止监控操作"><a href="#用两阶段终止模式终止监控操作" class="headerlink" title="用两阶段终止模式终止监控操作"></a>用两阶段终止模式终止监控操作</h1><p>实际工作中，有些监控系统需要动态地采集一些数据，一般都是监控系统发送采集指令给被监控系统的监控代理，监控代理接收到指令之后，从监控目标收集数据，然后回传给监控系统，详细过程如下图所示。出于对性能的考虑（有些监控项对系统性能影响很大，所以不能一直持续监控），动态采集功能一般都会有终止操作。</p>
+<p><img src="/article/2023/08/35%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E4%B8%A4%E9%98%B6%E6%AE%B5%E7%BB%88%E6%AD%A2%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E5%9C%B0%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B%EF%BC%9F/b2582e5e4401c2bd3658fcb51860b472.png" alt="img"></p>
+<p>动态采集功能示意图</p>
+<p>下面的示例代码是<strong>监控代理</strong>简化之后的实现，start()方法会启动一个新的线程rptThread来执行监控数据采集和回传的功能，stop()方法需要优雅地终止线程rptThread，那stop()相关功能该如何实现呢？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Proxy</span> &#123;</span><br><span class="line">  <span class="type">boolean</span> <span class="variable">started</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">  <span class="comment">//采集线程</span></span><br><span class="line">  Thread rptThread;</span><br><span class="line">  <span class="comment">//启动采集功能</span></span><br><span class="line">  <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">start</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="comment">//不允许同时启动多个采集线程</span></span><br><span class="line">    <span class="keyword">if</span> (started) &#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    started = <span class="literal">true</span>;</span><br><span class="line">    rptThread = <span class="keyword">new</span> <span class="title class_">Thread</span>(()-&gt;&#123;</span><br><span class="line">      <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">        <span class="comment">//省略采集、回传实现</span></span><br><span class="line">        report();</span><br><span class="line">        <span class="comment">//每隔两秒钟采集、回传一次数据</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          Thread.sleep(<span class="number">2000</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;  </span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">//执行到此处说明线程马上终止</span></span><br><span class="line">      started = <span class="literal">false</span>;</span><br><span class="line">    &#125;);</span><br><span class="line">    rptThread.start();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//终止采集功能</span></span><br><span class="line">  <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">stop</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="comment">//如何实现？</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+
+<p>按照两阶段终止模式，我们首先需要做的就是将线程rptThread状态转换到RUNNABLE，做法很简单，只需要在调用 <code>rptThread.interrupt()</code> 就可以了。线程rptThread的状态转换到RUNNABLE之后，如何优雅地终止呢？下面的示例代码中，我们选择的标志位是线程的中断状态：<code>Thread.currentThread().isInterrupted()</code> ，需要注意的是，我们在捕获Thread.sleep()的中断异常之后，通过 <code>Thread.currentThread().interrupt()</code> 重新设置了线程的中断状态，因为JVM的异常处理会清除线程的中断状态。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Proxy</span> &#123;</span><br><span class="line">  <span class="type">boolean</span> <span class="variable">started</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">  <span class="comment">//采集线程</span></span><br><span class="line">  Thread rptThread;</span><br><span class="line">  <span class="comment">//启动采集功能</span></span><br><span class="line">  <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">start</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="comment">//不允许同时启动多个采集线程</span></span><br><span class="line">    <span class="keyword">if</span> (started) &#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    started = <span class="literal">true</span>;</span><br><span class="line">    rptThread = <span class="keyword">new</span> <span class="title class_">Thread</span>(()-&gt;&#123;</span><br><span class="line">      <span class="keyword">while</span> (!Thread.currentThread().isInterrupted())&#123;</span><br><span class="line">        <span class="comment">//省略采集、回传实现</span></span><br><span class="line">        report();</span><br><span class="line">        <span class="comment">//每隔两秒钟采集、回传一次数据</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          Thread.sleep(<span class="number">2000</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e)&#123;</span><br><span class="line">          <span class="comment">//重新设置线程中断状态</span></span><br><span class="line">          Thread.currentThread().interrupt();</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">//执行到此处说明线程马上终止</span></span><br><span class="line">      started = <span class="literal">false</span>;</span><br><span class="line">    &#125;);</span><br><span class="line">    rptThread.start();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//终止采集功能</span></span><br><span class="line">  <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">stop</span><span class="params">()</span>&#123;</span><br><span class="line">    rptThread.interrupt();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的示例代码的确能够解决当前的问题，但是建议你在实际工作中谨慎使用。原因在于我们很可能在线程的run()方法中调用第三方类库提供的方法，而我们没有办法保证第三方类库正确处理了线程的中断异常，例如第三方类库在捕获到Thread.sleep()方法抛出的中断异常后，没有重新设置线程的中断状态，那么就会导致线程不能够正常终止。所以强烈建议你<strong>设置自己的线程终止标志位</strong>，例如在下面的代码中，使用isTerminated作为线程终止标志位，此时无论是否正确处理了线程的中断异常，都不会影响线程优雅地终止。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Proxy</span> &#123;</span><br><span class="line">  <span class="comment">//线程终止标志位</span></span><br><span class="line">  <span class="keyword">volatile</span> <span class="type">boolean</span> <span class="variable">terminated</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">  <span class="type">boolean</span> <span class="variable">started</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">  <span class="comment">//采集线程</span></span><br><span class="line">  Thread rptThread;</span><br><span class="line">  <span class="comment">//启动采集功能</span></span><br><span class="line">  <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">start</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="comment">//不允许同时启动多个采集线程</span></span><br><span class="line">    <span class="keyword">if</span> (started) &#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    started = <span class="literal">true</span>;</span><br><span class="line">    terminated = <span class="literal">false</span>;</span><br><span class="line">    rptThread = <span class="keyword">new</span> <span class="title class_">Thread</span>(()-&gt;&#123;</span><br><span class="line">      <span class="keyword">while</span> (!terminated)&#123;</span><br><span class="line">        <span class="comment">//省略采集、回传实现</span></span><br><span class="line">        report();</span><br><span class="line">        <span class="comment">//每隔两秒钟采集、回传一次数据</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          Thread.sleep(<span class="number">2000</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e)&#123;</span><br><span class="line">          <span class="comment">//重新设置线程中断状态</span></span><br><span class="line">          Thread.currentThread().interrupt();</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">//执行到此处说明线程马上终止</span></span><br><span class="line">      started = <span class="literal">false</span>;</span><br><span class="line">    &#125;);</span><br><span class="line">    rptThread.start();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//终止采集功能</span></span><br><span class="line">  <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">stop</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="comment">//设置中断标志位</span></span><br><span class="line">    terminated = <span class="literal">true</span>;</span><br><span class="line">    <span class="comment">//中断线程rptThread</span></span><br><span class="line">    rptThread.interrupt();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="如何优雅地终止线程池"><a href="#如何优雅地终止线程池" class="headerlink" title="如何优雅地终止线程池"></a>如何优雅地终止线程池</h1><p>Java领域用的最多的还是线程池，而不是手动地创建线程。那我们该如何优雅地终止线程池呢？</p>
+<p>线程池提供了两个方法：**shutdown()**和**shutdownNow()**。这两个方法有什么区别呢？要了解它们的区别，就先需要了解线程池的实现原理。</p>
+<p>我们曾经讲过，Java线程池是生产者-消费者模式的一种实现，提交给线程池的任务，首先是进入一个阻塞队列中，之后线程池中的线程从阻塞队列中取出任务执行。</p>
+<p>shutdown()方法是一种很保守的关闭线程池的方法。线程池执行shutdown()后，就会拒绝接收新的任务，但是会等待线程池中正在执行的任务和已经进入阻塞队列的任务都执行完之后才最终关闭线程池。</p>
+<p>而shutdownNow()方法，相对就激进一些了，线程池执行shutdownNow()后，会拒绝接收新的任务，同时还会中断线程池中正在执行的任务，已经进入阻塞队列的任务也被剥夺了执行的机会，不过这些被剥夺执行机会的任务会作为shutdownNow()方法的返回值返回。因为shutdownNow()方法会中断正在执行的线程，所以提交到线程池的任务，如果需要优雅地结束，就需要正确地处理线程中断。</p>
+<p>如果提交到线程池的任务不允许取消，那就不能使用shutdownNow()方法终止线程池。不过，如果提交到线程池的任务允许后续以补偿的方式重新执行，也是可以使用shutdownNow()方法终止线程池的。<a href="time://mall?url=https%3A%2F%2Fh5.youzan.com%2Fv2%2Fgoods%2F2758xqdzr6uuw">《Java并发编程实战》</a>这本书第7章《取消与关闭》的“shutdownNow的局限性”一节中，提到一种将已提交但尚未开始执行的任务以及已经取消的正在执行的任务保存起来，以便后续重新执行的方案，你可以参考一下，方案很简单，这里就不详细介绍了。</p>
+<p>其实分析完shutdown()和shutdownNow()方法你会发现，它们实质上使用的也是两阶段终止模式，只是终止指令的范围不同而已，前者只影响阻塞队列接收任务，后者范围扩大到线程池中所有的任务。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>两阶段终止模式是一种应用很广泛的并发设计模式，在Java语言中使用两阶段终止模式来优雅地终止线程，需要注意两个关键点：一个是仅检查终止标志位是不够的，因为线程的状态可能处于休眠态；另一个是仅检查线程的中断状态也是不够的，因为我们依赖的第三方类库很可能没有正确处理中断异常。</p>
+<p>当你使用Java的线程池来管理线程的时候，需要依赖线程池提供的shutdown()和shutdownNow()方法来终止线程池。不过在使用时需要注意它们的应用场景，尤其是在使用shutdownNow()的时候，一定要谨慎。</p>
+<h1 id="课后思考"><a href="#课后思考" class="headerlink" title="课后思考"></a>课后思考</h1><p>本文的示例代码中，线程终止标志位isTerminated被声明为volatile，你觉得是否有必要呢？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Proxy</span> &#123;</span><br><span class="line">  <span class="comment">//线程终止标志位</span></span><br><span class="line">  <span class="keyword">volatile</span> <span class="type">boolean</span> <span class="variable">terminated</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">  ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" rel="tag"># Java并发编程实战</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/08/34%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-Worker%20Thread%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D%E9%87%8D%E5%A4%8D%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B%EF%BC%9F/" rel="prev" title="34并发设计模式-Worker Thread模式：如何避免重复创建线程？">
+                  <i class="fa fa-angle-left"></i> 34并发设计模式-Worker Thread模式：如何避免重复创建线程？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/08/36%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%94%A8%E6%B5%81%E6%B0%B4%E7%BA%BF%E6%80%9D%E6%83%B3%E6%8F%90%E9%AB%98%E6%95%88%E7%8E%87/" rel="next" title="36并发设计模式-生产者-消费者模式：用流水线思想提高效率">
+                  36并发设计模式-生产者-消费者模式：用流水线思想提高效率 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="分布式执行以⼀个SQL例⼦来展示查询计划 1234567891011select	t1.n1,	t2.n2,	count(1) as c  from t1  join t2 on t1.id &#x3D; t2.id  join t3 on t1.id &#x3D; t3.id where t3.n3 between &#x27;a&#x27; and &#x27;f&#x27; group by t1.n1, t2">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Impala Sql优化案例分享">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2021/02/Impala%20Sql%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B%E5%88%86%E4%BA%AB/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="分布式执行以⼀个SQL例⼦来展示查询计划 1234567891011select	t1.n1,	t2.n2,	count(1) as c  from t1  join t2 on t1.id &#x3D; t2.id  join t3 on t1.id &#x3D; t3.id where t3.n3 between &#x27;a&#x27; and &#x27;f&#x27; group by t1.n1, t2">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2021/02/Impala%20Sql%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B%E5%88%86%E4%BA%AB/image-20231107214822756.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2021/02/Impala%20Sql%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B%E5%88%86%E4%BA%AB/image-20231107215556631.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2021/02/Impala%20Sql%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B%E5%88%86%E4%BA%AB/image-20231107220245799.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2021/02/Impala%20Sql%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B%E5%88%86%E4%BA%AB/image-20231107222544964.png">
+<meta property="article:published_time" content="2021-02-03T01:00:00.000Z">
+<meta property="article:modified_time" content="2021-02-03T01:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="大数据">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2021/02/Impala%20Sql%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B%E5%88%86%E4%BA%AB/image-20231107214822756.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2021/02/Impala%20Sql%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B%E5%88%86%E4%BA%AB/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2021/02/Impala%20Sql%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B%E5%88%86%E4%BA%AB/","path":"article/2021/02/Impala Sql优化案例分享/","title":"Impala Sql优化案例分享"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Impala Sql优化案例分享 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E6%89%A7%E8%A1%8C"><span class="nav-number">1.</span> <span class="nav-text">分布式执行</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E6%9C%BA%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92"><span class="nav-number">1.1.</span> <span class="nav-text">单机执行计划</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92"><span class="nav-number">1.2.</span> <span class="nav-text">分布式并行执行计划</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96"><span class="nav-number">2.</span> <span class="nav-text">连接查询优化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F%E4%B8%80"><span class="nav-number">2.1.</span> <span class="nav-text">方式一</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F%E4%BA%8C"><span class="nav-number">2.2.</span> <span class="nav-text">方式二</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F%E4%B8%89"><span class="nav-number">2.3.</span> <span class="nav-text">方式三</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ImpalaSQL%E4%BC%98%E5%8C%96%E6%80%9D%E8%B7%AF"><span class="nav-number">3.</span> <span class="nav-text">ImpalaSQL优化思路</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BC%98%E8%B4%A8%E6%96%87%E7%AB%A0%E6%8E%A8%E8%8D%90"><span class="nav-number">4.</span> <span class="nav-text">优质文章推荐</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2021/02/Impala%20Sql%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B%E5%88%86%E4%BA%AB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Impala Sql优化案例分享 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Impala Sql优化案例分享
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-02-03 09:00:00" itemprop="dateCreated datePublished" datetime="2021-02-03T09:00:00+08:00">2021-02-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%A4%A7%E6%95%B0%E6%8D%AE/" itemprop="url" rel="index"><span itemprop="name">大数据</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="分布式执行"><a href="#分布式执行" class="headerlink" title="分布式执行"></a>分布式执行</h1><p>以⼀个SQL例⼦来展示查询计划</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">	t1.n1,</span><br><span class="line">	t2.n2,</span><br><span class="line">	<span class="built_in">count</span>(<span class="number">1</span>) <span class="keyword">as</span> c</span><br><span class="line">  <span class="keyword">from</span> t1</span><br><span class="line">  <span class="keyword">join</span> t2 <span class="keyword">on</span> t1.id <span class="operator">=</span> t2.id</span><br><span class="line">  <span class="keyword">join</span> t3 <span class="keyword">on</span> t1.id <span class="operator">=</span> t3.id</span><br><span class="line"> <span class="keyword">where</span> t3.n3 <span class="keyword">between</span> <span class="string">&#x27;a&#x27;</span> <span class="keyword">and</span> <span class="string">&#x27;f&#x27;</span></span><br><span class="line"> <span class="keyword">group</span> <span class="keyword">by</span> t1.n1, t2.n2</span><br><span class="line"> <span class="keyword">order</span> <span class="keyword">by</span> c <span class="keyword">desc</span></span><br><span class="line"> limit <span class="number">100</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="单机执行计划"><a href="#单机执行计划" class="headerlink" title="单机执行计划"></a>单机执行计划</h2><p><img src="/article/2021/02/Impala%20Sql%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B%E5%88%86%E4%BA%AB/image-20231107214822756.png" alt="image-20231107214822756"></p>
+<p>分析上⾯的单机执⾏计划，第⼀步先去扫描 t1 表中需要的数据，<strong>如果数据⽂件存储是列式存储我们可以便利的扫描到所需的列 id, n1;</strong> 接着需要与 t2 表进⾏ Join 操作，扫描 t2 表与 t1 表类似获取到所需数据列 id, n2。t1 与 t2 表进⾏关联执行 join 操作，关联之后再与 t3 表进⾏关联，这⾥会使⽤谓词下推扫描 t3 表只取 join 所需数据；关联三个表得到数据后，对 group by 进⾏相应的 aggregation 操作，最终是排序取出指定数量的数据返回。</p>
+<p>这里由于是在一台机器上完成上述过程，所以逻辑上还是比较直观的。但是倘若所查询的 T1 和 T2 的数据都比较大，无法在一台机器上存储，或者单机执行效率太慢，这个时候就需要分布式并行执行计划来执行上述流程。</p>
+<h2 id="分布式并行执行计划"><a href="#分布式并行执行计划" class="headerlink" title="分布式并行执行计划"></a>分布式并行执行计划</h2><p>所谓的分布式并行化执行计划，就是在单机执行计划基础之上结合数据分布式存储的特点，按照任务的计要求把单机执行计划拆分为多段子任务，每个子任务都是可以并行执行的。上面的单机执行计划转为分布式并行执行计划如下图所示：</p>
+<p><img src="/article/2021/02/Impala%20Sql%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B%E5%88%86%E4%BA%AB/image-20231107215556631.png" alt="image-20231107215556631"></p>
+<p><font color size="5"><strong>整体流程</strong></font> </p>
+<p><strong>一、Hash join分区</strong></p>
+<p>首先底层仍然先执行的是数据间的 join 操作。这里我们假设 T1 表和 T2 表是大表，分布在三个节点上（三台机器上）。而 T3 表是小表，只存储在第三个节点。此时为了做表之间数据的 Join 操作，可以想到需要将相同 id 字段的数据汇总到一起，这样才能进行拼接。 为了实现该过程，分布式执行计划会首先根据 T1 和 T2 两个大表中数据的 id 字段进行 hash join，采取的公式类似于：</p>
+<p><img src="/article/2021/02/Impala%20Sql%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B%E5%88%86%E4%BA%AB/image-20231107220245799.png" alt="image-20231107220245799"></p>
+<p>这个是 MapReduce 中 HashPartitioner 类中的方法。可以看出上式的分区结果只与 key 值的 hashCode 有关。这里 id 字段是 int 类型，则 hashCode 就是其本身，所以通过上式，就可以实现将T1和T2表中相同id字段的数据划分到同一分区中。（这里要注意的是，不是id为1的字段进入一个分区，2、3、4、5…都各进入一个分区，通过上式可以看出是对分区大小取%的操作，图中分区大小是3，因此id为1,4,7…的数据进入同一分区。）</p>
+<p>同时要注意的是，对于 T3 表与 T1、T2 表数据的关联采用的不是 hash join，而是利用 Broadcast 来进行 join。 因为 T3 表的数据量较小，如果仍然采用 hash join 的话，就需要在 T1 表和 T2 表通过 hash join 分区后，再利用 hash join 与 T3 表重复执行一遍上述分区流程。这样增加了不同节点间网络传输的开销，也降低了执行效率。因此，对于小表，分布式执行计划采用的方法是利用广播机制，将该 T3 表直接分发到三个节点上。这样每个节点在执行完 T1 表与 T2 表的关联后，就可以直接在本机上执行与 T3 表的关联。</p>
+<p>通过上面的步骤，就可以保证对于 T1 表和 T2 表，id 字段相同的数据进入到同一分区中进行 join 操作，然后再与本机的 T3 表进行 join 操作。即完成了 sql 中的 </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> t1</span><br><span class="line"><span class="keyword">join</span> t2 <span class="keyword">on</span> t1.id <span class="operator">=</span> t2.id</span><br><span class="line"><span class="keyword">join</span> t3 <span class="keyword">on</span> t1.id <span class="operator">=</span> t3.id</span><br></pre></td></tr></table></figure>
+
+<p><strong>二、分区内预聚合</strong></p>
+<p>这一步相当于执行 <code>group by</code>  的步骤。因为在分区时每条数据都带着各自的字段，也就包含着 n1, n2 的数据，所以此时在每个分区中，就可以对该分区内的数据按照 n1, n2 的值，执行 <code>group by</code> 操作进行一个局部的预聚合。</p>
+<p><strong>三、全局聚合</strong></p>
+<p>通过上述操作可以得到分区内的局部预聚合。但此时，条件相同的 n1, n2 可能分散在各个分区中（因为最初是按 id 字段分区的）。因此还需要一个全局的聚合，把所有 hash 结果相同的 &lt;n1, n2&gt; 进行汇总，这样才能得到最后的结果。因此，此时各个分区中预聚合(group by)后的数据会根据该组的 &lt;n1, n2&gt; 值再利用 hash join 进行分区，使得对 &lt;n1, n2&gt; 的 hash 值相同的数据组发送到同一分区中(此时数据量经过预聚合后已经变小了，所以就可以减少分区数，图上减少为 2 个)。这样在每个分区中每个组内的数据都是包含了所有 &lt;n1, n2&gt; Hash 值相等的结果，也即可以得到 SQL 查询语句中 group by 的最终结果(相当于原查询语句中，<code>group by n1, n2</code> 后所有应该进入同一分组中的数据)。</p>
+<p><strong>四、局部TopN</strong></p>
+<p>除了上述过程可以并行外，还有其它操作也可以并行吗？由于原SQL语句有 <code>order by limit</code> 操作，所以其实还可以在全局聚合后执行局部的 <code>order by limit</code> 操作。由于<code>order by</code> 操作是对得到的最终结果进行 <code>order by</code>，因此，这里就可以在每个分区进行全局聚合后，对得到的 count(1) as c 进行 <code>order by limit</code> 操作，得到局部的 Top100 的结果。这样同样减少了网络间传输的数据量，同时也体现了并行执行的特点。</p>
+<p><strong>五、全局TopN</strong></p>
+<p>最后，就是将所有的数据进行汇总，然后执行全局的order by limit 操作，就可以得到最终的结果。</p>
+<p><font color size="5"><strong>整体的分布式并行执行计划流程图如下图所示：</strong></font> </p>
+<p><img src="/article/2021/02/Impala%20Sql%E4%BC%98%E5%8C%96%E6%A1%88%E4%BE%8B%E5%88%86%E4%BA%AB/image-20231107222544964.png" alt="image-20231107222544964"></p>
+<p>各部分的具体操作就如上述流程介绍中所示。对上述流程的总结如下：</p>
+<ol>
+<li>T1 和 T2 使⽤ Hash join，此时需要按照 id 的值分别将 T1 和 T2 分散到不同的进程，但是相同的 id 会散列到相同的进程，这样每⼀个 Join 之后是全部数据的⼀部分</li>
+<li>T1 与 T2 Join之后的结果数据再与 T3 表进⾏ Join，此时 T3 表采⽤ Broadcast ⽅式把⾃⼰全部数据(id列)⼴播到需要的节点上</li>
+<li>T1, T2, T3 Join之后再根据 Group by 执⾏本地的预聚合，每⼀个节点的预聚合结果只是最终结果的⼀部分（不同的节点可能存在相同的 group by 的值），需要再进⾏⼀次全局的聚合。</li>
+<li>全局的聚合同样需要并⾏，则根据聚合列进⾏Hash分散到不同的节点执⾏ Merge 运算（其实仍然是⼀次聚合运算），⼀般情况下为了较少数据的⽹络传输， 会选择之前本地聚合节点做全局聚合⼯作。</li>
+<li>通过全局聚合之后，相同的 key 只存在于⼀个节点，然后对于每⼀个节点进⾏排序和 TopN 计算，最终将每⼀个全局聚合节点的结果返回进⾏合并、排序、limit计算，返回结果给⽤户。</li>
+</ol>
+<h1 id="连接查询优化"><a href="#连接查询优化" class="headerlink" title="连接查询优化"></a>连接查询优化</h1><p> <a target="_blank" rel="noopener" href="https://blog.csdn.net/skyyws/article/details/120295560">一文读懂Impala统计信息相关知识</a> 、 <a target="_blank" rel="noopener" href="https://blog.csdn.net/skyyws/article/details/88026632">使用Impala hint加速SQL查询</a> 、 <a target="_blank" rel="noopener" href="https://codeantenna.com/a/MCWtGYvcjR#google_vignette">Impala简明调优手册</a> </p>
+<h2 id="方式一"><a href="#方式一" class="headerlink" title="方式一"></a>方式一</h2><p>优化连接最简单的方式就是使用 COMPUTE STATS 命令搜集所以参与关联表的统计信息，让 Impala 根据每个表的大小、列的非重复值个数等相关信息自动优化查询。为保证统计信息的准确性，我们需要在对表 INSERT、LOAD DATA 或者添加分区等操作之后及时执行 COMPUTE STATS 命令搜集统计信息。</p>
+<p>Impala查询优化器根据表的绝对大小和相对大小为连接查询选择不同的关联技术，它提供了两种连接方式：</p>
+<ul>
+<li>默认的连接方式是 Broadcast 连接，当右表比左表小时，它的内容会被发送到所有执行查询的节点上。</li>
+<li>另一种连接方式是 partitioned 连接，它使用大小差不太多的大表关联。使用此种方式关联，为了保证关联操作可以并行执行，每个表的一部分数据都会被发送到不同节点上，最后各节点分别对传送过来的数据并行处理。</li>
+</ul>
+<p>具体Impala优化器选择哪种连接方式，完全依赖于通过 COMPUTE STATS 搜集的表统计信息。为了确认表的连接策略，我们可以对一个特定的查询执行 EXPLAIN 语句。如果通过基准测试我们可以确认一种连接方式比另一种连接方式效率更高，也可以通过 Hint 的方式手动指定需要的连接方式。</p>
+<h2 id="方式二"><a href="#方式二" class="headerlink" title="方式二"></a>方式二</h2><p>当统计信息不可用时如何关联</p>
+<p>如果参与关联的表的统计信息不可用，而且 Impala 自动选择的连接顺序效率很低，我们可以在 SELECT 关键字之后使用 STRAIGHT_JOIN 关键字手动指定连接的顺序。</p>
+<p>如果参与关联的某些表的统计信息还是可用的，Impala会根据存在统计信息的表重新生成连接顺序。有统计信息的表会被放置在连接顺序的最左端，并根据表的基数和规模降序排列。而没有统计信息的表被作为空表对待，总是放在连接顺序的最右端。</p>
+<h2 id="方式三"><a href="#方式三" class="headerlink" title="方式三"></a>方式三</h2><p>使用 STRAIGHT_JOIN 覆盖连接顺序</p>
+<p>如果关联查询由于统计信息不可用、或过期、或者数据分布等问题导致效率低下，我们可以通过指定STRAIGHT_JOIN关键字改变连接顺序。使用该关键字后，关联查询将不会使用 Impala 查询优化器自动生成的连接顺序，而是使用查询中表出现的先后顺序作为关联的顺序。对于手动指定连接顺序的查询，我们可能需要根据情况对连接顺序进行微调，比如有四张表分别为BIG、MEDIUM、SMALL、TINY，那连接顺序可以调整为：BIG、TINY、SMALL、MEDIUM。</p>
+<p>如下示例中，表 BIG 经过过滤实际上产生了一个非常小的结果集，而 Impala 仍然把它作为最大的表对待放在连接顺序的最左侧。为了改变优化器错误的判断，我们使用 STRAIGHT_JOIN 改变连接的顺序，把 BIG 表放到了联机顺序的最右侧：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> straight_join x</span><br><span class="line">  <span class="keyword">from</span> medium</span><br><span class="line">  <span class="keyword">join</span> small</span><br><span class="line">  <span class="keyword">join</span> (<span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> big <span class="keyword">where</span> c1 <span class="operator">&lt;</span> <span class="number">10</span>) <span class="keyword">as</span> big</span><br><span class="line"> <span class="keyword">where</span> medium.id<span class="operator">=</span>small.id <span class="keyword">and</span> small.id<span class="operator">=</span>big.id;</span><br></pre></td></tr></table></figure>
+
+<h1 id="ImpalaSQL优化思路"><a href="#ImpalaSQL优化思路" class="headerlink" title="ImpalaSQL优化思路"></a>ImpalaSQL优化思路</h1><ul>
+<li>大表和小表JOIN时，确保大表在左侧，小表在右侧（Impala 会广播小表到所有节点）;</li>
+<li>有四张表分别为BIG、MEDIUM、SMALL、TINY，那连接顺序可以调整为：BIG、TINY、SMALL、MEDIUM。</li>
+</ul>
+<h1 id="优质文章推荐"><a href="#优质文章推荐" class="headerlink" title="优质文章推荐"></a>优质文章推荐</h1><p> <a target="_blank" rel="noopener" href="https://www.cnblogs.com/JasonCeng/p/14199298.html">SQL优化器-RBO与CBO分别是什么</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.cnblogs.com/xiaohuizhenyoucai/p/10983783.html">sql 算法 : Nested Loop，Hash Join，Merge Join介绍</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.cnblogs.com/Dreamer-1/p/6076440.html">看懂Oracle执行计划</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://learnku.com/blog/huxiaobai_001/tags/mysql_487">MySQL优化</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://developer.aliyun.com/article/1078715">执行计划中包含的信息 - 阿里云</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://www.cnblogs.com/xuanzhi201111/p/4175635.html">MySQL Explain详解</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://blog.csdn.net/wuseyukui/article/details/71512793">MySQL高级 之 explain执行计划详解</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://blog.csdn.net/a745233700/article/details/84335453">MySQL数据库：explain执行计划详解</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://developer.aliyun.com/article/1350997">不允许你不知道的 MySQL 优化实战（一）</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://developer.aliyun.com/article/1351018">不允许你不知道的 MySQL 优化实战（二）</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://developer.aliyun.com/article/1351040">不允许你不知道的 MySQL 优化实战（三）</a> </p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/" rel="tag"># 大数据</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2021/01/%E9%99%90%E6%B5%81%E7%AE%97%E6%B3%95/" rel="prev" title="限流算法">
+                  <i class="fa fa-angle-left"></i> 限流算法
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2021/02/%E5%A4%A7%E6%95%B0%E6%8D%AE%E6%8A%80%E6%9C%AF%E6%A0%88/" rel="next" title="大数据技术栈">
+                  大数据技术栈 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

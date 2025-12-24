@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="到这里，专栏的第一模块——并发编程的理论基础，我们已经讲解完了，总共12篇，不算少，但“跳出来，看全景”你会发现这12篇的内容基本上是一个“串行的故事”。所以，在学习过程中，建议你从一个个单一的知识和技术中“跳出来”，看全局，搭建自己的并发编程知识体系。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="13并发理论基础-理论基础模块热点问题答疑">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/07/13%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="到这里，专栏的第一模块——并发编程的理论基础，我们已经讲解完了，总共12篇，不算少，但“跳出来，看全景”你会发现这12篇的内容基本上是一个“串行的故事”。所以，在学习过程中，建议你从一个个单一的知识和技术中“跳出来”，看全局，搭建自己的并发编程知识体系。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/07/13%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/ac273999b72e406884d96508f37acac0.jpg">
+<meta property="article:published_time" content="2023-07-13T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-07-13T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Java并发编程实战">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/07/13%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/ac273999b72e406884d96508f37acac0.jpg">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/07/13%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/07/13%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/","path":"article/2023/07/13并发理论基础-理论基础模块热点问题答疑/","title":"13并发理论基础-理论基础模块热点问题答疑"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>13并发理论基础-理论基础模块热点问题答疑 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E7%94%A8%E9%94%81%E7%9A%84%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">1.</span> <span class="nav-text">1. 用锁的最佳实践</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E9%94%81%E7%9A%84%E6%80%A7%E8%83%BD%E8%A6%81%E7%9C%8B%E5%9C%BA%E6%99%AF"><span class="nav-number">2.</span> <span class="nav-text">2. 锁的性能要看场景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E7%AB%9E%E6%80%81%E6%9D%A1%E4%BB%B6%E9%9C%80%E8%A6%81%E6%A0%BC%E5%A4%96%E5%85%B3%E6%B3%A8"><span class="nav-number">3.</span> <span class="nav-text">3. 竞态条件需要格外关注</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E6%98%AF%E5%85%88%E8%AE%A1%E7%AE%97%E5%8F%82%E6%95%B0"><span class="nav-number">4.</span> <span class="nav-text">4. 方法调用是先计算参数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-InterruptedException%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E9%9C%80%E5%B0%8F%E5%BF%83"><span class="nav-number">5.</span> <span class="nav-text">5. InterruptedException异常处理需小心</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E7%90%86%E8%AE%BA%E5%80%BC-or-%E7%BB%8F%E9%AA%8C%E5%80%BC"><span class="nav-number">6.</span> <span class="nav-text">6. 理论值 or 经验值</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/07/13%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="13并发理论基础-理论基础模块热点问题答疑 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          13并发理论基础-理论基础模块热点问题答疑
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-07-13 08:00:00" itemprop="dateCreated datePublished" datetime="2023-07-13T08:00:00+08:00">2023-07-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">Java并发编程实战</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>到这里，专栏的第一模块——并发编程的理论基础，我们已经讲解完了，总共12篇，不算少，但“跳出来，看全景”你会发现这12篇的内容基本上是一个“串行的故事”。所以，在学习过程中，建议你从一个个单一的知识和技术中“跳出来”，看全局，搭建自己的并发编程知识体系。</p>
+<span id="more"></span>
+
+<p>为了便于你更好地学习和理解，下面我会先将这些知识点再简单地为你“串”一下，咱们一起复习下；然后就每篇文章的课后思考题、留言区的热门评论，我也集中总结和回复一下。</p>
+<p><strong>那这个“串行的故事”是怎样的呢？</strong></p>
+<p>起源是一个硬件的核心矛盾：CPU与内存、I&#x2F;O的速度差异，系统软件（操作系统、编译器）在解决这个核心矛盾的同时，引入了可见性、原子性和有序性问题，这三个问题就是很多并发程序的Bug之源。这，就是<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/83682">01</a>的内容。</p>
+<p>那如何解决这三个问题呢？Java语言自然有招儿，它提供了Java内存模型和互斥锁方案。所以，在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/84017">02</a>我们介绍了Java内存模型，以应对可见性和有序性问题；那另一个原子性问题该如何解决？多方考量用好互斥锁才是关键，这就是<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/84344">03</a>和<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/84601">04</a>的内容。</p>
+<p>虽说互斥锁是解决并发问题的核心工具，但它也可能会带来死锁问题，所以<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/85001">05</a>就介绍了死锁的产生原因以及解决方案；同时还引出一个线程间协作的问题，这也就引出了<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/85241">06</a>这篇文章的内容，介绍线程间的协作机制：等待-通知。</p>
+<p>你应该也看出来了，前六篇文章，我们更多地是站在微观的角度看待并发问题。而<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/85702">07</a>则是换一个角度，站在宏观的角度重新审视并发编程相关的概念和理论，同时也是对前六篇文章的查漏补缺。</p>
+<p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/86089">08</a>介绍的管程，是Java并发编程技术的基础，是解决并发问题的万能钥匙。并发编程里两大核心问题——互斥和同步，都是可以由管程来解决的。所以，学好管程，就相当于掌握了一把并发编程的万能钥匙。</p>
+<p>至此，并发编程相关的问题，理论上你都应该能找到问题所在，并能给出理论上的解决方案了。</p>
+<p>而后在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/86366">09</a>、<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/86666">10</a>和<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/86695">11</a>我们又介绍了线程相关的知识，毕竟Java并发编程是要靠多线程来实现的，所以有针对性地学习这部分知识也是很有必要的，包括线程的生命周期、如何计算合适的线程数以及线程内部是如何执行的。</p>
+<p>最后，在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/87365">12</a>我们还介绍了如何用面向对象思想写好并发程序，因为在Java语言里，面向对象思想能够让并发编程变得更简单。</p>
+<p><img src="/article/2023/07/13%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/ac273999b72e406884d96508f37acac0.jpg" alt="img"></p>
+<p>并发编程理论基础模块思维导图</p>
+<p>经过这样一个简要的总结，相信你此时对于并发编程相关的概念、理论、产生的背景以及它们背后的关系已经都有了一个相对全面的认识。至于更深刻的认识和应用体验，还是需要你“钻进去，看本质”，加深对技术本身的认识，拓展知识深度和广度。</p>
+<p>另外，在每篇文章的最后，我都附上了一个思考题，这些思考题虽然大部分都很简单，但是隐藏的问题却很容易让人忽略，从而不经意间就引发了Bug；再加上留言区的一些热门评论，所以我想着<strong>将这些隐藏的问题或者易混淆的问题，做一个总结也是很有必要的</strong>。</p>
+<h1 id="1-用锁的最佳实践"><a href="#1-用锁的最佳实践" class="headerlink" title="1. 用锁的最佳实践"></a>1. 用锁的最佳实践</h1><p>例如，在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/84344">《03 | 互斥锁（上）：解决原子性问题》</a>和<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/84601">《04 | 互斥锁（下）：如何用一把锁保护多个资源？》</a>这两篇文章中，我们的思考题都是关于如何创建正确的锁，而思考题里的做法都是错误的。</p>
+<p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/84344">03</a>的思考题的示例代码如下，<code>synchronized (new Object())</code> 这行代码很多同学已经分析出来了，每次调用方法get()、addOne()都创建了不同的锁，相当于无锁。这里需要你再次加深一下记忆，“<strong>一个合理的受保护资源与锁之间的关联关系应该是N:1</strong>”。只有共享一把锁才能起到互斥的作用。</p>
+<p>另外，很多同学也提到，JVM开启逃逸分析之后，<code>synchronized (new Object())</code> 这行代码在实际执行的时候会被优化掉，也就是说在真实执行的时候，这行代码压根就不存在。不过无论你是否懂“逃逸分析”都不影响你学好并发编程，如果你对“逃逸分析”感兴趣，可以参考一些JVM相关的资料。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SafeCalc</span> &#123;</span><br><span class="line">  <span class="type">long</span> <span class="variable">value</span> <span class="operator">=</span> <span class="number">0L</span>;</span><br><span class="line">  <span class="type">long</span> <span class="title function_">get</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">new</span> <span class="title class_">Object</span>()) &#123;</span><br><span class="line">      <span class="keyword">return</span> value;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">addOne</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">new</span> <span class="title class_">Object</span>()) &#123;</span><br><span class="line">      value += <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/84601">04</a>的思考题转换成代码，是下面这个样子。它的核心问题有两点：一个是锁有可能会变化，另一个是 Integer 和 String 类型的对象不适合做锁。如果锁发生变化，就意味着失去了互斥功能。 Integer 和 String 类型的对象在JVM里面是可能被重用的，除此之外，JVM里可能被重用的对象还有Boolean，那重用意味着什么呢？意味着你的锁可能被其他代码使用，如果其他代码 <code>synchronized(你的锁)</code>，而且不释放，那你的程序就永远拿不到锁，这是隐藏的风险。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Account</span> &#123;</span><br><span class="line">  <span class="comment">// 账户余额  </span></span><br><span class="line">  <span class="keyword">private</span> Integer balance;</span><br><span class="line">  <span class="comment">// 账户密码</span></span><br><span class="line">  <span class="keyword">private</span> String password;</span><br><span class="line">  <span class="comment">// 取款</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">withdraw</span><span class="params">(Integer amt)</span> &#123;</span><br><span class="line">    <span class="keyword">synchronized</span>(balance) &#123;</span><br><span class="line">      <span class="keyword">if</span> (<span class="built_in">this</span>.balance &gt; amt)&#123;</span><br><span class="line">        <span class="built_in">this</span>.balance -= amt;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; </span><br><span class="line">  <span class="comment">// 更改密码</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">updatePassword</span><span class="params">(String pw)</span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span>(password) &#123;</span><br><span class="line">      <span class="built_in">this</span>.password = pw;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过这两个反例，我们可以总结出这样一个基本的原则：<strong>锁，应是私有的、不可变的、不可重用的</strong>。我们经常看到别人家的锁，都长成下面示例代码这样，这种写法貌不惊人，却能避免各种意想不到的坑，这个其实就是最佳实践。最佳实践这方面的资料推荐你看《Java安全编码标准》这本书，研读里面的每一条规则都会让你受益匪浅。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 普通对象锁</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Object</span> </span><br><span class="line">  <span class="variable">lock</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br><span class="line"><span class="comment">// 静态对象锁</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Object</span></span><br><span class="line">  <span class="variable">lock</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>(); </span><br></pre></td></tr></table></figure>
+
+<h1 id="2-锁的性能要看场景"><a href="#2-锁的性能要看场景" class="headerlink" title="2. 锁的性能要看场景"></a>2. 锁的性能要看场景</h1><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/85001">《05 | 一不小心就死锁了，怎么办？》</a>的思考题是比较<code>while(!actr.apply(this, target));</code>这个方法和<code>synchronized(Account.class)</code>的性能哪个更好。</p>
+<p>这个要看具体的应用场景，不同应用场景它们的性能表现是不同的。在这个思考题里面，如果转账操作非常费时，那么前者的性能优势就显示出来了，因为前者允许A-&gt;B、C-&gt;D这种转账业务的并行。不同的并发场景用不同的方案，这是并发编程里面的一项基本原则；没有通吃的技术和方案，因为每种技术和方案都是优缺点和适用场景的。</p>
+<h1 id="3-竞态条件需要格外关注"><a href="#3-竞态条件需要格外关注" class="headerlink" title="3. 竞态条件需要格外关注"></a>3. 竞态条件需要格外关注</h1><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/85702">《07 | 安全性、活跃性以及性能问题》</a>里的思考题是一种典型的竞态条件问题（如下所示）。竞态条件问题非常容易被忽略，contains()和add()方法虽然都是线程安全的，但是组合在一起却不是线程安全的。所以你的程序里如果存在类似的组合操作，一定要小心。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">addIfNotExist</span><span class="params">(Vector v, </span></span><br><span class="line"><span class="params">    Object o)</span>&#123;</span><br><span class="line">  <span class="keyword">if</span>(!v.contains(o)) &#123;</span><br><span class="line">    v.add(o);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这道思考题的解决方法，可以参考<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/87365">《12 | 如何用面向对象思想写好并发程序？》</a>，你需要将共享变量v封装在对象的内部，而后控制并发访问的路径，这样就能有效防止对Vector v变量的滥用，从而导致并发问题。你可以参考下面的示例代码来加深理解。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SafeVector</span>&#123;</span><br><span class="line">  <span class="keyword">private</span> Vector v; </span><br><span class="line">  <span class="comment">// 所有公共方法增加同步控制</span></span><br><span class="line">  <span class="keyword">synchronized</span> </span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">addIfNotExist</span><span class="params">(Object o)</span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(!v.contains(o)) &#123;</span><br><span class="line">      v.add(o);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="4-方法调用是先计算参数"><a href="#4-方法调用是先计算参数" class="headerlink" title="4. 方法调用是先计算参数"></a>4. 方法调用是先计算参数</h1><p>不过，还有同学对<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/85702">07</a>文中所举的例子有疑议，认为<code>set(get()+1);</code>这条语句是进入set()方法之后才执行get()方法，其实并不是这样的。方法的调用，是先计算参数，然后将参数压入调用栈之后才会执行方法体，方法调用的过程在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/86695">11</a>这篇文章中我们已经做了详细的介绍，你可以再次重温一下。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span>(idx++ &lt; <span class="number">10000</span>) &#123;</span><br><span class="line">  set(get()+<span class="number">1</span>);   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先计算参数这个事情也是容易被忽视的细节。例如，下面写日志的代码，如果日志级别设置为INFO，虽然这行代码不会写日志，但是会计算<code>&quot;The var1：&quot; + var1 + &quot;, var2:&quot; + var2</code>的值，因为方法调用前会先计算参数。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">logger.debug(<span class="string">&quot;The var1：&quot;</span> + var1 + <span class="string">&quot;, var2:&quot;</span> + var2);</span><br></pre></td></tr></table></figure>
+
+<p>更好地写法应该是下面这样，这种写法仅仅是讲参数压栈，而没有参数的计算。使用{}占位符是写日志的一个良好习惯。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">logger.debug(<span class="string">&quot;The var1：&#123;&#125;, var2:&#123;&#125;&quot;</span>, var1, var2);</span><br></pre></td></tr></table></figure>
+
+<h1 id="5-InterruptedException异常处理需小心"><a href="#5-InterruptedException异常处理需小心" class="headerlink" title="5. InterruptedException异常处理需小心"></a>5. InterruptedException异常处理需小心</h1><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/86366">《 09 | Java线程（上）：Java线程的生命周期》</a>的思考题主要是希望你能够注意InterruptedException的处理方式。当你调用Java对象的wait()方法或者线程的sleep()方法时，需要捕获并处理InterruptedException异常，在思考题里面（如下所示），本意是通过isInterrupted()检查线程是否被中断了，如果中断了就退出while循环。当其他线程通过调用<code>th.interrupt().</code>来中断th线程时，会设置th线程的中断标志位，从而使<code>th.isInterrupted()</code>返回true，这样就能退出while循环了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Thread</span> <span class="variable">th</span> <span class="operator">=</span> Thread.currentThread();</span><br><span class="line"><span class="keyword">while</span>(<span class="literal">true</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span>(th.isInterrupted()) &#123;</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 省略业务代码无数</span></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    Thread.sleep(<span class="number">100</span>);</span><br><span class="line">  &#125;<span class="keyword">catch</span> (InterruptedException e)&#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这看上去一点问题没有，实际上却是几乎起不了作用。原因是这段代码在执行的时候，大部分时间都是阻塞在sleep(100)上，当其他线程通过调用<code>th.interrupt().</code>来中断th线程时，大概率地会触发InterruptedException 异常，<strong>在触发InterruptedException 异常的同时，JVM会同时把线程的中断标志位清除</strong>，所以这个时候<code>th.isInterrupted()</code>返回的是false。</p>
+<p>正确的处理方式应该是捕获异常之后重新设置中断标志位，也就是下面这样：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">  Thread.sleep(<span class="number">100</span>);</span><br><span class="line">&#125;<span class="keyword">catch</span>(InterruptedException e)&#123;</span><br><span class="line">  <span class="comment">// 重新设置中断标志位</span></span><br><span class="line">  th.interrupt();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="6-理论值-or-经验值"><a href="#6-理论值-or-经验值" class="headerlink" title="6. 理论值 or 经验值"></a>6. 理论值 or 经验值</h1><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/86666">《10 | Java线程（中）：创建多少线程才是合适的？》</a>的思考题是：经验值为“最佳线程&#x3D;2 * CPU的核数 + 1”，是否合理？</p>
+<p>从理论上来讲，这个经验值一定是靠不住的。但是经验值对于很多“I&#x2F;O耗时 &#x2F; CPU耗时”不太容易确定的系统来说，却是一个很好到初始值。</p>
+<p>我们曾讲到最佳线程数最终还是靠压测来确定的，实际工作中大家面临的系统，“I&#x2F;O耗时 &#x2F; CPU耗时”往往都大于1，所以基本上都是在这个<strong>初始值的基础上增加</strong>。增加的过程中，应关注线程数是如何影响吞吐量和延迟的。一般来讲，随着线程数的增加，吞吐量会增加，延迟也会缓慢增加；但是当线程数增加到一定程度，吞吐量就会开始下降，延迟会迅速增加。这个时候基本上就是线程能够设置的最大值了。</p>
+<p>实际工作中，不同的I&#x2F;O模型对最佳线程数的影响非常大，例如大名鼎鼎的Nginx用的是非阻塞I&#x2F;O，采用的是多进程单线程结构，Nginx本来是一个I&#x2F;O密集型系统，但是最佳进程数设置的却是CPU的核数，完全参考的是CPU密集型的算法。所以，理论我们还是要活学活用。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这个模块，内容主要聚焦在并发编程相关的理论上，但是思考题则是聚焦在细节上，我们经常说细节决定成败，在并发编程领域尤其如此。理论主要用来给我们提供解决问题的思路和方法，但在具体实践的时候，还必须重点关注每一个细节，哪怕有一个细节没有处理好，都会导致并发问题。这方面推荐你认真阅读《Java安全编码标准》这本书，如果你英文足够好，也可以参考<a target="_blank" rel="noopener" href="https://wiki.sei.cmu.edu/confluence/display/java/2+Rules">这份文档</a>。</p>
+<p>最后总结一句，学好理论有思路，关注细节定成败。</p>
+<p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" rel="tag"># Java并发编程实战</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/07/12%E5%B9%B6%E5%8F%91%E7%90%86%E8%AE%BA%E5%9F%BA%E7%A1%80-%E5%A6%82%E4%BD%95%E7%94%A8%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E6%80%9D%E6%83%B3%E5%86%99%E5%A5%BD%E5%B9%B6%E5%8F%91%E7%A8%8B%E5%BA%8F%EF%BC%9F/" rel="prev" title="12并发理论基础-如何用面向对象思想写好并发程序？">
+                  <i class="fa fa-angle-left"></i> 12并发理论基础-如何用面向对象思想写好并发程序？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/07/14%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB-Lock%E5%92%8CCondition%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E9%9A%90%E8%97%8F%E5%9C%A8%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E7%9A%84%E7%AE%A1%E7%A8%8B/" rel="next" title="14并发工具类-Lock和Condition（上）：隐藏在并发包中的管程">
+                  14并发工具类-Lock和Condition（上）：隐藏在并发包中的管程 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

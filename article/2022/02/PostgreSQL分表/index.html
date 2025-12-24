@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="PostgreSQL分表">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PostgreSQL分表">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/02/PostgreSQL%E5%88%86%E8%A1%A8/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="PostgreSQL分表">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-02-19T00:00:03.000Z">
+<meta property="article:modified_time" content="2022-02-19T00:00:03.000Z">
+<meta property="article:author" content="zhaolq">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/02/PostgreSQL%E5%88%86%E8%A1%A8/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/02/PostgreSQL%E5%88%86%E8%A1%A8/","path":"article/2022/02/PostgreSQL分表/","title":"PostgreSQL分表"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>PostgreSQL分表 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E8%A1%A8"><span class="nav-number">1.</span> <span class="nav-text">测试表</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E4%B8%BB%E8%A1%A8"><span class="nav-number">2.</span> <span class="nav-text">创建主表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%BA%8F%E5%88%97%E4%B8%BB%E9%94%AE-%E6%8E%A8%E8%8D%90"><span class="nav-number">2.1.</span> <span class="nav-text">使用序列主键(推荐)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ID%E8%87%AA%E5%8A%A8%E5%A2%9E%E9%95%BF"><span class="nav-number">2.2.</span> <span class="nav-text">ID自动增长</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A0%E9%99%A4"><span class="nav-number">2.3.</span> <span class="nav-text">删除</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%94%AF%E4%B8%80%E6%80%A7%E7%BA%A6%E6%9D%9F%E5%92%8C%E5%94%AF%E4%B8%80%E7%B4%A2%E5%BC%95"><span class="nav-number">2.4.</span> <span class="nav-text">唯一性约束和唯一索引</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%A6%E6%9D%9F%E5%92%8C%E7%B4%A2%E5%BC%95"><span class="nav-number">2.4.1.</span> <span class="nav-text">约束和索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%94%AF%E4%B8%80%E6%80%A7%E7%BA%A6%E6%9D%9F%E5%92%8C%E5%94%AF%E4%B8%80%E7%B4%A2%E5%BC%95-1"><span class="nav-number">2.4.2.</span> <span class="nav-text">唯一性约束和唯一索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%BA%E5%88%AB"><span class="nav-number">2.4.3.</span> <span class="nav-text">区别</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%88%86%E5%8C%BA%E8%A1%A8"><span class="nav-number">3.</span> <span class="nav-text">创建分区表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%8B%E5%8A%A8%E5%88%9B%E5%BB%BA%E5%88%86%E5%8C%BA%E8%A1%A8-%E4%B8%8D%E6%8E%A8%E8%8D%90"><span class="nav-number">3.1.</span> <span class="nav-text">手动创建分区表(不推荐)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%A7%E6%89%BF%E4%B8%BB%E8%A1%A8%E5%92%8C%E6%B7%BB%E5%8A%A0%E9%99%90%E5%88%B6"><span class="nav-number">3.1.1.</span> <span class="nav-text">继承主表和添加限制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BB%BA%E8%A1%A8%E5%92%8C%E9%99%90%E5%88%B6%E4%B8%80%E8%B5%B7"><span class="nav-number">3.1.2.</span> <span class="nav-text">建表和限制一起</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E7%B4%A2%E5%BC%95%E5%92%8C%E7%BA%A6%E6%9D%9F"><span class="nav-number">3.1.3.</span> <span class="nav-text">创建索引和约束</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%A7%E6%89%BF%E5%85%B3%E7%B3%BB%E4%BF%AE%E6%94%B9"><span class="nav-number">3.1.4.</span> <span class="nav-text">继承关系修改</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%AE%9A%E5%90%91%E6%8F%92%E5%85%A5%E6%95%B0%E6%8D%AE-%E4%BD%BF%E7%94%A8rule"><span class="nav-number">3.2.</span> <span class="nav-text">重定向插入数据(使用rule)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E8%A7%84%E5%88%99"><span class="nav-number">3.2.1.</span> <span class="nav-text">创建规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%92%E5%85%A5%E6%95%B0%E6%8D%AE"><span class="nav-number">3.2.2.</span> <span class="nav-text">插入数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2"><span class="nav-number">3.2.3.</span> <span class="nav-text">查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E7%BB%A7%E6%89%BF%E5%85%B3%E7%B3%BB"><span class="nav-number">3.2.4.</span> <span class="nav-text">删除继承关系</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E9%99%B7"><span class="nav-number">3.2.5.</span> <span class="nav-text">缺陷</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%AE%9A%E5%90%91%E6%8F%92%E5%85%A5%E6%95%B0%E6%8D%AE-%E8%A7%A6%E5%8F%91%E5%99%A8"><span class="nav-number">3.3.</span> <span class="nav-text">重定向插入数据(触发器)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E8%A7%A6%E5%8F%91%E5%99%A8"><span class="nav-number">3.3.1.</span> <span class="nav-text">创建触发器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%88%86%E5%8C%BA%E5%87%BD%E6%95%B0"><span class="nav-number">3.3.2.</span> <span class="nav-text">创建分区函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%92%E5%85%A5%E6%95%B0%E6%8D%AE-1"><span class="nav-number">3.3.3.</span> <span class="nav-text">插入数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2-1"><span class="nav-number">3.3.4.</span> <span class="nav-text">查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E9%99%B7-1"><span class="nav-number">3.3.5.</span> <span class="nav-text">缺陷</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%AE%9A%E5%90%91%E6%8F%92%E5%85%A5%E6%95%B0%E6%8D%AE-%E8%A7%A6%E5%8F%91%E5%99%A8-%E7%BB%88%E6%9E%81"><span class="nav-number">3.4.</span> <span class="nav-text">重定向插入数据(触发器)-终极</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E8%A7%A6%E5%8F%91%E5%99%A8-1"><span class="nav-number">3.4.1.</span> <span class="nav-text">创建触发器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%88%86%E5%8C%BA%E5%87%BD%E6%95%B0-1"><span class="nav-number">3.4.2.</span> <span class="nav-text">创建分区函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%92%E5%85%A5%E6%95%B0%E6%8D%AE-2"><span class="nav-number">3.4.3.</span> <span class="nav-text">插入数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2-2"><span class="nav-number">3.4.4.</span> <span class="nav-text">查询</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E8%A7%A6%E5%8F%91%E5%99%A8"><span class="nav-number">3.5.</span> <span class="nav-text">删除触发器</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92%E5%88%86%E6%9E%90"><span class="nav-number">4.</span> <span class="nav-text">执行计划分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E8%A1%A8%E5%90%8E%E7%9A%84%E5%A2%9E%E5%88%A0%E6%94%B9%E6%9F%A5%E6%B5%8B%E8%AF%95"><span class="nav-number">5.</span> <span class="nav-text">分表后的增删改查测试</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B0%E5%A2%9E%E6%95%B0%E6%8D%AE"><span class="nav-number">5.1.</span> <span class="nav-text">新增数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE"><span class="nav-number">5.2.</span> <span class="nav-text">查询数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E6%95%B0%E6%8D%AE"><span class="nav-number">5.3.</span> <span class="nav-text">更新数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E6%95%B0%E6%8D%AE"><span class="nav-number">5.4.</span> <span class="nav-text">删除数据</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B6%E4%BB%96"><span class="nav-number">6.</span> <span class="nav-text">其他</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="nav-number">7.</span> <span class="nav-text">注意事项</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">8.</span> <span class="nav-text">参考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/02/PostgreSQL%E5%88%86%E8%A1%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="PostgreSQL分表 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          PostgreSQL分表
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-02-19 08:00:03" itemprop="dateCreated datePublished" datetime="2022-02-19T08:00:03+08:00">2022-02-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>PostgreSQL分表</p>
+<span id="more"></span>
+
+<h1 id="测试表"><a href="#测试表" class="headerlink" title="测试表"></a>测试表</h1><p>创建表以存储全部数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE IF NOT EXISTS a_user_all (</span><br><span class="line">	&quot;id&quot; bigserial NOT NULL,</span><br><span class="line">	&quot;account&quot; VARCHAR ( 255 ),</span><br><span class="line">	&quot;name&quot; VARCHAR ( 255 ),</span><br><span class="line">	&quot;sex&quot; NUMERIC,</span><br><span class="line">	&quot;age&quot; NUMERIC,</span><br><span class="line">	&quot;birthday&quot; date,	</span><br><span class="line">	&quot;generation_time&quot; TIMESTAMP ( 6 ) </span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>随机字符串生成function</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">Create or replace function random_string(length integer)</span><br><span class="line">returns text as</span><br><span class="line">$body$</span><br><span class="line">declare</span><br><span class="line">  chars text[] := &#x27;&#123;0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z&#125;&#x27;;</span><br><span class="line">  result text := &#x27;&#x27;;</span><br><span class="line">  i integer := 0;</span><br><span class="line">begin</span><br><span class="line">  if length &lt; 0 then</span><br><span class="line">    raise exception &#x27;Given length cannot be less than 0&#x27;;</span><br><span class="line">  end if;</span><br><span class="line">  for i in 1..length loop</span><br><span class="line">    result := result || chars[1+random()*(array_length(chars, 1)-1)];</span><br><span class="line">  end loop;</span><br><span class="line">  return result;</span><br><span class="line">end;</span><br><span class="line">$body$</span><br><span class="line">language plpgsql;</span><br></pre></td></tr></table></figure>
+
+<p>插入数据脚本</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">INSERT INTO</span><br><span class="line">    a_user_all</span><br><span class="line">    (account, name, sex, age, birthday, generation_time) </span><br><span class="line">SELECT</span><br><span class="line">	random_string ( 10 ) AS account,</span><br><span class="line">	random_string ( 10 ) AS NAME,</span><br><span class="line">	CEIL ( random( ) * 2 ) AS sex,</span><br><span class="line">	FLOOR ( random( ) * ( 45-10 ) + 10 ) AS age,</span><br><span class="line">	CURRENT_DATE AS birthday,</span><br><span class="line">	now( ) AS generation_time </span><br><span class="line">FROM</span><br><span class="line">	generate_series ( 1, 100, 1 );</span><br></pre></td></tr></table></figure>
+
+<h1 id="创建主表"><a href="#创建主表" class="headerlink" title="创建主表"></a>创建主表</h1><p>TIMESTAMP(6)：小数点右边最多存储6位数字（PostgreSQL 12.6）</p>
+<h2 id="使用序列主键-推荐"><a href="#使用序列主键-推荐" class="headerlink" title="使用序列主键(推荐)"></a>使用序列主键(推荐)</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">CREATE SEQUENCE a_user_seq MINVALUE 1 NO MAXVALUE START WITH 1 INCREMENT BY 1 CACHE 1;</span><br><span class="line">CREATE TABLE IF NOT EXISTS a_user (</span><br><span class="line">	&quot;id&quot; int4 NOT NULL DEFAULT nextval( &#x27;a_user_seq&#x27; :: regclass ),</span><br><span class="line">	&quot;account&quot; VARCHAR ( 255 ) NOT NULL,</span><br><span class="line">	&quot;name&quot; VARCHAR ( 255 ),</span><br><span class="line">	&quot;sex&quot; integer,</span><br><span class="line">	&quot;age&quot; NUMERIC,</span><br><span class="line">	&quot;birthday&quot; date,</span><br><span class="line">	&quot;generation_time&quot; TIMESTAMP ( 6 ),</span><br><span class="line">	constraint pk_a_user_id primary key (id), -- 主键约束，可指定键名</span><br><span class="line">	constraint uk_a_user_account unique(account) -- 唯一约束，可指定健名</span><br><span class="line">);</span><br><span class="line">CREATE UNIQUE INDEX idx_uk_a_user_account ON a_user (account); -- 唯一索引</span><br><span class="line">CREATE INDEX idx_a_user_account_name ON a_user (account, name);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">insert into a_user (id, account, name, sex, age, birthday, generation_time) </span><br><span class="line">values (nextval( &#x27;a_user_seq&#x27; ), random_string(10), random_string(10), CEIL ( random( ) * 2 ), FLOOR ( random( ) * ( 45-10 ) + 10 ), current_date, now());</span><br></pre></td></tr></table></figure>
+
+<h2 id="ID自动增长"><a href="#ID自动增长" class="headerlink" title="ID自动增长"></a>ID自动增长</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE IF NOT EXISTS a_user (</span><br><span class="line">	&quot;id&quot; bigserial NOT NULL PRIMARY KEY, -- 主键约束，主键自增</span><br><span class="line">	&quot;account&quot; VARCHAR ( 255 ) NOT NULL UNIQUE, -- 唯一约束</span><br><span class="line">	&quot;name&quot; VARCHAR ( 255 ),</span><br><span class="line">	&quot;sex&quot; integer,</span><br><span class="line">	&quot;age&quot; NUMERIC,</span><br><span class="line">	&quot;birthday&quot; date,</span><br><span class="line">	&quot;generation_time&quot; TIMESTAMP ( 6 )</span><br><span class="line">);</span><br><span class="line">CREATE UNIQUE INDEX idx_uk_a_user_account ON a_user (account);</span><br><span class="line">CREATE INDEX idx_a_user_account_name ON a_user (account, name);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">insert into a_user (account, name, sex, age, birthday, generation_time) </span><br><span class="line">values (random_string(10), random_string(10), CEIL ( random( ) * 2 ), FLOOR ( random( ) * ( 45-10 ) + 10 ), current_date, now());</span><br></pre></td></tr></table></figure>
+
+<h2 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">DROP INDEX idx_uk_a_user_account;</span><br><span class="line">DROP INDEX idx_a_user_account_name;</span><br><span class="line">DROP TABLE a_user;</span><br><span class="line">DROP SEQUENCE a_user_seq;</span><br></pre></td></tr></table></figure>
+
+<h2 id="唯一性约束和唯一索引"><a href="#唯一性约束和唯一索引" class="headerlink" title="唯一性约束和唯一索引"></a>唯一性约束和唯一索引</h2><p><strong>不同数据库的实现不同，Oracle靠唯一索引实现唯一性，但是PostgreSQL两个都可以实现唯一性（似乎并无区别）。</strong> </p>
+<h3 id="约束和索引"><a href="#约束和索引" class="headerlink" title="约束和索引"></a>约束和索引</h3><p>前者用来检查数据的正确性，后者用来实现数据查询的优化，目的不同。</p>
+<h3 id="唯一性约束和唯一索引-1"><a href="#唯一性约束和唯一索引-1" class="headerlink" title="唯一性约束和唯一索引"></a>唯一性约束和唯一索引</h3><p>在Oracle中，创建一个Constraint，同时也会创建一个该约束对应的唯一索引。创建唯一索引只会创建一个唯一索引，不会创建Constraint。也就是说 <strong>唯一性约束是通过创建唯一索引来实现的（Oracle）</strong>。</p>
+<p>建表时加唯一性约束</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE IF NOT EXISTS a_user (</span><br><span class="line">	&quot;id&quot; bigserial PRIMARY KEY NOT NULL, -- 主键自增</span><br><span class="line">	&quot;account&quot; VARCHAR ( 255 ) NOT NULL UNIQUE, -- 唯一约束</span><br><span class="line">	constraint idx_uk_a_user_account unique(account) -- 唯一约束</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>给已建好的表加唯一性约束</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE a_user add unique(account);</span><br><span class="line">ALTER TABLE a_user add constraint uk_a_user_account unique(account); -- 指定健名</span><br></pre></td></tr></table></figure>
+
+<h3 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h3><p>删除唯一性约束时可以只删除约束而不删除对应的索引，所以对应的列还是必须唯一；而删除了唯一索引的话就可以插入不唯一的值。（Oracle）</p>
+<p>索引使用 <code>create/drop index</code> 创建和删除，而约束使用 <code>alter table tableName add constraint</code> 建立，使用 <code>drop constraint</code> 删除。</p>
+<h1 id="创建分区表"><a href="#创建分区表" class="headerlink" title="创建分区表"></a>创建分区表</h1><h2 id="手动创建分区表-不推荐"><a href="#手动创建分区表-不推荐" class="headerlink" title="手动创建分区表(不推荐)"></a>手动创建分区表(不推荐)</h2><h3 id="继承主表和添加限制"><a href="#继承主表和添加限制" class="headerlink" title="继承主表和添加限制"></a>继承主表和添加限制</h3><p>分区表继承主表，并且正常情况下都不要为这些分区表添加任何新的列。</p>
+<p><font color="red"><strong>重命名主表不影响继承关系</strong></font> </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE a_user_1() inherits (a_user);</span><br><span class="line">CREATE TABLE a_user_2() inherits (a_user);</span><br></pre></td></tr></table></figure>
+
+<p>分区表限制，决定了该表所能允许保存的数据集范围。这里必须保证各个分区表之间的限制不能有重叠。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE a_user_1 ADD CONSTRAINT a_user_1_sex_check_key CHECK (sex = 1);</span><br><span class="line">ALTER TABLE a_user_2 ADD CONSTRAINT a_user_2_sex_check_key CHECK (sex = 2);</span><br></pre></td></tr></table></figure>
+
+<h3 id="建表和限制一起"><a href="#建表和限制一起" class="headerlink" title="建表和限制一起"></a>建表和限制一起</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">create table a_user_1 ( CHECK (sex = 1) ) inherits (a_user);</span><br><span class="line">create table a_user_2 ( CHECK (sex = 2) ) inherits (a_user);</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建索引和约束"><a href="#创建索引和约束" class="headerlink" title="创建索引和约束"></a>创建索引和约束</h3><p>分区表上创建索引，该索引并不是严格必须创建的，但在大部分场景下，它都非常有用。</p>
+<p><font color="blue"><strong>分表字段也应加索引，虽然这会命中所有记录</strong></font> </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">CREATE UNIQUE INDEX idx_uk_a_user_1_account ON a_user_1 (account);</span><br><span class="line">CREATE INDEX idx_a_user_1_account_name ON a_user_1 (account, name);</span><br><span class="line">CREATE INDEX idx_a_user_1_sex ON a_user_1 (sex, account, name);</span><br><span class="line">ALTER TABLE a_user_1 add constraint uk_a_user_1_account unique(account);</span><br><span class="line">ALTER TABLE a_user_1 add constraint pk_a_user_1_id primary key (id);</span><br><span class="line"></span><br><span class="line">CREATE UNIQUE INDEX idx_uk_a_user_2_account ON a_user_2 (account);</span><br><span class="line">CREATE INDEX idx_a_user_2_account_name ON a_user_2 (account, name);</span><br><span class="line">CREATE INDEX idx_a_user_2_sex ON a_user_2 (sex, account, name);</span><br><span class="line">ALTER TABLE a_user_2 add constraint uk_a_user_2_account unique(account);</span><br><span class="line">ALTER TABLE a_user_2 add constraint pk_a_user_2_id primary key (id);</span><br></pre></td></tr></table></figure>
+
+<h3 id="继承关系修改"><a href="#继承关系修改" class="headerlink" title="继承关系修改"></a>继承关系修改</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">alter table a_user_1 no inherit a_user; -- 删除继承</span><br><span class="line">alter table a_user_2 no inherit a_user; -- 删除继承</span><br><span class="line"></span><br><span class="line">alter table a_user_1 inherit a_user; -- 添加继承</span><br><span class="line">alter table a_user_2 inherit a_user; -- 添加继承</span><br></pre></td></tr></table></figure>
+
+<h2 id="重定向插入数据-使用rule"><a href="#重定向插入数据-使用rule" class="headerlink" title="重定向插入数据(使用rule)"></a>重定向插入数据(使用rule)</h2><p>trigger和rule不同的是，触发器可以实现异常捕捉等实现更丰富的功能。</p>
+<p>rule 不像 function，trigger一样独立存在的，而是依附于表上，当你把表删了，相应的rule就一起被删了。</p>
+<h3 id="创建规则"><a href="#创建规则" class="headerlink" title="创建规则"></a>创建规则</h3><p>使用rule分流</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">CREATE RULE a_user_rule_1 AS</span><br><span class="line">ON INSERT TO a_user</span><br><span class="line">  WHERE sex = 1</span><br><span class="line">DO INSTEAD -- 改成also，会插入主表和子表，待测试</span><br><span class="line">  INSERT INTO a_user_1 VALUES (NEW.*);</span><br></pre></td></tr></table></figure>
+
+<h3 id="插入数据"><a href="#插入数据" class="headerlink" title="插入数据"></a>插入数据</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into a_user select * from a_user_all;</span><br></pre></td></tr></table></figure>
+
+<h3 id="查询"><a href="#查询" class="headerlink" title="查询"></a>查询</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM a_user;</span><br><span class="line">SELECT * FROM a_user_1;</span><br><span class="line">SELECT * FROM only a_user;</span><br></pre></td></tr></table></figure>
+
+<h3 id="删除继承关系"><a href="#删除继承关系" class="headerlink" title="删除继承关系"></a>删除继承关系</h3><p>删除继承关系后，将不在能查到子表的数据。</p>
+<blockquote>
+<p>若在 A 表上创建rule插入到 B 表，那么 B 不应再继承 A 表，否则会出现循环依赖，无法删除表的情况，当然这不是必须。</p>
+</blockquote>
+<h3 id="缺陷"><a href="#缺陷" class="headerlink" title="缺陷"></a>缺陷</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">insert into a_user (id, account, name, sex, birthday, generation_time) </span><br><span class="line">values (1000, &#x27;zhangsan&#x27;, &#x27;张三&#x27;, 9, current_date, now());</span><br></pre></td></tr></table></figure>
+
+<p>执行上述sql发现，不符合规则的数据会插入主表中。实际应用中，主表不需要存储数据，而是希望将那些不满足规则的数据</p>
+<p>1、直接丢弃</p>
+<p>2、放到一张other表</p>
+<p>3、创建一个新规则和新表以接收对应规则的数据</p>
+<h2 id="重定向插入数据-触发器"><a href="#重定向插入数据-触发器" class="headerlink" title="重定向插入数据(触发器)"></a>重定向插入数据(触发器)</h2><p>定义一个trigger，把对主表的数据插入操作重定向到对应的分区表。</p>
+<h3 id="创建触发器"><a href="#创建触发器" class="headerlink" title="创建触发器"></a>创建触发器</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TRIGGER</span> trig_insert_a_user</span><br><span class="line">BEFORE <span class="keyword">INSERT</span></span><br><span class="line"><span class="keyword">ON</span> a_user</span><br><span class="line"><span class="keyword">FOR</span> <span class="keyword">EACH</span> <span class="type">ROW</span></span><br><span class="line"><span class="keyword">EXECUTE</span> <span class="keyword">PROCEDURE</span> func_insert_a_user();</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建分区函数"><a href="#创建分区函数" class="headerlink" title="创建分区函数"></a>创建分区函数</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">OR</span> REPLACE <span class="keyword">FUNCTION</span> func_insert_a_user()</span><br><span class="line"><span class="keyword">returns</span> <span class="keyword">trigger</span> <span class="keyword">as</span></span><br><span class="line">$body$</span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line">  IF NEW.sex <span class="operator">=</span> <span class="number">1</span></span><br><span class="line">    <span class="keyword">THEN</span></span><br><span class="line">      <span class="keyword">INSERT INTO</span> a_user_1 <span class="keyword">VALUES</span> (NEW.<span class="operator">*</span>);</span><br><span class="line">  ELSIF NEW.sex <span class="operator">=</span> <span class="number">2</span></span><br><span class="line">    <span class="keyword">THEN</span></span><br><span class="line">      <span class="keyword">INSERT INTO</span> a_user_2 <span class="keyword">VALUES</span> (NEW.<span class="operator">*</span>);</span><br><span class="line">  <span class="keyword">END</span> IF;</span><br><span class="line">  <span class="keyword">RETURN</span> <span class="keyword">NULL</span>;</span><br><span class="line"><span class="keyword">END</span>;</span><br><span class="line">$body$</span><br><span class="line"><span class="keyword">LANGUAGE</span> plpgsql;</span><br></pre></td></tr></table></figure>
+
+<h3 id="插入数据-1"><a href="#插入数据-1" class="headerlink" title="插入数据"></a>插入数据</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into a_user select * from a_user_all;</span><br></pre></td></tr></table></figure>
+
+<h3 id="查询-1"><a href="#查询-1" class="headerlink" title="查询"></a>查询</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM a_user;</span><br><span class="line">SELECT * FROM a_user_1;</span><br><span class="line">SELECT * FROM only a_user;</span><br></pre></td></tr></table></figure>
+
+<h3 id="缺陷-1"><a href="#缺陷-1" class="headerlink" title="缺陷"></a>缺陷</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">insert into a_user (id, account, name, sex, birthday, generation_time) </span><br><span class="line">values (1000, &#x27;zhangsan&#x27;, &#x27;张三&#x27;, 9, current_date, now());</span><br></pre></td></tr></table></figure>
+
+<p>执行上述sql，此时不满足条件的数据<strong>丢弃</strong>，也可以使用other表接收这些数据。</p>
+<p>需求：所有数据都应按照规律存到对应的子表（分区表）中，若不存在这样的表要实现自动新建。</p>
+<h2 id="重定向插入数据-触发器-终极"><a href="#重定向插入数据-触发器-终极" class="headerlink" title="重定向插入数据(触发器)-终极"></a>重定向插入数据(触发器)-终极</h2><h3 id="创建触发器-1"><a href="#创建触发器-1" class="headerlink" title="创建触发器"></a>创建触发器</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TRIGGER</span> trig_insert_a_user</span><br><span class="line">BEFORE <span class="keyword">INSERT</span></span><br><span class="line"><span class="keyword">ON</span> a_user</span><br><span class="line"><span class="keyword">FOR</span> <span class="keyword">EACH</span> <span class="type">ROW</span></span><br><span class="line"><span class="keyword">EXECUTE</span> <span class="keyword">PROCEDURE</span> func_insert_a_user();</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建分区函数-1"><a href="#创建分区函数-1" class="headerlink" title="创建分区函数"></a>创建分区函数</h3><p> <strong>自动创建分区表并插入数据：</strong> </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">OR</span> REPLACE <span class="keyword">FUNCTION</span> func_insert_a_user()</span><br><span class="line"><span class="keyword">returns</span> <span class="keyword">trigger</span> <span class="keyword">as</span></span><br><span class="line">$body$</span><br><span class="line"><span class="keyword">DECLARE</span></span><br><span class="line">        sex_colume <span class="type">integer</span>;</span><br><span class="line">        insert_statement TEXT;</span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line">  <span class="keyword">select</span> NEW.sex <span class="keyword">INTO</span> sex_colume;</span><br><span class="line">  insert_statement :<span class="operator">=</span> <span class="string">&#x27;INSERT INTO a_user_&#x27;</span> <span class="operator">||</span> sex_colume <span class="operator">||</span> <span class="string">&#x27; VALUES ($1.*)&#x27;</span>;</span><br><span class="line">  <span class="keyword">execute</span> insert_statement <span class="keyword">USING</span> <span class="keyword">NEW</span>;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">  EXCEPTION</span><br><span class="line">  <span class="keyword">WHEN</span> UNDEFINED_TABLE</span><br><span class="line">    <span class="keyword">THEN</span></span><br><span class="line">      <span class="comment">-- 创建分表并加限制</span></span><br><span class="line">      <span class="keyword">execute</span> <span class="string">&#x27;CREATE TABLE IF NOT EXISTS a_user_&#x27;</span> <span class="operator">||</span> sex_colume <span class="operator">||</span> <span class="string">&#x27; ( CHECK (sex = &#x27;</span> <span class="operator">||</span> sex_colume <span class="operator">||</span> <span class="string">&#x27;) ) inherits (a_user)&#x27;</span>;</span><br><span class="line">      raise notice <span class="string">&#x27;Create a new table a_user_%&#x27;</span>, sex_colume;</span><br><span class="line">      <span class="comment">-- 建索引</span></span><br><span class="line">      <span class="keyword">execute</span> <span class="string">&#x27;CREATE UNIQUE INDEX idx_uk_a_user_&#x27;</span> <span class="operator">||</span> sex_colume <span class="operator">||</span> <span class="string">&#x27;_account ON a_user_&#x27;</span> <span class="operator">||</span> sex_colume <span class="operator">||</span> <span class="string">&#x27;(account)&#x27;</span>;</span><br><span class="line">      <span class="keyword">execute</span> <span class="string">&#x27;CREATE INDEX idx_a_user_&#x27;</span> <span class="operator">||</span> sex_colume <span class="operator">||</span> <span class="string">&#x27;_account_name ON a_user_&#x27;</span> <span class="operator">||</span> sex_colume <span class="operator">||</span> <span class="string">&#x27;(account, name)&#x27;</span>;</span><br><span class="line">      <span class="comment">-- 分表字段也应加索引，虽然这会命中所有记录</span></span><br><span class="line">      <span class="keyword">execute</span> <span class="string">&#x27;CREATE INDEX idx_a_user_&#x27;</span> <span class="operator">||</span> sex_colume <span class="operator">||</span> <span class="string">&#x27;_sex ON a_user_&#x27;</span> <span class="operator">||</span> sex_colume <span class="operator">||</span> <span class="string">&#x27;(sex, account, name)&#x27;</span>;</span><br><span class="line">      <span class="comment">-- 加约束</span></span><br><span class="line">      <span class="keyword">execute</span> <span class="string">&#x27;ALTER TABLE a_user_&#x27;</span> <span class="operator">||</span> sex_colume <span class="operator">||</span> <span class="string">&#x27; add constraint pk_a_user_&#x27;</span> <span class="operator">||</span> sex_colume <span class="operator">||</span> <span class="string">&#x27;_id primary key (id)&#x27;</span>;</span><br><span class="line">      <span class="keyword">execute</span> <span class="string">&#x27;ALTER TABLE a_user_&#x27;</span> <span class="operator">||</span> sex_colume <span class="operator">||</span> <span class="string">&#x27; add constraint uk_a_user_&#x27;</span> <span class="operator">||</span> sex_colume <span class="operator">||</span> <span class="string">&#x27;_account unique(account)&#x27;</span>;</span><br><span class="line">      <span class="comment">-- 建立分表后再次插入</span></span><br><span class="line">      <span class="keyword">execute</span> insert_statement <span class="keyword">USING</span> <span class="keyword">NEW</span>;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line"><span class="keyword">END</span>;</span><br><span class="line">$body$</span><br><span class="line"><span class="keyword">LANGUAGE</span> plpgsql;</span><br></pre></td></tr></table></figure>
+
+<h3 id="插入数据-2"><a href="#插入数据-2" class="headerlink" title="插入数据"></a>插入数据</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">insert into a_user select * from a_user_all;</span><br><span class="line"></span><br><span class="line">insert into a_user (id, account, name, sex, birthday, generation_time) </span><br><span class="line">values (1000, &#x27;zhangsan&#x27;, &#x27;张三&#x27;, 9, current_date, now());</span><br></pre></td></tr></table></figure>
+
+<h3 id="查询-2"><a href="#查询-2" class="headerlink" title="查询"></a>查询</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM a_user;</span><br><span class="line">SELECT * FROM a_user_1;</span><br><span class="line">SELECT * FROM only a_user;</span><br></pre></td></tr></table></figure>
+
+<p>查询发现，不存在的表会自动新建，自此优化完成。</p>
+<h2 id="删除触发器"><a href="#删除触发器" class="headerlink" title="删除触发器"></a>删除触发器</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM pg_trigger; -- 列出触发器</span><br><span class="line"></span><br><span class="line">drop trigger trig_insert_a_user on a_user;</span><br><span class="line">drop function func_insert_a_user;</span><br></pre></td></tr></table></figure>
+
+<h1 id="执行计划分析"><a href="#执行计划分析" class="headerlink" title="执行计划分析"></a>执行计划分析</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">EXPLAIN ( ANALYZE ON, buffers ON, costs ON, timing ON )</span><br><span class="line">SELECT * FROM a_user_all T;</span><br><span class="line"></span><br><span class="line">EXPLAIN ( ANALYZE ON, buffers ON, costs ON, timing ON )</span><br><span class="line">SELECT * FROM a_user T;</span><br></pre></td></tr></table></figure>
+
+<h1 id="分表后的增删改查测试"><a href="#分表后的增删改查测试" class="headerlink" title="分表后的增删改查测试"></a>分表后的增删改查测试</h1><h2 id="新增数据"><a href="#新增数据" class="headerlink" title="新增数据"></a>新增数据</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">insert into a_user (id, account, name, sex, birthday, generation_time) </span><br><span class="line">values (1000, &#x27;zhangsan&#x27;, &#x27;张三&#x27;, 1, current_date, now());</span><br></pre></td></tr></table></figure>
+
+<h2 id="查询数据"><a href="#查询数据" class="headerlink" title="查询数据"></a>查询数据</h2><p>如果想要查询父表的数据，忽略子表，可以使用 <strong>ONLY</strong> 关键字</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM a_user T where T.account = &#x27;zhangsan&#x27;;</span><br><span class="line">SELECT * FROM a_user_1 T where T.account = &#x27;zhangsan&#x27;;</span><br><span class="line">SELECT * FROM only a_user T where T.account = &#x27;zhangsan&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p>这里需要理解一个概念：给子表插入数据的时候，并不是同时把数据中的共享字段插入到父表中，只是简单通过继承关系使子表的数据在父表可见。如果你指定了 <strong>ONLY</strong> 关键字，则查询不在从子表中获取数据。</p>
+<p>另外需要注意的是，<strong>由于继承表的本质原因，一些约束条件可能会被打破</strong>；例如，声明一个唯一字段，可能在查询结果中2条相同的值。因此，在使用的继承的过程中，你要特别注意约束；因为他们在各自的表中没有违反约束条件；因此，如果你在查询父表的时候没有制定 <strong>ONLY</strong> 字段，那它可能会返回你非预期的结果。</p>
+<p>同理，update、delete同样可以使用 <strong>ONLY</strong> 关键字，示例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">update only a_user set age = 1000 where account = &#x27;zhangsan&#x27;;</span><br><span class="line">delete from only a_user where account = &#x27;zhangsan&#x27;</span><br></pre></td></tr></table></figure>
+
+<h2 id="更新数据"><a href="#更新数据" class="headerlink" title="更新数据"></a>更新数据</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">update a_user set age = 1000 where account = &#x27;zhangsan&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p>下面语句执行失败，违反检查约束。因其原本就是根据sex分表，所以无法直接修改sex字段。只能删除后重新插入。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">update a_user set sex = 2 where account = &#x27;zhangsan&#x27;;</span><br><span class="line"></span><br><span class="line">&gt; ERROR:  new row for relation &quot;a_user_1&quot; violates check constraint &quot;a_user_1_sex_check&quot;</span><br><span class="line">DETAIL:  Failing row contains (1000, zhangsan, 张三, 2, 1000, 2021-11-27, 2021-11-27 00:52:17.048075).</span><br></pre></td></tr></table></figure>
+
+<h2 id="删除数据"><a href="#删除数据" class="headerlink" title="删除数据"></a>删除数据</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">delete from a_user where account = &#x27;zhangsan&#x27;</span><br><span class="line"></span><br><span class="line">SELECT * FROM a_user T where T.account = &#x27;zhangsan&#x27;;</span><br><span class="line">SELECT * FROM a_user_1 T where T.account = &#x27;zhangsan&#x27;;</span><br><span class="line">SELECT * FROM ONLY a_user T where T.account = &#x27;zhangsan&#x27;;</span><br></pre></td></tr></table></figure>
+
+<h1 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">select version();</span><br><span class="line"></span><br><span class="line">select generate_series(1,30,1);</span><br><span class="line"></span><br><span class="line">select generate_series ( &#x27;2015-12-01&#x27; :: DATE, &#x27;2015-12-30&#x27; :: DATE, &#x27;1 day&#x27; :: INTERVAL );</span><br></pre></td></tr></table></figure>
+
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><p><code>VACUUM</code> 或 <code>ANALYZE</code> a_user 只会对主表起作用，要想分析表，需要分别分析每个分区表。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p> <a target="_blank" rel="noopener" href="https://www.cnblogs.com/mchina/archive/2013/04/09/2973427.html">PostgreSQL分区表（Table Partitioning）应用</a> </p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/02/Spring%E4%B8%AD@Async%E5%92%8C@Scheduled%E6%B3%A8%E8%A7%A3%E3%80%81%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BA%BF%E7%A8%8B%E6%B1%A0/" rel="prev" title="Spring中@Async和@Scheduled注解、自定义线程池">
+                  <i class="fa fa-angle-left"></i> Spring中@Async和@Scheduled注解、自定义线程池
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/02/%E5%88%86%E5%B8%83%E5%BC%8F%E3%80%81%E9%9B%86%E7%BE%A4%E3%80%81%E5%BE%AE%E6%9C%8D%E5%8A%A1/" rel="next" title="分布式、集群、微服务">
+                  分布式、集群、微服务 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

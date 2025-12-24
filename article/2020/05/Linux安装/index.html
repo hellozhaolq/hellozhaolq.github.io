@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Ubuntu Server 24.04 LTS以下是部分安装步骤，其他步骤请直接点击【Done】继续。  网络配置  配置ubuntu存档镜像 自定义存储布局 Ubuntu最佳分区方式：只需要两个分区 &#x2F; 和 swap 。swap 一般设置为 2 倍或 1.5 倍的 RAM。  下面创建根分区（&#x2F;），不创建 swap 分区：     配置用户名密码 跳过 Ubuntu ProUbun">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux安装">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="Ubuntu Server 24.04 LTS以下是部分安装步骤，其他步骤请直接点击【Done】继续。  网络配置  配置ubuntu存档镜像 自定义存储布局 Ubuntu最佳分区方式：只需要两个分区 &#x2F; 和 swap 。swap 一般设置为 2 倍或 1.5 倍的 RAM。  下面创建根分区（&#x2F;），不创建 swap 分区：     配置用户名密码 跳过 Ubuntu ProUbun">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-01-1%E7%BD%91%E7%BB%9C%E9%85%8D%E7%BD%AE.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-01-2%E7%BD%91%E7%BB%9C%E9%85%8D%E7%BD%AE.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-02-%E9%85%8D%E7%BD%AEubuntu%E5%AD%98%E6%A1%A3%E9%95%9C%E5%83%8F.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-03-1%E9%80%89%E6%8B%A9CustomStorageLayout.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-03-2%E5%88%9B%E5%BB%BA%E6%A0%B9%E5%88%86%E5%8C%BA.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-03-3%E5%88%9B%E5%BB%BA%E6%A0%B9%E5%88%86%E5%8C%BA.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-03-4%E7%BB%93%E6%9D%9F.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-04%E9%85%8D%E7%BD%AE%E7%99%BB%E5%BD%95%E5%90%8D%E5%92%8C%E5%AF%86%E7%A0%81.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-05%E5%BC%80%E5%90%AFssh%E8%BF%9C%E7%A8%8B.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-06%E5%B8%B8%E7%94%A8%E7%9A%84snap%E5%8C%85.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-01-%E5%AE%89%E8%A3%85%E4%BF%A1%E6%81%AF%E6%91%98%E8%A6%81.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-02-%E8%BD%AF%E4%BB%B6%E9%80%89%E6%8B%A9.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-03-01-%E5%AE%89%E8%A3%85%E7%9B%AE%E6%A0%87%E4%BD%8D%E7%BD%AE.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-03-02-%E6%89%8B%E5%8A%A8%E5%88%86%E5%8C%BA.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-03-03-%E6%9C%80%E7%BB%88%E5%88%86%E5%8C%BA.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-04-%E7%BD%91%E7%BB%9C%E5%92%8C%E4%B8%BB%E6%9C%BA%E5%90%8D.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-05-root%E5%AF%86%E7%A0%81.png">
+<meta property="article:published_time" content="2020-05-02T14:08:51.000Z">
+<meta property="article:modified_time" content="2020-05-02T14:08:51.000Z">
+<meta property="article:author" content="zhaolq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-01-1%E7%BD%91%E7%BB%9C%E9%85%8D%E7%BD%AE.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/","path":"article/2020/05/Linux安装/","title":"Linux安装"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Linux安装 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Ubuntu-Server-24-04-LTS"><span class="nav-number">1.</span> <span class="nav-text">Ubuntu Server 24.04 LTS</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E9%85%8D%E7%BD%AE"><span class="nav-number">1.1.</span> <span class="nav-text">网络配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEubuntu%E5%AD%98%E6%A1%A3%E9%95%9C%E5%83%8F"><span class="nav-number">1.2.</span> <span class="nav-text">配置ubuntu存档镜像</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E5%AD%98%E5%82%A8%E5%B8%83%E5%B1%80"><span class="nav-number">1.3.</span> <span class="nav-text">自定义存储布局</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E7%94%A8%E6%88%B7%E5%90%8D%E5%AF%86%E7%A0%81"><span class="nav-number">1.4.</span> <span class="nav-text">配置用户名密码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B7%B3%E8%BF%87-Ubuntu-Pro"><span class="nav-number">1.5.</span> <span class="nav-text">跳过 Ubuntu Pro</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E5%90%AFssh%E8%BF%9C%E7%A8%8B"><span class="nav-number">1.6.</span> <span class="nav-text">开启ssh远程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E7%9A%84snap%E5%8C%85"><span class="nav-number">1.7.</span> <span class="nav-text">常用的snap包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%AE%8C%E6%88%90%E5%90%8E%E9%87%8D%E5%90%AF"><span class="nav-number">1.8.</span> <span class="nav-text">安装完成后重启</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E5%AE%89%E8%A3%85%E4%BB%8B%E8%B4%A8"><span class="nav-number">1.9.</span> <span class="nav-text">删除安装介质</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E4%B8%AD%E6%96%87%E7%8E%AF%E5%A2%83"><span class="nav-number">1.10.</span> <span class="nav-text">安装中文环境</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CentOS-8-1-1911"><span class="nav-number">2.</span> <span class="nav-text">CentOS-8.1.1911</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BD%AF%E4%BB%B6%E9%80%89%E6%8B%A9"><span class="nav-number">2.1.</span> <span class="nav-text">软件选择</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E7%9B%AE%E6%A0%87%E4%BD%8D%E7%BD%AE-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%88%86%E5%8C%BA"><span class="nav-number">2.2.</span> <span class="nav-text">安装目标位置(自定义分区)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E5%92%8C%E4%B8%BB%E6%9C%BA%E5%90%8D"><span class="nav-number">2.3.</span> <span class="nav-text">网络和主机名</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#root%E5%AF%86%E7%A0%81"><span class="nav-number">2.4.</span> <span class="nav-text">root密码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%AE%8C%E6%88%90%E5%90%8E%E9%87%8D%E5%90%AF-1"><span class="nav-number">2.5.</span> <span class="nav-text">安装完成后重启</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E5%AE%89%E8%A3%85%E4%BB%8B%E8%B4%A8-1"><span class="nav-number">2.6.</span> <span class="nav-text">删除安装介质</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E9%94%81root%E7%94%A8%E6%88%B7"><span class="nav-number">3.</span> <span class="nav-text">解锁root用户</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%80%E5%90%AFroot%E7%94%A8%E6%88%B7%E8%BF%9C%E7%A8%8B%E7%99%BB%E5%BD%95"><span class="nav-number">4.</span> <span class="nav-text">开启root用户远程登录</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85SSH"><span class="nav-number">4.1.</span> <span class="nav-text">安装SSH</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8BSSH%E6%9C%8D%E5%8A%A1"><span class="nav-number">4.2.</span> <span class="nav-text">查看SSH服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SSH%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">4.3.</span> <span class="nav-text">SSH配置文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%81%E8%AE%B8Root%E7%94%A8%E6%88%B7%E8%BF%9C%E7%A8%8B%E7%99%BB%E5%BD%95"><span class="nav-number">4.4.</span> <span class="nav-text">允许Root用户远程登录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E7%99%BB%E5%BD%95"><span class="nav-number">4.5.</span> <span class="nav-text">测试登录</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8D%B8%E8%BD%BD%E6%97%A0%E7%94%A8%E7%9A%84%E7%B3%BB%E7%BB%9F%E6%9C%8D%E5%8A%A1"><span class="nav-number">5.</span> <span class="nav-text">卸载无用的系统服务</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A6%81%E7%94%A8swap%E5%88%86%E5%8C%BA"><span class="nav-number">6.</span> <span class="nav-text">禁用swap分区</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8D%A2%E6%BA%90"><span class="nav-number">7.</span> <span class="nav-text">换源</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E5%92%8C%E5%8D%87%E7%BA%A7"><span class="nav-number">8.</span> <span class="nav-text">更新和升级</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%91%E8%A1%8C%E7%89%88"><span class="nav-number">9.</span> <span class="nav-text">发行版</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E6%A0%B8"><span class="nav-number">10.</span> <span class="nav-text">内核</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E6%B8%85%E7%90%86"><span class="nav-number">11.</span> <span class="nav-text">内核清理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BD%91%E5%85%B3%E3%80%81IP%E3%80%81DNS"><span class="nav-number">12.</span> <span class="nav-text">网关、IP、DNS</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%8EDHCP%E6%94%B9%E4%B8%BA%E5%9B%BA%E5%AE%9AIP"><span class="nav-number">13.</span> <span class="nav-text">从DHCP改为固定IP</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9hostname"><span class="nav-number">14.</span> <span class="nav-text">修改hostname</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#hostnamectl"><span class="nav-number">14.1.</span> <span class="nav-text">hostnamectl</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%EF%BC%88%E8%80%81%E6%96%B9%E6%B3%95%EF%BC%89"><span class="nav-number">14.2.</span> <span class="nav-text">修改配置文件（老方法）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%98%B2%E7%81%AB%E5%A2%99"><span class="nav-number">15.</span> <span class="nav-text">防火墙</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Ubuntu"><span class="nav-number">15.1.</span> <span class="nav-text">Ubuntu</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Centos"><span class="nav-number">15.2.</span> <span class="nav-text">Centos</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Git%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">16.</span> <span class="nav-text">Git环境变量</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JDK%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">17.</span> <span class="nav-text">JDK环境变量</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Maven%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">18.</span> <span class="nav-text">Maven环境变量</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Gradle%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">19.</span> <span class="nav-text">Gradle环境变量</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E8%84%9A%E6%9C%AC"><span class="nav-number">20.</span> <span class="nav-text">执行环境变量脚本</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2020/05/Linux%E5%AE%89%E8%A3%85/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Linux安装 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux安装
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-05-02 22:08:51" itemprop="dateCreated datePublished" datetime="2020-05-02T22:08:51+08:00">2020-05-02</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><span id="more"></span>
+
+<h1 id="Ubuntu-Server-24-04-LTS"><a href="#Ubuntu-Server-24-04-LTS" class="headerlink" title="Ubuntu Server 24.04 LTS"></a>Ubuntu Server 24.04 LTS</h1><p><font color="red"><strong>以下是部分安装步骤，其他步骤请直接点击【Done】继续。</strong></font> </p>
+<h2 id="网络配置"><a href="#网络配置" class="headerlink" title="网络配置"></a>网络配置</h2><p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-01-1%E7%BD%91%E7%BB%9C%E9%85%8D%E7%BD%AE.png"></p>
+<p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-01-2%E7%BD%91%E7%BB%9C%E9%85%8D%E7%BD%AE.png"></p>
+<h2 id="配置ubuntu存档镜像"><a href="#配置ubuntu存档镜像" class="headerlink" title="配置ubuntu存档镜像"></a>配置ubuntu存档镜像</h2><p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-02-%E9%85%8D%E7%BD%AEubuntu%E5%AD%98%E6%A1%A3%E9%95%9C%E5%83%8F.png"></p>
+<h2 id="自定义存储布局"><a href="#自定义存储布局" class="headerlink" title="自定义存储布局"></a>自定义存储布局</h2><p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-03-1%E9%80%89%E6%8B%A9CustomStorageLayout.png"></p>
+<p><font color="red"><strong>Ubuntu最佳分区方式：只需要两个分区 <code>/</code> 和 <code>swap</code> 。swap 一般设置为 2 倍或 1.5 倍的 RAM。</strong></font> </p>
+<p><font color="red"><strong>下面创建根分区（&#x2F;），不创建 swap 分区：</strong></font> </p>
+<p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-03-2%E5%88%9B%E5%BB%BA%E6%A0%B9%E5%88%86%E5%8C%BA.png"></p>
+<p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-03-3%E5%88%9B%E5%BB%BA%E6%A0%B9%E5%88%86%E5%8C%BA.png"></p>
+<p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-03-4%E7%BB%93%E6%9D%9F.png"></p>
+<h2 id="配置用户名密码"><a href="#配置用户名密码" class="headerlink" title="配置用户名密码"></a>配置用户名密码</h2><p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-04%E9%85%8D%E7%BD%AE%E7%99%BB%E5%BD%95%E5%90%8D%E5%92%8C%E5%AF%86%E7%A0%81.png"></p>
+<h2 id="跳过-Ubuntu-Pro"><a href="#跳过-Ubuntu-Pro" class="headerlink" title="跳过 Ubuntu Pro"></a>跳过 Ubuntu Pro</h2><p><strong>Ubuntu Pro</strong> 是 Canonical 推出的 <strong>企业级付费支持和增强服务</strong>，在普通 Ubuntu 的基础上增加了安全更新、合规性工具和长期支持等功能，主要面向企业或专业用户。</p>
+<p><strong>个人用户 &#x2F; 小团队</strong>：</p>
+<ul>
+<li>Ubuntu Pro 对个人用户有免费额度（通常支持 5 台机器免费激活）。</li>
+</ul>
+<p><strong>企业用户 &#x2F; 大规模部署</strong>：</p>
+<ul>
+<li>需要付费订阅，可享受官方 SLA 支持、更多机器数量和附加安全服务。</li>
+</ul>
+<h2 id="开启ssh远程"><a href="#开启ssh远程" class="headerlink" title="开启ssh远程"></a>开启ssh远程</h2><p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-05%E5%BC%80%E5%90%AFssh%E8%BF%9C%E7%A8%8B.png"></p>
+<h2 id="常用的snap包"><a href="#常用的snap包" class="headerlink" title="常用的snap包"></a>常用的snap包</h2><p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/Debian-06%E5%B8%B8%E7%94%A8%E7%9A%84snap%E5%8C%85.png"></p>
+<h2 id="安装完成后重启"><a href="#安装完成后重启" class="headerlink" title="安装完成后重启"></a>安装完成后重启</h2><p>重启</p>
+<h2 id="删除安装介质"><a href="#删除安装介质" class="headerlink" title="删除安装介质"></a>删除安装介质</h2><p>重启后，Ubuntu 会提示移除安装镜像。</p>
+<p>具体操作：取消 <strong>虚拟机设置</strong> 中的设备 <strong>启动时连接</strong>，然后按 Enter。</p>
+<h2 id="安装中文环境"><a href="#安装中文环境" class="headerlink" title="安装中文环境"></a>安装中文环境</h2><p>安装英文版ubuntu，在打开含有中文字符文件时会乱码，有需要给Ubuntu Server装中文环境</p>
+<p>1、安装之前，执行 echo $LANG<br>屏幕显示：en_US.UTF-8<br>说明现在是英语环境，需要切换到中文环境。</p>
+<p>2、安装中文语言包</p>
+<p> <code>apt-get update &amp;&amp; apt-get install language-pack-zh-hans</code> </p>
+<p>3、<code>vim /etc/default/locale</code><br>把原来英语 US 的都换成如下的内容，并且注意<strong>配置文件中不能有多余的空格</strong> ：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">LANG=&quot;zh_CN.UTF-8&quot;</span><br><span class="line">LANGUAGE=&quot;zh_CN:zh&quot;</span><br><span class="line">LC_NUMERIC=&quot;zh_CN&quot;</span><br><span class="line">LC_TIME=&quot;zh_CN&quot;</span><br><span class="line">LC_MONETARY=&quot;zh_CN&quot;</span><br><span class="line">LC_PAPER=&quot;zh_CN&quot;</span><br><span class="line">LC_NAME=&quot;zh_CN&quot;</span><br><span class="line">LC_ADDRESS=&quot;zh_CN&quot;</span><br><span class="line">LC_TELEPHONE=&quot;zh_CN&quot;</span><br><span class="line">LC_MEASUREMENT=&quot;zh_CN&quot;</span><br><span class="line">LC_IDENTIFICATION=&quot;zh_CN&quot;</span><br><span class="line">LC_ALL=&quot;zh_CN.UTF-8&quot;</span><br></pre></td></tr></table></figure>
+
+<p>4、<code>vim /etc/environment</code><br>原来有一行 PATH&#x3D;.. 不要动这一行<br>另起一行，复制粘贴以下内容，并且注意<strong>配置文件中不能有多余的空格</strong>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">LANG=&quot;zh_CN.UTF-8&quot;</span><br><span class="line">LANGUAGE=&quot;zh_CN:zh&quot;</span><br><span class="line">LC_NUMERIC=&quot;zh_CN&quot;</span><br><span class="line">LC_TIME=&quot;zh_CN&quot;</span><br><span class="line">LC_MONETARY=&quot;zh_CN&quot;</span><br><span class="line">LC_PAPER=&quot;zh_CN&quot;</span><br><span class="line">LC_NAME=&quot;zh_CN&quot;</span><br><span class="line">LC_ADDRESS=&quot;zh_CN&quot;</span><br><span class="line">LC_TELEPHONE=&quot;zh_CN&quot;</span><br><span class="line">LC_MEASUREMENT=&quot;zh_CN&quot;</span><br><span class="line">LC_IDENTIFICATION=&quot;zh_CN&quot;</span><br><span class="line">LC_ALL=&quot;zh_CN.UTF-8&quot;</span><br></pre></td></tr></table></figure>
+
+<p>5、重启机器 reboot</p>
+<h1 id="CentOS-8-1-1911"><a href="#CentOS-8-1-1911" class="headerlink" title="CentOS-8.1.1911"></a>CentOS-8.1.1911</h1><p><font color="red"><strong>以下是部分安装步骤，其他步骤可以根据实际需求自行选择。</strong></font> </p>
+<p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-01-%E5%AE%89%E8%A3%85%E4%BF%A1%E6%81%AF%E6%91%98%E8%A6%81.png"></p>
+<h2 id="软件选择"><a href="#软件选择" class="headerlink" title="软件选择"></a>软件选择</h2><p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-02-%E8%BD%AF%E4%BB%B6%E9%80%89%E6%8B%A9.png"></p>
+<h2 id="安装目标位置-自定义分区"><a href="#安装目标位置-自定义分区" class="headerlink" title="安装目标位置(自定义分区)"></a>安装目标位置(自定义分区)</h2><p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-03-01-%E5%AE%89%E8%A3%85%E7%9B%AE%E6%A0%87%E4%BD%8D%E7%BD%AE.png"></p>
+<p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-03-02-%E6%89%8B%E5%8A%A8%E5%88%86%E5%8C%BA.png"></p>
+<p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-03-03-%E6%9C%80%E7%BB%88%E5%88%86%E5%8C%BA.png"></p>
+<h2 id="网络和主机名"><a href="#网络和主机名" class="headerlink" title="网络和主机名"></a>网络和主机名</h2><p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-04-%E7%BD%91%E7%BB%9C%E5%92%8C%E4%B8%BB%E6%9C%BA%E5%90%8D.png"></p>
+<h2 id="root密码"><a href="#root密码" class="headerlink" title="root密码"></a>root密码</h2><p><img src="/article/2020/05/Linux%E5%AE%89%E8%A3%85/RedHat-05-root%E5%AF%86%E7%A0%81.png"></p>
+<h2 id="安装完成后重启-1"><a href="#安装完成后重启-1" class="headerlink" title="安装完成后重启"></a>安装完成后重启</h2><p>重启</p>
+<h2 id="删除安装介质-1"><a href="#删除安装介质-1" class="headerlink" title="删除安装介质"></a>删除安装介质</h2><p>重启完成后操作：取消 <strong>虚拟机设置</strong> 中的设备 <strong>启动时连接</strong>。</p>
+<h1 id="解锁root用户"><a href="#解锁root用户" class="headerlink" title="解锁root用户"></a>解锁root用户</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">sudo passwd -S root # 查看 root 状态</span><br><span class="line">sudo passwd -l root # -l → Locked（锁定用户）</span><br><span class="line">sudo passwd -u root # -u → unlock（解锁用户）</span><br><span class="line">sudo passwd -d root # 删除 root 的密码（删除 /etc/shadow 里的加密串）</span><br><span class="line">sudo passwd root # 设置root用户的密码</span><br><span class="line"></span><br><span class="line">su root # 测试是否可以进入 root 用户</span><br></pre></td></tr></table></figure>
+
+<h1 id="开启root用户远程登录"><a href="#开启root用户远程登录" class="headerlink" title="开启root用户远程登录"></a>开启root用户远程登录</h1><h2 id="安装SSH"><a href="#安装SSH" class="headerlink" title="安装SSH"></a>安装SSH</h2><p>先检查是否安装</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dpkg -l | grep ssh</span><br><span class="line">rpm -qa | grep ssh</span><br></pre></td></tr></table></figure>
+
+<p><strong>开放本机 SSH 服务</strong>，请安装服务端：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apt install openssh-server</span><br><span class="line">dnf install openssh-server</span><br></pre></td></tr></table></figure>
+
+<p><strong>连接远程主机</strong>，请安装客户端：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apt install openssh-client</span><br><span class="line">dnf install openssh-client</span><br></pre></td></tr></table></figure>
+
+<h2 id="查看SSH服务"><a href="#查看SSH服务" class="headerlink" title="查看SSH服务"></a>查看SSH服务</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ps -ef | grep ssh</span><br><span class="line">systemctl status ssh   # Ubuntu 上服务名是 ssh</span><br><span class="line">systemctl status sshd  # CentOS 上服务名是 sshd</span><br></pre></td></tr></table></figure>
+
+<h2 id="SSH配置文件"><a href="#SSH配置文件" class="headerlink" title="SSH配置文件"></a>SSH配置文件</h2><p>ssh 有两个主要的配置文件，它们的作用和针对的对象<strong>不同</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>ssh_config</th>
+<th>sshd_config</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>角色</strong></td>
+<td><strong>客户端配置</strong></td>
+<td><strong>服务端配置</strong></td>
+</tr>
+<tr>
+<td><strong>进程</strong></td>
+<td><code>ssh</code> (当使用 ssh 远程连接时会看到该进程)</td>
+<td><code>sshd</code> (SSH Daemon 是一个<strong>守护进程</strong>，它一直在监听连接请求)</td>
+</tr>
+<tr>
+<td><strong>控制</strong></td>
+<td>客户端<strong>如何发起</strong>连接</td>
+<td>服务器<strong>如何接受</strong>连接</td>
+</tr>
+<tr>
+<td><strong>位置</strong></td>
+<td><code>/etc/ssh/ssh_config</code> 或 <code>~/.ssh/config</code></td>
+<td>通常是 <code>/etc/ssh/sshd_config</code></td>
+</tr>
+<tr>
+<td><strong>生效</strong></td>
+<td><strong>立即</strong>生效（客户端读取）</td>
+<td>需要<strong>重启服务</strong> (<code>sshd</code>)</td>
+</tr>
+</tbody></table>
+<p>客户端配置手册：<a target="_blank" rel="noopener" href="https://manpages.debian.org/trixie/openssh-client/ssh_config.5.en.html">https://manpages.debian.org/trixie/openssh-client/ssh_config.5.en.html</a></p>
+<p>服务端配置手册：<a target="_blank" rel="noopener" href="https://manpages.debian.org/trixie/openssh-server/sshd_config.5.en.html">https://manpages.debian.org/trixie/openssh-server/sshd_config.5.en.html</a></p>
+<p>客户端常用配置项</p>
+<table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>作用</th>
+<th>常用值&#x2F;说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong><code>Host</code></strong></td>
+<td>定义一个<strong>别名</strong>或模式，其后的配置将对该别名生效。</td>
+<td>别名如 <code>myserver</code>，模式如 <code>*</code> 或 <code>192.168.1.*</code>。</td>
+</tr>
+<tr>
+<td><strong><code>HostName</code></strong></td>
+<td>远程主机的实际地址（IP 或域名）。</td>
+<td>如果与 <code>Host</code> 别名不同时才需要设置。</td>
+</tr>
+<tr>
+<td><strong><code>User</code></strong></td>
+<td>连接远程主机时默认使用的用户名。</td>
+<td>省略则使用本地用户名。</td>
+</tr>
+<tr>
+<td><strong><code>Port</code></strong></td>
+<td>远程主机的端口。</td>
+<td>如果远程服务器端口不是默认的 <code>22</code>，则在此设置。</td>
+</tr>
+<tr>
+<td><strong><code>IdentityFile</code></strong></td>
+<td>用于公钥认证的私钥文件路径。</td>
+<td>例如 <code>~/.ssh/id_rsa</code>。可以为不同主机指定不同的密钥。</td>
+</tr>
+<tr>
+<td><strong><code>ServerAliveInterval</code></strong></td>
+<td>客户端向服务器发送“保活”消息的间隔时间（秒）。</td>
+<td>设为 <code>60</code> 可防止本地网络闲置导致的连接中断。</td>
+</tr>
+<tr>
+<td><strong><code>ConnectTimeout</code></strong></td>
+<td>SSH 连接建立的最大等待时间（秒）。</td>
+<td>避免因网络问题导致长时间卡死。</td>
+</tr>
+<tr>
+<td><strong><code>ProxyCommand</code></strong></td>
+<td><strong>【高级】</strong> 通过执行一个外部命令来建立与远程服务器的连接。</td>
+<td>例如：<code>ProxyCommand ssh -p 22 -W %h:%p jumpbox</code>。<br>常用于通过 SOCKS 代理或老版本跳板机。<br><strong><code>-p 22</code></strong>：连接跳板机的port。<br><strong><code>-W %h:%p</code></strong>：<strong>转发选项</strong>，告诉 SSH 客户端：<em>建立连接后，请在远程主机上执行一个转发操作到 <code>%h:%p</code></em>。<code>%h</code> 是目标主机，<code>%p</code> 是目标端口。<br><strong><code>jumpbox</code></strong>：连接的跳板机的IP</td>
+</tr>
+<tr>
+<td><strong><code>ProxyJump</code></strong></td>
+<td><strong>【推荐】</strong> 指定一个或多个跳板机（Bastion Host）。</td>
+<td>例如：<code>ProxyJump jump.example.com</code>。功能上取代了大部分 <code>ProxyCommand</code> 的跳板用途。</td>
+</tr>
+</tbody></table>
+<p>服务端常用配置项</p>
+<table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>作用</th>
+<th>常用值&#x2F;说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong><code>Port</code></strong></td>
+<td>指定 SSH 服务监听的端口。</td>
+<td>默认为 <code>22</code>。为了安全，常改为其他端口（如 <code>2222</code>）。</td>
+</tr>
+<tr>
+<td><strong><code>ListenAddress</code></strong></td>
+<td>指定 SSH 服务绑定的网络接口 IP。</td>
+<td>默认为 <code>0.0.0.0</code>（所有接口）。可设为特定 IP 以限制访问。</td>
+</tr>
+<tr>
+<td><strong><code>PermitRootLogin</code></strong></td>
+<td>是否允许 <code>root</code> 用户直接通过 SSH 登录。</td>
+<td>推荐设为 <strong><code>no</code></strong>。应使用普通用户登录后再切换到 <code>root</code>（<code>su</code> 或 <code>sudo</code>）。</td>
+</tr>
+<tr>
+<td><strong><code>PasswordAuthentication</code></strong></td>
+<td>是否允许使用<strong>密码</strong>进行身份验证。</td>
+<td>推荐设为 <strong><code>no</code></strong>。当使用公钥认证时，禁用密码可以大大提高安全性。</td>
+</tr>
+<tr>
+<td><strong><code>PubkeyAuthentication</code></strong></td>
+<td>是否允许使用 <strong>公钥</strong> 进行身份验证。</td>
+<td>通常设为 <strong><code>yes</code></strong>。这是最安全的登录方式。</td>
+</tr>
+<tr>
+<td><strong><code>AllowUsers</code> &#x2F; <code>DenyUsers</code></strong></td>
+<td>明确允许或拒绝某些用户登录。</td>
+<td>例如：<code>AllowUsers user1 user2@192.168.1.10</code></td>
+</tr>
+<tr>
+<td><strong><code>MaxAuthTries</code></strong></td>
+<td>每个连接允许的最大认证尝试次数。</td>
+<td>默认为 <code>6</code>。较低的数值可以阻止暴力破解。</td>
+</tr>
+<tr>
+<td><strong><code>ClientAliveInterval</code></strong></td>
+<td>服务器向客户端发送“保活”消息的间隔时间（秒）。</td>
+<td>默认为 <code>0</code>（不发送）。设为 <code>30</code> 或 <code>60</code> 可防止连接因超时而被关闭。</td>
+</tr>
+</tbody></table>
+<h2 id="允许Root用户远程登录"><a href="#允许Root用户远程登录" class="headerlink" title="允许Root用户远程登录"></a>允许Root用户远程登录</h2><p>编辑服务端配置文件：<code>vim /etc/ssh/sshd_config</code></p>
+<p>找到并修改：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">PermitRootLogin prohibit-password</span></span><br><span class="line">PermitRootLogin yes # 允许root用户登录</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">PasswordAuthentication <span class="built_in">yes</span> <span class="comment"># 指定是否使用密码认证。此关键字的参数必须为 yes（默认值）或 no</span></span></span><br></pre></td></tr></table></figure>
+
+<p>重新加载配置：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">systemctl reload ssh   # 仅重新加载配置，不中断现有会话</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">或</span></span><br><span class="line">systemctl restart ssh  # 重启服务，会断开现有会话</span><br></pre></td></tr></table></figure>
+
+<h2 id="测试登录"><a href="#测试登录" class="headerlink" title="测试登录"></a>测试登录</h2><p>从远程机器执行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh root@服务器IP</span><br></pre></td></tr></table></figure>
+
+<h1 id="卸载无用的系统服务"><a href="#卸载无用的系统服务" class="headerlink" title="卸载无用的系统服务"></a>卸载无用的系统服务</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看所有正在运行的服务</span></span><br><span class="line">systemctl list-units --type=service --state=running</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看开机启动的服务</span></span><br><span class="line">systemctl list-unit-files --type=service --state=enabled</span><br></pre></td></tr></table></figure>
+
+<h1 id="禁用swap分区"><a href="#禁用swap分区" class="headerlink" title="禁用swap分区"></a>禁用swap分区</h1><p><a target="_blank" rel="noopener" href="https://man.archlinux.org/man/swapoff">https://man.archlinux.org/man/swapoff</a></p>
+<p><a target="_blank" rel="noopener" href="https://man.archlinux.org/man/swapon">https://man.archlinux.org/man/swapon</a></p>
+<p><font size="4"><strong>临时禁用（立即生效，重启失效）</strong></font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cat /proc/swaps</span><br><span class="line">swapoff -a        # 禁用 /proc/swaps 中的所有 swaps</span><br><span class="line">swapon --show</span><br><span class="line">free -h</span><br></pre></td></tr></table></figure>
+
+<p><font size="4"><strong>永久禁用 Swap 自动挂载</strong></font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">编辑 /etc/fstab 文件</span></span><br><span class="line">vim /etc/fstab</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">找到包含 swap 关键字的行，并注释掉。</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">/swap.img       none    swap    sw      0       0</span></span><br></pre></td></tr></table></figure>
+
+<p><font size="4"><strong>删除Swap分区</strong></font></p>
+<p>略…</p>
+<p><font size="4"><strong>删除Swap文件（针对 Swap 文件用户）</strong></font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果您的Swap不是一个分区，而是一个文件（例如 /swap.img），您还需要删除该文件。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果Swap是一个分区，您也可以尝试删除它，但这可能需要更复杂的LVM 操作。</span></span><br><span class="line">rm -rf /swap.img</span><br></pre></td></tr></table></figure>
+
+<h1 id="换源"><a href="#换源" class="headerlink" title="换源"></a>换源</h1><p><a target="_blank" rel="noopener" href="https://developer.aliyun.com/mirror/ubuntu">https://developer.aliyun.com/mirror/ubuntu</a></p>
+<p><a target="_blank" rel="noopener" href="https://developer.aliyun.com/mirror/centos">https://developer.aliyun.com/mirror/centos</a></p>
+<p>ubuntu 查看源</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">cat /etc/apt/sources.list                                   # 主配置文件</span><br><span class="line">cat /etc/apt/sources.list.d/ubuntu.sources                  # 主配置文件，24.04 之后</span><br><span class="line">ll /etc/apt/sources.list.d/*.sources                        # 主配置文件+额外软件源（第三方 PPA、软件商提供的源）</span><br><span class="line">grep -rh &quot;URIs:&quot; /etc/apt/sources.list.d/*.sources          # 查看已启用的软件源文件</span><br><span class="line">apt-cache policy                                            # 查看已配置的所有源（启用+禁用）</span><br></pre></td></tr></table></figure>
+
+<p>centos 查看源</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ll /etc/yum.repos.d/*.repo  # 仓库配置文件</span><br><span class="line">dnf repolist --help</span><br><span class="line">dnf repolist --enabled      # 显示已经启用的仓库（默认）</span><br><span class="line">dnf repolist --all          # 显示所有的软件仓库（启用+禁用）</span><br></pre></td></tr></table></figure>
+
+<h1 id="更新和升级"><a href="#更新和升级" class="headerlink" title="更新和升级"></a>更新和升级</h1><p>ubuntu</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">apt-get update               # 从配置的软件源获取最新的软件包列表信息（元数据），更新本地的软件包索引和缓存。</span><br><span class="line"></span><br><span class="line">apt-get upgrade              # 只更新已安装的软件包。会安装新的依赖包。如果升级某个包需要移除其他已安装的包，会跳过升级，避免破坏现有系统环境。</span><br><span class="line">apt-get dist-upgrade         # 升级时智能处理依赖关系。会安装新的依赖包、移除不再需要/冲突的包、更换核心软件包。用于跨版本升级或内核升级。</span><br><span class="line"></span><br><span class="line">apt-get autoclean            # 清除旧的已安装的包缓存文件</span><br><span class="line">apt-get autoremove --purge   # 移除不再需要的软件包及其配置文件。--purge 参数的作用是同时删除残留配置文件</span><br><span class="line">apt-get clean                # 清除所有已下载的包缓存文件</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">apt 选项 --purge：可和 remove、autoremove 等组合，用于卸载软件并删除残留配置文件</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">apt 子命令 purge：卸载软件并删除残留配置文件</span></span><br><span class="line">apt purge pkg 等价于 apt remove --purge pkg</span><br></pre></td></tr></table></figure>
+
+<p>centos</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">dnf makecache           # 下载软件包仓库中的软件包列表和其他元数据到本地缓存，以便快速查找和安装软件。是一个准备操作</span><br><span class="line"></span><br><span class="line">dnf check-upgrade       # 查询系统已安装的软件包在仓库中是否有新版本。不下载、不安装，只显示更新信息。</span><br><span class="line">dnf -y update           # 更新系统中已经安装的软件包到可用的最新版本。默认只升级已经安装的软件，不会删除任何包。请使用 upgrade。</span><br><span class="line">dnf -y upgrade          # 与 update 不同的是，它会处理包依赖变化，有时会自动移除不需要的旧包。“更彻底的更新”。推荐！！！</span><br><span class="line"></span><br><span class="line">dnf clean packages      # 删除所有缓存的软件包文件（通常是 .rpm 文件）。</span><br><span class="line">dnf clean metadata      # 删除所有仓库的元数据文件（XML 格式，包含软件包列表、版本、依赖关系等信息）。</span><br><span class="line">dnf clean all           # 清理所有缓存文件，包括软件包、元数据 等等。</span><br></pre></td></tr></table></figure>
+
+<h1 id="发行版"><a href="#发行版" class="headerlink" title="发行版"></a>发行版</h1><p><code>/etc/*-release</code> 文件，它们用来 <strong>识别和描述操作系统发行版信息</strong>。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">find /etc | grep -E &quot;.*-release&quot;</span><br><span class="line">cat /etc/os-release          # 现代 Linux 统一标准文件（systemd 之后几乎都有）</span><br></pre></td></tr></table></figure>
+
+<h1 id="内核"><a href="#内核" class="headerlink" title="内核"></a>内核</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看当前使用的内核版本</span></span><br><span class="line">uname -r            # 仅显示内核版本号（最常用）。</span><br><span class="line">uname -a            # 显示所有内核信息，包括内核版本、操作系统、主机名、架构等。</span><br><span class="line">cat /proc/version   # 这个文件记录了 Linux 内核的版本、用于编译内核的 gcc 的版本、内核编译的时间，以及内核编译者的用户名。</span><br></pre></td></tr></table></figure>
+
+<h1 id="内核清理"><a href="#内核清理" class="headerlink" title="内核清理"></a>内核清理</h1><p>ubuntu</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看系统已安装的内核</span></span><br><span class="line">dpkg -l | grep linux-image</span><br><span class="line">dpkg --get-selections | grep linux-image</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">删除旧内核</span></span><br><span class="line">apt-get autoremove --purge # 系统一般会保留 2~3 个旧内核以防万一</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">手动删除</span></span><br><span class="line">apt-get purge linux-image-6.8.0-45-generic linux-headers-6.8.0-45-generic</span><br></pre></td></tr></table></figure>
+
+<p>centos</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查询系统已安装的内核</span></span><br><span class="line">rpm -qa | grep kernel</span><br><span class="line">dnf list installed | grep kernel</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">删除旧内核</span></span><br><span class="line">dnf autoremove</span><br><span class="line">dnf remove --oldinstallonly # 一键删除旧内核</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">手动删除</span></span><br><span class="line">dnf remove kernel-modules-core-5.14.0-522.el9.x86_64 kernel-core-5.14.0-522.el9.x86_64</span><br></pre></td></tr></table></figure>
+
+<h1 id="网关、IP、DNS"><a href="#网关、IP、DNS" class="headerlink" title="网关、IP、DNS"></a>网关、IP、DNS</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">ip route                                  # 查看网关地址</span><br><span class="line">ip addr show                              # 显示系统中所有网络接口的IP地址和相关配置信息，包括MAC地址、接口状态和网络配置。</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">resolvectl 是一个在较新的Linux系统中用于管理和查询系统DNS解析配置的命令行工具，它是 systemd-resolved 服务的一部分。</span></span><br><span class="line">resolvectl status                         # 显示每个网络接口（网卡）的详细配置。全面状态</span><br><span class="line">resolvectl dns                            # 是 resolvectl status 输出内容的子集。聚焦DNS服务器</span><br><span class="line">resolvectl dns &lt;interface&gt; &lt;DNS server&gt;   # 为指定的网络接口（例如 ens33）设置静态DNS 服务器地址（例如 8.8.8.8）</span><br><span class="line">resolvectl query www.baidu.com            # 执行DNS查询，获取百度的IP地址，它会报告查询使用的协议和网络接口。 </span><br><span class="line">resolvectl flush-caches                   # 清除DNS缓存。当DNS记录发生变化时，使用此命令清楚本地DNS缓存，强制系统重新查询DNS服务器。</span><br></pre></td></tr></table></figure>
+
+<h1 id="从DHCP改为固定IP"><a href="#从DHCP改为固定IP" class="headerlink" title="从DHCP改为固定IP"></a>从DHCP改为固定IP</h1><p>使用 <code>ip addr</code> 命令查看您的网络接口名称（例如 <code>eth0</code> 或 <code>ens33</code>）。﻿</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">root@localhost:~# ip addr</span><br><span class="line">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000</span><br><span class="line">    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">    inet 127.0.0.1/8 scope host lo</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">    inet6 ::1/128 scope host noprefixroute</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">2: ens33: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel state UP group default qlen 1000</span><br><span class="line">    link/ether 00:0c:29:7d:6c:a0 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    altname enp2s1</span><br><span class="line">    inet 192.168.0.102/24 metric 100 brd 192.168.0.255 scope global dynamic ens33</span><br><span class="line">       valid_lft 6189sec preferred_lft 6189sec</span><br><span class="line">    inet6 fe80::20c:29ff:fe7d:6ca0/64 scope link</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">root@localhost:~#</span><br><span class="line">root@localhost:~# ls /etc/netplan</span><br><span class="line">50-cloud-init.yaml</span><br></pre></td></tr></table></figure>
+
+<p>备份原配置 <code>sudo cp /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.bak</code></p>
+<p>编辑 Netplan 配置文件 <code>sudo vim /etc/netplan/50-cloud-init.yaml</code> 内容如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">保持缩进正确：Netplan 使用 YAML 格式，缩进必须用空格，不能用 Tab</span></span><br><span class="line">network:</span><br><span class="line">  version: 2</span><br><span class="line">  ethernets:</span><br><span class="line">    ens33: # 网卡名称</span><br><span class="line">      dhcp4: no</span><br><span class="line">      addresses:</span><br><span class="line">      - &quot;192.168.0.7/24&quot; # /24 是CIDR表示法，表示子网掩码，也就是该IP所在网络的大小。将IPv4转换为32位整数值，前24位是网络号，剩下的8位是主机号。</span><br><span class="line">      routes:</span><br><span class="line">      - to: &quot;default&quot; # default 是 0.0.0.0/0 的简写，表示 IPv4 默认路由，“匹配所有目的地址的流量”，即所有未匹配到其他路由的包都走这里”</span><br><span class="line">        via: &quot;192.168.0.101&quot; # 查看网关 ping tplogin.cn</span><br><span class="line">        metric: 100 # 路由优先级，数字越小优先级越高。如果系统存在多条默认路由，内核会根据 metric 选择哪条路由发送流量。默认写 100 就可以，一般不需要改动，除非你有 多网卡 / 多路由策略。</span><br><span class="line">      nameservers:</span><br><span class="line">        addresses:</span><br><span class="line">        - 114.114.114.114</span><br><span class="line">        - 114.114.115.115</span><br><span class="line">        search: [] # 默认DNS搜索域</span><br></pre></td></tr></table></figure>
+
+<p>保存文件后执行</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">系统会应用新的网络设置，可通过 ip addr 或 ping -c 4 www.runoob.com 测试网络是否可用</span></span><br><span class="line">netplan apply</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果 apply 出错，请重启网络服务</span></span><br><span class="line">systemctl restart systemd-networkd</span><br></pre></td></tr></table></figure>
+
+<h1 id="修改hostname"><a href="#修改hostname" class="headerlink" title="修改hostname"></a>修改hostname</h1><p>主机名是用于标识网络上设备的标签，在同一网络上，你不应有两台或更多台具有相同主机名的计算机。</p>
+<h2 id="hostnamectl"><a href="#hostnamectl" class="headerlink" title="hostnamectl"></a>hostnamectl</h2><p><code>hostnamectl</code> 是 systemd 系统和服务管理器套件的一部分，用于查询和修改系统主机名。</p>
+<p>Linux 系统通常涉及三种不同类型的主机名，<code>hostnamectl</code> 可以分别或同时进行管理：</p>
+<ul>
+<li><strong>静态主机名 (Static hostname):</strong> 这是保存在配置文件（通常是 <code>/etc/hostname</code>）中的标准主机名。它在系统启动时被初始化。永久的。</li>
+<li><strong>瞬态主机名 (Transient hostname):</strong> 由内核在运行时维护的主机名。DHCP 客户端、云平台（比如 OpenStack、AWS）分配主机名时常用它。临时的，重启失效。<strong>默认与静态主机名相同</strong>。</li>
+<li><strong>“美观”主机名 (Pretty hostname):</strong> 一个更友好、供人类阅读的主机名，可以包含空格和特殊字符（例如：”My Laptop”）。保存在 <code>/etc/machine-info</code> 。</li>
+</ul>
+<p>你可以使用 <code>--static</code>、<code>--transient</code> 或 <code>--pretty</code> 选项来单独查询或设置这些主机名。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">hostnamectl --help </span><br><span class="line">hostnamectl status # 查看系统主机名</span><br><span class="line"></span><br><span class="line">hostnamectl set-hostname halbin-dev-zhaolq.halbin.mars.com             # 会同时更新 静态主机名 和 瞬态主机名</span><br><span class="line">hostnamectl set-hostname halbin-dev-zhaolq.halbin.mars.com --static    # 静态主机名，永久的</span><br><span class="line">hostnamectl set-hostname halbin-dev-zhaolq.halbin.mars.com --transient # 瞬态主机名，临时的，重启失效</span><br><span class="line">reboot</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><code>hostname</code> 是一个<strong>传统</strong>的命令行工具，属于 <code>inetutils</code> 或 <code>net-tools</code> 包。它修改的是 <strong>瞬态主机名</strong>。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hostname                                      # 查看系统主机名</span><br><span class="line">hostname halbin-dev-zhaolq.halbin.mars.com    # 瞬态主机名，临时的，重启失效</span><br></pre></td></tr></table></figure></blockquote>
+<h2 id="修改配置文件（老方法）"><a href="#修改配置文件（老方法）" class="headerlink" title="修改配置文件（老方法）"></a>修改配置文件（老方法）</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cat /etc/hostname</span><br><span class="line">cat /etc/hosts</span><br><span class="line">reboot</span><br></pre></td></tr></table></figure>
+
+<h1 id="防火墙"><a href="#防火墙" class="headerlink" title="防火墙"></a>防火墙</h1><p><strong><code>192.168.0.0/24</code></strong>：表示一个包含 256 个地址（从 <code>192.168.0.0</code> 到 <code>192.168.0.255</code>）的子网，其中 <code>192.168.0.0</code> 是网络地址，<code>192.168.0.255</code> 是广播地址，<code>192.168.0.1</code> 到 <code>192.168.0.254</code> 是可分配的设备 IP 地址。</p>
+<p><strong><code>192.168.0.1/24</code></strong>：表示子网 <code>192.168.0.0/24</code> 中的第一个有效 IP 地址，通常被分配给网关或路由器。</p>
+<h2 id="Ubuntu"><a href="#Ubuntu" class="headerlink" title="Ubuntu"></a>Ubuntu</h2><p>在 Ubuntu 系统中，最常用和推荐的防火墙管理工具是 <strong>UFW (Uncomplicated Firewall)</strong>。</p>
+<p>UFW 是一个对标准 Linux 防火墙工具 <strong>iptables</strong> 进行封装的前端工具，它大大简化了配置规则的复杂性，让用户可以轻松管理网络连接。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">************************************ UFW 状态检查与管理</span></span><br><span class="line">ufw status            # 查看 UFW 的当前状态（active 或 inactive）和已配置的规则。</span><br><span class="line">ufw status verbose    # 显示更详细的信息，包括默认策略和日志级别。</span><br><span class="line">ufw enable            # 启用 UFW，系统启动时会自动运行。注意：在启用前，请确保您已允许 SSH 端口，以防失去远程连接。</span><br><span class="line">ufw disable           # 完全禁用 UFW。</span><br><span class="line">ufw reset             # 清除所有规则，将默认策略设置为拒绝 (deny)，并将状态设置为禁用 (inactive)。谨慎使用！</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">************************************ 配置默认策略</span></span><br><span class="line">ufw default deny incoming   # 拒绝所有传入的连接（入站规则）。服务器和安全桌面的标准配置。这意味着除了您明确允许的端口（如 SSH、HTTP、HTTPS）外，所有外部或内部尝试连接您的机器的请求都会被拒绝。</span><br><span class="line">ufw default allow incoming</span><br><span class="line">ufw default deny outgoing   # 拒绝所有传出的连接（出站规则）。严格安全环境或特定应用服务器。这会阻止您的机器主动发起任何网络连接，除非您明确允许（例如，允许您的服务器连接到外部 DNS 或更新服务器）。这通常会使日常桌面使用变得困难。</span><br><span class="line">ufw default allow outgoing  # 允许所有传出的连接（出站规则）。服务器和安全桌面的标准配置。</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">************************************ 添加允许（Allow）规则（拒绝请使用deny）</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">基于 服务名、端口号、协议 来允许流量通过。</span></span><br><span class="line">ufw allow ssh                                # 按服务名。允许 SSH 连接（自动解析为 TCP 端口 22）。</span><br><span class="line">ufw allow 80                                 # 按端口号。允许所有协议（TCP/UDP）的 80 端口（HTTP）流量。</span><br><span class="line">ufw allow http                               # 允许 80/tcp</span><br><span class="line">ufw allow https                              # 允许 443/tcp</span><br><span class="line">ufw allow 443/tcp                            # 按端口和协议。仅允许 TCP 协议的 443 端口（HTTPS）流量。</span><br><span class="line">ufw allow 6000:6007/udp                      # 按端口范围。允许 6000 到 6007 之间的 UDP 端口。</span><br><span class="line">ufw allow from 192.168.0.0/24                # 特定子网。允许来自 192.168.0.0/24 子网的所有传入（Incoming）连接。</span><br><span class="line">ufw allow from 192.168.0.100                 # 特定IP地址。允许来自特定 IP 地址的所有流量。</span><br><span class="line">ufw allow from 192.168.0.100 to any port 25  # IP和端口。仅允许该 IP 地址访问本机的 25 端口（SMTP）。</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">************************************ 添加拒绝（Deny）和限制（Limit）规则</span></span><br><span class="line">ufw deny 23                 # 拒绝所有尝试连接到 23 端口（Telnet）的流量。</span><br><span class="line">ufw limit ssh               # 允许 SSH 连接，但在 30 秒内如果同一 IP 尝试连接超过 6 次，则阻止该 IP 地址。这是防止暴力破解的推荐做法。</span><br><span class="line">ufw reject 143/tcp          # 拒绝连接请求，但发送一个拒绝响应（如 ICMP port unreachable），而不是直接丢弃数据包（deny行为）。</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">************************************ 删除规则</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">按规则内容删除 (推荐)：直接在命令前加上 delete 关键字，内容与添加规则时完全相同。</span></span><br><span class="line">ufw delete allow 80/tcp    # 删除允许 80 端口的规则</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">按编号删除 (适用于规则多且复杂的情况)</span></span><br><span class="line">ufw status numbered        # 先查看带有编号的规则列表</span><br><span class="line">sudo ufw delete 2          # 然后使用编号删除</span><br></pre></td></tr></table></figure>
+
+<h2 id="Centos"><a href="#Centos" class="headerlink" title="Centos"></a>Centos</h2><p>CentOS 7及更高版本默认使用 <strong>firewalld</strong> 作为防火墙管理工具，它采用**区域（Zone）**的概念来管理网络连接和接口的信任级别。</p>
+<p>以下是使用 <code>firewall-cmd</code> 命令管理防火墙的一些常用操作：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">************************************ firewalld 服务管理</span></span><br><span class="line">systemctl status firewalld	    # 检查 firewalld 服务是否正在运行。</span><br><span class="line">systemctl start firewalld	    # 启动 firewalld 服务。</span><br><span class="line">systemctl stop firewalld	    # 停止 firewalld 服务。</span><br><span class="line">systemctl enable firewalld	    # 设置 firewalld 开机自启。</span><br><span class="line">systemctl disable firewalld	    # 禁止 firewalld 开机自启。</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">************************************ 常用防火墙配置命令</span></span><br><span class="line">firewall-cmd --help # 查看帮助</span><br><span class="line">firewall-cmd --version # 查看版本</span><br><span class="line">firewall-cmd --get-default-zone             # 查看当前默认的区域（通常是 public）。</span><br><span class="line">firewall-cmd --get-active-zones             # 查看区域信息</span><br><span class="line">firewall-cmd --get-zone-of-interface=eth0   # 查看指定接口所属区域信息</span><br><span class="line">firewall-cmd --list-all                     # 查看默认区域的运行时所有规则（服务、端口等）。</span><br><span class="line">firewall-cmd --zone=public --list-all       # 查看 public 区域的所有运行时规则。</span><br><span class="line">firewall-cmd --reload                       # 应用永久配置，使更改立即生效，且不中断现有连接。</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">************************************ 区域（Zone）概念</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">区域是 firewalld 的核心概念，用于根据网络环境定义不同的信任级别：</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">区域名称          信任级别    默认行为</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">trusted(信任)     最高        允许所有网络连接。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">home(家庭)        中高        信任网络上的大多数计算机，允许少量入站连接。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">work(工作)        中          信任工作环境中的计算机，允许少量入站连接。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">public(公共)      低          默认区域，不信任网络上的其他计算机，只接受选定的入站连接（例如您手动开放的服务）。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">drop(丢弃)        最低        丢弃所有入站数据包，不回复任何信息，只允许出站连接。</span></span><br><span class="line">firewall-cmd --set-default-zone=public    # 修改默认区域</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">************************************ 开放/关闭端口或服务，默认情况在 public 区域进行配置</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">firewalld 的配置分为 运行时（runtime）和永久（permanent） 两种。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">    运行时配置立即生效，但在服务重启或系统重启后会丢失。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">    永久配置需要使用 --permanent 标志，并且需要重新加载防火墙才能生效。!!!!!!</span></span><br><span class="line">firewall-cmd --zone=public --add-service=ssh --permanent           # 添加服务（永久生效）</span><br><span class="line">firewall-cmd --zone=public --remove-service=ssh --permanent        # 关闭服务（永久生效）</span><br><span class="line">firewall-cmd --zone=public --list-ports                            # 查看指定区域所有开放的端口号</span><br><span class="line">firewall-cmd --zone=public --add-port=80/tcp --permanent           # 开放端口（永久生效）</span><br><span class="line">firewall-cmd --zone=public --remove-port=80/tcp --permanent        # 关闭端口（永久生效）</span><br><span class="line">firewall-cmd --zone=public --add-port=18881:65534/tcp --permanent  # 开放指定范围的端口号</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">************************************ 紧急模式</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">紧急模式是一个极端的安全措施，用于在系统检测到攻击或严重威胁时，立即丢弃（drop）所有网络数据包。</span></span><br><span class="line">firewall-cmd --panic-on     # 开启紧急模式。立即丢弃所有传入和传出的网络数据包。通常在系统遭受拒绝服务（DoS）攻击或检测到严重入侵企图时使用，以完全隔离服务器。</span><br><span class="line">firewall-cmd --panic-off    # 关闭紧急模式。停止丢弃所有数据包，恢复到正常运行时的防火墙规则。在安全威胁解除后，用于恢复正常的网络连接。</span><br><span class="line">firewall-cmd --query-panic  # 查询紧急模式状态。检查 firewalld 当前是否处于紧急模式。返回 yes 或 no。</span><br></pre></td></tr></table></figure>
+
+<h1 id="Git环境变量"><a href="#Git环境变量" class="headerlink" title="Git环境变量"></a>Git环境变量</h1><p>参考官网，编译安装</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">grep -qxF &#x27;export PATH=/data/local/git/bin:$PATH&#x27; /etc/profile || \</span><br><span class="line">echo &#x27;export PATH=/data/local/git/bin:$PATH&#x27; &gt;&gt; /etc/profile</span><br><span class="line"></span><br><span class="line">source /etc/profile</span><br><span class="line">git -v</span><br></pre></td></tr></table></figure>
+
+<h1 id="JDK环境变量"><a href="#JDK环境变量" class="headerlink" title="JDK环境变量"></a>JDK环境变量</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">若存在 JAVA_HOME 行就替换，不存在就添加</span></span><br><span class="line">grep -q &quot;^export JAVA_HOME=&quot; /etc/profile \</span><br><span class="line">    &amp;&amp; sed -i &#x27;s|^export JAVA_HOME=.*|export JAVA_HOME=/data/local/java/jdk-17.0.14+7|&#x27; /etc/profile \</span><br><span class="line">    || echo &#x27;export JAVA_HOME=/data/local/java/jdk-17.0.14+7&#x27; &gt;&gt; /etc/profile</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-q： 找到匹配项后不会向标准输出打印任何内容。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-x： 强制仅匹配整行。这意味着模式必须匹配从行首到行尾的全部内容，该行的前后不会有任何其他内容。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-F： 确保搜索模式中的所有字符（特别是 $、/、: 等）都按字面意思匹配，而不是被误认为是正则表达式的特殊含义。</span></span><br><span class="line">grep -qxF &#x27;export PATH=$JAVA_HOME/bin:$PATH&#x27; /etc/profile || \</span><br><span class="line">    echo &#x27;export PATH=$JAVA_HOME/bin:$PATH&#x27; &gt;&gt; /etc/profile</span><br><span class="line"></span><br><span class="line">source /etc/profile</span><br><span class="line">java -version</span><br></pre></td></tr></table></figure>
+
+<h1 id="Maven环境变量"><a href="#Maven环境变量" class="headerlink" title="Maven环境变量"></a>Maven环境变量</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">grep -qxF &#x27;export PATH=/data/local/apache-maven-3.9.11/bin:$PATH&#x27; /etc/profile || \</span><br><span class="line">echo &#x27;export PATH=/data/local/apache-maven-3.9.11/bin:$PATH&#x27; &gt;&gt; /etc/profile</span><br><span class="line"></span><br><span class="line">source /etc/profile</span><br><span class="line">mvn -v</span><br></pre></td></tr></table></figure>
+
+<h1 id="Gradle环境变量"><a href="#Gradle环境变量" class="headerlink" title="Gradle环境变量"></a>Gradle环境变量</h1><p><a target="_blank" rel="noopener" href="https://gradle.org/install/">https://gradle.org/install/</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">grep -qxF &#x27;export PATH=/data/local/gradle-7.6.6/bin:$PATH&#x27; /etc/profile || \</span><br><span class="line">echo &#x27;export PATH=/data/local/gradle-7.6.6/bin:$PATH&#x27; &gt;&gt; /etc/profile</span><br><span class="line"></span><br><span class="line">source /etc/profile</span><br><span class="line">gradle -v</span><br></pre></td></tr></table></figure>
+
+<h1 id="执行环境变量脚本"><a href="#执行环境变量脚本" class="headerlink" title="执行环境变量脚本"></a>执行环境变量脚本</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">grep -qxF &#x27;source /data/local/env/ideps-env.sh&#x27; /etc/profile || \</span><br><span class="line">echo &#x27;source /data/local/env/ideps-env.sh&#x27; &gt;&gt; /etc/profile</span><br><span class="line"></span><br><span class="line">grep -qxF &#x27;. /data/local/env/ideps-env.sh&#x27; /etc/profile || \</span><br><span class="line">echo &#x27;. /data/local/env/ideps-env.sh&#x27; &gt;&gt; /etc/profile</span><br><span class="line"></span><br><span class="line">source /etc/profile</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2020/04/IntelliJ-IDEA%E5%B0%86%E4%BB%A3%E7%A0%81%E9%83%A8%E7%BD%B2%E5%88%B0%E8%BF%9C%E7%A8%8B%E4%B8%BB%E6%9C%BA/" rel="prev" title="IntelliJ-IDEA将代码部署到远程主机">
+                  <i class="fa fa-angle-left"></i> IntelliJ-IDEA将代码部署到远程主机
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2020/05/Linux%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" rel="next" title="Linux常用命令">
+                  Linux常用命令 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

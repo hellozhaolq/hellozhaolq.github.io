@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="在我们的职业生涯中，很少有机会可以从零开发一个项目，大部分都是接手别人的代码继续开发，或者做些维护性开发。而且，对于大部分业务系统来说，因为业务导向，需求倒逼，开发工期紧，团队往往都不是很重视代码质量，快速上线是第一要务。所以，很多团队的代码质量一般都不怎么高。埋坑无数、没有文档、也没有注释，代码读不懂、也不敢改，这对于新人来说，会非常苦恼。今天，我们就聊一聊，如何接手一坨烂业务代码，以及如在烂业">
+<meta property="og:type" content="article">
+<meta property="og:title" content="110加餐十-如何接手一坨烂业务代码？如何在烂业务代码中成长？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/01/110%E5%8A%A0%E9%A4%90%E5%8D%81-%E5%A6%82%E4%BD%95%E6%8E%A5%E6%89%8B%E4%B8%80%E5%9D%A8%E7%83%82%E4%B8%9A%E5%8A%A1%E4%BB%A3%E7%A0%81%EF%BC%9F%E5%A6%82%E4%BD%95%E5%9C%A8%E7%83%82%E4%B8%9A%E5%8A%A1%E4%BB%A3%E7%A0%81%E4%B8%AD%E6%88%90%E9%95%BF%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="在我们的职业生涯中，很少有机会可以从零开发一个项目，大部分都是接手别人的代码继续开发，或者做些维护性开发。而且，对于大部分业务系统来说，因为业务导向，需求倒逼，开发工期紧，团队往往都不是很重视代码质量，快速上线是第一要务。所以，很多团队的代码质量一般都不怎么高。埋坑无数、没有文档、也没有注释，代码读不懂、也不敢改，这对于新人来说，会非常苦恼。今天，我们就聊一聊，如何接手一坨烂业务代码，以及如在烂业">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-01-20T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-01-20T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/01/110%E5%8A%A0%E9%A4%90%E5%8D%81-%E5%A6%82%E4%BD%95%E6%8E%A5%E6%89%8B%E4%B8%80%E5%9D%A8%E7%83%82%E4%B8%9A%E5%8A%A1%E4%BB%A3%E7%A0%81%EF%BC%9F%E5%A6%82%E4%BD%95%E5%9C%A8%E7%83%82%E4%B8%9A%E5%8A%A1%E4%BB%A3%E7%A0%81%E4%B8%AD%E6%88%90%E9%95%BF%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/01/110%E5%8A%A0%E9%A4%90%E5%8D%81-%E5%A6%82%E4%BD%95%E6%8E%A5%E6%89%8B%E4%B8%80%E5%9D%A8%E7%83%82%E4%B8%9A%E5%8A%A1%E4%BB%A3%E7%A0%81%EF%BC%9F%E5%A6%82%E4%BD%95%E5%9C%A8%E7%83%82%E4%B8%9A%E5%8A%A1%E4%BB%A3%E7%A0%81%E4%B8%AD%E6%88%90%E9%95%BF%EF%BC%9F/","path":"article/2023/01/110加餐十-如何接手一坨烂业务代码？如何在烂业务代码中成长？/","title":"110加餐十-如何接手一坨烂业务代码？如何在烂业务代码中成长？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>110加餐十-如何接手一坨烂业务代码？如何在烂业务代码中成长？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%8E%A5%E6%89%8B%E4%B8%80%E5%9D%A8%E7%83%82%E4%B8%9A%E5%8A%A1%E4%BB%A3%E7%A0%81%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">如何接手一坨烂业务代码？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%9C%A8%E7%83%82%E4%B8%9A%E5%8A%A1%E4%BB%A3%E7%A0%81%E4%B8%AD%E6%88%90%E9%95%BF%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">如何在烂业务代码中成长？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%A0%82%E8%AE%A8%E8%AE%BA"><span class="nav-number">3.</span> <span class="nav-text">课堂讨论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/01/110%E5%8A%A0%E9%A4%90%E5%8D%81-%E5%A6%82%E4%BD%95%E6%8E%A5%E6%89%8B%E4%B8%80%E5%9D%A8%E7%83%82%E4%B8%9A%E5%8A%A1%E4%BB%A3%E7%A0%81%EF%BC%9F%E5%A6%82%E4%BD%95%E5%9C%A8%E7%83%82%E4%B8%9A%E5%8A%A1%E4%BB%A3%E7%A0%81%E4%B8%AD%E6%88%90%E9%95%BF%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="110加餐十-如何接手一坨烂业务代码？如何在烂业务代码中成长？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          110加餐十-如何接手一坨烂业务代码？如何在烂业务代码中成长？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-01-20 08:00:00" itemprop="dateCreated datePublished" datetime="2023-01-20T08:00:00+08:00">2023-01-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>在我们的职业生涯中，很少有机会可以从零开发一个项目，大部分都是接手别人的代码继续开发，或者做些维护性开发。而且，对于大部分业务系统来说，因为业务导向，需求倒逼，开发工期紧，团队往往都不是很重视代码质量，快速上线是第一要务。所以，很多团队的代码质量一般都不怎么高。埋坑无数、没有文档、也没有注释，代码读不懂、也不敢改，这对于新人来说，会非常苦恼。今天，我们就聊一聊，如何接手一坨烂业务代码，以及如在烂业务代码中的成长？</p>
+<p>话不多说，让我们正式开始今天的内容吧！</p>
+<span id="more"></span>
+
+<h1 id="如何接手一坨烂业务代码？"><a href="#如何接手一坨烂业务代码？" class="headerlink" title="如何接手一坨烂业务代码？"></a>如何接手一坨烂业务代码？</h1><p>在我过去10年的工作经历中，我接手过很多个代码质量比较烂的项目。这些项目都有很多共性的特点，大部分都已经维护了两三年，甚至五六年之久，代码量很大，有十几万行以上，并且大部分代码都没有任何注释，业务功能非常庞杂，也没有对应的业务文档。</p>
+<p>除此之外，代码中还充斥着各种临时解决方案（Workaround）、硬编码（Hard Code）、遗留代码（Legacy Code），还有很多匪夷所思的设计。对于有些设计来说，我们称之为“反人类”设计或者“故意挖坑”，一点都不为过。如果没有老员工给你解释上下文，你万万都想不到它为什么这么设计和实现。</p>
+<p>实际上，**要想接手一个业务系统，前提是要读懂代码，而读懂代码的关键，是要熟悉业务。**只要业务搞清楚了，代码只不过是对业务的翻译，对照着业务看代码实现，看懂并不是件难事。不过，我所接手的这几个项目，基本上都是零文档，所有的业务知识都是靠口口相传。所以，搞清楚业务，就成了接手项目最难的事情了。</p>
+<p>面对如此庞大的项目代码，没有文档，几乎就是两眼一抹黑。原来参与这个项目开发的老同事，有的离职，有的去做其他新项目，一直问他们也不好意思，所以，大部分情况下，我都只能硬着头皮，通过阅读代码反推业务功能。</p>
+<p>如果代码质量比较高，模块划分清晰，命名规范，那通过读代码反推业务，也并非不可能的事情。但真实的情况往往事与愿违，就像我们前面提到的，代码中充斥着临时解决方案、硬编码、遗留代码等各种坑，这就使反推业务变得非常困难。对于代码中的这些坑，尽管我不想一直麻烦同事，但也只有多问才能最快速地解决。</p>
+<p>在读代码的过程中，我非常重视知识的文档化，我会把读懂的每个业务都写到文档中。当然，这其中也包括前面提到的各种坑。对于复杂的业务流程，我还会画一些流程图。读代码的过程非常痛苦，花了好几个月，我才有信心说，自己几乎把所有代码都搞清楚了。同时，我也做了一件过去几年都没有人做的事情，那就是补充完整了技术文档和业务文档，之后再有新同事加入，看了我的文档，就可以很快了解代码、了解业务，很快就能上手开发代码。</p>
+<p>总结一下，即便代码再烂，只要有完善的业务文档，先理解业务，再去看代码，几乎就没啥难度了。对于零文档的项目，大部分情况下，我们只能通过代码来反推业务。当然，对于有些坑来说，必要的情况下，我们也要询问前辈来搞定。在读代码的过程中，我们要将得到的知识文档化，这也是对公司和团队来说最有价值的部分。</p>
+<h1 id="如何在烂业务代码中成长？"><a href="#如何在烂业务代码中成长？" class="headerlink" title="如何在烂业务代码中成长？"></a>如何在烂业务代码中成长？</h1><p>有人一遇到这种烂业务代码，就觉得很心烦，我反倒不一样。恰恰相反，相比接手好代码，我觉得接手烂代码，虽然过程更加痛苦，但同时也会给我更多施展才华的空间、锻炼技术的机会，我的成长也会更多。</p>
+<p>除此之外，很多人觉得做偏底层的开发（基础架构、框架、中间件等开发）才锻炼技术，做业务系统没有挑战，技术上没有成长，对此非常苦恼。实际上，我觉得这种看法是比较片面的。做业务开发的难度不亚于底层开发，做好也不是件容易的事情，同样可以积累技术、锻炼能力。</p>
+<p>偏底层的开发更加考验程序员在某一细分领域的技术深度，偏业务的开发更加考验程序员的能力，比如沟通能力、分析问题解决问题能力、权衡取舍能力、架构能力等，毕竟业务多种多样，问题千奇百怪，单一细分领域的经验很难应对所有问题。</p>
+<p><strong>实际上，业务系统的开发难度一般来自两个方面：高性能要求和业务复杂。</strong></p>
+<p>解决性能问题，你需要具备一定的架构能力，有一定的技术广度，需要对各种基础架构、框架、中间件都有所了解。光了解还不够，还要有一定的技术深度，最好能对原理甚至是源码有所研究。除此之外，还要有一定的使用经验。广度、深度、经验三者配合，这样才能做到恰到好处组合这些技术搭建架构，解决性能问题，并且在出现问题之后才能快速地解决。</p>
+<p>应对大型项目的业务复杂性，要想让项目代码一直在你的掌控范围内，你需要有很强的业务建模能力、复杂逻辑的抽象能力、代码翻译能力等。对于一个人的基本素质、基础能力的要求要更高。实际上，对于复杂业务系统来说，对业务的熟悉也能成为你的竞争壁垒，成为升职加薪的砝码。我前面也讲到，低级别的晋升靠技术，比如升阿里的P7，高级别的晋升靠业务，比如升阿里的P8、P9，或者换个说法，高级别的晋升，靠业务比单纯靠技术，更容易一些。</p>
+<p>如果你参与的项目，性能要求高、业务也复杂，那恭喜你，好好干就成了。如果你参与的项目，在性能和复杂度上，只兼具其中一点，那也不错，值得一做。如果你参与的项目，既没有性能压力、业务也不复杂，那也别太着急，走着瞧，实在不行再跳槽。</p>
+<h1 id="课堂讨论"><a href="#课堂讨论" class="headerlink" title="课堂讨论"></a>课堂讨论</h1><p>在过往的项目经历中，你有没有像我一样，接手过代码质量比较差的代码？你又是如何顺利接手的呢？</p>
+<p>欢迎留言和我分享你的想法。如果有收获，也欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/01/109%E5%8A%A0%E9%A4%90%E4%B9%9D-%E4%BD%9C%E4%B8%BA%E9%9D%A2%E8%AF%95%E5%AE%98%E6%88%96%E5%80%99%E9%80%89%E4%BA%BA%EF%BC%8C%E5%A6%82%E4%BD%95%E9%9D%A2%E8%AF%95%E6%88%96%E5%9B%9E%E7%AD%94%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E9%97%AE%E9%A2%98%EF%BC%9F/" rel="prev" title="109加餐九-作为面试官或候选人，如何面试或回答设计模式问题？">
+                  <i class="fa fa-angle-left"></i> 109加餐九-作为面试官或候选人，如何面试或回答设计模式问题？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/01/111%E7%BB%93%E6%9D%9F%E8%AF%AD-%E8%81%8A%E4%B8%80%E8%81%8A%E6%9C%BA%E9%81%87%E3%80%81%E6%96%B9%E5%90%91%E3%80%81%E8%83%BD%E5%8A%9B%E3%80%81%E5%8A%AA%E5%8A%9B%EF%BC%81/" rel="next" title="111结束语-聊一聊机遇、方向、能力、努力！">
+                  111结束语-聊一聊机遇、方向、能力、努力！ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

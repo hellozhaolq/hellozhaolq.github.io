@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="SecurityManager应用场景当运行未知的Java程序的时候，该程序可能有恶意代码（删除系统文件、重启系统等），为了防止运行恶意代码对系统产生影响，需要对运行的代码的权限进行控制，这时候就要启用Java安全管理器。 Java 安全管理器允许应用程序设置一个安全管理策略，通过安全管理策略实现对应用程序中敏感操作的管理。 安全策略配置文件默认的安全管理器配置文件 $JAVA_HOME&#x2F;jre&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java安全管理器SecurityManager">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2015/10/Java%E5%AE%89%E5%85%A8%E7%AE%A1%E7%90%86%E5%99%A8SecurityManager/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="SecurityManager应用场景当运行未知的Java程序的时候，该程序可能有恶意代码（删除系统文件、重启系统等），为了防止运行恶意代码对系统产生影响，需要对运行的代码的权限进行控制，这时候就要启用Java安全管理器。 Java 安全管理器允许应用程序设置一个安全管理策略，通过安全管理策略实现对应用程序中敏感操作的管理。 安全策略配置文件默认的安全管理器配置文件 $JAVA_HOME&#x2F;jre&#x2F;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2015-10-16T01:00:00.000Z">
+<meta property="article:modified_time" content="2015-10-16T01:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Java基础">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2015/10/Java%E5%AE%89%E5%85%A8%E7%AE%A1%E7%90%86%E5%99%A8SecurityManager/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2015/10/Java%E5%AE%89%E5%85%A8%E7%AE%A1%E7%90%86%E5%99%A8SecurityManager/","path":"article/2015/10/Java安全管理器SecurityManager/","title":"Java安全管理器SecurityManager"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Java安全管理器SecurityManager | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#SecurityManager%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">SecurityManager应用场景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E7%AD%96%E7%95%A5%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">2.</span> <span class="nav-text">安全策略配置文件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E5%AE%89%E5%85%A8%E7%AE%A1%E7%90%86%E5%99%A8"><span class="nav-number">3.</span> <span class="nav-text">启动安全管理器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">3.1.</span> <span class="nav-text">参数启动方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E7%A0%81%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">3.2.</span> <span class="nav-text">编码启动方式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E7%AE%80%E5%8D%95%E8%A7%A3%E9%87%8A"><span class="nav-number">4.</span> <span class="nav-text">配置文件简单解释</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E9%85%8D%E7%BD%AE%E5%8E%9F%E5%88%99"><span class="nav-number">4.1.</span> <span class="nav-text">基本配置原则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%A7%A3%E9%87%8A"><span class="nav-number">4.2.</span> <span class="nav-text">默认配置文件解释</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%AF%E9%85%8D%E7%BD%AE%E9%A1%B9%E8%AF%A6%E8%A7%A3"><span class="nav-number">4.3.</span> <span class="nav-text">可配置项详解</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%A1%B6%E5%B1%82%E6%8A%BD%E8%B1%A1%E7%B1%BB"><span class="nav-number">5.</span> <span class="nav-text">顶层抽象类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3"><span class="nav-number">6.</span> <span class="nav-text">问题解决</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%96%E6%B6%88%E5%AE%89%E5%85%A8%E7%AE%A1%E7%90%86%E5%99%A8"><span class="nav-number">6.1.</span> <span class="nav-text">取消安全管理器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A2%9E%E5%8A%A0%E7%9B%B8%E5%BA%94%E6%9D%83%E9%99%90"><span class="nav-number">6.2.</span> <span class="nav-text">增加相应权限</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2015/10/Java%E5%AE%89%E5%85%A8%E7%AE%A1%E7%90%86%E5%99%A8SecurityManager/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Java安全管理器SecurityManager | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java安全管理器SecurityManager
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2015-10-16 09:00:00" itemprop="dateCreated datePublished" datetime="2015-10-16T09:00:00+08:00">2015-10-16</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="SecurityManager应用场景"><a href="#SecurityManager应用场景" class="headerlink" title="SecurityManager应用场景"></a>SecurityManager应用场景</h1><p>当运行未知的Java程序的时候，该程序可能有恶意代码（删除系统文件、重启系统等），为了防止运行恶意代码对系统产生影响，需要对运行的代码的权限进行控制，这时候就要启用Java安全管理器。</p>
+<p>Java 安全管理器允许应用程序设置一个安全管理策略，通过安全管理策略实现对应用程序中敏感操作的管理。</p>
+<h1 id="安全策略配置文件"><a href="#安全策略配置文件" class="headerlink" title="安全策略配置文件"></a>安全策略配置文件</h1><p>默认的安全管理器配置文件</p>
+<p><code>$JAVA_HOME/jre/lib/security/java.policy</code> （Java 8）</p>
+<p><code>$JAVA_HOME/lib/security/default.policy</code>（Java 9+）</p>
+<p>当未指定配置文件时，将会使用该配置。</p>
+<p>不同版本的 Java 默认的权限配置有所差异，导致部分原来在低版本 Java 上运行的程序，在高版本中可能出现 <code>access denied</code> 的权限异常。</p>
+<p>Java 8 内容如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">// Standard extensions get all permissions by default</span><br><span class="line"></span><br><span class="line">grant codeBase &quot;file:$&#123;&#123;java.ext.dirs&#125;&#125;/*&quot; &#123;</span><br><span class="line">        permission java.security.AllPermission;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// default permissions granted to all domains</span><br><span class="line"></span><br><span class="line">grant &#123;</span><br><span class="line">        // Allows any thread to stop itself using the java.lang.Thread.stop()</span><br><span class="line">        // method that takes no argument.</span><br><span class="line">        // Note that this permission is granted by default only to remain</span><br><span class="line">        // backwards compatible.</span><br><span class="line">        // It is strongly recommended that you either remove this permission</span><br><span class="line">        // from this policy file or further restrict it to code sources</span><br><span class="line">        // that you specify, because Thread.stop() is potentially unsafe.</span><br><span class="line">        // See the API specification of java.lang.Thread.stop() for more</span><br><span class="line">        // information.</span><br><span class="line">        permission java.lang.RuntimePermission &quot;stopThread&quot;;</span><br><span class="line"></span><br><span class="line">        // allows anyone to listen on dynamic ports</span><br><span class="line">        permission java.net.SocketPermission &quot;localhost:0&quot;, &quot;listen&quot;;</span><br><span class="line"></span><br><span class="line">        // &quot;standard&quot; properies that can be read by anyone</span><br><span class="line"></span><br><span class="line">        permission java.util.PropertyPermission &quot;java.version&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;java.vendor&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;java.vendor.url&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;java.class.version&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;os.name&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;os.version&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;os.arch&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;file.separator&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;path.separator&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;line.separator&quot;, &quot;read&quot;;</span><br><span class="line"></span><br><span class="line">        permission java.util.PropertyPermission &quot;java.specification.version&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;java.specification.vendor&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;java.specification.name&quot;, &quot;read&quot;;</span><br><span class="line"></span><br><span class="line">        permission java.util.PropertyPermission &quot;java.vm.specification.version&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;java.vm.specification.vendor&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;java.vm.specification.name&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;java.vm.version&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;java.vm.vendor&quot;, &quot;read&quot;;</span><br><span class="line">        permission java.util.PropertyPermission &quot;java.vm.name&quot;, &quot;read&quot;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><font color="red" size="4"><strong>配置文件详解见下文。</strong></font></p>
+<h1 id="启动安全管理器"><a href="#启动安全管理器" class="headerlink" title="启动安全管理器"></a>启动安全管理器</h1><p>启动安全管理有两种方式，建议使用启动参数方式。</p>
+<h2 id="参数启动方式"><a href="#参数启动方式" class="headerlink" title="参数启动方式"></a>参数启动方式</h2><p><code>-Djava.security.manager</code></p>
+<p>指定配置文件</p>
+<p><code>-Djava.security.manager -Djava.security.policy=&quot;E:/java.policy&quot;</code></p>
+<h2 id="编码启动方式"><a href="#编码启动方式" class="headerlink" title="编码启动方式"></a>编码启动方式</h2><p><code>System.setSecurityManager(new SecurityManager());</code></p>
+<h1 id="配置文件简单解释"><a href="#配置文件简单解释" class="headerlink" title="配置文件简单解释"></a>配置文件简单解释</h1><h2 id="基本配置原则"><a href="#基本配置原则" class="headerlink" title="基本配置原则"></a>基本配置原则</h2><p>在启用安全管理器的时候，配置遵循以下基本原则：</p>
+<ul>
+<li>没有配置的权限表示没有。</li>
+<li>只能配置有什么权限，不能配置禁止做什么。</li>
+<li>同一种权限可多次配置，取并集。</li>
+<li>统一资源的多种权限可用逗号分割。</li>
+</ul>
+<h2 id="默认配置文件解释"><a href="#默认配置文件解释" class="headerlink" title="默认配置文件解释"></a>默认配置文件解释</h2><p>第一部分授权：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">grant codeBase &quot;file:$&#123;&#123;java.ext.dirs&#125;&#125;/*&quot; &#123;</span><br><span class="line">    permission java.security.AllPermission;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>授权基于路径在 <code>&quot;file:$&#123;&#123;java.ext.dirs&#125;&#125;/*&quot;</code> 的class和jar包，所有权限。</p>
+<p>第二部分授权：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">grant &#123; </span><br><span class="line">    permission java.lang.RuntimePermission &quot;stopThread&quot;;</span><br><span class="line">    ……   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这是细粒度的授权，对某些资源的操作进行授权。具体不再解释，可以查看javadoc。如 RuntimePermission 的可授权操作经查看javadoc如下：</p>
+<table>
+<thead>
+<tr>
+<th>权限目标名称</th>
+<th>权限所允许的操作</th>
+<th>允许此权限所带来的风险</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>createClassLoader</td>
+<td>创建类加载器</td>
+<td>授予该权限极其危险。能够实例化自己的类加载器的恶意应用程序可能会在系统中装载自己的恶意类。这些新加载的类可能被类加载器置于任意保护域中，从而自动将该域的权限授予这些类。</td>
+</tr>
+<tr>
+<td>getClassLoader</td>
+<td>类加载器的获取（即调用类的类加载器）</td>
+<td>这将授予攻击者得到具体类的加载器的权限。这很危险，由于攻击者能够访问类的类加载器，所以攻击者能够加载其他可用于该类加载器的类。通常攻击者不具备这些类的访问权限。</td>
+</tr>
+<tr>
+<td>setContextClassLoader</td>
+<td>线程使用的上下文类加载器的设置</td>
+<td>在需要查找可能不存在于系统类加载器中的资源时，系统代码和扩展部分会使用上下文类加载器。授予 setContextClassLoader 权限将允许代码改变特定线程（包括系统线程）使用的上下文类加载器。</td>
+</tr>
+<tr>
+<td>enableContextClassLoaderOverride</td>
+<td>线程上下文类加载器方法的子类实现</td>
+<td>在需要查找可能不存在于系统类加载器中的资源时，系统代码和扩展部分会使用上下文类加载器。授予 enableContextClassLoaderOverride 权限将允许线程的子类重写某些方法，这些方法用于得到或设置特定线程的上下文类加载器。</td>
+</tr>
+<tr>
+<td>setSecurityManager</td>
+<td>设置安全管理器（可能会替换现有的）</td>
+<td>安全管理器是允许应用程序实现安全策略的类。授予 setSecurityManager 权限将通过安装一个不同的、可能限制更少的安全管理器，来允许代码改变所用的安全管理器，因此可跳过原有安全管理器所强制执行的某些检查。</td>
+</tr>
+<tr>
+<td>createSecurityManager</td>
+<td>创建新的安全管理器</td>
+<td>授予代码对受保护的、敏感方法的访问权，可能会泄露有关其他类或执行堆栈的信息。</td>
+</tr>
+<tr>
+<td>getenv.{variable name}</td>
+<td>读取指定环境变量的值</td>
+<td>此权限允许代码读取特定环境变量的值或确定它是否存在。如果该变量含有机密数据，则这项授权是很危险的。</td>
+</tr>
+<tr>
+<td>exitVM.{exit status}</td>
+<td>暂停带有指定退出状态的 Java 虚拟机</td>
+<td>此权限允许攻击者通过自动强制暂停虚拟机来发起一次拒绝服务攻击。注意：自动为那些从应用程序类路径加载的全部代码授予 “exitVM.<em>“ 权限，从而使这些应用程序能够自行中止。此外，”exitVM” 权限等于 “exitVM.</em>“。</td>
+</tr>
+<tr>
+<td>shutdownHooks</td>
+<td>虚拟机关闭钩子 (hook) 的注册与取消</td>
+<td>此权限允许攻击者注册一个妨碍虚拟机正常关闭的恶意关闭钩子 (hook)。</td>
+</tr>
+<tr>
+<td>setFactory</td>
+<td>设置由 ServerSocket 或 Socket 使用的套接字工厂，或 URL 使用的流处理程序工厂</td>
+<td>此权限允许代码设置套接字、服务器套接字、流处理程序或 RMI 套接字工厂的实际实现。攻击者可能设置错误的实现，从而破坏数据流。</td>
+</tr>
+<tr>
+<td>setIO</td>
+<td>System.out、System.in 和 System.err 的设置</td>
+<td>此权限允许改变标准系统流的值。攻击者可以改变 System.in 来监视和窃取用户输入，或将 System.err 设置为 “null” OutputStream，从而隐藏发送到 System.err 的所有错误信息。</td>
+</tr>
+<tr>
+<td>modifyThread</td>
+<td>修改线程，例如通过调用线程的 <code>interrupt</code>、<code>stop</code>、<code>suspend</code>、<code>resume</code>、<code>setDaemon</code>、<code>setPriority</code>、<code>setName</code> 和 <code>setUncaughtExceptionHandler</code> 方法</td>
+<td>此权限允许攻击者修改系统中任意线程的行为。</td>
+</tr>
+<tr>
+<td>stopThread</td>
+<td>通过调用线程的 <code>stop</code> 方法停止线程</td>
+<td>如果系统已授予代码访问该线程的权限，则此权限允许代码停止系统中的任何线程。此权限会造成一定的危险，因为该代码可能通过中止现有的线程来破坏系统。</td>
+</tr>
+<tr>
+<td>modifyThreadGroup</td>
+<td>修改线程组，例如通过调用 ThreadGroup 的 <code>destroy</code>、<code>getParent</code>、<code>resume</code>、<code>setDaemon</code>、<code>setMaxPriority</code>、<code>stop</code> 和 <code>suspend</code> 方法</td>
+<td>此权限允许攻击者创建线程组并设置它们的运行优先级。</td>
+</tr>
+<tr>
+<td>getProtectionDomain</td>
+<td>获取类的 ProtectionDomain</td>
+<td>此权限允许代码获得特定代码源的安全策略信息。虽然获得安全策略信息并不足以危及系统安全，但这确实会给攻击者提供了能够更好地定位攻击目标的其他信息，例如本地文件名称等。</td>
+</tr>
+<tr>
+<td>getFileSystemAttributes</td>
+<td>获取文件系统属性</td>
+<td>此权限允许代码获得文件系统信息（如调用者可用的磁盘使用量或磁盘空间）。这存在潜在危险，因为它泄露了关于系统硬件配置的信息以及一些关于调用者写入文件特权的信息。</td>
+</tr>
+<tr>
+<td>readFileDescriptor</td>
+<td>读取文件描述符</td>
+<td>此权限允许代码读取与文件描述符读取相关的特定文件。如果该文件包含机密数据，则此操作非常危险。</td>
+</tr>
+<tr>
+<td>writeFileDescriptor</td>
+<td>写入文件描述符</td>
+<td>此权限允许代码写入与描述符相关的特定文件。此权限很危险，因为它可能允许恶意代码传播病毒，或者至少也会填满整个磁盘。</td>
+</tr>
+<tr>
+<td>loadLibrary.{库名}</td>
+<td>动态链接指定的库</td>
+<td>允许 applet 具有加载本机代码库的权限是危险的，因为 Java 安全架构并未设计成可以防止恶意行为，并且也无法在本机代码的级别上防止恶意行为。</td>
+</tr>
+<tr>
+<td>accessClassInPackage.{包名}</td>
+<td>当类加载器调用 SecurityManager 的<code>checkPackageAccess</code> 方法时，通过类加载器的 <code>loadClass</code> 方法访问指定的包</td>
+<td>此权限允许代码访问它们通常无法访问的那些包中的类。恶意代码可能利用这些类帮助它们实现破坏系统安全的企图。</td>
+</tr>
+<tr>
+<td>defineClassInPackage.{包名}</td>
+<td>当类加载器调用 SecurityManager 的 <code>checkPackageDefinition</code> 方法时，通过类加载器的 <code>defineClass</code> 方法定义指定的包中的类。</td>
+<td>此权限允许代码在特定包中定义类。这样做很危险，因为具有此权限的恶意代码可能在受信任的包中定义恶意类，比如 <code>java.security</code> 或 <code>java.lang</code>。</td>
+</tr>
+<tr>
+<td>accessDeclaredMembers</td>
+<td>访问类的已声明成员</td>
+<td>此权限允许代码查询类的公共、受保护、默认（包）访问和私有的字段和&#x2F;或方法。尽管代码可以访问私有和受保护字段和方法名称，但它不能访问私有&#x2F;受保护字段数据并且不能调用任何私有方法。此外，恶意代码可能使用该信息来更好地定位攻击目标。而且，它可以调用类中的任意公共方法和&#x2F;或访问公共字段。如果代码不能用这些方法和字段将对象强制转换为类&#x2F;接口，那么它通常无法调用这些方法和&#x2F;或访问该字段，而这可能很危险。</td>
+</tr>
+<tr>
+<td>queuePrintJob</td>
+<td>打印作业请求的开始</td>
+<td>这可能向打印机输出敏感信息，或者只是浪费纸张。</td>
+</tr>
+<tr>
+<td>getStackTrace</td>
+<td>获取另一个线程的堆栈追踪信息。</td>
+<td>此权限允许获取另一个线程的堆栈追踪信息。此操作可能允许执行恶意代码监视线程并发现应用程序中的弱点。</td>
+</tr>
+<tr>
+<td>setDefaultUncaughtExceptionHandler</td>
+<td>在线程由于未捕获的异常而突然终止时，设置将要使用的默认处理程序</td>
+<td>此权限允许攻击者注册恶意的未捕获异常处理程序，可能会妨碍线程的终止</td>
+</tr>
+<tr>
+<td>Preferences</td>
+<td>表示得到 java.util.prefs.Preferences 的访问权所需的权限。java.util.prefs.Preferences 实现了用户或系统的根，这反过来又允许获取或更新 Preferences 持久内部存储中的操作。</td>
+<td>如果运行此代码的用户具有足够的读&#x2F;写内部存储的 OS 特权，则此权限就允许用户读&#x2F;写优先级内部存储。实际的内部存储可能位于传统的文件系统目录中或注册表中，这取决于平台 OS。</td>
+</tr>
+</tbody></table>
+<h2 id="可配置项详解"><a href="#可配置项详解" class="headerlink" title="可配置项详解"></a>可配置项详解</h2><p>当批量配置的时候，有三种模式：</p>
+<ul>
+<li><code>directory/</code> ：表示directory目录下的所有.class文件，不包括.jar文件</li>
+<li><code>directory/*</code> ：表示directory目录下的所有的.class及.jar文件</li>
+<li><code>directory/-</code> ：表示directory目录下的所有的.class及.jar文件，包括子目录</li>
+</ul>
+<p>可以通过${}来引用系统属性，如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;file:$&#123;&#123;java.ext.dirs&#125;&#125;/*&quot;</span><br></pre></td></tr></table></figure>
+
+<h1 id="顶层抽象类"><a href="#顶层抽象类" class="headerlink" title="顶层抽象类"></a>顶层抽象类</h1><p><code>java.security.Permission</code> 用来定义类所拥有的权限，具体见其子类。</p>
+<p>每个子类具体拥有哪些权限，请查看类注释。</p>
+<h1 id="问题解决"><a href="#问题解决" class="headerlink" title="问题解决"></a>问题解决</h1><p>当出现关于安全管理的报错的时候，基本有两种方式来解决。</p>
+<h2 id="取消安全管理器"><a href="#取消安全管理器" class="headerlink" title="取消安全管理器"></a>取消安全管理器</h2><p>一般情况下都是无意启动安全管理器，所以这时候只需要把安全管理器进行关闭，去掉启动参数即可。</p>
+<h2 id="增加相应权限"><a href="#增加相应权限" class="headerlink" title="增加相应权限"></a>增加相应权限</h2><p>若因为没有权限报错，则报错信息中会有请求的权限和请求什么权限，如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread &quot;main&quot; java.security.AccessControlException: access denied (java.io.FilePermission c:/protect.txt write)</span><br></pre></td></tr></table></figure>
+
+<p>上面例子，请求资源 <code>c:/protect.txt</code> 的 FilePermission 的写权限没有，因此被拒绝。</p>
+<p>也可以开放所有权限：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">grant &#123; </span><br><span class="line">    permission java.security.AllPermission;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>或</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">grant &#123;</span><br><span class="line">	permissionjava.io.FilePermission &quot;c:/protect.txt&quot;, &quot;read&quot;, &quot;write&quot;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag"># Java基础</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2015/10/29Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%BA%BF%E7%A8%8B%E8%A7%84%E8%8C%83%E4%B8%8E%E7%BA%BF%E7%A8%8B%E7%AE%A1%E7%90%86/" rel="prev" title="29Java多线程之线程规范与线程管理">
+                  <i class="fa fa-angle-left"></i> 29Java多线程之线程规范与线程管理
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2015/10/Java%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6-%E7%B2%97%E7%B3%99%E7%89%88/" rel="next" title="Java高级特性之垃圾回收-粗糙版">
+                  Java高级特性之垃圾回收-粗糙版 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

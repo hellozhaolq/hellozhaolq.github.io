@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="深入了解基本类型和包装类了解基本数据类型和包装类的区别，最终了解：什么时候应该使用基本数据类型，什么时候应该使用包装类">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaBean使用包装类型还是基本类型？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/08/JavaBean%E4%BD%BF%E7%94%A8%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E8%BF%98%E6%98%AF%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="深入了解基本类型和包装类了解基本数据类型和包装类的区别，最终了解：什么时候应该使用基本数据类型，什么时候应该使用包装类">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/08/JavaBean%E4%BD%BF%E7%94%A8%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E8%BF%98%E6%98%AF%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%EF%BC%9F/d4628535e5dde711e293a762fed0231f9c1661a1.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/08/JavaBean%E4%BD%BF%E7%94%A8%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E8%BF%98%E6%98%AF%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%EF%BC%9F/1090410-20180512100835212-63260432.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/08/JavaBean%E4%BD%BF%E7%94%A8%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E8%BF%98%E6%98%AF%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%EF%BC%9F/1090410-20180929222210763-116155644.png">
+<meta property="article:published_time" content="2019-08-15T06:00:42.000Z">
+<meta property="article:modified_time" content="2019-08-15T06:00:42.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="JavaBean">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2019/08/JavaBean%E4%BD%BF%E7%94%A8%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E8%BF%98%E6%98%AF%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%EF%BC%9F/d4628535e5dde711e293a762fed0231f9c1661a1.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/08/JavaBean%E4%BD%BF%E7%94%A8%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E8%BF%98%E6%98%AF%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2019/08/JavaBean%E4%BD%BF%E7%94%A8%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E8%BF%98%E6%98%AF%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%EF%BC%9F/","path":"article/2019/08/JavaBean使用包装类型还是基本类型？/","title":"JavaBean使用包装类型还是基本类型？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>JavaBean使用包装类型还是基本类型？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B7%B1%E5%85%A5%E4%BA%86%E8%A7%A3%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%E5%92%8C%E5%8C%85%E8%A3%85%E7%B1%BB"><span class="nav-number">1.</span> <span class="nav-text">深入了解基本类型和包装类</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E5%A7%8B"><span class="nav-number">1.1.</span> <span class="nav-text">开始</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%9F%A5%E8%AF%86"><span class="nav-number">1.2.</span> <span class="nav-text">基本知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E6%96%B9%E5%BC%8F"><span class="nav-number">1.3.</span> <span class="nav-text">内存方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%92%8Cequals"><span class="nav-number">1.4.</span> <span class="nav-text">&#x3D;&#x3D;和equals</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E8%A3%85%E7%AE%B1%E5%92%8C%E8%87%AA%E5%8A%A8%E6%8B%86%E7%AE%B1"><span class="nav-number">1.5.</span> <span class="nav-text">自动装箱和自动拆箱</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6"><span class="nav-number">1.6.</span> <span class="nav-text">缓存机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">1.7.</span> <span class="nav-text">初始化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%8E%9F%E5%88%99"><span class="nav-number">1.8.</span> <span class="nav-text">使用原则</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JavaBean-%E4%BD%BF%E7%94%A8%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E8%BF%98%E6%98%AF%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.</span> <span class="nav-text">JavaBean 使用包装类型还是基本类型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#int%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">2.1.</span> <span class="nav-text">int优缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Integer%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">2.2.</span> <span class="nav-text">Integer优缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Integer-%E5%92%8C-int-%E8%BF%9B%E8%A1%8C%E6%AF%94%E8%BE%83%E5%88%86%E4%B8%89%E6%83%85%E5%86%B5"><span class="nav-number">2.3.</span> <span class="nav-text">Integer 和 int 进行比较分三情况</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Java%E5%AE%9E%E4%BD%93%E7%B1%BB%E7%9A%84%E5%B1%9E%E6%80%A7%E7%B1%BB%E5%9E%8B%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E8%A1%A8%E5%AD%97%E6%AE%B5%E7%B1%BB%E5%9E%8B%E5%AF%B9%E5%BA%94%E8%A1%A8"><span class="nav-number">3.</span> <span class="nav-text">Java实体类的属性类型与数据库表字段类型对应表</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/08/JavaBean%E4%BD%BF%E7%94%A8%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E8%BF%98%E6%98%AF%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="JavaBean使用包装类型还是基本类型？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JavaBean使用包装类型还是基本类型？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-08-15 14:00:42" itemprop="dateCreated datePublished" datetime="2019-08-15T14:00:42+08:00">2019-08-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="深入了解基本类型和包装类"><a href="#深入了解基本类型和包装类" class="headerlink" title="深入了解基本类型和包装类"></a>深入了解基本类型和包装类</h1><p>了解基本数据类型和包装类的区别，最终了解：什么时候应该使用基本数据类型，什么时候应该使用包装类</p>
+<span id="more"></span>
+
+<h2 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h2><p>我们知道，Java中有八种基本数据类型，它们又对应八种包装类型。那么，回想一下你在代码中使用基本数据类型或包装类型时，选择标准是什么？有没有标准呢？今天，我们就来了解一下包装类型。</p>
+<p>不妨也先这道题开始思考。输出结果是什么？</p>
+<p><img src="/article/2019/08/JavaBean%E4%BD%BF%E7%94%A8%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E8%BF%98%E6%98%AF%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%EF%BC%9F/d4628535e5dde711e293a762fed0231f9c1661a1.png" alt="img"></p>
+<h2 id="基本知识"><a href="#基本知识" class="headerlink" title="基本知识"></a>基本知识</h2><table>
+<thead>
+<tr>
+<th align="center"><strong>基本数据类型</strong></th>
+<th align="center"><strong>对应包装类</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><strong>byte</strong></td>
+<td align="center"><strong>Byte</strong></td>
+</tr>
+<tr>
+<td align="center"><strong>short</strong></td>
+<td align="center"><strong>Short</strong></td>
+</tr>
+<tr>
+<td align="center"><strong>int</strong></td>
+<td align="center"><strong>Integer</strong></td>
+</tr>
+<tr>
+<td align="center"><strong>long</strong></td>
+<td align="center"><strong>Long</strong></td>
+</tr>
+<tr>
+<td align="center"><strong>float</strong></td>
+<td align="center"><strong>Float</strong></td>
+</tr>
+<tr>
+<td align="center"><strong>double</strong></td>
+<td align="center"><strong>Double</strong></td>
+</tr>
+<tr>
+<td align="center"><strong>char</strong></td>
+<td align="center"><strong>Character</strong></td>
+</tr>
+<tr>
+<td align="center"><strong>boolean</strong></td>
+<td align="center"><strong>Boolean</strong></td>
+</tr>
+</tbody></table>
+<p>Java有八种基本类型，byte， short， int， long， float， double， char， boolean。</p>
+<p>对应八种包装类，Byte， Short， Integer， Long， Double， Character， Boolean。</p>
+<p>以int为例，创建一个基本类型的变量时，基本类型如下：</p>
+<p>int a &#x3D; 0;</p>
+<p>包装类型如下：</p>
+<p>Integer a &#x3D; new Integer(0);</p>
+<h2 id="内存方式"><a href="#内存方式" class="headerlink" title="内存方式"></a>内存方式</h2><p>基本类型属于原始数据类型，变量中存储的就是原始值。包装类型属于引用数据类型，变量中存储的是存储原始值的地址的引用。</p>
+<p>我们先不考虑内存空间各种不同区域对应不同的用途，将其看做一个整体，思考以下语句的内存分配过程。</p>
+<p>int a &#x3D; 0;</p>
+<p>分配一块内存，即为a，存入的值为0。</p>
+<p>Integer b &#x3D; new Integer(0);</p>
+<p>分配一块内存，我们称之为内存1，存储0，再分配一块内存，我们称之为内存2。内存2中存放的是指向内存1的引用。</p>
+<h2 id="和equals"><a href="#和equals" class="headerlink" title="&#x3D;&#x3D;和equals"></a>&#x3D;&#x3D;和equals</h2><p>基本类型的比较要用&#x3D;&#x3D;，包装类型的比较要用equals。&#x3D;&#x3D;是Java本身的一个操作符，它的作用是比较两个变量在内存中的地址，相同为true，不同为false。equals则是一个方法。Java中，所有的类都有一个根级父类，Ojbect，包括包装类。在不重写的情况下，直接equals实际上就是在调用Ojbect类的equals方法。而Ojbect类的equals方法，也是使用&#x3D;&#x3D;来作判断的。换句话说，如果没有经过重写，equals和&#x3D;&#x3D;的结果是一致的。而如果我们想要达到某些其它目的，比如说，我们希望在地址不同，但是值相同的情况下，也能返回true，就需要自己重写equals方法。</p>
+<p>看到这里，产生了一个疑惑，如下：</p>
+<p>int a &#x3D; 0;</p>
+<p>int b &#x3D; 0;</p>
+<p>System.out.println(a &#x3D;&#x3D; b);</p>
+<p>true还是false？</p>
+<p>初看觉得是true，再想觉得是false，程序运行结果是true。</p>
+<p>疑惑：两个变量的值虽然是相同的，但是，它们在内存中的地址应该是不同的，只是其中的值相同。按照&#x3D;&#x3D;的运算规则，理由得到false的结果（内存中的地址不同），结果却是true，为什么？</p>
+<p>事实：当定义b时，JVM会先检查内存中是否已经有了0这个值，如果没有，则创建，如果有（如之前已经执行过int a &#x3D; 0），则不会再创建，而是直接将变量b指向变量a所有内存的地址，就好像执行的语句是int b &#x3D; a。换句话说，a和b最终指向的内存空间，其实还是一致的。</p>
+<p>基于上述事实，又产生了一个疑惑，如下：</p>
+<p>int a &#x3D; 0;</p>
+<p>int b &#x3D; 0;</p>
+<p>b &#x3D; b + 1;</p>
+<p>System.out.printlt(a &#x3D;&#x3D; 2);</p>
+<p>疑惑：因为变量b实质上指向的是变量a的内存地址，所以，对b的修改，实质上就是对a的修改，输出结果应该是true，但实际上false。</p>
+<p>事实：这里，又有一个误解。当执行b &#x3D; b + 1时，JVM事实上并不是直接去对变量a的内存地址中的值做操作。事实上是，它先取出了a的值，为1。然后进行 +1 操作，得到2。这时候，JVM并不会直接把变量a内存地址中的值直接改成2，而是会在内存中寻找是否有2，有就将b指向相应地址，没有就把b内存地址中的值修改为2。</p>
+<p><strong>总结：</strong></p>
+<p>1.**int 和 Integer比较：**会发生自动拆箱,如果值相同就相同(不看地址 不看是否创建了对象 new)<br>2.<strong>两个Integer比较：</strong><br>如果有创建对象new,就不相同(加入地址比较)<br>如果都没有创建对象new,要看是否再缓冲区对象的范围之内,在相同,不在不相同</p>
+<h2 id="自动装箱和自动拆箱"><a href="#自动装箱和自动拆箱" class="headerlink" title="自动装箱和自动拆箱"></a>自动装箱和自动拆箱</h2><p><strong>自动装箱:</strong> 从基本数据类型→包装类型 int → Integer<br><strong>自动拆箱:</strong> 从包装类型-&gt;基本数据类型 Integer → int</p>
+<p>在实际使用时，通过我们在定义包装类型的定义时，不会使用new关键字，而是如下：</p>
+<p>Integer a &#x3D; 0;</p>
+<p>思考这条语句为什么成立？难道是说字面量0就相当于一个Integer对象吗？当然不是，这其实是Java为了方便，为我们提供了自动装箱的机制。事实上，这条语句相当于：</p>
+<p>Integer a &#x3D; Integer.values(0);</p>
+<p>values是Integer 类提供一个静态方法，返回值是一个Integer实例。</p>
+<p>和自动装箱相反，当你把一个包装类型的变量赋值到一个基本类型的变量时，Java会进行自动拆箱的过程，执行intValue方法。</p>
+<p>Integer a &#x3D; 0;（自动装箱）</p>
+<p>int b &#x3D; a;（自动拆箱）</p>
+<h2 id="缓存机制"><a href="#缓存机制" class="headerlink" title="缓存机制"></a>缓存机制</h2><p>在执行Integer a &#x3D; new Integer(0)时，JVM会先创建一个对象，值为0，再把这个对象的引用赋值给a。基于节约内存和效率等的考虑，Java对包装类的values方法做了一些优化。如Integer，在执行Integer a &#x3D; Integer.values(0)时，Java会在缓存中直接找到之前创建好的缓存，直接把0相应的引用给a。</p>
+<p>又产生了之前的疑惑吗？其实Java的操作还和之前是一样的。所以，并不会出现不合理的问题。</p>
+<p>观察源码发现，Boolean的缓存是true，false，Byte、Short、Integer、Long的缓存都是-128到127。Character是缓存是0~127对应的字符。Float，Double没有缓存。为什么没有？你也这样疑惑吗？</p>
+<p>其实答案很简单，思考一下缓存的意义就可以想到，为了使缓存真正有效果，应该把最常用的一部分数据放到缓存里。但是，对于小数来说，选定一个集合，其中元素的个数是无限的。所以，Java可能在想这个问题的时候，实在是想不出来，应该以什么标准判断，把什么元素放到缓存里，于是，就放弃了，干脆不要缓存了。</p>
+<h2 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h2><p>基本类型和包装类型的另外一个区别时，在用作类变量时，在初始化的时候，包装类型会被初始化成null，基本类型会被初始化成特定的值，如int为0，boolean为false等。</p>
+<p>思考一下这个差距，会带来什么样的影响？</p>
+<h2 id="使用原则"><a href="#使用原则" class="headerlink" title="使用原则"></a>使用原则</h2><p>最后我们来整理一下基本类和包装类在实际使用时，应该遵循哪些原则？</p>
+<p>1． 尽量使用values方法。最大可能使用缓存，提高程序的效率。</p>
+<p>2． 类变量使用包装类。想象有一个和数据库表对应的实体类，如果你使用的基本数据类型，在插入时，可能会插入一些让你意想不到的初始值。</p>
+<p>3． 方法的参数要使用包装类。使用包装类意味着你在调用时，可以令若干个参数为null。null是无意义的。但是如果你使用了基本数据类型，那么，你将不得不传入一个值，即使这个值对你来说，没有什么意义。</p>
+<p>4． 方法的返回值要根据是否可为null来确定使用包装类还是基本类。当一个方法的返回值，一定不会出现null的情况时，推荐使用基本类来作为返回值。这样，调用者在拿到这个方法的返回值时，就不必担心它是为null了。</p>
+<p>5． 方法内部（局部变量）使用基本类型。基本类型的时间效率和效率上来说，都是要优于包装类的。所以，在方法内部，能使用基本类型尽量不要使用包装类。</p>
+<p>6． 小数的计算。严格来说，这条不属于基本类型和包装类的内容，但是，这里顺便提交，当涉及到小数的计算时，要考虑到计算的精度问题，可以使用BigDecimal，也可以通过缩小计量单位，达到化零为整的目的，这个，根据具体场景来确定。</p>
+<h1 id="JavaBean-使用包装类型还是基本类型"><a href="#JavaBean-使用包装类型还是基本类型" class="headerlink" title="JavaBean 使用包装类型还是基本类型"></a>JavaBean 使用包装类型还是基本类型</h1><h2 id="int优缺点"><a href="#int优缺点" class="headerlink" title="int优缺点"></a>int优缺点</h2><p><strong>优点：</strong></p>
+<p>1.用于Bean的时候，有默认值。比如自己拼接sql增加一个User时，会方便很多，不过现在都用ORM框架，所以这也不算是优点啦。</p>
+<p>2.两个值比较方便，使用 &#x3D;&#x3D; 就可以了。</p>
+<p><strong>缺点：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//错误</span><br><span class="line">int a1 = (Integer) null;</span><br><span class="line">//错误</span><br><span class="line">boolean x1 = (Boolean)null;</span><br><span class="line">//正确</span><br><span class="line">Integer a2 = (Integer) null;</span><br><span class="line">Boolean x2 = (Boolean)null;</span><br></pre></td></tr></table></figure>
+
+<p>阿里巴巴开发手册中写的很明确，基本类型接收NULL值有NPE风险（java.lang.NullPointerException  NPE 空值异常），而且默认值和NULL值不能传达同一种信息。</p>
+<p><img src="/article/2019/08/JavaBean%E4%BD%BF%E7%94%A8%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E8%BF%98%E6%98%AF%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%EF%BC%9F/1090410-20180512100835212-63260432.png" alt="img"></p>
+<h2 id="Integer优缺点"><a href="#Integer优缺点" class="headerlink" title="Integer优缺点"></a>Integer优缺点</h2><p>**优点：**可以存放null,从数据库中查出值时可能会有null</p>
+<p>**缺点：**Intege不能使用 &#x3D;&#x3D; 比较相等。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">Integer i1 = 127;</span><br><span class="line">Integer i2 = 127;</span><br><span class="line">Integer i3 = 128;</span><br><span class="line">Integer i4 = 128;</span><br><span class="line">/**</span><br><span class="line"> *   public static Integer valueOf(int i) &#123;</span><br><span class="line"> if (i &gt;= IntegerCache.low &amp;&amp; i &lt;= IntegerCache.high)</span><br><span class="line"> return IntegerCache.cache[i + (-IntegerCache.low)];</span><br><span class="line"> return new Integer(i);</span><br><span class="line"> &#125;</span><br><span class="line"> */</span><br><span class="line">System.out.println(&quot;  i1 == i2 &quot;+(i1 == i2));//true</span><br><span class="line">System.out.println(&quot;  i3 == i4 &quot;+(i3 == i4));//false</span><br><span class="line">int i6 = 127;</span><br><span class="line">int i7 = 127;</span><br><span class="line">int i8 = 128;</span><br><span class="line">int i9 = 128;</span><br><span class="line">System.out.println(&quot;  i6 == i7 &quot;+(i6 == i7));//true  </span><br><span class="line">System.out.println(&quot;  i8 == i9 &quot;+(i8 == i9));//true</span><br><span class="line"></span><br><span class="line">System.out.println(&quot;  i1 == i6 &quot;+(i6 == i1));//true 与 int 类型的比较都是值比较</span><br><span class="line">System.out.println(&quot;  i8 == i3 &quot;+(i8 == i3));//true</span><br><span class="line"></span><br><span class="line">int i10 = new Integer(128);</span><br><span class="line">int i11 = new Integer(128);</span><br><span class="line">System.out.println(&quot;  i10 == i11 &quot;+(i10 == i11));//true</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Integer i12 = new Integer(127);</span><br><span class="line">Integer i13 = new Integer(127);</span><br><span class="line">System.out.println(&quot;  i12 == i13 &quot;+(i12 == i11));//false 对象地址比较</span><br></pre></td></tr></table></figure>
+
+<p>把int类型赋值给Integer类型。此时，int类型变量的值会自动装箱成Integer类型，然后赋给Integer类型的引用，这里底层就是通过调用valueOf()这个方法来实现所谓的装箱的。<br>把Integer类型赋值给int类型。此时，Integer类型变量的值会自动拆箱成int类型，然后赋给int类型的变量，这里底层则是通过调用intValue()方法来实现所谓的拆箱的。</p>
+<h2 id="Integer-和-int-进行比较分三情况"><a href="#Integer-和-int-进行比较分三情况" class="headerlink" title="Integer 和 int 进行比较分三情况"></a>Integer 和 int 进行比较分三情况</h2><p>1、Integer与int类型的比较<br>      这里就无所谓是谁与谁比较了，Integer &#x3D;&#x3D; int与int &#x3D;&#x3D; Integer的效果是一样的，都会把Integer类型变量拆箱成int类型，然后进行比较，相等则返回true，否则返回false。同样，拆箱调用的还是intValue()方法。<br>2、Integer之间的比较<br>      这个就相对简单了，直接把两个引用的值（即是存储目标数据的那个地址）进行比较就行了，不用再拆箱、装箱什么的。<br>3、int之间的比较<br>      这个也一样，直接把两个变量的值进行比较。<br>值得注意的是：Integer之间的比较，JVM会自动缓存-128~127范围内的值，所以所有在这个范围内的值相等的Integer对象都会共用一块内存，而不会开辟多个；超出这个范围内的值对应的Integer对象有多少个就开辟多少个内存。</p>
+<p><img src="/article/2019/08/JavaBean%E4%BD%BF%E7%94%A8%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E8%BF%98%E6%98%AF%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%EF%BC%9F/1090410-20180929222210763-116155644.png" alt="img"></p>
+<h1 id="Java实体类的属性类型与数据库表字段类型对应表"><a href="#Java实体类的属性类型与数据库表字段类型对应表" class="headerlink" title="Java实体类的属性类型与数据库表字段类型对应表"></a>Java实体类的属性类型与数据库表字段类型对应表</h1><p>Java中的数据类型和SQL中的数据类型有很多不一样，需要仔细区分，不然易在开发中造成莫名的错误。</p>
+<table>
+<thead>
+<tr>
+<th>Java数据类型</th>
+<th>Hibernate数据类型</th>
+<th>标准SQL数据类型 (PS:对于不同的DB可能有所差异)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>byte、java.lang.Byte</td>
+<td>byte</td>
+<td>TINYINT</td>
+</tr>
+<tr>
+<td>short、java.lang.Short</td>
+<td>short</td>
+<td>SMALLINT</td>
+</tr>
+<tr>
+<td>int、java.lang.Integer</td>
+<td>integer</td>
+<td>INGEGER</td>
+</tr>
+<tr>
+<td>long、java.lang.Long</td>
+<td>long</td>
+<td>BIGINT</td>
+</tr>
+<tr>
+<td>float、java.lang.Float</td>
+<td>float</td>
+<td>FLOAT</td>
+</tr>
+<tr>
+<td>double、java.lang.Double</td>
+<td>double</td>
+<td>DOUBLE</td>
+</tr>
+<tr>
+<td>java.math.BigDecimal</td>
+<td>big_decimal</td>
+<td>NUMERIC</td>
+</tr>
+<tr>
+<td>char、java.lang.Character</td>
+<td>character</td>
+<td>CHAR(1)</td>
+</tr>
+<tr>
+<td>boolean、java.lang.Boolean</td>
+<td>boolean</td>
+<td>BIT</td>
+</tr>
+<tr>
+<td>java.lang.String</td>
+<td>string</td>
+<td>VARCHAR</td>
+</tr>
+<tr>
+<td>boolean、java.lang.Boolean</td>
+<td>yes_no</td>
+<td>CHAR(1)(‘Y’或‘N’)</td>
+</tr>
+<tr>
+<td>boolean、java.lang.Boolean</td>
+<td>true_false</td>
+<td>CHAR(1)(‘Y’或‘N’)</td>
+</tr>
+<tr>
+<td>java.util.Date、java.sql.Date</td>
+<td>date</td>
+<td>DATE</td>
+</tr>
+<tr>
+<td>java.util.Date、java.sql.Time</td>
+<td>time</td>
+<td>TIME</td>
+</tr>
+<tr>
+<td>java.util.Date、java.sql.Timestamp</td>
+<td>timestamp</td>
+<td>TIMESTAMP</td>
+</tr>
+<tr>
+<td>java.util.Calendar</td>
+<td>calendar</td>
+<td>TIMESTAMP</td>
+</tr>
+<tr>
+<td>java.util.Calendar</td>
+<td>calendar_date</td>
+<td>DATE</td>
+</tr>
+<tr>
+<td>byte[]</td>
+<td>binary</td>
+<td>VARBINARY、BLOB</td>
+</tr>
+<tr>
+<td>java.lang.String</td>
+<td>text</td>
+<td>CLOB</td>
+</tr>
+<tr>
+<td>java.io.Serializable</td>
+<td>serializable</td>
+<td>VARBINARY、BLOB</td>
+</tr>
+<tr>
+<td>java.sql.Clob</td>
+<td>clob</td>
+<td>CLOB</td>
+</tr>
+<tr>
+<td>java.sql.Blob</td>
+<td>blob</td>
+<td>BLOB</td>
+</tr>
+<tr>
+<td>java.lang.Class</td>
+<td>class</td>
+<td>VARCHAR</td>
+</tr>
+<tr>
+<td>java.util.Locale</td>
+<td>locale</td>
+<td>VARCHAR</td>
+</tr>
+<tr>
+<td>java.util.TimeZone</td>
+<td>timezone</td>
+<td>VARCHAR</td>
+</tr>
+<tr>
+<td>java.util.Currency</td>
+<td>currency</td>
+<td>VARCHAR</td>
+</tr>
+</tbody></table>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/JavaBean/" rel="tag"># JavaBean</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2019/08/Swagger-RESTful-API/" rel="prev" title="Swagger RESTful API">
+                  <i class="fa fa-angle-left"></i> Swagger RESTful API
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2019/08/Oracle-SQL-%E7%BB%9F%E8%AE%A1/" rel="next" title="Oracle SQL 统计">
+                  Oracle SQL 统计 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="转载： https:&#x2F;&#x2F;www.nginx.cn&#x2F;5559.html  参考： https:&#x2F;&#x2F;support.dnsimple.com&#x2F;articles&#x2F;what-is-ssl-certificate-chain&#x2F;  https证书包含的文件   ca.cer 中间证书和根证书    nginx.cn.cer 你申请的ssl证书   fullchain.cer 包括了 ca.cer 和 ngin">
+<meta property="og:type" content="article">
+<meta property="og:title" content="根证书、服务器证书、用户证书的区别">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/12/%E6%A0%B9%E8%AF%81%E4%B9%A6%E3%80%81%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%AF%81%E4%B9%A6%E3%80%81%E7%94%A8%E6%88%B7%E8%AF%81%E4%B9%A6%E7%9A%84%E5%8C%BA%E5%88%AB/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="转载： https:&#x2F;&#x2F;www.nginx.cn&#x2F;5559.html  参考： https:&#x2F;&#x2F;support.dnsimple.com&#x2F;articles&#x2F;what-is-ssl-certificate-chain&#x2F;  https证书包含的文件   ca.cer 中间证书和根证书    nginx.cn.cer 你申请的ssl证书   fullchain.cer 包括了 ca.cer 和 ngin">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/12/%E6%A0%B9%E8%AF%81%E4%B9%A6%E3%80%81%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%AF%81%E4%B9%A6%E3%80%81%E7%94%A8%E6%88%B7%E8%AF%81%E4%B9%A6%E7%9A%84%E5%8C%BA%E5%88%AB/Figure_Chain.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/12/%E6%A0%B9%E8%AF%81%E4%B9%A6%E3%80%81%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%AF%81%E4%B9%A6%E3%80%81%E7%94%A8%E6%88%B7%E8%AF%81%E4%B9%A6%E7%9A%84%E5%8C%BA%E5%88%AB/image-3.png">
+<meta property="article:published_time" content="2019-12-05T02:00:00.000Z">
+<meta property="article:modified_time" content="2019-12-05T02:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2019/12/%E6%A0%B9%E8%AF%81%E4%B9%A6%E3%80%81%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%AF%81%E4%B9%A6%E3%80%81%E7%94%A8%E6%88%B7%E8%AF%81%E4%B9%A6%E7%9A%84%E5%8C%BA%E5%88%AB/Figure_Chain.jpg">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/12/%E6%A0%B9%E8%AF%81%E4%B9%A6%E3%80%81%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%AF%81%E4%B9%A6%E3%80%81%E7%94%A8%E6%88%B7%E8%AF%81%E4%B9%A6%E7%9A%84%E5%8C%BA%E5%88%AB/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2019/12/%E6%A0%B9%E8%AF%81%E4%B9%A6%E3%80%81%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%AF%81%E4%B9%A6%E3%80%81%E7%94%A8%E6%88%B7%E8%AF%81%E4%B9%A6%E7%9A%84%E5%8C%BA%E5%88%AB/","path":"article/2019/12/根证书、服务器证书、用户证书的区别/","title":"根证书、服务器证书、用户证书的区别"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>根证书、服务器证书、用户证书的区别 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#https%E8%AF%81%E4%B9%A6%E5%8C%85%E5%90%AB%E7%9A%84%E6%96%87%E4%BB%B6"><span class="nav-number">1.</span> <span class="nav-text">https证书包含的文件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E8%AF%81%E4%B9%A6%E9%93%BE"><span class="nav-number">2.</span> <span class="nav-text">什么是证书链</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E8%AF%81%E4%B9%A6%E7%9A%84%E9%AA%8C%E8%AF%81%E9%A1%BA%E5%BA%8F%E6%98%AF"><span class="nav-number">3.</span> <span class="nav-text">浏览器中证书的验证顺序是</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%81%E4%B9%A6%E6%A0%BC%E5%BC%8F%E8%BD%AC%E6%8D%A2"><span class="nav-number">5.</span> <span class="nav-text">证书格式转换</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#pem%E6%88%96cer%E6%A0%BC%E5%BC%8F%E8%BD%AC%E4%B8%BAJKS%E6%A0%BC%E5%BC%8F%E6%96%87%E4%BB%B6%E5%8C%85%E6%8B%AC%E5%85%AC%E9%92%A5%E5%92%8C%E7%A7%81%E9%92%A5"><span class="nav-number">5.1.</span> <span class="nav-text">pem或cer格式转为JKS格式文件包括公钥和私钥</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pem%E6%A0%BC%E5%BC%8F%E8%AF%81%E4%B9%A6%E8%BD%AC%E6%88%90cer%E6%A0%BC%E5%BC%8F"><span class="nav-number">5.2.</span> <span class="nav-text">pem格式证书转成cer格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#crt%E6%A0%BC%E5%BC%8F%E8%BD%AC%E6%88%90der%E6%A0%BC%E5%BC%8F"><span class="nav-number">5.3.</span> <span class="nav-text">crt格式转成der格式</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/12/%E6%A0%B9%E8%AF%81%E4%B9%A6%E3%80%81%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%AF%81%E4%B9%A6%E3%80%81%E7%94%A8%E6%88%B7%E8%AF%81%E4%B9%A6%E7%9A%84%E5%8C%BA%E5%88%AB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="根证书、服务器证书、用户证书的区别 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          根证书、服务器证书、用户证书的区别
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-12-05 10:00:00" itemprop="dateCreated datePublished" datetime="2019-12-05T10:00:00+08:00">2019-12-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/WebServer/" itemprop="url" rel="index"><span itemprop="name">WebServer</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>转载： <a target="_blank" rel="noopener" href="https://www.nginx.cn/5559.html">https://www.nginx.cn/5559.html</a> </p>
+<p>参考： <a target="_blank" rel="noopener" href="https://support.dnsimple.com/articles/what-is-ssl-certificate-chain/">https://support.dnsimple.com/articles/what-is-ssl-certificate-chain/</a> </p>
+<h1 id="https证书包含的文件"><a href="#https证书包含的文件" class="headerlink" title="https证书包含的文件"></a>https证书包含的文件</h1><table>
+<thead>
+<tr>
+<th>ca.cer</th>
+<th>中间证书和根证书</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>nginx.cn.cer</td>
+<td>你申请的ssl证书</td>
+</tr>
+<tr>
+<td>fullchain.cer</td>
+<td>包括了 ca.cer 和 nginx.cn.cer 的全链证书</td>
+</tr>
+<tr>
+<td>nginx.cn.key</td>
+<td>证书的私钥</td>
+</tr>
+</tbody></table>
+<h1 id="什么是证书链"><a href="#什么是证书链" class="headerlink" title="什么是证书链"></a>什么是证书链</h1><p>证书链的意思是有一个证书机构A，A生成证书B，B也可以生成证书C，那么A是根证书。</p>
+<span id="more"></span>
+
+<p>操作系统预先安装的一些根证书，都是国际上很有权威的证书机构，比如 verisign 、 ENTRUST 这些公司。</p>
+<p>我们普通申请的ssl证书都是这些根证书的孙证书。根证书签发中间证书，中间证书签发ssl证书。</p>
+<p>证书链的顺序是：ssl证书＋中间证书＋根证书。证书链上的每个证书都是被它相邻的证书签发。</p>
+<p><img src="/article/2019/12/%E6%A0%B9%E8%AF%81%E4%B9%A6%E3%80%81%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%AF%81%E4%B9%A6%E3%80%81%E7%94%A8%E6%88%B7%E8%AF%81%E4%B9%A6%E7%9A%84%E5%8C%BA%E5%88%AB/Figure_Chain.jpg" alt="img"></p>
+<p>证书以证书链的形式存在， 只有当整个证书链上的证书都有效时，才会认定当前证书合法 ：</p>
+<ol>
+<li>最上层为root，也就是通常所说的CA，用来颁发证书</li>
+<li>最下层为end-user，对应是每个网站购买使用的ssl证书</li>
+<li>中间一层为intermediates，是二级CA，这一层可以继续划分为多层，用来帮助root给end-user颁发证书。</li>
+</ol>
+<h1 id="浏览器中证书的验证顺序是"><a href="#浏览器中证书的验证顺序是" class="headerlink" title="浏览器中证书的验证顺序是"></a>浏览器中证书的验证顺序是</h1><p>首先检查你购买的ssl证书的签发者是不是可信根证书，如果不是那么会检查你的证书的签发机构是否被可信根证书签发，以此类推，直到找到一个可信的根证书，标示你的证书是可信的，如果找不到那么你的证书是不可信的。</p>
+<p>根证书是用来签发证书的，不参与通信，一般会内置在客户端的浏览器中。如果服务器没有安装中间证书，那么对于某些非主流浏览器、安卓手机设备，应用程序等可能没办法验证ssl证书的真实性，所以为了兼容所有客户端，服务器需要安装中间证书。</p>
+<p>例如下面图中情况：你从证书2处购买了证书3，但是证书2不是默认包含在浏览器种的可信证书，中间证书2是根证书1签发的证书，如果服务器端只发送证书3不包含证书2，那么浏览器找不到证书3的签发者证书2，这样整个证书的验证链条就断裂了，你的证书就会被浏览器标识为无效证书“Invalid certificate” 或 “certificate not trusted” </p>
+<p><img src="/article/2019/12/%E6%A0%B9%E8%AF%81%E4%B9%A6%E3%80%81%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%AF%81%E4%B9%A6%E3%80%81%E7%94%A8%E6%88%B7%E8%AF%81%E4%B9%A6%E7%9A%84%E5%8C%BA%E5%88%AB/image-3.png" alt="img"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>根证书是第三方被大家信任的认证机构自签名的证书，通常浏览器会内置。</p>
+<p>服务器证书是包含包含“ssl证书＋中间证书”的证书链，对于某些不知名的中间证书，浏览器是不内置，服务器需要把ssl证书连同中间证书一起发送给浏览器，如果证书链不全，你的证书在这些浏览器上会不被信任。</p>
+<p>用户证书有两种理解，如果对于证书颁发机构和服务器来说你可以理解为你申请的ssl证书；对于服务器-客户端交互来说是客户端的证书，比如我们的u盾。</p>
+<p>大家可能有一个疑问，服务器上要不要安装根证书？从上面分析可以知道，浏览器是内置了根证书，不需要我们在服务器的证书链上加根证书。</p>
+<p>如何安装中间证书？不同web服务器有不同的设置，apache有个变量SSLCertificateChainFile专门对应中间证书bundle，Nginx需要把ssl证书和中间证书打包为一个文件。</p>
+<h1 id="证书格式转换"><a href="#证书格式转换" class="headerlink" title="证书格式转换"></a>证书格式转换</h1><p>cer和pem格式文件都是证书文件，key文件是私钥文件，证书机构会将两种格式的文件发放给客户。</p>
+<h2 id="pem或cer格式转为JKS格式文件包括公钥和私钥"><a href="#pem或cer格式转为JKS格式文件包括公钥和私钥" class="headerlink" title="pem或cer格式转为JKS格式文件包括公钥和私钥"></a>pem或cer格式转为JKS格式文件包括公钥和私钥</h2><p>第一步：在openssl命令行下输入如下命令，将pem或cer证书转pfx格式，回车后需要输入两次密码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pkcs12 -export -out server.pfx -inkey server.key -in server.pem（server.cer）</span><br></pre></td></tr></table></figure>
+
+<p>第二步：在命令行下使用 java 的keytool工具，将pfx文件转换成jks文件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -importkeystore -srckeystore server.pfx -destkeystore server.jks -srcstoretype PKCS12 -deststoretype JKS</span><br></pre></td></tr></table></figure>
+
+<h2 id="pem格式证书转成cer格式"><a href="#pem格式证书转成cer格式" class="headerlink" title="pem格式证书转成cer格式"></a>pem格式证书转成cer格式</h2><p>先在终端cd到文件目录下 然后 </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl x509 -outform der -in xxx.pem -out yyy.cer</span><br></pre></td></tr></table></figure>
+
+<p>或者直接把pem文件双击导入钥匙串，然后再钥匙串里右键导出</p>
+<p>(xxx 是原证书的名称，yyy是转格式生成的证书名称)</p>
+<h2 id="crt格式转成der格式"><a href="#crt格式转成der格式" class="headerlink" title="crt格式转成der格式"></a>crt格式转成der格式</h2><p>先在终端cd到文件目录下 然后 </p>
+<p>openssl x509 -in xxx.crt -out yyy.der -outform DER</p>
+<p>(xxx 是原证书的名称，yyy是转格式生成的证书名称)</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2019/12/init%E3%80%81service%E3%80%81systemd%E3%80%81systemctl/" rel="prev" title="init、service、systemd、systemctl">
+                  <i class="fa fa-angle-left"></i> init、service、systemd、systemctl
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2019/12/Nginx%E9%85%8D%E7%BD%AESSL%E8%AF%81%E4%B9%A6%E5%BC%80%E5%90%AFHTTPS%E6%95%99%E7%A8%8B/" rel="next" title="Nginx安装SSL证书开启HTTPS">
+                  Nginx安装SSL证书开启HTTPS <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

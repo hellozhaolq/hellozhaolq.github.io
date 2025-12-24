@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="软件开发的难度无外乎两点，一是技术难，意思是说，代码量不一定多，但要解决的问题比较难，需要用到一些比较深的技术解决方案或者算法，不是靠“堆人”就能搞定的，比如自动驾驶、图像识别、高性能消息队列等；二是复杂度，意思是说，技术不难，但项目很庞大，业务复杂，代码量多，参与开发的人多，比如物流系统、财务系统等。第一点涉及细分专业的领域知识，跟我们专栏要讲的设计、编码无关，所以我们重点来讲第二点，如何应对软">
+<meta property="og:type" content="article">
+<meta property="og:title" content="78开源与项目实战之开源实战-开源实战二（上）：从Unix开源开发学习应对大型复杂项目开发">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/12/78%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E4%BB%8EUnix%E5%BC%80%E6%BA%90%E5%BC%80%E5%8F%91%E5%AD%A6%E4%B9%A0%E5%BA%94%E5%AF%B9%E5%A4%A7%E5%9E%8B%E5%A4%8D%E6%9D%82%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="软件开发的难度无外乎两点，一是技术难，意思是说，代码量不一定多，但要解决的问题比较难，需要用到一些比较深的技术解决方案或者算法，不是靠“堆人”就能搞定的，比如自动驾驶、图像识别、高性能消息队列等；二是复杂度，意思是说，技术不难，但项目很庞大，业务复杂，代码量多，参与开发的人多，比如物流系统、财务系统等。第一点涉及细分专业的领域知识，跟我们专栏要讲的设计、编码无关，所以我们重点来讲第二点，如何应对软">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-12-18T00:00:00.000Z">
+<meta property="article:modified_time" content="2022-12-18T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/12/78%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E4%BB%8EUnix%E5%BC%80%E6%BA%90%E5%BC%80%E5%8F%91%E5%AD%A6%E4%B9%A0%E5%BA%94%E5%AF%B9%E5%A4%A7%E5%9E%8B%E5%A4%8D%E6%9D%82%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/12/78%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E4%BB%8EUnix%E5%BC%80%E6%BA%90%E5%BC%80%E5%8F%91%E5%AD%A6%E4%B9%A0%E5%BA%94%E5%AF%B9%E5%A4%A7%E5%9E%8B%E5%A4%8D%E6%9D%82%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/","path":"article/2022/12/78开源与项目实战之开源实战-开源实战二（上）：从Unix开源开发学习应对大型复杂项目开发/","title":"78开源与项目实战之开源实战-开源实战二（上）：从Unix开源开发学习应对大型复杂项目开发"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>78开源与项目实战之开源实战-开源实战二（上）：从Unix开源开发学习应对大型复杂项目开发 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%81%E8%A3%85%E4%B8%8E%E6%8A%BD%E8%B1%A1"><span class="nav-number">1.</span> <span class="nav-text">封装与抽象</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E5%B1%82%E4%B8%8E%E6%A8%A1%E5%9D%97%E5%8C%96"><span class="nav-number">2.</span> <span class="nav-text">分层与模块化</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E6%8E%A5%E5%8F%A3%E9%80%9A%E4%BF%A1"><span class="nav-number">3.</span> <span class="nav-text">基于接口通信</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%AB%98%E5%86%85%E8%81%9A%E3%80%81%E6%9D%BE%E8%80%A6%E5%90%88"><span class="nav-number">4.</span> <span class="nav-text">高内聚、松耦合</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E6%89%A9%E5%B1%95%E8%80%8C%E8%AE%BE%E8%AE%A1"><span class="nav-number">5.</span> <span class="nav-text">为扩展而设计</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#KISS%E9%A6%96%E8%A6%81%E5%8E%9F%E5%88%99"><span class="nav-number">6.</span> <span class="nav-text">KISS首要原则</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%80%E5%B0%8F%E6%83%8A%E5%A5%87%E5%8E%9F%E5%88%99"><span class="nav-number">7.</span> <span class="nav-text">最小惊奇原则</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE"><span class="nav-number">8.</span> <span class="nav-text">重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%A0%82%E8%AE%A8%E8%AE%BA"><span class="nav-number">9.</span> <span class="nav-text">课堂讨论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/12/78%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E4%BB%8EUnix%E5%BC%80%E6%BA%90%E5%BC%80%E5%8F%91%E5%AD%A6%E4%B9%A0%E5%BA%94%E5%AF%B9%E5%A4%A7%E5%9E%8B%E5%A4%8D%E6%9D%82%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="78开源与项目实战之开源实战-开源实战二（上）：从Unix开源开发学习应对大型复杂项目开发 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          78开源与项目实战之开源实战-开源实战二（上）：从Unix开源开发学习应对大型复杂项目开发
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-12-18 08:00:00" itemprop="dateCreated datePublished" datetime="2022-12-18T08:00:00+08:00">2022-12-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>软件开发的难度无外乎两点，一是技术难，意思是说，代码量不一定多，但要解决的问题比较难，需要用到一些比较深的技术解决方案或者算法，不是靠“堆人”就能搞定的，比如自动驾驶、图像识别、高性能消息队列等；二是复杂度，意思是说，技术不难，但项目很庞大，业务复杂，代码量多，参与开发的人多，比如物流系统、财务系统等。第一点涉及细分专业的领域知识，跟我们专栏要讲的设计、编码无关，所以我们重点来讲第二点，如何应对软件开发的复杂度。</p>
+<p>简单的“hello world”程序，谁都能写得出来。几千行的代码谁都能维护得了。但是，当代码超过几万行、十几万，甚至几十万行、上百万行的时候，软件的复杂度就会呈指数级增长。这种情况下，我们不仅仅要求程序运行得了，运行得正确，还要求代码看得懂、维护得了。实际上，复杂度不仅仅体现在代码本身，还体现在协作研发上，如何管理庞大的团队，来进行有条不紊地协作开发，也是一个很复杂的难题。</p>
+<p>如何应对复杂软件开发？Unix开源项目就是一个值得学习的例子。</p>
+<p>Unix从1969年诞生，一直演进至今，代码量有几百万行，如此庞大的项目开发，能够如此完美的协作开发，并且长期维护，保持足够的代码质量，这里面有很多成功的经验可以借鉴。所以，接下来，我们就以Unix开源项目的开发为引子，分三节课的时间，通过下面三个话题，详细地讲讲应对复杂软件开发的方法论。希望这些经验能为你所用，在今后面对复杂项目开发的时候，能让你有条不紊、有章可循地从容应对。</p>
+<ul>
+<li>从设计原则和思想的角度来看，如何应对庞大而复杂的项目开发？</li>
+<li>从研发管理和开发技巧的角度来看，如何应对庞大而复杂的项目开发？</li>
+<li>聚焦在Code Review上来看，如何通过Code Reviwe保持项目的代码质量？</li>
+</ul>
+<p>话不多说，让我们正式开始今天的学习吧！</p>
+<span id="more"></span>
+
+<h1 id="封装与抽象"><a href="#封装与抽象" class="headerlink" title="封装与抽象"></a>封装与抽象</h1><p>在Unix、Linux系统中，有一句经典的话，“Everything is a file”，翻译成中文就是“一切皆文件”。这句话的意思就是，在Unix、Linux系统中，很多东西都被抽象成“文件”这样一个概念，比如Socket、驱动、硬盘、系统信息等。它们使用文件系统的路径作为统一的命名空间（namespace），使用统一的read、write标准函数来访问。</p>
+<p>比如，我们要查看CPU的信息，在Linux系统中，我们只需要使用Vim、Gedit等编辑器或者cat命令，像打开其他文件一样，打开&#x2F;proc&#x2F;cpuinfo，就能查看到相应的信息。除此之外，我们还可以通过查看&#x2F;proc&#x2F;uptime文件，了解系统运行了多久，查看&#x2F;proc&#x2F;version了解系统的内核版本等。</p>
+<p>实际上，“一切皆文件”就体现了封装和抽象的设计思想。</p>
+<p>封装了不同类型设备的访问细节，抽象为统一的文件访问方式，更高层的代码就能基于统一的访问方式，来访问底层不同类型的设备。这样做的好处是，隔离底层设备访问的复杂性。统一的访问方式能够简化上层代码的编写，并且代码更容易复用。</p>
+<p>除此之外，抽象和封装还能有效控制代码复杂性的蔓延，将复杂性封装在局部代码中，隔离实现的易变性，提供简单、统一的访问接口，让其他模块来使用，其他模块基于抽象的接口而非具体的实现编程，代码会更加稳定。</p>
+<h1 id="分层与模块化"><a href="#分层与模块化" class="headerlink" title="分层与模块化"></a>分层与模块化</h1><p>前面我们也提到，模块化是构建复杂系统的常用手段。</p>
+<p>对于像Unix这样的复杂系统，没有人能掌控所有的细节。之所以我们能开发出如此复杂的系统，并且能维护得了，最主要的原因就是将系统划分成各个独立的模块，比如进程调度、进程通信、内存管理、虚拟文件系统、网络接口等模块。不同的模块之间通过接口来进行通信，模块之间耦合很小，每个小的团队聚焦于一个独立的高内聚模块来开发，最终像搭积木一样，将各个模块组装起来，构建成一个超级复杂的系统。</p>
+<p>除此之外，Unix、Linux等大型系统之所以能做到几百、上千人有条不紊地协作开发，也归功于模块化做得好。不同的团队负责不同的模块开发，这样即便在不了解全部细节的情况下，管理者也能协调各个模块，让整个系统有效运转。</p>
+<p>实际上，除了模块化之外，分层也是我们常用来架构复杂系统的方法。</p>
+<p>我们常说，计算机领域的任何问题都可以通过增加一个间接的中间层来解决，这本身就体现了分层的重要性。比如，Unix系统也是基于分层开发的，它可以大致上分为三层，分别是内核、系统调用、应用层。每一层都对上层封装实现细节，暴露抽象的接口来调用。而且，任意一层都可以被重新实现，不会影响到其他层的代码。</p>
+<p>面对复杂系统的开发，我们要善于应用分层技术，把容易复用、跟具体业务关系不大的代码，尽量下沉到下层，把容易变动、跟具体业务强相关的代码，尽量上移到上层。</p>
+<h1 id="基于接口通信"><a href="#基于接口通信" class="headerlink" title="基于接口通信"></a>基于接口通信</h1><p>刚刚我们讲了分层、模块化，那不同的层之间、不同的模块之间，是如何通信的呢？一般来讲都是通过接口调用。在设计模块（module）或者层（layer）要暴露的接口的时候，我们要学会隐藏实现，接口从命名到定义都要抽象一些，尽量少涉及具体的实现细节。</p>
+<p>比如，Unix系统提供的open()文件操作函数，底层实现非常复杂，涉及权限控制、并发控制、物理存储，但我们用起来却非常简单。除此之外，因为open()函数基于抽象而非具体的实现来定义，所以我们在改动open()函数的底层实现的时候，并不需要改动依赖它的上层代码。</p>
+<h1 id="高内聚、松耦合"><a href="#高内聚、松耦合" class="headerlink" title="高内聚、松耦合"></a>高内聚、松耦合</h1><p>高内聚、松耦合是一个比较通用的设计思想，内聚性好、耦合少的代码，能让我们在修改或者阅读代码的时候，聚集到在一个小范围的模块或者类中，不需要了解太多其他模块或类的代码，让我们的焦点不至于太发散，也就降低了阅读和修改代码的难度。而且，因为依赖关系简单，耦合小，修改代码不会牵一发而动全身，代码改动比较集中，引入bug的风险也就减少了很多。</p>
+<p>实际上，刚刚讲到的很多方法，比如封装、抽象、分层、模块化、基于接口通信，都能有效地实现代码的高内聚、松耦合。反过来，代码的高内聚、松耦合，也就意味着，抽象、封装做到比较到位、代码结构清晰、分层和模块化合理、依赖关系简单，那代码整体的质量就不会太差。即便某个具体的类或者模块设计得不怎么合理，代码质量不怎么高，影响的范围也是非常有限的。我们可以聚焦于这个模块或者类做相应的小型重构。而相对于代码结构的调整，这种改动范围比较集中的小型重构的难度就小多了。</p>
+<h1 id="为扩展而设计"><a href="#为扩展而设计" class="headerlink" title="为扩展而设计"></a>为扩展而设计</h1><p>越是复杂项目，越要在前期设计上多花点时间。提前思考项目中未来可能会有哪些功能需要扩展，提前预留好扩展点，以便在未来需求变更的时候，在不改动代码整体结构的情况下，轻松地添加新功能。</p>
+<p>做到代码可扩展，需要代码满足开闭原则。特别是像Unix这样的开源项目，有n多人参与开发，任何人都可以提交代码到代码库中。代码满足开闭原则，基于扩展而非修改来添加新功能，最小化、集中化代码改动，避免新代码影响到老代码，降低引入bug的风险。</p>
+<p>除了满足开闭原则，做到代码可扩展，我们前面也提到很多方法，比如封装和抽象，基于接口编程等。识别出代码可变部分和不可变部分，将可变部分封装起来，隔离变化，提供抽象化的不可变接口，供上层系统使用。当具体的实现发生变化的时候，我们只需要基于相同的抽象接口，扩展一个新的实现，替换掉老的实现即可，上游系统的代码几乎不需要修改。</p>
+<h1 id="KISS首要原则"><a href="#KISS首要原则" class="headerlink" title="KISS首要原则"></a>KISS首要原则</h1><p>简单清晰、可读性好，是任何大型软件开发要遵循的首要原则。只要可读性好，即便扩展性不好，顶多就是多花点时间、多改动几行代码的事情。但是，如果可读性不好，连看都看不懂，那就不是多花时间可以解决得了的了。如果你对现有代码的逻辑似懂非懂，抱着尝试的心态去修改代码，引入bug的可能性就会很大。</p>
+<p>不管是自己还是团队，在参与大型项目开发的时候，要尽量避免过度设计、过早优化，在扩展性和可读性有冲突的时候，或者在两者之间权衡，模棱两可的时候，应该选择遵循KISS原则，首选可读性。</p>
+<h1 id="最小惊奇原则"><a href="#最小惊奇原则" class="headerlink" title="最小惊奇原则"></a>最小惊奇原则</h1><p>《Unix编程艺术》一书中提到一个Unix的经典设计原则，叫“最小惊奇原则”，英文是“The Least Surprise Principle”。实际上，这个原则等同于“遵守开发规范”，意思是，在做设计或者编码的时候要遵守统一的开发规范，避免反直觉的设计。实际上，关于这一点，我们在前面的编码规范部分也讲到过。</p>
+<p>遵从统一的编码规范，所有的代码都像一个人写出来的，能有效地减少阅读干扰。在大型软件开发中，参与开发的人员很多，如果每个人都按照自己的编码习惯来写代码，那整个项目的代码风格就会千奇百怪，这个类是这种编码风格，另一个类又是另外一种风格。在阅读的时候，我们要不停地切换去适应不同的编码风格，可读性就变差了。所以，对于大型项目的开发来说，我们要特别重视遵守统一的开发规范。</p>
+<h1 id="重点回顾"><a href="#重点回顾" class="headerlink" title="重点回顾"></a>重点回顾</h1><p>好了，今天的内容到此就讲完了。我们一块来总结回顾一下，你需要重点掌握的内容。</p>
+<p>今天，我们主要从设计原则和思想的角度，也可以说是从设计开发的角度，来学习如何应对复杂软件开发。我总计了7点我认为比较重要的。这7点前面我们都详细讲过，如果你对哪块理解得不够清楚，可以回过头去再看下。这7点分别是：</p>
+<ul>
+<li>封装与抽象</li>
+<li>分层与模块化</li>
+<li>基于接口通信</li>
+<li>高内聚、松耦合</li>
+<li>为扩展而设计</li>
+<li>KISS首要原则</li>
+<li>最小惊奇原则</li>
+</ul>
+<p>当然，这7点之间并不是相互独立的，有几点是互相支持的，比如“高内聚、松耦合”与抽象封装、分层模块化、基于接口通信。有几点是互相冲突的， 比如KISS原则与为扩展而设计，这都需要我们根据实际情况去权衡。</p>
+<h1 id="课堂讨论"><a href="#课堂讨论" class="headerlink" title="课堂讨论"></a>课堂讨论</h1><p>从设计原则和思想的角度来看，你觉得哪些原则或思想在大型软件开发中最能发挥作用，最能有效地应对代码的复杂性？</p>
+<p>欢迎留言和我分享你的想法。如果有收获，也欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/12/77%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E4%B8%80%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E9%80%9A%E8%BF%87%E5%89%96%E6%9E%90Java%20JDK%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%E7%81%B5%E6%B4%BB%E5%BA%94%E7%94%A8%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="prev" title="77开源与项目实战之开源实战-开源实战一（下）：通过剖析Java JDK源码学习灵活应用设计模式">
+                  <i class="fa fa-angle-left"></i> 77开源与项目实战之开源实战-开源实战一（下）：通过剖析Java JDK源码学习灵活应用设计模式
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/12/79%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98-%E5%BC%80%E6%BA%90%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%88%E4%B8%AD%EF%BC%89%EF%BC%9A%E4%BB%8EUnix%E5%BC%80%E6%BA%90%E5%BC%80%E5%8F%91%E5%AD%A6%E4%B9%A0%E5%BA%94%E5%AF%B9%E5%A4%A7%E5%9E%8B%E5%A4%8D%E6%9D%82%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/" rel="next" title="79开源与项目实战之开源实战-开源实战二（中）：从Unix开源开发学习应对大型复杂项目开发">
+                  79开源与项目实战之开源实战-开源实战二（中）：从Unix开源开发学习应对大型复杂项目开发 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="在讲反序列化漏洞的时候，我们说过，这个漏洞其实就存在于Fastjson、Jackson等知名的JSON解析库中，跟你自己写的代码没有太多关系，所以极难掌控。也就是说，在开发应用的过程中，尽管你的代码很安全了，黑客还是能够通过插件漏洞对应用发起攻击（我文中提到的插件，是第三方的插件、依赖库、工具和框架等的统称）。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="11Web安全-插件漏洞：我的代码看起来很安全，为什么还会出现漏洞？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/09/11Web%E5%AE%89%E5%85%A8-%E6%8F%92%E4%BB%B6%E6%BC%8F%E6%B4%9E%EF%BC%9A%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E7%9C%8B%E8%B5%B7%E6%9D%A5%E5%BE%88%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E5%87%BA%E7%8E%B0%E6%BC%8F%E6%B4%9E%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="在讲反序列化漏洞的时候，我们说过，这个漏洞其实就存在于Fastjson、Jackson等知名的JSON解析库中，跟你自己写的代码没有太多关系，所以极难掌控。也就是说，在开发应用的过程中，尽管你的代码很安全了，黑客还是能够通过插件漏洞对应用发起攻击（我文中提到的插件，是第三方的插件、依赖库、工具和框架等的统称）。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/11Web%E5%AE%89%E5%85%A8-%E6%8F%92%E4%BB%B6%E6%BC%8F%E6%B4%9E%EF%BC%9A%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E7%9C%8B%E8%B5%B7%E6%9D%A5%E5%BE%88%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E5%87%BA%E7%8E%B0%E6%BC%8F%E6%B4%9E%EF%BC%9F/20200818101411233.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/11Web%E5%AE%89%E5%85%A8-%E6%8F%92%E4%BB%B6%E6%BC%8F%E6%B4%9E%EF%BC%9A%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E7%9C%8B%E8%B5%B7%E6%9D%A5%E5%BE%88%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E5%87%BA%E7%8E%B0%E6%BC%8F%E6%B4%9E%EF%BC%9F/20200818101520313.png">
+<meta property="article:published_time" content="2023-09-11T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-09-11T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="安全攻防技能30讲">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/09/11Web%E5%AE%89%E5%85%A8-%E6%8F%92%E4%BB%B6%E6%BC%8F%E6%B4%9E%EF%BC%9A%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E7%9C%8B%E8%B5%B7%E6%9D%A5%E5%BE%88%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E5%87%BA%E7%8E%B0%E6%BC%8F%E6%B4%9E%EF%BC%9F/20200818101411233.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/09/11Web%E5%AE%89%E5%85%A8-%E6%8F%92%E4%BB%B6%E6%BC%8F%E6%B4%9E%EF%BC%9A%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E7%9C%8B%E8%B5%B7%E6%9D%A5%E5%BE%88%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E5%87%BA%E7%8E%B0%E6%BC%8F%E6%B4%9E%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/09/11Web%E5%AE%89%E5%85%A8-%E6%8F%92%E4%BB%B6%E6%BC%8F%E6%B4%9E%EF%BC%9A%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E7%9C%8B%E8%B5%B7%E6%9D%A5%E5%BE%88%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E5%87%BA%E7%8E%B0%E6%BC%8F%E6%B4%9E%EF%BC%9F/","path":"article/2023/09/11Web安全-插件漏洞：我的代码看起来很安全，为什么还会出现漏洞？/","title":"11Web安全-插件漏洞：我的代码看起来很安全，为什么还会出现漏洞？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>11Web安全-插件漏洞：我的代码看起来很安全，为什么还会出现漏洞？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E9%87%8D%E8%A7%86%E6%8F%92%E4%BB%B6%E6%BC%8F%E6%B4%9E%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">为什么要重视插件漏洞？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%BB%BA%E7%AB%8B%E6%8F%92%E4%BB%B6%E6%BC%8F%E6%B4%9E%E7%9A%84%E9%98%B2%E6%8A%A4%E4%BD%93%E7%B3%BB%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">如何建立插件漏洞的防护体系？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E6%95%B4%E7%90%86%E6%8F%92%E4%BB%B6%EF%BC%8C%E5%89%94%E9%99%A4%E6%97%A0%E7%94%A8%E6%8F%92%E4%BB%B6"><span class="nav-number">2.1.</span> <span class="nav-text">第一步：整理插件，剔除无用插件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E7%AE%A1%E7%90%86%E6%8F%92%E4%BB%B6%E8%A1%A5%E4%B8%81%E6%9B%B4%E6%96%B0"><span class="nav-number">2.2.</span> <span class="nav-text">第二步：管理插件补丁更新</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E4%BD%BF%E7%94%A8%E5%85%AC%E5%BC%80%E6%BC%8F%E6%B4%9E%E5%BA%93"><span class="nav-number">2.3.</span> <span class="nav-text">第三步：使用公开漏洞库</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%9D%E8%80%83%E9%A2%98"><span class="nav-number">4.</span> <span class="nav-text">思考题</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/09/11Web%E5%AE%89%E5%85%A8-%E6%8F%92%E4%BB%B6%E6%BC%8F%E6%B4%9E%EF%BC%9A%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E7%9C%8B%E8%B5%B7%E6%9D%A5%E5%BE%88%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E5%87%BA%E7%8E%B0%E6%BC%8F%E6%B4%9E%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="11Web安全-插件漏洞：我的代码看起来很安全，为什么还会出现漏洞？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          11Web安全-插件漏洞：我的代码看起来很安全，为什么还会出现漏洞？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-09-11 08:00:00" itemprop="dateCreated datePublished" datetime="2023-09-11T08:00:00+08:00">2023-09-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" itemprop="url" rel="index"><span itemprop="name">安全攻防技能30讲</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>在讲<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/182421">反序列化漏洞</a>的时候，我们说过，这个漏洞其实就存在于Fastjson、Jackson等知名的JSON解析库中，跟你自己写的代码没有太多关系，所以极难掌控。也就是说，在开发应用的过程中，尽管你的代码很安全了，黑客还是能够通过插件漏洞对应用发起攻击（我文中提到的插件，是第三方的插件、依赖库、工具和框架等的统称）。</p>
+<span id="more"></span>
+
+<p>说到这儿，想不想测试一下你的插件是否安全？在这里，我准备了几个问题，你可以看看自己是否对所用的插件了如指掌。</p>
+<ul>
+<li>你所使用的所有插件的版本是什么？（包括前端和后端，直接引用和间接引用）</li>
+<li>你所使用的这些插件，是否存在漏洞，是否不被维护了，是否被废弃了？</li>
+<li>你所使用的这些插件，会在哪些地方发布更新信息和漏洞信息？</li>
+<li>你所使用的这些插件，是否会定期更新？你是否会对更新插件进行完整的测试？</li>
+<li>你所使用的这些插件，在安全方面，有哪些配置需要关注?</li>
+</ul>
+<p>对于这些问题，如果你还没办法很快回答上来，那你的应用很有可能要受到插件漏洞的威胁了。所以，我接下来要讲的内容，你要认真听了。</p>
+<h1 id="为什么要重视插件漏洞？"><a href="#为什么要重视插件漏洞？" class="headerlink" title="为什么要重视插件漏洞？"></a>为什么要重视插件漏洞？</h1><p>在谈论安全漏洞的时候，你应该经常会听到“0 day”（中文译为“零日”）这个词。到底什么是“0 day”呢？“0 day”，即在插件发布修复漏洞的安全补丁之前，黑客就已经知道漏洞细节的漏洞。换一句话说，“0 day”就是只有黑客知晓的未公开漏洞。</p>
+<p>说到这里，不知道你有没有听说过一个叫作<a target="_blank" rel="noopener" href="https://dirtycow.ninja/">脏牛</a>（<a target="_blank" rel="noopener" href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-5195">CVE-2016-5195</a>）的Linux系统漏洞，这个漏洞可以实现提权操作，也就是让低权限的用户获得较高权限。在这个漏洞被公开曝出之前，它已经存在于Linux系统中长达9年了，直到现在，仍然有很多黑客通过这个漏洞获取较高的系统权限。</p>
+<p>而这其实就是一个“0 day”漏洞。因为只有黑客知道这个漏洞，而我们连这个漏洞是什么都不知道，所以“0 day”几乎无法防御。除此之外，“0 day”还具备极高的攻击有效性，可以说只要应用使用了对应的插件，黑客几乎“战无不胜”。甚至在黑市上，“0 day”漏洞都可以作为一种资产在黑客间进行交易。</p>
+<p>那除了“脏牛”，还有两个知名的插件漏洞，不知道你有没有耳闻。</p>
+<p>一个是<a target="_blank" rel="noopener" href="https://news.netcraft.com/archives/2014/04/08/half-a-million-widely-trusted-websites-vulnerable-to-heartbleed-bug.html">心脏滴血</a>（<a target="_blank" rel="noopener" href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-0160">CVE-2014-0160</a>）。心脏滴血是加解密插件OpenSSL中的漏洞，OpenSSL曾为所有HTTPS网站提供数据加密保护。这个漏洞让任何人都可以通过网络读取OpenSSL系统内存中的数据，解密所有的加密流量。这让当时至少一半的HTTPS站点都受到了影响。</p>
+<p>另一个是Structs 2的漏洞（<a target="_blank" rel="noopener" href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5638">CVE-2017-5638</a>）。这个漏洞在2017年导致美国三大信用机构之一的<a target="_blank" rel="noopener" href="https://resources.whitesourcesoftware.com/blog-whitesource/the-equifax-breach-who-s-to-blame">Equifax</a>，泄露了1.4亿用户的姓名、SSN（美国身份证号）、生日和地址等。受影响的用户相当于近一半的美国人口。我们在开篇词里也有提过，这里我就不多说了。</p>
+<p>总之，对于应用来说，不只代码本身会产生漏洞，除了代码之外的一切也都有可能出现漏洞。从提供加解密功能的工具OpenSSL，到提供网络服务的框架Structs 2，甚至是基础的操作系统Linux，都有可能出现各种漏洞。插件漏洞既能够破坏插件本身的功能，也能让黑客以插件为跳板，实现控制整个应用甚至是服务器。</p>
+<h1 id="如何建立插件漏洞的防护体系？"><a href="#如何建立插件漏洞的防护体系？" class="headerlink" title="如何建立插件漏洞的防护体系？"></a>如何建立插件漏洞的防护体系？</h1><p>那我们该如何对插件漏洞进行防护呢？实际上，修复和维护插件漏洞的过程，就是在和黑客竞赛的过程。业内有大量专业的安全研究人员，专注于对这些插件漏洞进行研究。因此，我们可以使用行业内的现有研究成果，来帮助我们提升插件的安全性，建立插件漏洞的防护体系。</p>
+<p>具体来说，我总结了三步，但其实这三步并非完全递进的。你可以参考这三步的做法，看看哪些你已经做到了，哪些还没有做过，可以试一试。</p>
+<h2 id="第一步：整理插件，剔除无用插件"><a href="#第一步：整理插件，剔除无用插件" class="headerlink" title="第一步：整理插件，剔除无用插件"></a>第一步：整理插件，剔除无用插件</h2><p>避免插件漏洞威胁的第一步，自然是了解自己的应用都使用了哪些插件。我就以Java中的Maven插件管理工具为例，详细说一下整理和剔除插件的过程。</p>
+<p>如果使用Maven作为插件管理工具的话，你一定会先通过POM文件去找到自己所使用的插件（即所有的Dependency）。但是，Dependency只是你的应用中直接使用的插件，这些插件本身也会引用很多其他插件。所以大部分应用的插件依赖树十分复杂，那你该如何整理全部的插件呢？</p>
+<p>首先，你可以通过<a target="_blank" rel="noopener" href="http://maven.apache.org/plugins/maven-dependency-plugin/">Maven Dependency Plugin</a>帮助自己自动分析插件依赖树。除了展示出当前Maven工程中所有的使用插件，Maven Dependency Plugin还会对插件的使用情况做进一步的分析，帮你找出在POM中却没在代码中使用的插件。这样，你就可以对这一类无用的插件引用及时剔除，自然也就能够减少插件漏洞出现的可能性。</p>
+<p>比如，在下面这个分析结果中，通过<code>mvn dependency:analyze</code>的分析，我们发现了JUnit和Logback这类“虽然被引用但却没有被使用”的插件。既然没有被使用，那我们就可以很放心地进行删除了。</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">mvn dependency:tree dependency:analyze</span><br><span class="line">...</span><br><span class="line"><span class="section">[INFO]</span> --- maven-dependency-plugin:2.8:tree (default-cli) @ client ---</span><br><span class="line"><span class="section">[INFO]</span> com.coveros:sample-maven:jar:0.0.1-SNAPSHOT</span><br><span class="line"><span class="section">[INFO]</span> +- junit:junit:jar:4.11:test</span><br><span class="line"><span class="section">[INFO]</span> |      \- org.hamcrest:hamcrest-core:jar:1.3:test</span><br><span class="line"><span class="section">[INFO]</span> +- org.slf4j:slf4j-api:jar:1.7.5:compile</span><br><span class="line"><span class="section">[INFO]</span> \- ch.qos.logback:logback-classic:jar:1.0.13:test</span><br><span class="line"><span class="section">[INFO]</span>    \- ch.qos.logback:logback-core:jar:1.0.13:test</span><br><span class="line">...</span><br><span class="line"><span class="section">[INFO]</span> --- maven-dependency-plugin:2.8:analyze (default-cli) @ client ---</span><br><span class="line"><span class="section">[WARNING]</span> Unused declared dependencies found:</span><br><span class="line"><span class="section">[WARNING]</span>    junit:junit:jar:4.11:test</span><br><span class="line"><span class="section">[WARNING]</span>    ch.qos.logback:logback-classic:jar:1.0.13:test</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<h2 id="第二步：管理插件补丁更新"><a href="#第二步：管理插件补丁更新" class="headerlink" title="第二步：管理插件补丁更新"></a>第二步：管理插件补丁更新</h2><p>一旦某个插件出现漏洞，通常插件的运维方都会尽快推出补丁。有的公司还会设立专门的部门和人员进行补丁管理的工作。一旦出现漏洞和补丁，公司会先评估漏洞的严重性，然后设定打补丁的优先级，推动研发人员进行更新操作。</p>
+<p>所以，建立插件防护体系的第二步，就是要知道你有哪些插件需要更新。但是，在实际工作中一个应用随便就依赖几十个插件，你当然没办法一个一个去查询插件的更新状态了。那<a target="_blank" rel="noopener" href="https://www.mojohaus.org/versions-maven-plugin/">Version Maven Plugin</a>就是用来帮你检查版本更新的一个工具。你可以看到，在下面的分析结果中，通过<code>mvn version:display-dependency-updates</code>这个命令，我们就能发现JUnit有一个新的4.11版本。</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">mvn versions:display-plugin-updates versions:display-dependency-updates</span><br><span class="line">...</span><br><span class="line"><span class="section">[INFO]</span> --- versions-maven-plugin:2.1:display-plugin-updates (default-cli) @ sample-maven ---</span><br><span class="line"><span class="section">[INFO]</span></span><br><span class="line"><span class="section">[INFO]</span> The following plugin updates are available:</span><br><span class="line"><span class="section">[INFO]</span>   maven-deploy-plugin ...................................... 2.7 -&gt; 2.8</span><br><span class="line"><span class="section">[INFO]</span></span><br><span class="line"><span class="section">[INFO]</span> All plugins have a version specified.</span><br><span class="line"><span class="section">[INFO]</span></span><br><span class="line"><span class="section">[INFO]</span> Project defines minimum Maven version as: 3.0</span><br><span class="line"><span class="section">[INFO]</span> Plugins require minimum Maven version of: 3.0</span><br><span class="line"><span class="section">[INFO]</span></span><br><span class="line"><span class="section">[INFO]</span> No plugins require a newer version of Maven than specified by the pom.</span><br><span class="line"><span class="section">[INFO]</span></span><br><span class="line"><span class="section">[INFO]</span></span><br><span class="line"><span class="section">[INFO]</span> --- versions-maven-plugin:2.1:display-dependency-updates (default-cli) @ sample-maven ---</span><br><span class="line"><span class="section">[INFO]</span> The following dependencies in Dependencies have newer versions:</span><br><span class="line"><span class="section">[INFO]</span>   junit:junit ............................................. 4.10 -&gt; 4.11</span><br><span class="line">...        </span><br></pre></td></tr></table></figure>
+
+<p>尽管Version Maven Plugin也提供自动更新的功能，不过我更推荐你手动进行更新。因为对于插件的版本变更，其兼容性并没有保证，而且你也无法保证，插件在更新的过程中，不会对它原本的功能产生影响。</p>
+<p>那使用了补丁管理工具之后，我们就可以完全放心了吗？当然不是。补丁管理中依旧存在一些问题，我这里从3个方面帮你梳理了一下，你可以作为了解。</p>
+<ul>
+<li>补丁可用性：并不是所有的插件漏洞，都能有最新的补丁进行及时的更新和维护。很多时候，运维人员会面临一个已知的漏洞，但无补丁“可打”的窘迫局面。</li>
+<li>覆盖面不全：实际上，并不是所有语言都能够很好地进行插件分析工作，这也就导致运维人员无法掌控公司内所使用的所有插件。这个时候，必然会产生一定的漏洞疏忽。</li>
+<li>更新时间延迟：为了提高打补丁的效率，补丁管理一般会按月或者按季度进行集中的打补丁工作。而在这个期间，公司的应用就会处于无保护的状态。</li>
+</ul>
+<p>为了解决这些问题，虚拟补丁的概念就被提出了。所谓虚拟补丁，就是在不对应用插件进行升级的情况下，有效阻止攻击流量。实现的原理也很简单，即在前置的网络或系统中，对针对插件漏洞的攻击流量进行检测和拦截即可，大部分防火墙、IPS等安全防御工具，都会提供虚拟补丁的功能。比如，2017年，<a target="_blank" rel="noopener" href="https://baike.baidu.com/item/%E6%B0%B8%E6%81%92%E4%B9%8B%E8%93%9D/4951714?fr=aladdin">永恒之蓝</a>肆虐的时候，防火墙会直接封禁445端口请求，就相当于给所有的Windows系统，打上了虚拟补丁。然后，只需要等到所有Windows都真正更新补丁之后，再放开对445端口的限制即可。</p>
+<h2 id="第三步：使用公开漏洞库"><a href="#第三步：使用公开漏洞库" class="headerlink" title="第三步：使用公开漏洞库"></a>第三步：使用公开漏洞库</h2><p>最后，你还需要知道，在你所使用的插件中，是否已经存在了公开的漏洞。</p>
+<p>我在讲解知名插件漏洞的例子中，提到了一些漏洞的编号：脏牛（CVE-2016-5195）、心脏滴血（CVE-2014-0160）和Structs 2的漏洞（CVE-2017-5638）。细心的同学可能已经想要问了，那这些编号是怎么来的呢？又代表了什么含义呢？</p>
+<p>实际上，每个漏洞的编号都是该漏洞在公开漏洞库的唯一编号。我提到的这三个编号，开头都是CVE，也就是说，这三个编号的信息都存在于<a target="_blank" rel="noopener" href="https://cve.mitre.org/">CVE</a>（Common Vulnerabilities &amp; Exposures，公共漏洞和暴露）这个公开漏洞库中，你可以根据漏洞的唯一编号，在CVE中快速地找到这个漏洞相关的信息，包括：受影响的版本、可能造成的影响、修复的方法及补丁等。</p>
+<p>除了CVE之外，公开的漏洞库还包括<a target="_blank" rel="noopener" href="https://cwe.mitre.org/">CWE</a>（Common Weakness Enumeration，通用缺陷列表）、<a target="_blank" rel="noopener" href="https://www.first.org/cvss/">CVSS</a>（Common Vulnerability Scoring System，通用漏洞评分系统）、<a target="_blank" rel="noopener" href="https://www.nist.gov/programs-projects/national-vulnerability-database-nvd">NVD</a>（National Vulnerability Database，国家信息安全漏洞库）以及<a target="_blank" rel="noopener" href="https://www.cnvd.org.cn/">CNVD</a>(China National Vulnerability Database，中国国家信息安全漏洞库）。</p>
+<p>每当漏洞库中新曝出一个漏洞时，你需要分析这个漏洞所涉及的插件：是否在公司中有被使用；公司中使用的，是否是受影响的版本；这个漏洞会产生哪些危害等等。这样，你才能够尽快地修复各类已知的插件漏洞，降低应用被黑客攻击的可能。</p>
+<p>那实际工作中，我们其实也可以借助工具，自动化地完成匹配公开漏洞库的工作。<a target="_blank" rel="noopener" href="https://jeremylong.github.io/DependencyCheck/">OWASP Dependency-Check</a>是一款专门进行插件漏洞检测的工具。它会将工程内的插件和公开的漏洞库进行比对。最终，会生成一个网页形式的报告，使你对工程中的插件漏洞一目了然了。下图就展示了，如何通过OWASP Dependency-Check发现一个3.2.1版本的Commons-Collections的高危漏洞。</p>
+<p><img src="/article/2023/09/11Web%E5%AE%89%E5%85%A8-%E6%8F%92%E4%BB%B6%E6%BC%8F%E6%B4%9E%EF%BC%9A%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E7%9C%8B%E8%B5%B7%E6%9D%A5%E5%BE%88%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E5%87%BA%E7%8E%B0%E6%BC%8F%E6%B4%9E%EF%BC%9F/20200818101411233.png" alt="img"></p>
+<p>同理，在其他语言中，也会存在类似的插件管理工具。比如对于JavaScript中的插件，我们可以使用<a target="_blank" rel="noopener" href="https://github.com/retirejs/retire.js/">Retire.js</a>进行整理。</p>
+<p>总结来说，我们在建立插件漏洞的防护体系时，会使用这些自动化管理工具完成这样三件事情：</p>
+<ul>
+<li>统计你的应用中引用了哪些插件</li>
+<li>管理这些插件中是否有版本更新</li>
+<li>检测这些插件是否存在已知的漏洞</li>
+</ul>
+<p>根据这些信息，你就能够对应用中的插件安全性，有一个比较完整的认知了。接下来，在实际使用的过程中，我们根据漏洞的更新情况，有针对性地修复即可。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>好了，今天的内容讲完了。我们来一起总结回顾一下，你需要掌握的重点内容。</p>
+<p>在开发应用的过程中，我们总是需要引入各种第三方插件。而这些第三方插件的漏洞，尽管看起来很容易解决，只需要一直使用最新的插件，并保持更新即可。但是，往往因为版本更新繁琐，且无法带来业务收益，很多公司都会因此忽视插件漏洞的防护工作。所以，在应用中存在一个好几年前的插件漏洞并不奇怪。</p>
+<p>提高版本更新的效率、避免插件漏洞，主要可以分三个步骤：首先我们可以使用插件分析工具，来了解应用中包括了哪些插件；然后，可以通过补丁管理制度和虚拟补丁，来推进对插件漏洞的管理和修复工作；最后，我们可以对比公开漏洞库（比如CVE等）中的最新漏洞，及时修复漏洞，降低被黑客攻击的可能。</p>
+<p>好了，我把这一讲的重点内容梳理了一个脑图。你可以用它来查漏补缺，也可以自己来梳理看看，加深印象。</p>
+<p><img src="/article/2023/09/11Web%E5%AE%89%E5%85%A8-%E6%8F%92%E4%BB%B6%E6%BC%8F%E6%B4%9E%EF%BC%9A%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E7%9C%8B%E8%B5%B7%E6%9D%A5%E5%BE%88%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E5%87%BA%E7%8E%B0%E6%BC%8F%E6%B4%9E%EF%BC%9F/20200818101520313.png" alt="img"></p>
+<h1 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h1><p>最后，给你留一个思考题。</p>
+<p>你可以尝试对你的应用作一次插件分析，看看会不会出现已知的安全漏洞。除此之外，你还可以对应用的外部依赖（数据库、Web服务、操作系统等）进行一次调查，在当前版本中，是否存在公开的漏洞？</p>
+<p>欢迎留言和我分享你的思考和疑惑，也欢迎你把文章分享给你的朋友。我们下一讲再见！</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" rel="tag"># 安全攻防技能30讲</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/09/10Web%E5%AE%89%E5%85%A8-%E4%BF%A1%E6%81%AF%E6%B3%84%E9%9C%B2%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%BB%91%E5%AE%A2%E4%BC%9A%E7%9F%A5%E9%81%93%E4%BD%A0%E7%9A%84%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91%EF%BC%9F/" rel="prev" title="10Web安全-信息泄露：为什么黑客会知道你的代码逻辑？">
+                  <i class="fa fa-angle-left"></i> 10Web安全-信息泄露：为什么黑客会知道你的代码逻辑？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/09/12Web%E5%AE%89%E5%85%A8-%E6%9D%83%E9%99%90%E6%8F%90%E5%8D%87%E5%92%8C%E6%8C%81%E4%B9%85%E5%8C%96%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%BC%8F%E6%B4%9E%E4%BF%AE%E5%A4%8D%E4%BA%86%EF%BC%8C%E9%BB%91%E5%AE%A2%E8%BF%98%E6%98%AF%E8%83%BD%E5%A4%9F%E8%87%AA%E7%94%B1%E8%BF%9B%E5%87%BA%EF%BC%9F/" rel="next" title="12Web安全-权限提升和持久化：为什么漏洞修复了，黑客还是能够自由进出？">
+                  12Web安全-权限提升和持久化：为什么漏洞修复了，黑客还是能够自由进出？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

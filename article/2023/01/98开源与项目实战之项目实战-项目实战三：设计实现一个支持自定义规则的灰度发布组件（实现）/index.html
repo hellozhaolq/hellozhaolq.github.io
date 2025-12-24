@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="上两节课，我们讲解了灰度组件的需求和设计思路。不管是之前讲过的限流、幂等框架，还是现在正在讲的灰度组件，这些框架、组件、类库的功能性需求都不复杂，相反，非功能性需求是开发的重点、难点。 今天，我们按照上节课给出的灰度组件的设计思路，讲解如何进行编码实现。不过今天对实现的讲解，跟前面两个实战项目有所不同。在前面两个项目中，我都是手把手地从最基础的MVP代码讲起，然后讲解如何review代码发现问题、">
+<meta property="og:type" content="article">
+<meta property="og:title" content="98开源与项目实战之项目实战-项目实战三：设计实现一个支持自定义规则的灰度发布组件（实现）">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/01/98%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98-%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B8%89%EF%BC%9A%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E6%94%AF%E6%8C%81%E8%87%AA%E5%AE%9A%E4%B9%89%E8%A7%84%E5%88%99%E7%9A%84%E7%81%B0%E5%BA%A6%E5%8F%91%E5%B8%83%E7%BB%84%E4%BB%B6%EF%BC%88%E5%AE%9E%E7%8E%B0%EF%BC%89/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="上两节课，我们讲解了灰度组件的需求和设计思路。不管是之前讲过的限流、幂等框架，还是现在正在讲的灰度组件，这些框架、组件、类库的功能性需求都不复杂，相反，非功能性需求是开发的重点、难点。 今天，我们按照上节课给出的灰度组件的设计思路，讲解如何进行编码实现。不过今天对实现的讲解，跟前面两个实战项目有所不同。在前面两个项目中，我都是手把手地从最基础的MVP代码讲起，然后讲解如何review代码发现问题、">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-01-08T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-01-08T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/01/98%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98-%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B8%89%EF%BC%9A%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E6%94%AF%E6%8C%81%E8%87%AA%E5%AE%9A%E4%B9%89%E8%A7%84%E5%88%99%E7%9A%84%E7%81%B0%E5%BA%A6%E5%8F%91%E5%B8%83%E7%BB%84%E4%BB%B6%EF%BC%88%E5%AE%9E%E7%8E%B0%EF%BC%89/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/01/98%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98-%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B8%89%EF%BC%9A%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E6%94%AF%E6%8C%81%E8%87%AA%E5%AE%9A%E4%B9%89%E8%A7%84%E5%88%99%E7%9A%84%E7%81%B0%E5%BA%A6%E5%8F%91%E5%B8%83%E7%BB%84%E4%BB%B6%EF%BC%88%E5%AE%9E%E7%8E%B0%EF%BC%89/","path":"article/2023/01/98开源与项目实战之项目实战-项目实战三：设计实现一个支持自定义规则的灰度发布组件（实现）/","title":"98开源与项目实战之项目实战-项目实战三：设计实现一个支持自定义规则的灰度发布组件（实现）"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>98开源与项目实战之项目实战-项目实战三：设计实现一个支持自定义规则的灰度发布组件（实现） | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%81%B0%E5%BA%A6%E7%BB%84%E4%BB%B6%E5%8A%9F%E8%83%BD%E9%9C%80%E6%B1%82%E6%95%B4%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">灰度组件功能需求整理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E7%81%B0%E5%BA%A6%E8%A7%84%E5%88%99%E7%9A%84%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%AD%98%E5%82%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">1.1.</span> <span class="nav-text">1.灰度规则的格式和存储方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E7%81%B0%E5%BA%A6%E8%A7%84%E5%88%99%E7%9A%84%E8%AF%AD%E6%B3%95%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.2.</span> <span class="nav-text">2.灰度规则的语法格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E7%81%B0%E5%BA%A6%E8%A7%84%E5%88%99%E7%9A%84%E5%86%85%E5%AD%98%E7%BB%84%E7%BB%87%E6%96%B9%E5%BC%8F"><span class="nav-number">1.3.</span> <span class="nav-text">3.灰度规则的内存组织方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E7%81%B0%E5%BA%A6%E8%A7%84%E5%88%99%E7%83%AD%E6%9B%B4%E6%96%B0"><span class="nav-number">1.4.</span> <span class="nav-text">4.灰度规则热更新</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E7%81%B0%E5%BA%A6%E7%BB%84%E4%BB%B6%E5%9F%BA%E6%9C%AC%E5%8A%9F%E8%83%BD"><span class="nav-number">2.</span> <span class="nav-text">实现灰度组件基本功能</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E3%80%81%E4%BC%98%E5%8C%96%E7%81%B0%E5%BA%A6%E7%BB%84%E4%BB%B6%E5%8A%9F%E8%83%BD"><span class="nav-number">3.</span> <span class="nav-text">添加、优化灰度组件功能</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE"><span class="nav-number">4.</span> <span class="nav-text">重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%A0%82%E8%AE%A8%E8%AE%BA"><span class="nav-number">5.</span> <span class="nav-text">课堂讨论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/01/98%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98-%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B8%89%EF%BC%9A%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E6%94%AF%E6%8C%81%E8%87%AA%E5%AE%9A%E4%B9%89%E8%A7%84%E5%88%99%E7%9A%84%E7%81%B0%E5%BA%A6%E5%8F%91%E5%B8%83%E7%BB%84%E4%BB%B6%EF%BC%88%E5%AE%9E%E7%8E%B0%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="98开源与项目实战之项目实战-项目实战三：设计实现一个支持自定义规则的灰度发布组件（实现） | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          98开源与项目实战之项目实战-项目实战三：设计实现一个支持自定义规则的灰度发布组件（实现）
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-01-08 08:00:00" itemprop="dateCreated datePublished" datetime="2023-01-08T08:00:00+08:00">2023-01-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>上两节课，我们讲解了灰度组件的需求和设计思路。不管是之前讲过的限流、幂等框架，还是现在正在讲的灰度组件，这些框架、组件、类库的功能性需求都不复杂，相反，非功能性需求是开发的重点、难点。</p>
+<p>今天，我们按照上节课给出的灰度组件的设计思路，讲解如何进行编码实现。不过今天对实现的讲解，跟前面两个实战项目有所不同。在前面两个项目中，我都是手把手地从最基础的MVP代码讲起，然后讲解如何review代码发现问题、重构代码解决问题，最终得到一份还算高质量的代码。考虑到已经有前面两个项目的学习和锻炼了，你应该对开发套路、思考路径很熟悉了，所以，今天我们换个讲法，就不从最基础的讲起了，而是重点讲解实现思路。</p>
+<p>话不多说，让我们正式开始今天的学习吧！</p>
+<span id="more"></span>
+
+<h1 id="灰度组件功能需求整理"><a href="#灰度组件功能需求整理" class="headerlink" title="灰度组件功能需求整理"></a>灰度组件功能需求整理</h1><p>针对上两节课给出的开发需求和设计思路，我们还是按照老套路，从中剥离出V1版本要实现的内容。为了方便我讲解和你查看，我把灰度组件的开发需求和设计思路，重新整理罗列了一下，放到了这里。</p>
+<h2 id="1-灰度规则的格式和存储方式"><a href="#1-灰度规则的格式和存储方式" class="headerlink" title="1.灰度规则的格式和存储方式"></a>1.灰度规则的格式和存储方式</h2><p>我们希望支持不同格式（JSON、YAML、XML等）、不同存储方式（本地配置文件、Redis、Zookeeper、或者自研配置中心等）的灰度规则配置方式。实际上，这一点跟之前的限流框架中限流规则的格式和存储方式完全一致，代码实现也是相同的，所以在接下来的讲解中，就不重复啰嗦了，你可以回过头去看下<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/243961">第92讲</a>。</p>
+<h2 id="2-灰度规则的语法格式"><a href="#2-灰度规则的语法格式" class="headerlink" title="2.灰度规则的语法格式"></a>2.灰度规则的语法格式</h2><p>我们支持三种灰度规则语法格式：具体值（比如893）、区间值（比如1020-1120）、比例值（比如%30）。除此之外，对于更加复杂的灰度规则，比如只对30天内购买过某某商品并且退货次数少于10次的用户进行灰度，我们通过编程的方式来实现。</p>
+<h2 id="3-灰度规则的内存组织方式"><a href="#3-灰度规则的内存组织方式" class="headerlink" title="3.灰度规则的内存组织方式"></a>3.灰度规则的内存组织方式</h2><p>类似于限流框架中的限流规则，我们需要把灰度规则组织成支持快速查找的数据结构，能够快速判定某个灰度对象（darkTarget，比如用户ID），是否落在灰度规则设定的范围内。</p>
+<h2 id="4-灰度规则热更新"><a href="#4-灰度规则热更新" class="headerlink" title="4.灰度规则热更新"></a>4.灰度规则热更新</h2><p>修改了灰度规则之后，我们希望不重新部署和重启系统，新的灰度规则就能生效，所以，我们需要支持灰度规则热更新。</p>
+<p>在V1版本中，对于第一点灰度规则的格式和存储方式，我们只支持YAML格式本地文件的配置存储方式。对于剩下的三点，我们都要进行实现。考虑到V1版本要实现的内容比较多，我们分两步来实现代码，第一步先将大的流程、框架搭建好，第二步再进一步添加、丰富、优化功能。</p>
+<h1 id="实现灰度组件基本功能"><a href="#实现灰度组件基本功能" class="headerlink" title="实现灰度组件基本功能"></a>实现灰度组件基本功能</h1><p>在第一步中，我们先实现基于YAML格式的本地文件的灰度规则配置方式，以及灰度规则热更新，并且只支持三种基本的灰度规则语法格式。基于编程实现灰度规则的方式，我们留在第二步实现。</p>
+<p>我们先把这个基本功能的开发需求，用代码实现出来。它的目录结构及其Demo示例如下所示。代码非常简单，只包含4个类。接下来，我们针对每个类再详细讲解一下。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 代码目录结构</span></span><br><span class="line">com.xzg.darklaunch</span><br><span class="line">  --DarkLaunch(框架的最顶层入口类)</span><br><span class="line">  --DarkFeature(每个feature的灰度规则)</span><br><span class="line">  --DarkRule(灰度规则)</span><br><span class="line">  --DarkRuleConfig(用来映射配置到内存中)</span><br><span class="line"></span><br><span class="line"><span class="comment">// Demo示例</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DarkDemo</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="type">DarkLaunch</span> <span class="variable">darkLaunch</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DarkLaunch</span>();</span><br><span class="line">    <span class="type">DarkFeature</span> <span class="variable">darkFeature</span> <span class="operator">=</span> darkLaunch.getDarkFeature(<span class="string">&quot;call_newapi_getUserById&quot;</span>);</span><br><span class="line">    System.out.println(darkFeature.enabled());</span><br><span class="line">    System.out.println(darkFeature.dark(<span class="number">893</span>));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 灰度规则配置(dark-rule.yaml)放置在classpath路径下</span></span><br><span class="line">features:</span><br><span class="line">- key: call_newapi_getUserById</span><br><span class="line">  enabled: <span class="literal">true</span></span><br><span class="line">  rule: &#123;<span class="number">893</span>,<span class="number">342</span>,<span class="number">1020</span>-<span class="number">1120</span>,%<span class="number">30</span>&#125;</span><br><span class="line">- key: call_newapi_registerUser</span><br><span class="line">  enabled: <span class="literal">true</span></span><br><span class="line">  rule: &#123;<span class="number">1391198723</span>, %<span class="number">10</span>&#125;</span><br><span class="line">- key: newalgo_loan</span><br><span class="line">  enabled: <span class="literal">true</span></span><br><span class="line">  rule: &#123;<span class="number">0</span>-<span class="number">1000</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从Demo代码中，我们可以看出，对于业务系统来说，灰度组件的两个直接使用的类是DarkLaunch类和DarkFeature类。</p>
+<p>**我们先来看DarkLaunch类。**这个类是灰度组件的最顶层入口类。它用来组装其他类对象，串联整个操作流程，提供外部调用的接口。</p>
+<p>DarkLaunch类先读取灰度规则配置文件，映射为内存中的Java对象（DarkRuleConfig），然后再将这个中间结构，构建成一个支持快速查询的数据结构（DarkRule）。除此之外，它还负责定期更新灰度规则，也就是前面提到的灰度规则热更新。</p>
+<p>为了避免更新规则和查询规则的并发执行冲突，在更新灰度规则的时候，我们并非直接操作老的DarkRule，而是先创建一个新的DarkRule，然后等新的DarkRule都构建好之后，再“瞬间”赋值给老的DarkRule。你可以结合着下面的代码一块看下。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DarkLaunch</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">log</span> <span class="operator">=</span> LoggerFactory.getLogger(DarkLaunch.class);</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">DEFAULT_RULE_UPDATE_TIME_INTERVAL</span> <span class="operator">=</span> <span class="number">60</span>; <span class="comment">// in seconds</span></span><br><span class="line">  <span class="keyword">private</span> DarkRule rule;</span><br><span class="line">  <span class="keyword">private</span> ScheduledExecutorService executor;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">DarkLaunch</span><span class="params">(<span class="type">int</span> ruleUpdateTimeInterval)</span> &#123;</span><br><span class="line">    loadRule();</span><br><span class="line">    <span class="built_in">this</span>.executor = Executors.newSingleThreadScheduledExecutor();</span><br><span class="line">    <span class="built_in">this</span>.executor.scheduleAtFixedRate(<span class="keyword">new</span> <span class="title class_">Runnable</span>() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">        loadRule();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;, ruleUpdateTimeInterval, ruleUpdateTimeInterval, TimeUnit.SECONDS);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">DarkLaunch</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>(DEFAULT_RULE_UPDATE_TIME_INTERVAL);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">loadRule</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">// 将灰度规则配置文件dark-rule.yaml中的内容读取DarkRuleConfig中</span></span><br><span class="line">    <span class="type">InputStream</span> <span class="variable">in</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="type">DarkRuleConfig</span> <span class="variable">ruleConfig</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      in = <span class="built_in">this</span>.getClass().getResourceAsStream(<span class="string">&quot;/dark-rule.yaml&quot;</span>);</span><br><span class="line">      <span class="keyword">if</span> (in != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="type">Yaml</span> <span class="variable">yaml</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Yaml</span>();</span><br><span class="line">        ruleConfig = yaml.loadAs(in, DarkRuleConfig.class);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (in != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          in.close();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">          log.error(<span class="string">&quot;close file error:&#123;&#125;&quot;</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ruleConfig == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;Can not load dark rule.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 更新规则并非直接在this.rule上进行，</span></span><br><span class="line">    <span class="comment">// 而是通过创建一个新的DarkRule，然后赋值给this.rule，</span></span><br><span class="line">    <span class="comment">// 来避免更新规则和规则查询的并发冲突问题</span></span><br><span class="line">    <span class="type">DarkRule</span> <span class="variable">newRule</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DarkRule</span>(ruleConfig);</span><br><span class="line">    <span class="built_in">this</span>.rule = newRule;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> DarkFeature <span class="title function_">getDarkFeature</span><span class="params">(String featureKey)</span> &#123;</span><br><span class="line">    <span class="type">DarkFeature</span> <span class="variable">darkFeature</span> <span class="operator">=</span> <span class="built_in">this</span>.rule.getDarkFeature(featureKey);</span><br><span class="line">    <span class="keyword">return</span> darkFeature;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>**我们再来看下DarkRuleConfig类。**这个类功能非常简单，只是用来将灰度规则映射到内存中。具体的代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DarkRuleConfig</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> List&lt;DarkFeatureConfig&gt; features;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> List&lt;DarkFeatureConfig&gt; <span class="title function_">getFeatures</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.features;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setFeatures</span><span class="params">(List&lt;DarkFeatureConfig&gt; features)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.features = features;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">DarkFeatureConfig</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> String key;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">boolean</span> enabled;</span><br><span class="line">    <span class="keyword">private</span> String rule;</span><br><span class="line">    <span class="comment">// 省略getter、setter方法</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从代码中，我们可以看出来，DarkRuleConfig类嵌套了一个内部类DarkFeatureConfig。这两个类跟配置文件的两层嵌套结构完全对应。我把对应关系标注在了下面的示例中，你可以对照着代码看下。</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&lt;!--对应DarkRuleConfig--&gt;</span></span><br><span class="line"><span class="attr">features</span>:                       <span class="string"></span></span><br><span class="line"><span class="attr">-</span> <span class="string">key: call_newapi_getUserById  &lt;!--对应DarkFeatureConfig--&gt;</span></span><br><span class="line">  <span class="attr">enabled</span>: <span class="string">true</span></span><br><span class="line">  <span class="attr">rule</span>: <span class="string">&#123;893,342,1020-1120,%30&#125;</span></span><br><span class="line"><span class="attr">-</span> <span class="string">key: call_newapi_registerUser &lt;!--对应DarkFeatureConfig--&gt;</span></span><br><span class="line">  <span class="attr">enabled</span>: <span class="string">true</span></span><br><span class="line">  <span class="attr">rule</span>: <span class="string">&#123;1391198723, %10&#125;</span></span><br><span class="line"><span class="attr">-</span> <span class="string">key: newalgo_loan             &lt;!--对应DarkFeatureConfig--&gt;</span></span><br><span class="line">  <span class="attr">enabled</span>: <span class="string">true</span></span><br><span class="line">  <span class="attr">rule</span>: <span class="string">&#123;0-1000&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>**我们再来看下DarkRule。**DarkRule包含所有要灰度的业务功能的灰度规则。它用来支持根据业务功能标识（feature key），快速查询灰度规则（DarkFeature）。代码也比较简单，具体如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DarkRule</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> Map&lt;String, DarkFeature&gt; darkFeatures = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">DarkRule</span><span class="params">(DarkRuleConfig darkRuleConfig)</span> &#123;</span><br><span class="line">    List&lt;DarkRuleConfig.DarkFeatureConfig&gt; darkFeatureConfigs = darkRuleConfig.getFeatures();</span><br><span class="line">    <span class="keyword">for</span> (DarkRuleConfig.DarkFeatureConfig darkFeatureConfig : darkFeatureConfigs) &#123;</span><br><span class="line">      darkFeatures.put(darkFeatureConfig.getKey(), <span class="keyword">new</span> <span class="title class_">DarkFeature</span>(darkFeatureConfig));</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> DarkFeature <span class="title function_">getDarkFeature</span><span class="params">(String featureKey)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> darkFeatures.get(featureKey);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>**我们最后来看下DarkFeature类。**DarkFeature类表示每个要灰度的业务功能的灰度规则。DarkFeature将配置文件中灰度规则，解析成一定的结构（比如RangeSet），方便快速判定某个灰度对象是否落在灰度规则范围内。具体的代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DarkFeature</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> String key;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">boolean</span> enabled;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">int</span> percentage;</span><br><span class="line">  <span class="keyword">private</span> RangeSet&lt;Long&gt; rangeSet = TreeRangeSet.create();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">DarkFeature</span><span class="params">(DarkRuleConfig.DarkFeatureConfig darkFeatureConfig)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.key = darkFeatureConfig.getKey();</span><br><span class="line">    <span class="built_in">this</span>.enabled = darkFeatureConfig.getEnabled();</span><br><span class="line">    <span class="type">String</span> <span class="variable">darkRule</span> <span class="operator">=</span> darkFeatureConfig.getRule().trim();</span><br><span class="line">    parseDarkRule(darkRule);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@VisibleForTesting</span></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">parseDarkRule</span><span class="params">(String darkRule)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!darkRule.startsWith(<span class="string">&quot;&#123;&quot;</span>) || !darkRule.endsWith(<span class="string">&quot;&#125;&quot;</span>)) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;Failed to parse dark rule: &quot;</span> + darkRule);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    String[] rules = darkRule.substring(<span class="number">1</span>, darkRule.length() - <span class="number">1</span>).split(<span class="string">&quot;,&quot;</span>);</span><br><span class="line">    <span class="built_in">this</span>.rangeSet.clear();</span><br><span class="line">    <span class="built_in">this</span>.percentage = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (String rule : rules) &#123;</span><br><span class="line">      rule = rule.trim();</span><br><span class="line">      <span class="keyword">if</span> (StringUtils.isEmpty(rule)) &#123;</span><br><span class="line">        <span class="keyword">continue</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (rule.startsWith(<span class="string">&quot;%&quot;</span>)) &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">newPercentage</span> <span class="operator">=</span> Integer.parseInt(rule.substring(<span class="number">1</span>));</span><br><span class="line">        <span class="keyword">if</span> (newPercentage &gt; <span class="built_in">this</span>.percentage) &#123;</span><br><span class="line">          <span class="built_in">this</span>.percentage = newPercentage;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (rule.contains(<span class="string">&quot;-&quot;</span>)) &#123;</span><br><span class="line">        String[] parts = rule.split(<span class="string">&quot;-&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (parts.length != <span class="number">2</span>) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;Failed to parse dark rule: &quot;</span> + darkRule);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="type">long</span> <span class="variable">start</span> <span class="operator">=</span> Long.parseLong(parts[<span class="number">0</span>]);</span><br><span class="line">        <span class="type">long</span> <span class="variable">end</span> <span class="operator">=</span> Long.parseLong(parts[<span class="number">1</span>]);</span><br><span class="line">        <span class="keyword">if</span> (start &gt; end) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;Failed to parse dark rule: &quot;</span> + darkRule);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">this</span>.rangeSet.add(Range.closed(start, end));</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="type">long</span> <span class="variable">val</span> <span class="operator">=</span> Long.parseLong(rule);</span><br><span class="line">        <span class="built_in">this</span>.rangeSet.add(Range.closed(val, val));</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">enabled</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.enabled;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">dark</span><span class="params">(<span class="type">long</span> darkTarget)</span> &#123;</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">selected</span> <span class="operator">=</span> <span class="built_in">this</span>.rangeSet.contains(darkTarget);</span><br><span class="line">    <span class="keyword">if</span> (selected) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">long</span> <span class="variable">reminder</span> <span class="operator">=</span> darkTarget % <span class="number">100</span>;</span><br><span class="line">    <span class="keyword">if</span> (reminder &gt;= <span class="number">0</span> &amp;&amp; reminder &lt; <span class="built_in">this</span>.percentage) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">dark</span><span class="params">(String darkTarget)</span> &#123;</span><br><span class="line">    <span class="type">long</span> <span class="variable">target</span> <span class="operator">=</span> Long.parseLong(darkTarget);</span><br><span class="line">    <span class="keyword">return</span> dark(target);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="添加、优化灰度组件功能"><a href="#添加、优化灰度组件功能" class="headerlink" title="添加、优化灰度组件功能"></a>添加、优化灰度组件功能</h1><p>在第一步中，我们完成了灰度组件的基本功能。在第二步中，我们再实现基于编程的灰度规则配置方式，用来支持更加复杂、更加灵活的灰度规则。</p>
+<p>我们需要对于第一步实现的代码，进行一些改造。改造之后的代码目录结构如下所示。其中，DarkFeature、DarkRuleConfig的基本代码不变，新增了IDarkFeature接口，DarkLaunch、DarkRule的代码有所改动，用来支持编程实现灰度规则。</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 第一步的代码目录结构</span></span><br><span class="line">com<span class="selector-class">.xzg</span><span class="selector-class">.darklaunch</span></span><br><span class="line">  <span class="attr">--DarkLaunch</span>(框架的最顶层入口类)</span><br><span class="line">  <span class="attr">--DarkFeature</span>(每个feature的灰度规则)</span><br><span class="line">  <span class="attr">--DarkRule</span>(灰度规则)</span><br><span class="line">  <span class="attr">--DarkRuleConfig</span>(用来映射配置到内存中)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 第二步的代码目录结构</span></span><br><span class="line">com<span class="selector-class">.xzg</span><span class="selector-class">.darklaunch</span></span><br><span class="line">  <span class="attr">--DarkLaunch</span>(框架的最顶层入口类，代码有改动)</span><br><span class="line">  <span class="attr">--IDarkFeature</span>(抽象接口)</span><br><span class="line">  <span class="attr">--DarkFeature</span>(实现IDarkFeature接口，基于配置文件的灰度规则，代码不变)</span><br><span class="line">  <span class="attr">--DarkRule</span>(灰度规则，代码有改动)</span><br><span class="line">  <span class="attr">--DarkRuleConfig</span>(用来映射配置到内存中，代码不变)</span><br></pre></td></tr></table></figure>
+
+<p>我们先来看下IDarkFeature接口，它用来抽象从配置文件中得到的灰度规则，以及编程实现的灰度规则。具体代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">IDarkFeature</span> &#123;</span><br><span class="line">  <span class="type">boolean</span> <span class="title function_">enabled</span><span class="params">()</span>;</span><br><span class="line">  <span class="type">boolean</span> <span class="title function_">dark</span><span class="params">(<span class="type">long</span> darkTarget)</span>;</span><br><span class="line">  <span class="type">boolean</span> <span class="title function_">dark</span><span class="params">(String darkTarget)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>基于这个抽象接口，业务系统可以自己编程实现复杂的灰度规则，然后添加到DarkRule中。为了避免配置文件中的灰度规则热更新时，覆盖掉编程实现的灰度规则，在DarkRule中，我们对从配置文件中加载的灰度规则和编程实现的灰度规则分开存储。按照这个设计思路，我们对DarkRule类进行重构。重构之后的代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DarkRule</span> &#123;</span><br><span class="line">  <span class="comment">// 从配置文件中加载的灰度规则</span></span><br><span class="line">  <span class="keyword">private</span> Map&lt;String, IDarkFeature&gt; darkFeatures = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">  <span class="comment">// 编程实现的灰度规则</span></span><br><span class="line">  <span class="keyword">private</span> ConcurrentHashMap&lt;String, IDarkFeature&gt; programmedDarkFeatures = <span class="keyword">new</span> <span class="title class_">ConcurrentHashMap</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addProgrammedDarkFeature</span><span class="params">(String featureKey, IDarkFeature darkFeature)</span> &#123;</span><br><span class="line">    programmedDarkFeatures.put(featureKey, darkFeature);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setDarkFeatures</span><span class="params">(Map&lt;String, IDarkFeature&gt; newDarkFeatures)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.darkFeatures = newDarkFeatures;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> IDarkFeature <span class="title function_">getDarkFeature</span><span class="params">(String featureKey)</span> &#123;</span><br><span class="line">    <span class="type">IDarkFeature</span> <span class="variable">darkFeature</span> <span class="operator">=</span> programmedDarkFeatures.get(featureKey);</span><br><span class="line">    <span class="keyword">if</span> (darkFeature != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> darkFeature;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> darkFeatures.get(featureKey);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为DarkRule代码有所修改，对应地，DarkLaunch的代码也需要做少许改动，主要有一处修改和一处新增代码，具体如下所示，我在代码中都做了注释，就不再重复解释了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DarkLaunch</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">log</span> <span class="operator">=</span> LoggerFactory.getLogger(DarkLaunch.class);</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">DEFAULT_RULE_UPDATE_TIME_INTERVAL</span> <span class="operator">=</span> <span class="number">60</span>; <span class="comment">// in seconds</span></span><br><span class="line">  <span class="keyword">private</span> <span class="type">DarkRule</span> <span class="variable">rule</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DarkRule</span>();</span><br><span class="line">  <span class="keyword">private</span> ScheduledExecutorService executor;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">DarkLaunch</span><span class="params">(<span class="type">int</span> ruleUpdateTimeInterval)</span> &#123;</span><br><span class="line">    loadRule();</span><br><span class="line">    <span class="built_in">this</span>.executor = Executors.newSingleThreadScheduledExecutor();</span><br><span class="line">    <span class="built_in">this</span>.executor.scheduleAtFixedRate(<span class="keyword">new</span> <span class="title class_">Runnable</span>() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">        loadRule();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;, ruleUpdateTimeInterval, ruleUpdateTimeInterval, TimeUnit.SECONDS);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">DarkLaunch</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>(DEFAULT_RULE_UPDATE_TIME_INTERVAL);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">loadRule</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">InputStream</span> <span class="variable">in</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="type">DarkRuleConfig</span> <span class="variable">ruleConfig</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      in = <span class="built_in">this</span>.getClass().getResourceAsStream(<span class="string">&quot;/dark-rule.yaml&quot;</span>);</span><br><span class="line">      <span class="keyword">if</span> (in != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="type">Yaml</span> <span class="variable">yaml</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Yaml</span>();</span><br><span class="line">        ruleConfig = yaml.loadAs(in, DarkRuleConfig.class);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (in != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          in.close();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">          log.error(<span class="string">&quot;close file error:&#123;&#125;&quot;</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ruleConfig == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;Can not load dark rule.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 修改：单独更新从配置文件中得到的灰度规则，不覆盖编程实现的灰度规则</span></span><br><span class="line">    Map&lt;String, IDarkFeature&gt; darkFeatures = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    List&lt;DarkRuleConfig.DarkFeatureConfig&gt; darkFeatureConfigs = ruleConfig.getFeatures();</span><br><span class="line">    <span class="keyword">for</span> (DarkRuleConfig.DarkFeatureConfig darkFeatureConfig : darkFeatureConfigs) &#123;</span><br><span class="line">      darkFeatures.put(darkFeatureConfig.getKey(), <span class="keyword">new</span> <span class="title class_">DarkFeature</span>(darkFeatureConfig));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">this</span>.rule.setDarkFeatures(darkFeatures);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 新增：添加编程实现的灰度规则的接口</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addProgrammedDarkFeature</span><span class="params">(String featureKey, IDarkFeature darkFeature)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.rule.addProgrammedDarkFeature(featureKey, darkFeature);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> IDarkFeature <span class="title function_">getDarkFeature</span><span class="params">(String featureKey)</span> &#123;</span><br><span class="line">    <span class="type">IDarkFeature</span> <span class="variable">darkFeature</span> <span class="operator">=</span> <span class="built_in">this</span>.rule.getDarkFeature(featureKey);</span><br><span class="line">    <span class="keyword">return</span> darkFeature;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>灰度组件的代码实现就讲完了。我们再通过一个Demo来看下，目前实现的灰度组件该如何使用。结合着Demo，再去理解上面的代码，会更容易些。Demo代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 灰度规则配置(dark-rule.yaml)，放到classpath路径下</span></span><br><span class="line">features:</span><br><span class="line">- key: call_newapi_getUserById</span><br><span class="line">  enabled: <span class="literal">true</span></span><br><span class="line">  rule: &#123;<span class="number">893</span>,<span class="number">342</span>,<span class="number">1020</span>-<span class="number">1120</span>,%<span class="number">30</span>&#125;</span><br><span class="line">- key: call_newapi_registerUser</span><br><span class="line">  enabled: <span class="literal">true</span></span><br><span class="line">  rule: &#123;<span class="number">1391198723</span>, %<span class="number">10</span>&#125;</span><br><span class="line">- key: newalgo_loan</span><br><span class="line">  enabled: <span class="literal">true</span></span><br><span class="line">  rule: &#123;<span class="number">0</span>-<span class="number">100</span>&#125;</span><br><span class="line">  </span><br><span class="line"><span class="comment">// 编程实现的灰度规则</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserPromotionDarkRule</span> <span class="keyword">implements</span> <span class="title class_">IDarkFeature</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">enabled</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">dark</span><span class="params">(<span class="type">long</span> darkTarget)</span> &#123;</span><br><span class="line">    <span class="comment">// 灰度规则自己想怎么写就怎么写</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">dark</span><span class="params">(String darkTarget)</span> &#123;</span><br><span class="line">    <span class="comment">// 灰度规则自己想怎么写就怎么写</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Demo</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Demo</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="type">DarkLaunch</span> <span class="variable">darkLaunch</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DarkLaunch</span>(); <span class="comment">// 默认加载classpath下dark-rule.yaml文件中的灰度规则</span></span><br><span class="line">    darkLaunch.addProgrammedDarkFeature(<span class="string">&quot;user_promotion&quot;</span>, <span class="keyword">new</span> <span class="title class_">UserPromotionDarkRule</span>()); <span class="comment">// 添加编程实现的灰度规则</span></span><br><span class="line">    <span class="type">IDarkFeature</span> <span class="variable">darkFeature</span> <span class="operator">=</span> darkLaunch.getDarkFeature(<span class="string">&quot;user_promotion&quot;</span>);</span><br><span class="line">    System.out.println(darkFeature.enabled());</span><br><span class="line">    System.out.println(darkFeature.dark(<span class="number">893</span>));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="重点回顾"><a href="#重点回顾" class="headerlink" title="重点回顾"></a>重点回顾</h1><p>好了，今天的内容到此就讲完了。我们一块来总结回顾一下，你需要重点掌握的内容。</p>
+<p>到今天为止，项目实战环节就彻底结束了。在这一部分中，我们通过限流、幂等、灰度这三个实战项目，带你从需求分析、系统设计、代码实现这三个环节，学习了如何进行功能性、非功能性需求分析，如何通过合理的设计，完成功能性需求的同时，满足非功能性需求，以及如何编写高质量的代码实现。</p>
+<p>实际上，项目本身的分析、设计、实现并不重要，不必对细节过于纠结。我希望通过这三个例子，分享我的思考路径、开发套路，让你借鉴并举一反三地应用到你平时的项目开发中。我觉得这才是最有价值的，才是你学习的重点。</p>
+<p>如果你学完这一部分之后，对于项目中的一些通用的功能，能够开始下意识地主动思考代码复用的问题，考虑如何抽象成框架、类库、组件，并且对于如何开发，也不再觉得无从下手，而是觉得有章可循，那我觉得你就学到了这一部分的精髓。</p>
+<h1 id="课堂讨论"><a href="#课堂讨论" class="headerlink" title="课堂讨论"></a>课堂讨论</h1><p>在DarkFeature类中，灰度规则的解析代码设计的不够优雅，你觉得问题在哪里呢？又该如何重构呢？</p>
+<p>欢迎留言和我分享你的想法。如果有收获，也欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/01/97%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98-%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B8%89%EF%BC%9A%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E6%94%AF%E6%8C%81%E8%87%AA%E5%AE%9A%E4%B9%89%E8%A7%84%E5%88%99%E7%9A%84%E7%81%B0%E5%BA%A6%E5%8F%91%E5%B8%83%E7%BB%84%E4%BB%B6%EF%BC%88%E8%AE%BE%E8%AE%A1%EF%BC%89/" rel="prev" title="97开源与项目实战之项目实战-项目实战三：设计实现一个支持自定义规则的灰度发布组件（设计）">
+                  <i class="fa fa-angle-left"></i> 97开源与项目实战之项目实战-项目实战三：设计实现一个支持自定义规则的灰度发布组件（设计）
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/01/99%E5%BC%80%E6%BA%90%E4%B8%8E%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E4%B9%8B%E6%80%BB%E7%BB%93%E8%AF%BE-%E6%80%BB%E7%BB%93%E5%9B%9E%E9%A1%BE%EF%BC%9A%E5%9C%A8%E5%AE%9E%E9%99%85%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91%E4%B8%AD%E5%B8%B8%E7%94%A8%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3%E3%80%81%E5%8E%9F%E5%88%99%E5%92%8C%E6%A8%A1%E5%BC%8F/" rel="next" title="99开源与项目实战之总结课-总结回顾：在实际软件开发中常用的设计思想、原则和模式">
+                  99开源与项目实战之总结课-总结回顾：在实际软件开发中常用的设计思想、原则和模式 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

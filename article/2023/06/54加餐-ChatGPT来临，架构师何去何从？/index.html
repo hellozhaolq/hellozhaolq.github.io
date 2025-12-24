@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="你好，我是李运华。 最近科技圈大火的事件就是ChatGPT的全球火热流行。这款由OpenAI公司在2022年11月底推出的聊天机器人，创造了史上消费应用最快达成1亿用户的历史，在推出仅仅两个月后，月活跃用户估计已达1亿，成为历史上增长最快的消费应用。与之对比，TikTok达成1亿月活目标耗费了9个月，而Instagram则耗时两年半。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="54加餐-ChatGPT来临，架构师何去何从？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="你好，我是李运华。 最近科技圈大火的事件就是ChatGPT的全球火热流行。这款由OpenAI公司在2022年11月底推出的聊天机器人，创造了史上消费应用最快达成1亿用户的历史，在推出仅仅两个月后，月活跃用户估计已达1亿，成为历史上增长最快的消费应用。与之对比，TikTok达成1亿月活目标耗费了9个月，而Instagram则耗时两年半。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/13cb762e98d44b85b8a7f26ff12d302f.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/7004b055fbfa42489df8939267a1d73f.jpeg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/6a823af730ef4715ba69065fbb7492ba.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/8eac914623ae4dbe90684a1118585ea6.jpeg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/bb92d6f985d34fe799b3499c2174a466.jpeg">
+<meta property="article:published_time" content="2023-06-24T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-06-24T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="从零开始学架构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/13cb762e98d44b85b8a7f26ff12d302f.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/","path":"article/2023/06/54加餐-ChatGPT来临，架构师何去何从？/","title":"54加餐-ChatGPT来临，架构师何去何从？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>54加餐-ChatGPT来临，架构师何去何从？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ChatGPT-%E5%9B%A0%E4%BD%95%E7%88%86%E7%81%AB%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">ChatGPT 因何爆火？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ChatGPT-%E8%83%BD%E5%A4%9F%E5%8F%96%E4%BB%A3%E6%9E%B6%E6%9E%84%E5%B8%88%E5%90%97%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">ChatGPT 能够取代架构师吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8A%80%E8%83%BD%E5%92%8C%E5%AD%A6%E4%B9%A0%E6%96%B9%E5%BC%8F%E8%A6%81%E5%8D%87%E7%BA%A7%E5%90%97%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">技能和学习方式要升级吗？</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="54加餐-ChatGPT来临，架构师何去何从？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          54加餐-ChatGPT来临，架构师何去何从？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-06-24 08:00:00" itemprop="dateCreated datePublished" datetime="2023-06-24T08:00:00+08:00">2023-06-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%9E%B6%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">架构</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>你好，我是李运华。</p>
+<p>最近科技圈大火的事件就是ChatGPT的全球火热流行。这款由OpenAI公司在2022年11月底推出的聊天机器人，创造了史上消费应用最快达成1亿用户的历史，在推出仅仅两个月后，月活跃用户估计已达1亿，成为历史上增长最快的消费应用。与之对比，TikTok达成1亿月活目标耗费了9个月，而Instagram则耗时两年半。</p>
+<span id="more"></span>
+
+<h1 id="ChatGPT-因何爆火？"><a href="#ChatGPT-因何爆火？" class="headerlink" title="ChatGPT 因何爆火？"></a>ChatGPT 因何爆火？</h1><p>ChatGPT为什么会如此火热和流行呢？体验过的朋友应该都有类似的感觉：它的回答内容几乎和真人聊天的感觉类似，聊天的上下文有连贯的逻辑性，尤其让人震撼的是，它能够根据用户的描述直接写一段代码、写论文、写报告。例如：</p>
+<p><img src="/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/13cb762e98d44b85b8a7f26ff12d302f.png" alt="img"></p>
+<p>如此强大的智能能力让ChatGPT成为了现象级的人工智能产品，而上一个如此火热的人工智能产品还是围棋领域的AlphaGo。在击败人类顶尖棋手李世石后，AlphaGo直接带起了人工智能领域的热潮，这次ChatGPT的火热同样会引领人工智能领域一个新的热潮。</p>
+<p>但这次ChatGPT引领的人工智能热潮和上一次相比，出现了一个很大的变化。虽然科技工作者和技术人员对ChatGPT的技术饶有兴趣，资本大佬们对ChatGPT带来的创业机会兴奋不已，但更多的人却开始担心自己会不会被ChatGPT为代表的人工智能取代！尤其是ChatGPT现在的算法模型是GPT-3，已经这么厉害了，据说很快要升级到GPT-4，如果后面再有GPT-5、GPT-6呢？</p>
+<h1 id="ChatGPT-能够取代架构师吗？"><a href="#ChatGPT-能够取代架构师吗？" class="headerlink" title="ChatGPT 能够取代架构师吗？"></a>ChatGPT 能够取代架构师吗？</h1><p>这样的担忧不无道理，毕竟只是从ChatGPT目前的能力来看，已经可以取代不少岗位了，例如客服、教师、文员等，那是否意味着随着ChatGPT的发展，以后任何岗位都可以被ChatGPT取代呢？比如说有了ChatGPT，架构师还有必要继续存在吗？以后是不是把需求文档输入给ChatGPT，它就能给出一个可行的架构方案？</p>
+<p>要回答这个问题，我们既需要对ChatGPT的技术本质有深刻理解，也需要对架构师的职责和能力有深入的洞察。</p>
+<p>首先，我们概要理解一下ChatGPT的技术本质。</p>
+<p>ChatGPT中的GPT是指Generative Pretrained Transformer，是<strong>一种可利用互联网数据进行训练的文本生成深度学习模型</strong>，在问答、文本摘要、机器翻译、分类、代码生成和对话式AI 领域都有相当出色的表现。GPT的算法细节不展开，你可以自行搜索了解。总体来说，GPT的技术本质还是用大量已有的数据去训练算法模型，然后算法模型根据概率输出回答结果。</p>
+<p>这就意味着ChatGPT有几个能力缺陷。</p>
+<p>1、<strong>数据样本量越少，训练的结果就会越差</strong></p>
+<p>比如说下图，这是学员们调侃ChatGPT时的一个案例：</p>
+<p><img src="/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/7004b055fbfa42489df8939267a1d73f.jpeg" alt="img"></p>
+<p>很明显这个回答是一本正经的瞎扯，里面的内容看起来大部分是阿里云王坚博士的资料 ：）</p>
+<p>2、<strong>数据无法及时更新</strong></p>
+<p>比如说下图是关于《流浪地球2》的问题，ChatGPT的回答：</p>
+<p><img src="/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/6a823af730ef4715ba69065fbb7492ba.png" alt="img"></p>
+<p>3、<strong>历史数据对未来影响很大</strong></p>
+<p>以架构领域为例，前几年中台很流行，假设我们用很多中台的内容去训练ChatGPT，然后2022年没什么人讲中台了，这个时候如果让ChatGPT回答架构设计，它还会回答大量中台的内容。</p>
+<p>其次，我们概要归纳一下架构师的职责和能力。</p>
+<p>架构师本质是业务和技术的桥梁，核心职责是深入理解业务需求，然后判断业务需求带来的系统复杂度，然后设计备选方案来应对或者降低复杂度，最后基于各种情况来做取舍。这里我提炼几个能力关键词：理解、判断、设计、取舍。</p>
+<p>最后，我们综合对比一下ChatGPT的技术本质和架构师的能力要求，再来看看这个问题：ChatGPT能够取代架构师吗？</p>
+<p>我的答案是“不能”，至少在5~10年内不用担心，即使GPT-4、GPT-5算法出来问题也不大，因为技术本质还是GPT。我说4个主要的理由。</p>
+<ol>
+<li><strong>业务需求本身的差异性无法训练</strong></li>
+</ol>
+<p>业务的差异性是没法训练、没法预知的，比如说即使同样是电商领域商品评论功能，淘宝京东拼多多的具体做法都会有很多细节差异，而来一家新的创业公司，做法又不同，甚至同一家公司同一个业务，只是换了一个产品经理，需求可能就会调整。</p>
+<p>ChatGPT目前还不具备理解特定场景下的人类语言，简单来说就是ChatGPT是没法和客户讨论需求的，而架构师是需要理解业务才能做架构设计的。</p>
+<ol>
+<li><strong>架构设计过程中的判断无法标准化</strong></li>
+</ol>
+<p>架构师要根据利益干系人的诉求、团队的技术水平、业务的发展情况来做判断和取舍，这些事情不能标准化也不能被训练。尤其是涉及和人打交道，有人的地方就有江湖，ChatGPT是无法理解特定团队里面人情世故之类的微妙关系的。</p>
+<p>举个简单例子，同样的业务、同样的团队，换个leader就可能导致架构推翻重来。</p>
+<ol>
+<li><strong>技术不断在演进</strong></li>
+</ol>
+<p>如果用旧的架构文档和方案训练ChatGPT，它需要很长时间和大量数据才能更新到新的技术，很明显这个过程中的方案是不合理的。目前ChatGPT的训练数据据只到2021年底。</p>
+<p>而技术圈的技术演进是非常快的，前几年还大火的中台，到无人问津只需要不到1年时间；去年火热的低代码，今年可能就被替换为云原生了。</p>
+<ol>
+<li><strong>架构师需要创新能力</strong></li>
+</ol>
+<p>比如说谷歌三篇论文开创大数据时代，Redis的诞生、Nginx的横空出世等等，这些都是需要创新的，而ChatGPT技术本质就是基于已有数据来训练，目前难以做到真正有价值的创新。</p>
+<p>更可能的情况是ChatGPT一本正经瞎扯淡，因为它的技术本质是根据训练数据的概率来生成答案，如果是放在绘画或者音乐领域，这样输出的结果看不出明显的问题，可能还会让人觉得很有创意，但是在明确的事实（例如“过五关斩六将”具体是哪六将）或者严格的目标导向的事情（例如“开发一个比Kafka更强大的云原生消息队列”）方面，按照概率来输出内容的话，很容易就能看出问题所在。</p>
+<p>比如说“过五关斩六将”这个问题，ChatGPT的回答五花八门，如下是两个比较搞笑的回答：</p>
+<p><img src="/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/8eac914623ae4dbe90684a1118585ea6.jpeg" alt="img"></p>
+<p><img src="/article/2023/06/54%E5%8A%A0%E9%A4%90-ChatGPT%E6%9D%A5%E4%B8%B4%EF%BC%8C%E6%9E%B6%E6%9E%84%E5%B8%88%E4%BD%95%E5%8E%BB%E4%BD%95%E4%BB%8E%EF%BC%9F/bb92d6f985d34fe799b3499c2174a466.jpeg" alt="img"></p>
+<h1 id="技能和学习方式要升级吗？"><a href="#技能和学习方式要升级吗？" class="headerlink" title="技能和学习方式要升级吗？"></a>技能和学习方式要升级吗？</h1><p>基于上面的分析，我们可以看到，ChatGPT目前还不具备取代架构师的能力。但不取代并不意味着不影响。对于技术人员来说，需要意识到自己的技能和学习方式要升级了。</p>
+<p>比如说以前花费大量时间在刷数据结构和算法，死记硬背一些框架和第三方库的一些API如何调用，有了ChatGPT后，这些知识和技能已经非常容易获取，自己刷得再熟练也体现不了什么竞争力了。技术人员需要积累更多业务相关的知识，增强对业务的理解力和洞察力，提升自己在技术方面的创造性。这样才不用担心会被人工智能取代。</p>
+<p>顺带提一下，你可能对ChatGPT最可能取代什么样的岗位感兴趣。我用一句话概括：<strong>标准化的常规工作</strong>。</p>
+<p>例如客服、医生、律师、教师等岗位。以律师为例，打官司的律师不会被取代，但是基础的法律咨询和法律协助等很可能被取代；以程序员为例，只熟悉编程语言API算法和数据结构的程序员会被取代，能够完成端到端业务需求开发的程序员不会被取代！</p>
+<p>希望这节分享能让你有所收获，启发你及时调整自己的学习方式，提升核心竞争力。</p>
+<p>顺便说一下，我的专栏《从 0 开始学架构》今日秒杀特惠 ¥139，立省 ¥60，即将恢复原价，戳此立即拿下&gt;&gt;&gt;<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/intro/81?utm_term=zeusL1YLI&utm_source=geektime&utm_medium=geektime&utm_campaign=100006601&utm_content=text">《从 0 开始学架构》</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%AD%A6%E6%9E%B6%E6%9E%84/" rel="tag"># 从零开始学架构</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/06/53%E5%8A%A0%E9%A4%90-%E6%89%92%E4%B8%80%E6%89%92%E4%B8%AD%E5%8F%B0%E7%9A%87%E5%B8%9D%E7%9A%84%E5%A4%96%E8%A1%A3/" rel="prev" title="53加餐-扒一扒中台皇帝的外衣">
+                  <i class="fa fa-angle-left"></i> 53加餐-扒一扒中台皇帝的外衣
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/06/00%E5%BC%80%E7%AF%87%E8%AF%8D-%E4%BD%A0%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%AD%A6%E4%B9%A0%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%EF%BC%9F/" rel="next" title="00开篇词-你为什么需要学习并发编程？">
+                  00开篇词-你为什么需要学习并发编程？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="推荐：   Oracle 11g 临时表空间管理   oracle11g下清理临时表空间  表空间和用户的建立顺序">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Oracle表空间和用户的建立与删除">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/11/Oracle%E8%A1%A8%E7%A9%BA%E9%97%B4%E5%92%8C%E7%94%A8%E6%88%B7%E7%9A%84%E5%BB%BA%E7%AB%8B%E4%B8%8E%E5%88%A0%E9%99%A4/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="推荐：   Oracle 11g 临时表空间管理   oracle11g下清理临时表空间  表空间和用户的建立顺序">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-11-21T12:39:17.000Z">
+<meta property="article:modified_time" content="2019-11-21T12:39:17.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Oracle">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/11/Oracle%E8%A1%A8%E7%A9%BA%E9%97%B4%E5%92%8C%E7%94%A8%E6%88%B7%E7%9A%84%E5%BB%BA%E7%AB%8B%E4%B8%8E%E5%88%A0%E9%99%A4/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2019/11/Oracle%E8%A1%A8%E7%A9%BA%E9%97%B4%E5%92%8C%E7%94%A8%E6%88%B7%E7%9A%84%E5%BB%BA%E7%AB%8B%E4%B8%8E%E5%88%A0%E9%99%A4/","path":"article/2019/11/Oracle表空间和用户的建立与删除/","title":"Oracle表空间和用户的建立与删除"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Oracle表空间和用户的建立与删除 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A1%A8%E7%A9%BA%E9%97%B4%E5%92%8C%E7%94%A8%E6%88%B7%E7%9A%84%E5%BB%BA%E7%AB%8B%E9%A1%BA%E5%BA%8F"><span class="nav-number">1.</span> <span class="nav-text">表空间和用户的建立顺序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E8%A1%A8%E7%A9%BA%E9%97%B4%E5%8F%8A%E5%85%B6%E5%A4%A7%E5%B0%8F"><span class="nav-number">2.</span> <span class="nav-text">查看表空间及其大小</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E8%A1%A8%E7%A9%BA%E9%97%B4%E5%92%8C%E7%94%A8%E6%88%B7"><span class="nav-number">3.</span> <span class="nav-text">创建表空间和用户</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E7%94%A8%E6%88%B7%E5%92%8C%E8%A1%A8%E7%A9%BA%E9%97%B4"><span class="nav-number">4.</span> <span class="nav-text">删除用户和表空间</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%80%E7%BB%88%E8%84%9A%E6%9C%AC"><span class="nav-number">5.</span> <span class="nav-text">最终脚本</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/11/Oracle%E8%A1%A8%E7%A9%BA%E9%97%B4%E5%92%8C%E7%94%A8%E6%88%B7%E7%9A%84%E5%BB%BA%E7%AB%8B%E4%B8%8E%E5%88%A0%E9%99%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Oracle表空间和用户的建立与删除 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Oracle表空间和用户的建立与删除
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-11-21 20:39:17" itemprop="dateCreated datePublished" datetime="2019-11-21T20:39:17+08:00">2019-11-21</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p><font color="blue"><strong>推荐：</strong></font> </p>
+<p> <a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1735963">Oracle 11g 临时表空间管理</a> </p>
+<p> <a target="_blank" rel="noopener" href="https://blog.csdn.net/lmalds/article/details/33725657">oracle11g下清理临时表空间</a> </p>
+<h1 id="表空间和用户的建立顺序"><a href="#表空间和用户的建立顺序" class="headerlink" title="表空间和用户的建立顺序"></a>表空间和用户的建立顺序</h1><span id="more"></span>
+
+<p>第一步：建立表空间。<br>    在设计数据库的时候，首先需要设计表空间。我们需要考虑，是只建立一个表空间呢，还是需要建立多个表空间，以及各个表空间的存放位置、磁盘限额等等。<br>    到底设计多少个表空间合理，没有统一的说法，这主要根据企业的实际需求去判断。如企业需要对用户进行磁盘限额控制的，则就需要根据用户的数量来设置表空间。当企业的数据容量比较大，而其又对数据库的性能有比较高的要求时，就需要根据不同类型的数据，设置不同的表空间，以提高其输入输出性能。<br>第二步：建立用户，并制定用户的默认表空间。<br>    在建立用户的时候，我们建议数据库管理员要指定用户的默认表空间。因为我们在利用CREATE语句创建数据库对象，如数据库表的时候，其默认是存储在数据库的当前默认空间。若不指定用户默认表空间的话，则用户每次创建数据库对象的时候，都要指定表空间，显然，这不是很合理。<br>    另外要注意，不同的表空间有不同的权限控制。用户对于表空间A具有完全控制权限，可能对于表空间B就只有查询权限，甚至连连接的权限的都没有。所以，合理为用户配置表空间的访问权限，也是提高数据库安全性的一个方法。</p>
+<h1 id="查看表空间及其大小"><a href="#查看表空间及其大小" class="headerlink" title="查看表空间及其大小"></a>查看表空间及其大小</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> tablespace_name,file_name,status,bytes <span class="keyword">from</span> dba_data_files;</span><br></pre></td></tr></table></figure>
+
+<h1 id="创建表空间和用户"><a href="#创建表空间和用户" class="headerlink" title="创建表空间和用户"></a>创建表空间和用户</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 创建</span></span><br><span class="line"><span class="keyword">create</span> tablespace tablespace_name datafile <span class="string">&#x27;D:\oracle\oradata\tablespace_name.dbf&#x27;</span> size <span class="number">256</span>m;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 设置表空间超载时自动增长:</span></span><br><span class="line">	<span class="comment">-- 表空间将满时会自动增加256m大小空间:</span></span><br><span class="line">	<span class="keyword">alter</span> database datafile <span class="string">&#x27;D:\oracle\oradata\tablespace_name.dbf&#x27;</span> autoextend <span class="keyword">on</span> next <span class="number">256</span>m;</span><br><span class="line">	<span class="comment">-- 表空间每次增加256M，累计增加到1024M后将不再增加:</span></span><br><span class="line">	<span class="keyword">alter</span> database datafile <span class="string">&#x27;D:\oracle\oradata\tablespace_name.dbf&#x27;</span> autoextend <span class="keyword">on</span> next <span class="number">256</span>m maxsize <span class="number">1024</span>m;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 创建用户（指定默认表空间，所以要先创建表空间）:</span></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">user</span> username identified <span class="keyword">by</span> passwd <span class="keyword">default</span> tablespace tablespace_name temporary tablespace temp;</span><br><span class="line"><span class="comment">-- 授予用户权限:</span></span><br><span class="line"><span class="keyword">grant</span> dba,<span class="keyword">connect</span>,resource <span class="keyword">to</span> username;</span><br><span class="line"><span class="comment">-- 修改用户密码(处于锁定状态的用户需先解锁):</span></span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">user</span> username identified <span class="keyword">by</span> new_passwd;</span><br><span class="line"><span class="comment">-- 解锁用户:</span></span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">user</span> username account unlock;</span><br></pre></td></tr></table></figure>
+
+<h1 id="删除用户和表空间"><a href="#删除用户和表空间" class="headerlink" title="删除用户和表空间"></a>删除用户和表空间</h1><p>删除是创建的相反顺序，先删除用户，再删除表空间。</p>
+<p><font color="green">先删除表空间再删除用户可能是允许的。但也有说这样操作会报错，因为表空间对象还在被用户使用，我没这样正式用过。</font></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 删除用户:</span></span><br><span class="line"><span class="keyword">drop</span> <span class="keyword">user</span> username cascade;</span><br><span class="line"><span class="comment">-- 删除表空间:</span></span><br><span class="line">	<span class="comment">-- 删除空表空间，不包含物理文件</span></span><br><span class="line">	<span class="keyword">drop</span> tablespace tablespace_name; <span class="comment">-- tablespace_name不加.dbf后缀哦！！！</span></span><br><span class="line">	<span class="comment">-- 删除空表空间，包含物理文件</span></span><br><span class="line">	<span class="keyword">drop</span> tablespace tablespace_name including datafiles; </span><br><span class="line">	<span class="comment">-- 删除空(非空)表空间，不包含物理文件</span></span><br><span class="line">	<span class="keyword">drop</span> tablespace tablespace_name including contents;</span><br><span class="line">	<span class="comment">-- 删除空(非空)表空间，包含物理文件</span></span><br><span class="line">	<span class="keyword">drop</span> tablespace tablespace_name including contents <span class="keyword">and</span> datafiles;</span><br><span class="line">	<span class="comment">-- 如果其他表空间中的表有外键等约束关联到了本表空间中的表的字段，就要加上CASCADE CONSTRAINTS</span></span><br><span class="line">	<span class="keyword">drop</span> tablespace tablespace_name including contents <span class="keyword">and</span> datafiles CASCADE CONSTRAINTS;</span><br><span class="line"></span><br><span class="line">	<span class="comment">-- including 说明</span></span><br><span class="line">    including contents <span class="comment">-- 删除表空间及对象；</span></span><br><span class="line">    including contents <span class="keyword">and</span> datafiles <span class="comment">-- 删除表空间、对象及物理文件(数据文件tablespace_name.dbf)；</span></span><br><span class="line">    including contents CASCADE <span class="keyword">CONSTRAINT</span> <span class="comment">-- 删除关联；</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="最终脚本"><a href="#最终脚本" class="headerlink" title="最终脚本"></a>最终脚本</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 创建表空间和用户</span></span><br><span class="line">	<span class="comment">--创建表空间 Linux</span></span><br><span class="line">	<span class="keyword">create</span> tablespace mars_data datafile <span class="string">&#x27;/u01/app/oracle/oradata/orcl/mars_data.dbf&#x27;</span> size <span class="number">256</span>m;</span><br><span class="line">	<span class="comment">--创建表空间 Windows</span></span><br><span class="line">	<span class="keyword">create</span> tablespace mars_data datafile <span class="string">&#x27;F:/oracle19c/oradata/ORCL/orclpdb/mars_data.dbf&#x27;</span> size <span class="number">256</span>m;</span><br><span class="line">	<span class="comment">--表空间将满时会自动增加256m大小空间</span></span><br><span class="line">	<span class="keyword">alter</span> database datafile <span class="string">&#x27;F:/oracle19c/oradata/ORCL/orclpdb/mars_data.dbf&#x27;</span> autoextend <span class="keyword">on</span> next <span class="number">256</span>m;</span><br><span class="line">	<span class="comment">--创建用户,指定默认表空间</span></span><br><span class="line">	<span class="keyword">create</span> <span class="keyword">user</span> mars identified <span class="keyword">by</span> <span class="number">123456789</span> <span class="keyword">default</span> tablespace mars_data temporary tablespace temp;</span><br><span class="line">	<span class="comment">--授予用户权限</span></span><br><span class="line">	<span class="keyword">grant</span> dba,<span class="keyword">connect</span>,resource <span class="keyword">to</span> mars;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 删除用户和表空间</span></span><br><span class="line">	<span class="comment">--删除用户</span></span><br><span class="line">	<span class="keyword">drop</span> <span class="keyword">user</span> mars cascade;</span><br><span class="line">	<span class="comment">--删除空(非空)表空间，包含物理文件</span></span><br><span class="line">	<span class="keyword">drop</span> tablespace mars_data including contents <span class="keyword">and</span> datafiles;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Oracle/" rel="tag"># Oracle</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2019/11/JDBC%E6%A6%82%E8%BF%B0%E5%92%8C%E9%A9%B1%E5%8A%A8%E4%B8%8B%E8%BD%BD/" rel="prev" title="JDBC概述和驱动下载">
+                  <i class="fa fa-angle-left"></i> JDBC概述和驱动下载
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2019/11/Oracle%E7%B3%BB%E7%BB%9F%E8%A1%A8%E6%95%B4%E7%90%86+%E5%B8%B8%E7%94%A8SQL%E8%AF%AD%E5%8F%A5%E6%94%B6%E9%9B%86/" rel="next" title="Oracle系统表整理+常用SQL语句收集">
+                  Oracle系统表整理+常用SQL语句收集 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

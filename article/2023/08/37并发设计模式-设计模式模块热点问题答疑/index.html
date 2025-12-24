@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="多线程设计模式是前人解决并发问题的经验总结，当我们试图解决一个并发问题时，首选方案往往是使用匹配的设计模式，这样能避免走弯路。同时，由于大家都熟悉设计模式，所以使用设计模式还能提升方案和代码的可理解性。 在这个模块，我们总共介绍了9种常见的多线程设计模式。下面我们就对这9种设计模式做个分类和总结，同时也对前面各章的课后思考题做个答疑。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="37并发设计模式-设计模式模块热点问题答疑">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/08/37%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="多线程设计模式是前人解决并发问题的经验总结，当我们试图解决一个并发问题时，首选方案往往是使用匹配的设计模式，这样能避免走弯路。同时，由于大家都熟悉设计模式，所以使用设计模式还能提升方案和代码的可理解性。 在这个模块，我们总共介绍了9种常见的多线程设计模式。下面我们就对这9种设计模式做个分类和总结，同时也对前面各章的课后思考题做个答疑。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-08-07T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-08-07T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="Java并发编程实战">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/08/37%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/08/37%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/","path":"article/2023/08/37并发设计模式-设计模式模块热点问题答疑/","title":"37并发设计模式-设计模式模块热点问题答疑"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>37并发设计模式-设计模式模块热点问题答疑 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%81%BF%E5%85%8D%E5%85%B1%E4%BA%AB%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.</span> <span class="nav-text">避免共享的设计模式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%89%88%E6%9C%ACIF%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">多线程版本IF的设计模式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D%E6%9C%80%E7%AE%80%E5%8D%95%E7%9A%84%E5%88%86%E5%B7%A5%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.</span> <span class="nav-text">三种最简单的分工模式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/08/37%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E6%A8%A1%E5%9D%97%E7%83%AD%E7%82%B9%E9%97%AE%E9%A2%98%E7%AD%94%E7%96%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="37并发设计模式-设计模式模块热点问题答疑 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          37并发设计模式-设计模式模块热点问题答疑
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-08-07 08:00:00" itemprop="dateCreated datePublished" datetime="2023-08-07T08:00:00+08:00">2023-08-07</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">Java并发编程实战</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>多线程设计模式是前人解决并发问题的经验总结，当我们试图解决一个并发问题时，首选方案往往是使用匹配的设计模式，这样能避免走弯路。同时，由于大家都熟悉设计模式，所以使用设计模式还能提升方案和代码的可理解性。</p>
+<p>在这个模块，我们总共介绍了9种常见的多线程设计模式。下面我们就对这9种设计模式做个分类和总结，同时也对前面各章的课后思考题做个答疑。</p>
+<span id="more"></span>
+
+<h1 id="避免共享的设计模式"><a href="#避免共享的设计模式" class="headerlink" title="避免共享的设计模式"></a>避免共享的设计模式</h1><p><strong>Immutability模式</strong>、<strong>Copy-on-Write模式</strong>和<strong>线程本地存储模式</strong>本质上都是<strong>为了避免共享</strong>，只是实现手段不同而已。这3种设计模式的实现都很简单，但是实现过程中有些细节还是需要格外注意的。例如，<strong>使用Immutability模式需要注意对象属性的不可变性，使用Copy-on-Write模式需要注意性能问题，使用线程本地存储模式需要注意异步执行问题</strong>。所以，每篇文章最后我设置的课后思考题的目的就是提醒你注意这些细节。</p>
+<p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/92856">《28 | Immutability模式：如何利用不变性解决并发问题？》</a>的课后思考题是讨论Account这个类是不是具备不可变性。这个类初看上去属于不可变对象的中规中矩实现，而实质上这个实现是有问题的，原因在于StringBuffer不同于String，StringBuffer不具备不可变性，通过getUser()方法获取user之后，是可以修改user的。一个简单的解决方案是让getUser()方法返回String对象。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Account</span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> </span><br><span class="line">    StringBuffer user;</span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">Account</span><span class="params">(String user)</span>&#123;</span><br><span class="line">    <span class="built_in">this</span>.user = </span><br><span class="line">      <span class="keyword">new</span> <span class="title class_">StringBuffer</span>(user);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//返回的StringBuffer并不具备不可变性</span></span><br><span class="line">  <span class="keyword">public</span> StringBuffer <span class="title function_">getUser</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.user;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">public</span> String <span class="title function_">toString</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;user&quot;</span>+user;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/93154">《29 | Copy-on-Write模式：不是延时策略的COW》</a>的课后思考题是讨论Java SDK中为什么没有提供 CopyOnWriteLinkedList。这是一个开放性的问题，没有标准答案，但是性能问题一定是其中一个很重要的原因，毕竟完整地复制LinkedList性能开销太大了。</p>
+<p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/93745">《30 | 线程本地存储模式：没有共享，就没有伤害》</a>的课后思考题是在异步场景中，是否可以使用 Spring 的事务管理器。答案显然是不能的，Spring 使用 ThreadLocal 来传递事务信息，因此这个事务信息是不能跨线程共享的。实际工作中有很多类库都是用 ThreadLocal 传递上下文信息的，这种场景下如果有异步操作，一定要注意上下文信息是不能跨线程共享的。</p>
+<h1 id="多线程版本IF的设计模式"><a href="#多线程版本IF的设计模式" class="headerlink" title="多线程版本IF的设计模式"></a>多线程版本IF的设计模式</h1><p><strong>Guarded Suspension模式</strong>和<strong>Balking模式</strong>都可以简单地理解为“多线程版本的if”，但它们的区别在于前者会等待if条件变为真，而后者则不需要等待。</p>
+<p>Guarded Suspension模式的经典实现是使用<strong>管程</strong>，很多初学者会简单地用线程sleep的方式实现，比如<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/94097">《31 | Guarded Suspension模式：等待唤醒机制的规范实现》</a>的思考题就是用线程sleep方式实现的。但不推荐你使用这种方式，最重要的原因是性能，如果sleep的时间太长，会影响响应时间；sleep的时间太短，会导致线程频繁地被唤醒，消耗系统资源。</p>
+<p>同时，示例代码的实现也有问题：由于obj不是volatile变量，所以即便obj被设置了正确的值，执行 <code>while(!p.test(obj))</code> 的线程也有可能看不到，从而导致更长时间的sleep。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获取受保护对象  </span></span><br><span class="line">T <span class="title function_">get</span><span class="params">(Predicate&lt;T&gt; p)</span> &#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">//obj的可见性无法保证</span></span><br><span class="line">    <span class="keyword">while</span>(!p.test(obj))&#123;</span><br><span class="line">      TimeUnit.SECONDS</span><br><span class="line">        .sleep(timeout);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;<span class="keyword">catch</span>(InterruptedException e)&#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(e);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//返回非空的受保护对象</span></span><br><span class="line">  <span class="keyword">return</span> obj;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//事件通知方法</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">onChanged</span><span class="params">(T obj)</span> &#123;</span><br><span class="line">  <span class="built_in">this</span>.obj = obj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实现Balking模式最容易忽视的就是<strong>竞态条件问题</strong>。比如，<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/94604">《32 | Balking模式：再谈线程安全的单例模式》</a>的思考题就存在竞态条件问题。因此，在多线程场景中使用if语句时，一定要多问自己一遍：是否存在竞态条件。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Test</span>&#123;</span><br><span class="line">  <span class="keyword">volatile</span> <span class="type">boolean</span> <span class="variable">inited</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">  <span class="type">int</span> <span class="variable">count</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">init</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="comment">//存在竞态条件</span></span><br><span class="line">    <span class="keyword">if</span>(inited)&#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//有可能多个线程执行到这里</span></span><br><span class="line">    inited = <span class="literal">true</span>;</span><br><span class="line">    <span class="comment">//计算count的值</span></span><br><span class="line">    count = calc();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+
+<h1 id="三种最简单的分工模式"><a href="#三种最简单的分工模式" class="headerlink" title="三种最简单的分工模式"></a>三种最简单的分工模式</h1><p><strong>Thread-Per-Message模式</strong>、<strong>Worker Thread模式</strong>和<strong>生产者-消费者模式</strong>是三种<strong>最简单实用的多线程分工方法</strong>。虽说简单，但也还是有许多细节需要你多加小心和注意。</p>
+<p>Thread-Per-Message模式在实现的时候需要注意是否存在线程的频繁创建、销毁以及是否可能导致OOM。在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/95098">《33 | Thread-Per-Message模式：最简单实用的分工方法》</a>文章中，最后的思考题就是关于如何快速解决OOM问题的。在高并发场景中，最简单的办法其实是<strong>限流</strong>。当然，限流方案也并不局限于解决Thread-Per-Message模式中的OOM问题。</p>
+<p>Worker Thread模式的实现，需要注意潜在的线程<strong>死锁问题</strong>。<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/95525">《34 | Worker Thread模式：如何避免重复创建线程？》</a>思考题中的示例代码就存在线程死锁。有名叫vector的同学关于这道思考题的留言，我觉得描述得很贴切和形象：“工厂里只有一个工人，他的工作就是同步地等待工厂里其他人给他提供东西，然而并没有其他人，他将等到天荒地老，海枯石烂！”因此，共享线程池虽然能够提供线程池的使用效率，但一定要保证一个前提，那就是：<strong>任务之间没有依赖关系</strong>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ExecutorService</span> <span class="variable">pool</span> <span class="operator">=</span> Executors</span><br><span class="line">  .newSingleThreadExecutor();</span><br><span class="line"><span class="comment">//提交主任务</span></span><br><span class="line">pool.submit(() -&gt; &#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">//提交子任务并等待其完成，</span></span><br><span class="line">    <span class="comment">//会导致线程死锁</span></span><br><span class="line">    String qq=pool.submit(()-&gt;<span class="string">&quot;QQ&quot;</span>).get();</span><br><span class="line">    System.out.println(qq);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>Java线程池本身就是一种生产者-消费者模式的实现，所以大部分场景你都不需要自己实现，直接使用Java的线程池就可以了。但若能自己灵活地实现生产者-消费者模式会更好，比如可以实现批量执行和分阶段提交，不过这过程中还需要注意如何优雅地终止线程，<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/96168">《36 | 生产者-消费者模式：用流水线思想提高效率》</a>的思考题就是关于此的。</p>
+<p>如何优雅地终止线程？我们在<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/95847">《35 | 两阶段终止模式：如何优雅地终止线程？》</a>有过详细介绍，两阶段终止模式是一种通用的解决方案。但其实终止生产者-消费者服务还有一种更简单的方案，叫做**“毒丸”对象**。<a href="time://mall?url=https%3A%2F%2Fh5.youzan.com%2Fv2%2Fgoods%2F2758xqdzr6uuw">《Java并发编程实战》</a>第7章的7.2.3节对“毒丸”对象有过详细的介绍。简单来讲，“毒丸”对象是生产者生产的一条特殊任务，然后当消费者线程读到“毒丸”对象时，会立即终止自身的执行。</p>
+<p>下面是用“毒丸”对象终止写日志线程的具体实现，整体的实现过程还是很简单的：类Logger中声明了一个“毒丸”对象poisonPill ，当消费者线程从阻塞队列bq中取出一条LogMsg后，先判断是否是“毒丸”对象，如果是，则break while循环，从而终止自己的执行。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Logger</span> &#123;</span><br><span class="line">  <span class="comment">//用于终止日志执行的“毒丸”</span></span><br><span class="line">  <span class="keyword">final</span> <span class="type">LogMsg</span> <span class="variable">poisonPill</span> <span class="operator">=</span> </span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">LogMsg</span>(LEVEL.ERROR, <span class="string">&quot;&quot;</span>);</span><br><span class="line">  <span class="comment">//任务队列  </span></span><br><span class="line">  <span class="keyword">final</span> BlockingQueue&lt;LogMsg&gt; bq</span><br><span class="line">    = <span class="keyword">new</span> <span class="title class_">BlockingQueue</span>&lt;&gt;();</span><br><span class="line">  <span class="comment">//只需要一个线程写日志</span></span><br><span class="line">  <span class="type">ExecutorService</span> <span class="variable">es</span> <span class="operator">=</span> </span><br><span class="line">    Executors.newFixedThreadPool(<span class="number">1</span>);</span><br><span class="line">  <span class="comment">//启动写日志线程</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">start</span><span class="params">()</span>&#123;</span><br><span class="line">    File file=File.createTempFile(</span><br><span class="line">      <span class="string">&quot;foo&quot;</span>, <span class="string">&quot;.log&quot;</span>);</span><br><span class="line">    <span class="keyword">final</span> FileWriter writer=</span><br><span class="line">      <span class="keyword">new</span> <span class="title class_">FileWriter</span>(file);</span><br><span class="line">    <span class="built_in">this</span>.es.execute(()-&gt;&#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">          <span class="type">LogMsg</span> <span class="variable">log</span> <span class="operator">=</span> bq.poll(</span><br><span class="line">            <span class="number">5</span>, TimeUnit.SECONDS);</span><br><span class="line">          <span class="comment">//如果是“毒丸”，终止执行  </span></span><br><span class="line">          <span class="keyword">if</span>(poisonPill.equals(logMsg))&#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">          &#125;  </span><br><span class="line">          <span class="comment">//省略执行逻辑</span></span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">catch</span>(Exception e)&#123;</span><br><span class="line">      &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          writer.flush();</span><br><span class="line">          writer.close();</span><br><span class="line">        &#125;<span class="keyword">catch</span>(IOException e)&#123;&#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);  </span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//终止写日志线程</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">stop</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">//将“毒丸”对象加入阻塞队列</span></span><br><span class="line">    bq.add(poisonPill);</span><br><span class="line">    es.shutdown();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>到今天为止，“并发设计模式”模块就告一段落了，多线程的设计模式当然不止我们提到的这9种，不过这里提到的这9种设计模式一定是最简单实用的。如果感兴趣，你也可以结合《图解Java多线程设计模式》这本书来深入学习这个模块，这是一本不错的并发编程入门书籍，虽然重点是讲解设计模式，但是也详细讲解了设计模式中涉及到的方方面面的基础知识，而且深入浅出，非常推荐入门的同学认真学习一下。</p>
+<p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98/" rel="tag"># Java并发编程实战</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/08/36%E5%B9%B6%E5%8F%91%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%94%A8%E6%B5%81%E6%B0%B4%E7%BA%BF%E6%80%9D%E6%83%B3%E6%8F%90%E9%AB%98%E6%95%88%E7%8E%87/" rel="prev" title="36并发设计模式-生产者-消费者模式：用流水线思想提高效率">
+                  <i class="fa fa-angle-left"></i> 36并发设计模式-生产者-消费者模式：用流水线思想提高效率
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/08/38%E6%A1%88%E4%BE%8B%E5%88%86%E6%9E%90-%E6%A1%88%E4%BE%8B%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9A%E9%AB%98%E6%80%A7%E8%83%BD%E9%99%90%E6%B5%81%E5%99%A8Guava%20RateLimiter/" rel="next" title="38案例分析-案例分析（一）：高性能限流器Guava RateLimiter">
+                  38案例分析-案例分析（一）：高性能限流器Guava RateLimiter <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

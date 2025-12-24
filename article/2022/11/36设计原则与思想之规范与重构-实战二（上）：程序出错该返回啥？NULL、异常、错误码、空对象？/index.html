@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="我们可以把函数的运行结果分为两类。一类是预期的结果，也就是函数在正常情况下输出的结果。一类是非预期的结果，也就是函数在异常（或叫出错）情况下输出的结果。比如，在上一节课中，获取本机名的函数，在正常情况下，函数返回字符串格式的本机名；在异常情况下，获取本机名失败，函数返回UnknownHostException异常对象。 在正常情况下，函数返回数据的类型非常明确，但是，在异常情况下，函数返回的数据类">
+<meta property="og:type" content="article">
+<meta property="og:title" content="36设计原则与思想之规范与重构-实战二（上）：程序出错该返回啥？NULL、异常、错误码、空对象？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/11/36%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E8%A7%84%E8%8C%83%E4%B8%8E%E9%87%8D%E6%9E%84-%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E7%A8%8B%E5%BA%8F%E5%87%BA%E9%94%99%E8%AF%A5%E8%BF%94%E5%9B%9E%E5%95%A5%EF%BC%9FNULL%E3%80%81%E5%BC%82%E5%B8%B8%E3%80%81%E9%94%99%E8%AF%AF%E7%A0%81%E3%80%81%E7%A9%BA%E5%AF%B9%E8%B1%A1%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="我们可以把函数的运行结果分为两类。一类是预期的结果，也就是函数在正常情况下输出的结果。一类是非预期的结果，也就是函数在异常（或叫出错）情况下输出的结果。比如，在上一节课中，获取本机名的函数，在正常情况下，函数返回字符串格式的本机名；在异常情况下，获取本机名失败，函数返回UnknownHostException异常对象。 在正常情况下，函数返回数据的类型非常明确，但是，在异常情况下，函数返回的数据类">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-11-06T00:00:00.000Z">
+<meta property="article:modified_time" content="2022-11-06T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/11/36%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E8%A7%84%E8%8C%83%E4%B8%8E%E9%87%8D%E6%9E%84-%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E7%A8%8B%E5%BA%8F%E5%87%BA%E9%94%99%E8%AF%A5%E8%BF%94%E5%9B%9E%E5%95%A5%EF%BC%9FNULL%E3%80%81%E5%BC%82%E5%B8%B8%E3%80%81%E9%94%99%E8%AF%AF%E7%A0%81%E3%80%81%E7%A9%BA%E5%AF%B9%E8%B1%A1%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/11/36%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E8%A7%84%E8%8C%83%E4%B8%8E%E9%87%8D%E6%9E%84-%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E7%A8%8B%E5%BA%8F%E5%87%BA%E9%94%99%E8%AF%A5%E8%BF%94%E5%9B%9E%E5%95%A5%EF%BC%9FNULL%E3%80%81%E5%BC%82%E5%B8%B8%E3%80%81%E9%94%99%E8%AF%AF%E7%A0%81%E3%80%81%E7%A9%BA%E5%AF%B9%E8%B1%A1%EF%BC%9F/","path":"article/2022/11/36设计原则与思想之规范与重构-实战二（上）：程序出错该返回啥？NULL、异常、错误码、空对象？/","title":"36设计原则与思想之规范与重构-实战二（上）：程序出错该返回啥？NULL、异常、错误码、空对象？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>36设计原则与思想之规范与重构-实战二（上）：程序出错该返回啥？NULL、异常、错误码、空对象？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%8E%E4%B8%8A%E8%8A%82%E8%AF%BE%E7%9A%84ID%E7%94%9F%E6%88%90%E5%99%A8%E4%BB%A3%E7%A0%81%E8%AE%B2%E8%B5%B7"><span class="nav-number">1.</span> <span class="nav-text">从上节课的ID生成器代码讲起</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E5%87%BA%E9%94%99%E5%BA%94%E8%AF%A5%E8%BF%94%E5%9B%9E%E5%95%A5%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">函数出错应该返回啥？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E8%BF%94%E5%9B%9E%E9%94%99%E8%AF%AF%E7%A0%81"><span class="nav-number">2.1.</span> <span class="nav-text">1.返回错误码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E8%BF%94%E5%9B%9ENULL%E5%80%BC"><span class="nav-number">2.2.</span> <span class="nav-text">2.返回NULL值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E8%BF%94%E5%9B%9E%E7%A9%BA%E5%AF%B9%E8%B1%A1"><span class="nav-number">2.3.</span> <span class="nav-text">3.返回空对象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E6%8A%9B%E5%87%BA%E5%BC%82%E5%B8%B8%E5%AF%B9%E8%B1%A1"><span class="nav-number">2.4.</span> <span class="nav-text">4.抛出异常对象</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE"><span class="nav-number">3.</span> <span class="nav-text">重点回顾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%A0%82%E8%AE%A8%E8%AE%BA"><span class="nav-number">4.</span> <span class="nav-text">课堂讨论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/11/36%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E8%A7%84%E8%8C%83%E4%B8%8E%E9%87%8D%E6%9E%84-%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E7%A8%8B%E5%BA%8F%E5%87%BA%E9%94%99%E8%AF%A5%E8%BF%94%E5%9B%9E%E5%95%A5%EF%BC%9FNULL%E3%80%81%E5%BC%82%E5%B8%B8%E3%80%81%E9%94%99%E8%AF%AF%E7%A0%81%E3%80%81%E7%A9%BA%E5%AF%B9%E8%B1%A1%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="36设计原则与思想之规范与重构-实战二（上）：程序出错该返回啥？NULL、异常、错误码、空对象？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          36设计原则与思想之规范与重构-实战二（上）：程序出错该返回啥？NULL、异常、错误码、空对象？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-11-06 08:00:00" itemprop="dateCreated datePublished" datetime="2022-11-06T08:00:00+08:00">2022-11-06</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>我们可以把函数的运行结果分为两类。一类是预期的结果，也就是函数在正常情况下输出的结果。一类是非预期的结果，也就是函数在异常（或叫出错）情况下输出的结果。比如，在上一节课中，获取本机名的函数，在正常情况下，函数返回字符串格式的本机名；在异常情况下，获取本机名失败，函数返回UnknownHostException异常对象。</p>
+<p>在正常情况下，函数返回数据的类型非常明确，但是，在异常情况下，函数返回的数据类型却非常灵活，有多种选择。除了刚刚提到的类似UnknownHostException这样的异常对象之外，函数在异常情况下还可以返回错误码、NULL值、特殊值（比如-1）、空对象（比如空字符串、空集合）等。</p>
+<p>每一种异常返回数据类型，都有各自的特点和适用场景。但有的时候，在异常情况下，函数到底该返回什么样的数据类型，并不那么容易判断。比如，上节课中，在本机名获取失败的时候，ID生成器的generate()函数应该返回什么呢？是异常？空字符？还是NULL值？又或者是其他特殊值（比如null-15293834874-fd3A9KBn，null表示本机名未获取到）呢？</p>
+<p>函数是代码的一个非常重要的编写单元，而函数的异常处理，又是我们在编写函数的时候，时刻都要考虑的。所以，今天我们就聊一聊，如何设计函数在异常情况下的返回数据类型。</p>
+<p>话不多说，让我们正式开始今天的学习吧！</p>
+<span id="more"></span>
+
+<h1 id="从上节课的ID生成器代码讲起"><a href="#从上节课的ID生成器代码讲起" class="headerlink" title="从上节课的ID生成器代码讲起"></a>从上节课的ID生成器代码讲起</h1><p>上两节课中，我们把一份非常简单的ID生成器的代码，从“能用”重构成了“好用”。最终给出的代码看似已经很完美了，但是如果我们再用心推敲一下，代码中关于出错处理的方式，还有进一步优化的空间，值得我们拿出来再讨论一下。</p>
+<p>为了方便你查看，我将上节课的代码拷贝到了这里。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RandomIdGenerator</span> <span class="keyword">implements</span> <span class="title class_">IdGenerator</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(RandomIdGenerator.class);</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> String <span class="title function_">generate</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">substrOfHostName</span> <span class="operator">=</span> getLastFiledOfHostName();</span><br><span class="line">    <span class="type">long</span> <span class="variable">currentTimeMillis</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">    <span class="type">String</span> <span class="variable">randomString</span> <span class="operator">=</span> generateRandomAlphameric(<span class="number">8</span>);</span><br><span class="line">    <span class="type">String</span> <span class="variable">id</span> <span class="operator">=</span> String.format(<span class="string">&quot;%s-%d-%s&quot;</span>,</span><br><span class="line">            substrOfHostName, currentTimeMillis, randomString);</span><br><span class="line">    <span class="keyword">return</span> id;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> String <span class="title function_">getLastFiledOfHostName</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">substrOfHostName</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="type">String</span> <span class="variable">hostName</span> <span class="operator">=</span> InetAddress.getLocalHost().getHostName();</span><br><span class="line">      substrOfHostName = getLastSubstrSplittedByDot(hostName);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (UnknownHostException e) &#123;</span><br><span class="line">      logger.warn(<span class="string">&quot;Failed to get the host name.&quot;</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> substrOfHostName;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@VisibleForTesting</span></span><br><span class="line">  <span class="keyword">protected</span> String <span class="title function_">getLastSubstrSplittedByDot</span><span class="params">(String hostName)</span> &#123;</span><br><span class="line">    String[] tokens = hostName.split(<span class="string">&quot;\\.&quot;</span>);</span><br><span class="line">    <span class="type">String</span> <span class="variable">substrOfHostName</span> <span class="operator">=</span> tokens[tokens.length - <span class="number">1</span>];</span><br><span class="line">    <span class="keyword">return</span> substrOfHostName;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@VisibleForTesting</span></span><br><span class="line">  <span class="keyword">protected</span> String <span class="title function_">generateRandomAlphameric</span><span class="params">(<span class="type">int</span> length)</span> &#123;</span><br><span class="line">    <span class="type">char</span>[] randomChars = <span class="keyword">new</span> <span class="title class_">char</span>[length];</span><br><span class="line">    <span class="type">int</span> <span class="variable">count</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    <span class="type">Random</span> <span class="variable">random</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Random</span>();</span><br><span class="line">    <span class="keyword">while</span> (count &lt; length) &#123;</span><br><span class="line">      <span class="type">int</span> <span class="variable">maxAscii</span> <span class="operator">=</span> <span class="string">&#x27;z&#x27;</span>;</span><br><span class="line">      <span class="type">int</span> <span class="variable">randomAscii</span> <span class="operator">=</span> random.nextInt(maxAscii);</span><br><span class="line">      <span class="type">boolean</span> isDigit= randomAscii &gt;= <span class="string">&#x27;0&#x27;</span> &amp;&amp; randomAscii &lt;= <span class="string">&#x27;9&#x27;</span>;</span><br><span class="line">      <span class="type">boolean</span> isUppercase= randomAscii &gt;= <span class="string">&#x27;A&#x27;</span> &amp;&amp; randomAscii &lt;= <span class="string">&#x27;Z&#x27;</span>;</span><br><span class="line">      <span class="type">boolean</span> isLowercase= randomAscii &gt;= <span class="string">&#x27;a&#x27;</span> &amp;&amp; randomAscii &lt;= <span class="string">&#x27;z&#x27;</span>;</span><br><span class="line">      <span class="keyword">if</span> (isDigit|| isUppercase || isLowercase) &#123;</span><br><span class="line">        randomChars[count] = (<span class="type">char</span>) (randomAscii);</span><br><span class="line">        ++count;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">String</span>(randomChars);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码中有四个函数。针对这四个函数的出错处理方式，我总结出下面这样几个问题。</p>
+<ul>
+<li>对于generate()函数，如果本机名获取失败，函数返回什么？这样的返回值是否合理？</li>
+<li>对于getLastFiledOfHostName()函数，是否应该将UnknownHostException异常在函数内部吞掉（try-catch并打印日志）？还是应该将异常继续往上抛出？如果往上抛出的话，是直接把UnknownHostException异常原封不动地抛出，还是封装成新的异常抛出？</li>
+<li>对于getLastSubstrSplittedByDot(String hostName)函数，如果hostName为NULL或者是空字符串，这个函数应该返回什么？</li>
+<li>对于generateRandomAlphameric(int length)函数，如果length小于0或者等于0，这个函数应该返回什么？</li>
+</ul>
+<p>对于上面这几个问题，你可以试着思考下，我先不做解答。等我们学完本节课的理论内容之后，我们下一节课再一块来分析。这一节我们重点讲解一些理论方面的知识。</p>
+<h1 id="函数出错应该返回啥？"><a href="#函数出错应该返回啥？" class="headerlink" title="函数出错应该返回啥？"></a>函数出错应该返回啥？</h1><p>关于函数出错返回数据类型，我总结了4种情况，它们分别是：错误码、NULL值、空对象、异常对象。接下来，我们就一一来看它们的用法以及适用场景。</p>
+<h2 id="1-返回错误码"><a href="#1-返回错误码" class="headerlink" title="1.返回错误码"></a>1.返回错误码</h2><p>C语言中没有异常这样的语法机制，因此，返回错误码便是最常用的出错处理方式。而在Java、Python等比较新的编程语言中，大部分情况下，我们都用异常来处理函数出错的情况，极少会用到错误码。</p>
+<p>在C语言中，错误码的返回方式有两种：一种是直接占用函数的返回值，函数正常执行的返回值放到出参中；另一种是将错误码定义为全局变量，在函数执行出错时，函数调用者通过这个全局变量来获取错误码。针对这两种方式，我举个例子来进一步解释。具体代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 错误码的返回方式一：pathname/flags/mode为入参；fd为出参，存储打开的文件句柄。</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">open</span><span class="params">(const <span class="type">char</span> *pathname, <span class="type">int</span> flags, mode_t mode, <span class="type">int</span>* fd)</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="comment">/*文件不存在*/</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> EEXIST;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">if</span> (<span class="comment">/*没有访问权限*/</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> EACCESS;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">if</span> (<span class="comment">/*打开文件成功*/</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> SUCCESS; <span class="comment">// C语言中的宏定义：#define SUCCESS 0</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//使用举例</span></span><br><span class="line"><span class="type">int</span> fd;</span><br><span class="line"><span class="type">int</span> <span class="variable">result</span> <span class="operator">=</span> open(“c:\test.txt”, O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO, &amp;fd);</span><br><span class="line"><span class="keyword">if</span> (result == SUCCESS) &#123;</span><br><span class="line">  <span class="comment">// 取出fd使用</span></span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (result == EEXIST) &#123;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (result == EACESS) &#123;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 错误码的返回方式二：函数返回打开的文件句柄，错误码放到errno中。</span></span><br><span class="line"><span class="type">int</span> errno; <span class="comment">// 线程安全的全局变量</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">open</span><span class="params">(const <span class="type">char</span> *pathname, <span class="type">int</span> flags, mode_t mode）&#123;</span></span><br><span class="line"><span class="params">  <span class="keyword">if</span> (<span class="comment">/*文件不存在*/</span>)</span> &#123;</span><br><span class="line">    errno = EEXIST;</span><br><span class="line">    <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">if</span> (<span class="comment">/*没有访问权限*/</span>) &#123;</span><br><span class="line">    errno = EACCESS;</span><br><span class="line">    <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 使用举例</span></span><br><span class="line"><span class="type">int</span> <span class="variable">hFile</span> <span class="operator">=</span> open(“c:\test.txt”, O_RDWR, S_IRWXU|S_IRWXG|S_IRWXO);</span><br><span class="line"><span class="keyword">if</span> (-<span class="number">1</span> == hFile) &#123;</span><br><span class="line">  printf(<span class="string">&quot;Failed to open file, error no: %d.\n&quot;</span>, errno);</span><br><span class="line">  <span class="keyword">if</span> (errno == EEXIST ) &#123;</span><br><span class="line">    <span class="comment">// ...        </span></span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span>(errno == EACCESS) &#123;</span><br><span class="line">    <span class="comment">// ...    </span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实际上，如果你熟悉的编程语言中有异常这种语法机制，那就尽量不要使用错误码。异常相对于错误码，有诸多方面的优势，比如可以携带更多的错误信息（exception中可以有message、stack trace等信息）等。关于异常，我们待会还会非常详细地讲解。</p>
+<h2 id="2-返回NULL值"><a href="#2-返回NULL值" class="headerlink" title="2.返回NULL值"></a>2.返回NULL值</h2><p>在多数编程语言中，我们用NULL来表示“不存在”这种语义。不过，网上很多人不建议函数返回NULL值，认为这是一种不好的设计思路，主要的理由有以下两个。</p>
+<ul>
+<li>如果某个函数有可能返回NULL值，我们在使用它的时候，忘记了做NULL值判断，就有可能会抛出<strong>空指针异常</strong>（Null Pointer Exception，缩写为NPE）。</li>
+<li>如果我们定义了很多返回值可能为NULL的函数，那代码中就会充斥着大量的NULL值判断逻辑，一方面写起来比较繁琐，另一方面它们跟正常的业务逻辑耦合在一起，会影响代码的可读性。</li>
+</ul>
+<p>我举个例子解释一下，具体代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> UserRepo userRepo; <span class="comment">// 依赖注入</span></span><br><span class="line">  </span><br><span class="line">  <span class="keyword">public</span> User <span class="title function_">getUser</span><span class="params">(String telephone)</span> &#123;</span><br><span class="line">    <span class="comment">// 如果用户不存在，则返回null</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用函数getUser()</span></span><br><span class="line"><span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> userService.getUser(<span class="string">&quot;18917718965&quot;</span>);</span><br><span class="line"><span class="keyword">if</span> (user != <span class="literal">null</span>) &#123; <span class="comment">// 做NULL值判断，否则有可能会报NPE</span></span><br><span class="line">  <span class="type">String</span> <span class="variable">email</span> <span class="operator">=</span> user.getEmail();</span><br><span class="line">  <span class="keyword">if</span> (email != <span class="literal">null</span>) &#123; <span class="comment">// 做NULL值判断，否则有可能会报NPE</span></span><br><span class="line">    <span class="type">String</span> <span class="variable">escapedEmail</span> <span class="operator">=</span> email.replaceAll(<span class="string">&quot;@&quot;</span>, <span class="string">&quot;#&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那我们是否可以用异常来替代NULL值，在查找用户不存在的时候，让函数抛出UserNotFoundException异常呢？</p>
+<p>我个人觉得，尽管返回NULL值有诸多弊端，但对于以get、find、select、search、query等单词开头的查找函数来说，数据不存在，并非一种异常情况，这是一种正常行为。所以，返回代表不存在语义的NULL值比返回异常更加合理。</p>
+<p>不过，话说回来，刚刚讲的这个理由，也并不是特别有说服力。对于查找数据不存在的情况，函数到底是该用NULL值还是异常，有一个比较重要的参考标准是，看项目中的其他类似查找函数都是如何定义的，只要整个项目遵从统一的约定即可。如果项目从零开始开发，并没有统一约定和可以参考的代码，那你选择两者中的任何一种都可以。你只需要在函数定义的地方注释清楚，让调用者清晰地知道数据不存在的时候会返回什么就可以了。</p>
+<p>再补充说明一点，对于查找函数来说，除了返回数据对象之外，有的还会返回下标位置，比如Java中的indexOf()函数，用来实现在某个字符串中查找另一个子串第一次出现的位置。函数的返回值类型为基本类型int。这个时候，我们就无法用NULL值来表示不存在的情况了。对于这种情况，我们有两种处理思路，一种是返回NotFoundException，一种是返回一个特殊值，比如-1。不过，显然-1更加合理，理由也是同样的，也就是说“没有查找到”是一种正常而非异常的行为。</p>
+<h2 id="3-返回空对象"><a href="#3-返回空对象" class="headerlink" title="3.返回空对象"></a>3.返回空对象</h2><p>刚刚我们讲到，返回NULL值有各种弊端。应对这个问题有一个比较经典的策略，那就是应用空对象设计模式（Null Object Design Pattern）。关于这个设计模式，我们在后面章节会详细讲，现在就不展开来讲解了。不过，我们今天来讲两种比较简单、比较特殊的空对象，那就是<strong>空字符串</strong>和<strong>空集合</strong>。</p>
+<p>当函数返回的数据是字符串类型或者集合类型的时候，我们可以用空字符串或空集合替代NULL值，来表示不存在的情况。这样，我们在使用函数的时候，就可以不用做NULL值判断。我举个例子来解释下。具体代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用空集合替代NULL</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> UserRepo userRepo; <span class="comment">// 依赖注入</span></span><br><span class="line">  </span><br><span class="line">  <span class="keyword">public</span> List&lt;User&gt; <span class="title function_">getUsers</span><span class="params">(String telephonePrefix)</span> &#123;</span><br><span class="line">   <span class="comment">// 没有查找到数据</span></span><br><span class="line">    <span class="keyword">return</span> Collections.emptyList();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// getUsers使用示例</span></span><br><span class="line">List&lt;User&gt; users = userService.getUsers(<span class="string">&quot;189&quot;</span>);</span><br><span class="line"><span class="keyword">for</span> (User user : users) &#123; <span class="comment">//这里不需要做NULL值判断</span></span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用空字符串替代NULL</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">retrieveUppercaseLetters</span><span class="params">(String text)</span> &#123;</span><br><span class="line">  <span class="comment">// 如果text中没有大写字母，返回空字符串，而非NULL值</span></span><br><span class="line">  <span class="keyword">return</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// retrieveUppercaseLetters()使用举例</span></span><br><span class="line"><span class="type">String</span> <span class="variable">uppercaseLetters</span> <span class="operator">=</span> retrieveUppercaseLetters(<span class="string">&quot;wangzheng&quot;</span>);</span><br><span class="line"><span class="type">int</span> <span class="variable">length</span> <span class="operator">=</span> uppercaseLetters.length();<span class="comment">// 不需要做NULL值判断 </span></span><br><span class="line">System.out.println(<span class="string">&quot;Contains &quot;</span> + length + <span class="string">&quot; upper case letters.&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-抛出异常对象"><a href="#4-抛出异常对象" class="headerlink" title="4.抛出异常对象"></a>4.抛出异常对象</h2><p>尽管前面讲了很多函数出错的返回数据类型，但是，最常用的函数出错处理方式就是抛出异常。异常可以携带更多的错误信息，比如函数调用栈信息。除此之外，异常可以将正常逻辑和异常逻辑的处理分离开来，这样代码的可读性就会更好。</p>
+<p>不同的编程语言的异常语法稍有不同。像C++和大部分的动态语言（Python、Ruby、JavaScript等）都只定义了一种异常类型：运行时异常（Runtime Exception）。而像Java，除了运行时异常外，还定义了另外一种异常类型：编译时异常（Compile Exception）。</p>
+<p>对于运行时异常，我们在编写代码的时候，可以不用主动去try-catch，编译器在编译代码的时候，并不会检查代码是否有对运行时异常做了处理。相反，对于编译时异常，我们在编写代码的时候，需要主动去try-catch或者在函数定义中声明，否则编译就会报错。所以，运行时异常也叫作非受检异常（Unchecked Exception），编译时异常也叫作受检异常（Checked Exception）。</p>
+<p>如果你熟悉的编程语言中，只定义了一种异常类型，那用起来反倒比较简单。如果你熟悉的编程语言中（比如Java），定义了两种异常类型，那在异常出现的时候，我们应该选择抛出哪种异常类型呢？是受检异常还是非受检异常？</p>
+<p>对于代码bug（比如数组越界）以及不可恢复异常（比如数据库连接失败），即便我们捕获了，也做不了太多事情，所以，我们倾向于使用非受检异常。对于可恢复异常、业务异常，比如提现金额大于余额的异常，我们更倾向于使用受检异常，明确告知调用者需要捕获处理。</p>
+<p>我举一个例子解释一下，代码如下所示。当Redis的地址（参数address）没有设置的时候，我们直接使用默认的地址（比如本地地址和默认端口）；当Redis的地址格式不正确的时候，我们希望程序能fail-fast，也就是说，把这种情况当成不可恢复的异常，直接抛出运行时异常，将程序终止掉。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// address格式：&quot;192.131.2.33:7896&quot;</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">parseRedisAddress</span><span class="params">(String address)</span> &#123;</span><br><span class="line">  <span class="built_in">this</span>.host = RedisConfig.DEFAULT_HOST;</span><br><span class="line">  <span class="built_in">this</span>.port = RedisConfig.DEFAULT_PORT;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">if</span> (StringUtils.isBlank(address)) &#123;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  String[] ipAndPort = address.split(<span class="string">&quot;:&quot;</span>);</span><br><span class="line">  <span class="keyword">if</span> (ipAndPort.length != <span class="number">2</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;...&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="built_in">this</span>.host = ipAndPort[<span class="number">0</span>];</span><br><span class="line">  <span class="comment">// parseInt()解析失败会抛出NumberFormatException运行时异常</span></span><br><span class="line">  <span class="built_in">this</span>.port = Integer.parseInt(ipAndPort[<span class="number">1</span>]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实际上，Java支持的受检异常一直被人诟病，很多人主张所有的异常情况都应该使用非受检异常。支持这种观点的理由主要有以下三个。</p>
+<ul>
+<li>受检异常需要显式地在函数定义中声明。如果函数会抛出很多受检异常，那函数的定义就会非常冗长，这就会影响代码的可读性，使用起来也不方便。</li>
+<li>编译器强制我们必须显示地捕获所有的受检异常，代码实现会比较繁琐。而非受检异常正好相反，我们不需要在定义中显示声明，并且是否需要捕获处理，也可以自由决定。</li>
+<li>受检异常的使用违反开闭原则。如果我们给某个函数新增一个受检异常，这个函数所在的函数调用链上的所有位于其之上的函数都需要做相应的代码修改，直到调用链中的某个函数将这个新增的异常try-catch处理掉为止。而新增非受检异常可以不改动调用链上的代码。我们可以灵活地选择在某个函数中集中处理，比如在Spring中的AOP切面中集中处理异常。</li>
+</ul>
+<p>不过，非受检异常也有弊端，它的优点其实也正是它的缺点。从刚刚的表述中，我们可以看出，非受检异常使用起来更加灵活，怎么处理的主动权这里就交给了程序员。我们前面也讲到，过于灵活会带来不可控，非受检异常不需要显式地在函数定义中声明，那我们在使用函数的时候，就需要查看代码才能知道具体会抛出哪些异常。非受检异常不需要强制捕获处理，那程序员就有可能漏掉一些本应该捕获处理的异常。</p>
+<p>对于应该用受检异常还是非受检异常，网上的争论有很多，但并没有一个非常强有力的理由能够说明一个就一定比另一个更好。所以，我们只需要根据团队的开发习惯，在同一个项目中，制定统一的异常处理规范即可。</p>
+<p>**刚刚我们讲了两种异常类型，现在我们再来讲下，如何处理函数抛出的异常？**总结一下，一般有下面三种处理方法。</p>
+<ul>
+<li>直接吞掉。具体的代码示例如下所示：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">func1</span><span class="params">()</span> <span class="keyword">throws</span> Exception1 &#123;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">func2</span><span class="params">()</span> &#123;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    func1();</span><br><span class="line">  &#125; <span class="keyword">catch</span>(Exception1 e) &#123;</span><br><span class="line">    log.warn(<span class="string">&quot;...&quot;</span>, e); <span class="comment">//吐掉：try-catch打印日志</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>原封不动地re-throw。具体的代码示例如下所示：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">func1</span><span class="params">()</span> <span class="keyword">throws</span> Exception1 &#123;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">func2</span><span class="params">()</span> <span class="keyword">throws</span> Exception1 &#123;<span class="comment">//原封不动的re-throw Exception1</span></span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">  func1();</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>包装成新的异常re-throw。具体的代码示例如下所示：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">func1</span><span class="params">()</span> <span class="keyword">throws</span> Exception1 &#123;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">func2</span><span class="params">()</span> <span class="keyword">throws</span> Exception2 &#123;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    func1();</span><br><span class="line">  &#125; <span class="keyword">catch</span>(Exception1 e) &#123;</span><br><span class="line">   <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Exception2</span>(<span class="string">&quot;...&quot;</span>, e); <span class="comment">// wrap成新的Exception2然后re-throw</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当我们面对函数抛出异常的时候，应该选择上面的哪种处理方式呢？我总结了下面三个参考原则：</p>
+<ul>
+<li>如果func1()抛出的异常是可以恢复，且func2()的调用方并不关心此异常，我们完全可以在func2()内将func1()抛出的异常吞掉；</li>
+<li>如果func1()抛出的异常对func2()的调用方来说，也是可以理解的、关心的 ，并且在业务概念上有一定的相关性，我们可以选择直接将func1抛出的异常re-throw；</li>
+<li>如果func1()抛出的异常太底层，对func2()的调用方来说，缺乏背景去理解、且业务概念上无关，我们可以将它重新包装成调用方可以理解的新异常，然后re-throw。</li>
+</ul>
+<p>总之，是否往上继续抛出，要看上层代码是否关心这个异常。关心就将它抛出，否则就直接吞掉。是否需要包装成新的异常抛出，看上层代码是否能理解这个异常、是否业务相关。如果能理解、业务相关就可以直接抛出，否则就封装成新的异常抛出。关于这部分理论知识，我们在下一节课中，会结合ID生成器的代码来进一步讲解。</p>
+<h1 id="重点回顾"><a href="#重点回顾" class="headerlink" title="重点回顾"></a>重点回顾</h1><p>好了，今天的内容到此就讲完了。我们一块来总结回顾一下，你需要掌握的重点内容。</p>
+<p>对于函数出错返回数据类型，我总结了4种情况，它们分别是：错误码、NULL值、空对象、异常对象。</p>
+<p><strong>1.返回错误码</strong></p>
+<p>C语言没有异常这样的语法机制，返回错误码便是最常用的出错处理方式。而Java、Python等比较新的编程语言中，大部分情况下，我们都用异常来处理函数出错的情况，极少会用到错误码。</p>
+<p><strong>2.返回NULL值</strong></p>
+<p>在多数编程语言中，我们用NULL来表示“不存在”这种语义。对于查找函数来说，数据不存在并非一种异常情况，是一种正常行为，所以返回表示不存在语义的NULL值比返回异常更加合理。</p>
+<p><strong>3.返回空对象</strong></p>
+<p>返回NULL值有各种弊端，对此有一个比较经典的应对策略，那就是应用空对象设计模式。当函数返回的数据是字符串类型或者集合类型的时候，我们可以用空字符串或空集合替代NULL值，来表示不存在的情况。这样，我们在使用函数的时候，就可以不用做NULL值判断。</p>
+<p><strong>4.抛出异常对象</strong></p>
+<p>尽管前面讲了很多函数出错的返回数据类型，但是，最常用的函数出错处理方式是抛出异常。异常有两种类型：受检异常和非受检异常。</p>
+<p>对于应该用受检异常还是非受检异常，网上的争论有很多，但也并没有一个非常强有力的理由，说明一个就一定比另一个更好。所以，我们只需要根据团队的开发习惯，在同一个项目中，制定统一的异常处理规范即可。</p>
+<p>对于函数抛出的异常，我们有三种处理方法：直接吞掉、直接往上抛出、包裹成新的异常抛出。这一部分我们留在下一节课中结合实战进一步讲解。</p>
+<h1 id="课堂讨论"><a href="#课堂讨论" class="headerlink" title="课堂讨论"></a>课堂讨论</h1><p>结合我们今天学的理论知识，试着回答一下在文章开头针对RandomIdGenerator提到的四个问题。</p>
+<p>欢迎在留言区写下你的答案，和同学一起交流和分享。如果有收获，也欢迎你把这篇文章分享给你的朋友。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/11/35%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E8%A7%84%E8%8C%83%E4%B8%8E%E9%87%8D%E6%9E%84-%E5%AE%9E%E6%88%98%E4%B8%80%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E6%89%8B%E6%8A%8A%E6%89%8B%E5%B8%A6%E4%BD%A0%E5%B0%86ID%E7%94%9F%E6%88%90%E5%99%A8%E4%BB%A3%E7%A0%81%E4%BB%8E%E2%80%9C%E8%83%BD%E7%94%A8%E2%80%9D%E9%87%8D%E6%9E%84%E4%B8%BA%E2%80%9C%E5%A5%BD%E7%94%A8%E2%80%9D/" rel="prev" title="35设计原则与思想之规范与重构-实战一（下）：手把手带你将ID生成器代码从“能用”重构为“好用”">
+                  <i class="fa fa-angle-left"></i> 35设计原则与思想之规范与重构-实战一（下）：手把手带你将ID生成器代码从“能用”重构为“好用”
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/11/37%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E4%B8%8E%E6%80%9D%E6%83%B3%E4%B9%8B%E8%A7%84%E8%8C%83%E4%B8%8E%E9%87%8D%E6%9E%84-%E5%AE%9E%E6%88%98%E4%BA%8C%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E9%87%8D%E6%9E%84ID%E7%94%9F%E6%88%90%E5%99%A8%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%90%84%E5%87%BD%E6%95%B0%E7%9A%84%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E4%BB%A3%E7%A0%81/" rel="next" title="37设计原则与思想之规范与重构-实战二（下）：重构ID生成器项目中各函数的异常处理代码">
+                  37设计原则与思想之规范与重构-实战二（下）：重构ID生成器项目中各函数的异常处理代码 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

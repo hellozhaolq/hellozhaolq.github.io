@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="线程生命周期">
+<meta property="og:type" content="article">
+<meta property="og:title" content="15Java多线程之生命周期和状态">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2015/10/15Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E7%8A%B6%E6%80%81/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="线程生命周期">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2015/10/15Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E7%8A%B6%E6%80%81/image-20210709100121549.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2015/10/15Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E7%8A%B6%E6%80%81/java-thread.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2015/10/15Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E7%8A%B6%E6%80%81/image-20210709100027532.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2015/10/15Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E7%8A%B6%E6%80%81/threadLifeCycle.jpg">
+<meta property="article:published_time" content="2015-10-08T00:56:20.000Z">
+<meta property="article:modified_time" content="2015-10-08T00:56:20.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="多线程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2015/10/15Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E7%8A%B6%E6%80%81/image-20210709100121549.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2015/10/15Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E7%8A%B6%E6%80%81/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2015/10/15Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E7%8A%B6%E6%80%81/","path":"article/2015/10/15Java多线程之生命周期和状态/","title":"15Java多线程之生命周期和状态"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>15Java多线程之生命周期和状态 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">1.</span> <span class="nav-text">线程生命周期</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%8A%B6%E6%80%81"><span class="nav-number">2.</span> <span class="nav-text">线程状态</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B-%E6%96%B0%E5%BB%BA%E7%8A%B6%E6%80%81-NEW"><span class="nav-number">2.1.</span> <span class="nav-text">初始&#x2F;新建状态 - NEW</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RUNNABLE"><span class="nav-number">2.2.</span> <span class="nav-text">RUNNABLE</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%B1%E7%BB%AA%E7%8A%B6%E6%80%81-%E5%8F%AF%E6%89%A7%E8%A1%8C"><span class="nav-number">2.2.1.</span> <span class="nav-text">就绪状态(可执行)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E7%8A%B6%E6%80%81-%E6%AD%A3%E5%9C%A8%E6%89%A7%E8%A1%8C"><span class="nav-number">2.2.2.</span> <span class="nav-text">运行状态(正在执行)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%98%BB%E5%A1%9E%E7%8A%B6%E6%80%81"><span class="nav-number">2.3.</span> <span class="nav-text">阻塞状态</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5%E9%98%BB%E5%A1%9E-BLOCKED"><span class="nav-number">2.3.1.</span> <span class="nav-text">同步阻塞 - BLOCKED</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%89%E5%BE%85%E9%98%BB%E5%A1%9E"><span class="nav-number">2.3.2.</span> <span class="nav-text">等待阻塞</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AD%89%E5%BE%85-WAITING"><span class="nav-number">2.3.2.1.</span> <span class="nav-text">等待 - WAITING</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E6%97%B6%E7%AD%89%E5%BE%85-TIMED-WAITING"><span class="nav-number">2.3.2.2.</span> <span class="nav-text">定时等待 - TIMED_WAITING</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E9%98%BB%E5%A1%9E"><span class="nav-number">2.3.3.</span> <span class="nav-text">其他阻塞</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%88%E6%AD%A2-%E6%AD%BB%E4%BA%A1%E7%8A%B6%E6%80%81-TERMINATED"><span class="nav-number">2.4.</span> <span class="nav-text">终止&#x2F;死亡状态 - TERMINATED</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2015/10/15Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E7%8A%B6%E6%80%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="15Java多线程之生命周期和状态 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          15Java多线程之生命周期和状态
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2015-10-08 08:56:20" itemprop="dateCreated datePublished" datetime="2015-10-08T08:56:20+08:00">2015-10-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="线程生命周期"><a href="#线程生命周期" class="headerlink" title="线程生命周期"></a>线程生命周期</h1><p><img src="/article/2015/10/15Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E7%8A%B6%E6%80%81/image-20210709100121549.png" alt="image-20210709100121549"></p>
+<p><img src="/article/2015/10/15Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E7%8A%B6%E6%80%81/java-thread.jpg" alt="img"></p>
+<span id="more"></span>
+
+<h1 id="线程状态"><a href="#线程状态" class="headerlink" title="线程状态"></a>线程状态</h1><p> <a target="_blank" rel="noopener" href="https://www.runoob.com/java/thread-status.html">Java 实例 - 获取线程状态 - 菜鸟</a> </p>
+<p>线程的状态转换图及常见执行情况（图片仅供参考，详细状态见后文）：</p>
+<p><img src="/article/2015/10/15Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E7%8A%B6%E6%80%81/image-20210709100027532.png" alt="image-20210709100027532"></p>
+<p><img src="/article/2015/10/15Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E7%8A%B6%E6%80%81/threadLifeCycle.jpg" alt="img"></p>
+<p>Java 线程的生命周期中，在 Thread 类里有一个枚举类型 State，定义了线程的几种状态，分别有：</p>
+<p>Thread.State.NEW;<br>Thread.State.RUNNABLE;<br>Thread.State.BLOCKED;<br>Thread.State.WAITING;<br>Thread.State.TIMED_WAITING;<br>Thread.State.TERMINATED;</p>
+<h2 id="初始-新建状态-NEW"><a href="#初始-新建状态-NEW" class="headerlink" title="初始&#x2F;新建状态 - NEW"></a>初始&#x2F;新建状态 - NEW</h2><p> <code>Thread.State.NEW</code> ：尚未启动的线程的线程状态。</p>
+<p>实现 Runnable 接口和继承 Thread 可以得到一个线程类，new 一个实例出来，线程就进入了初始状态。它保持这个状态直到程序 <strong>start()</strong> 这个线程。</p>
+<h2 id="RUNNABLE"><a href="#RUNNABLE" class="headerlink" title="RUNNABLE"></a>RUNNABLE</h2><p> <code>Thread.State.RUNNABLE</code> ：可运行线程的线程状态，包括两种状态：</p>
+<h3 id="就绪状态-可执行"><a href="#就绪状态-可执行" class="headerlink" title="就绪状态(可执行)"></a>就绪状态(可执行)</h3><p>简言之，无执行权但可执行。</p>
+<p>就绪状态只是说你资格运行，调度程序没有挑选到你，你就永远是就绪状态，<font color="red">正在等待CPU资源。</font> </p>
+<p>调用线程的 start() 方法，此线程进入就绪状态。就绪状态的线程处于<strong>就绪队列</strong>中。</p>
+<p>当前线程 sleep() 方法结束，其他线程 join() 结束，等待用户输入完毕，某个线程拿到对象锁，这些线程也将进入就绪状态。</p>
+<p>当前线程时间片用完了，调用当前线程的 yield() 方法，当前线程进入就绪状态。</p>
+<p>锁池里的线程拿到对象锁后，进入就绪状态。</p>
+<h3 id="运行状态-正在执行"><a href="#运行状态-正在执行" class="headerlink" title="运行状态(正在执行)"></a>运行状态(正在执行)</h3><p>简言之，有执行权且正在执行。</p>
+<p>线程调度程序(JVM或操作系统的线程调度器)从可运行池(处于就绪状态的线程)中选择一个线程执行，即就绪状态的线程获取到CPU资源，此时线程就由就绪变成运行。这也是线程进入运行状态的唯一方式。</p>
+<p><font color="red">处于运行状态的线程最为复杂，它可以变为阻塞状态、就绪状态和死亡状态。</font> </p>
+<h2 id="阻塞状态"><a href="#阻塞状态" class="headerlink" title="阻塞状态"></a>阻塞状态</h2><h3 id="同步阻塞-BLOCKED"><a href="#同步阻塞-BLOCKED" class="headerlink" title="同步阻塞 - BLOCKED"></a>同步阻塞 - BLOCKED</h3><p> <code>Thread.State.BLOCKED</code> ：线程被阻塞，等待监视器锁的线程状态。触发条件：synchronized、Lock.lock。</p>
+<p>因为线程获取 synchronized 同步锁失败（同步锁被其他线程占用），所以<font color="red">线程阻塞在进入 synchronized 关键字修饰的代码块或方法（在努力获取锁&#x2F;争夺锁）</font>，此时的状态为 <code>BLOCKED</code> 。<font color="red">调用 <code>Object.notify</code> 后重新进入重新获取锁。</font> </p>
+<h3 id="等待阻塞"><a href="#等待阻塞" class="headerlink" title="等待阻塞"></a>等待阻塞</h3><h4 id="等待-WAITING"><a href="#等待-WAITING" class="headerlink" title="等待 - WAITING"></a>等待 - WAITING</h4><p> <code>Thread.State.WAITING</code> ：等待状态</p>
+<p>调用以下方法之一，线程处于等待状态：</p>
+<ul>
+<li><code>Object.wait</code> 调用无参方法</li>
+<li><code>Thread.join</code> 调用无参方法</li>
+<li><code>LockSupport.park</code> </li>
+<li><code>Condition.await()</code></li>
+</ul>
+<p>处于这种状态的线程不会被分配 CPU 资源，需主动唤醒，否则会处于无限<strong>等待</strong>状态。例如：</p>
+<ul>
+<li>在对象上调用 <code>Object.wait()</code> 的线程正在等待另一个线程在该对象上调用 <code>Object.notify()</code> 或 <code>Object.notifyAll()</code> 。</li>
+<li><code>LockSupport.unpark</code> 已启动的线程， 如果线程在park上被阻塞，那么它将解除阻塞。 否则，保证它的下一次park调用不会阻塞。 </li>
+<li>调用 <code>Thread.join()</code> 线程<font color="red"><strong>正在等待指定的线程终止</strong></font>。</li>
+</ul>
+<p><font color="red"> <code>Object.wait()</code> 能否使用  <code>LockSupport.unpark</code> 解除阻塞？<code>LockSupport.park</code> 能否使用 <code>Object.notify()</code> 唤醒？</font> </p>
+<h4 id="定时等待-TIMED-WAITING"><a href="#定时等待-TIMED-WAITING" class="headerlink" title="定时等待 - TIMED_WAITING"></a>定时等待 - TIMED_WAITING</h4><p> <code>Thread.State.TIMED_WAITING</code> ：具有指定等待时间的等待状态</p>
+<p>调用以下方法之一，线程处于<strong>定时等待</strong>状态：</p>
+<ul>
+<li><code>Thread.sleep</code> </li>
+<li><code>Object.wait</code> 调用有参方法</li>
+<li><code>Thread.join</code> 调用有参方法</li>
+<li><code>LockSupport.parkNanos</code> </li>
+<li><code>LockSupport.parkUntil</code> </li>
+<li><code>Condition.await()</code> 调用有参方法</li>
+</ul>
+<p>处于这种状态的线程不会被分配 CPU 执行时间，如果不主动唤醒，那么一定时间后它们<strong>会自动唤醒</strong>。</p>
+<h3 id="其他阻塞"><a href="#其他阻塞" class="headerlink" title="其他阻塞"></a>其他阻塞</h3><p>发出 I&#x2F;O 请求时，线程也会进入阻塞状态。<font color="red">但不知实际对应哪一种( <code>Thread.State.BLOCKED</code> ) ？</font>I&#x2F;O 处理完毕，重新转为就绪状态。</p>
+<h2 id="终止-死亡状态-TERMINATED"><a href="#终止-死亡状态-TERMINATED" class="headerlink" title="终止&#x2F;死亡状态 - TERMINATED"></a>终止&#x2F;死亡状态 - TERMINATED</h2><p> <code>Thread.State.TERMINATED</code> ：线程已完成执行或被终止</p>
+<p>如何终止正在运行的线程：</p>
+<ul>
+<li>主线程 main() 方法完成即终止。</li>
+<li>线程的 run() 方法完成即终止。</li>
+<li>终止条件发生。调用 stop()、interrupt() 方法</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag"># 多线程</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2015/10/14Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E4%BB%8B%E7%BB%8D/" rel="prev" title="14Java多线程之介绍">
+                  <i class="fa fa-angle-left"></i> 14Java多线程之介绍
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2015/10/16Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%BA%BF%E7%A8%8B%E8%B0%83%E5%BA%A6/" rel="next" title="16Java多线程之线程调度">
+                  16Java多线程之线程调度 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Java实现 https:&#x2F;&#x2F;www.baeldung.com&#x2F;java-atomikos 视频 https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v&#x3D;fBGmuUdNejM https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v&#x3D;0DC4BAkIozM https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v&#x3D;Au_T1yk_AWU https:&#x2F;&#x2F;www.youtube">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式事务解决方案详解">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="Java实现 https:&#x2F;&#x2F;www.baeldung.com&#x2F;java-atomikos 视频 https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v&#x3D;fBGmuUdNejM https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v&#x3D;0DC4BAkIozM https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v&#x3D;Au_T1yk_AWU https:&#x2F;&#x2F;www.youtube">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223527536-316703542.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223527159-1771197355.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223526822-920676932.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223526373-1324414868.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223525751-783739931.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223525304-1032615173.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223524738-1458164709.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223524287-1230580948.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223523861-1607218317.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223523395-1090494584.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223522858-881002826.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223522289-1676461838.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223521873-558611025.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223521465-1323643365.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223521087-1963379793.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223520683-2070254747.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223520117-1837358977.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223519666-51242653.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223519276-1817580096.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223518815-608152946.png">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223518154-881670379.png">
+<meta property="article:published_time" content="2022-05-03T00:02:00.000Z">
+<meta property="article:modified_time" content="2022-05-03T00:02:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223527536-316703542.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/","path":"article/2022/05/分布式事务解决方案详解/","title":"分布式事务解决方案详解"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>分布式事务解决方案详解 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">分布式事务简介</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B7%A8%E5%BA%93%E4%BA%8B%E5%8A%A1"><span class="nav-number">1.1.</span> <span class="nav-text">跨库事务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8"><span class="nav-number">1.2.</span> <span class="nav-text">分库分表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9E%B6%E6%9E%84"><span class="nav-number">1.3.</span> <span class="nav-text">微服务架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">1.4.</span> <span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E7%A7%8D%E7%B1%BB"><span class="nav-number">2.</span> <span class="nav-text">分布式事务解决方案种类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9A%E6%80%A7%E4%BA%8B%E5%8A%A1"><span class="nav-number">3.</span> <span class="nav-text">刚性事务</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2PC"><span class="nav-number">3.1.</span> <span class="nav-text">2PC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#XA-%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.2.</span> <span class="nav-text">XA 协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3PC"><span class="nav-number">3.3.</span> <span class="nav-text">3PC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Seata-AT-%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.4.</span> <span class="nav-text">Seata AT 模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">3.4.1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E4%B8%AA%E8%A7%92%E8%89%B2"><span class="nav-number">3.4.2.</span> <span class="nav-text">三个角色</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%A4%E4%B8%AA%E9%98%B6%E6%AE%B5"><span class="nav-number">3.4.3.</span> <span class="nav-text">两个阶段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Seata-AT%E6%A8%A1%E5%BC%8F%E5%AD%98%E5%9C%A8%E7%9A%84%E9%97%AE%E9%A2%98-%E4%BB%A5%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">3.4.4.</span> <span class="nav-text">Seata AT模式存在的问题,以及解决方案</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%94%E6%80%A7%E4%BA%8B%E5%8A%A1"><span class="nav-number">4.</span> <span class="nav-text">柔性事务</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%AF%E9%9D%A0%E6%B6%88%E6%81%AF%E6%9C%80%E7%BB%88%E4%B8%80%E8%87%B4%E6%80%A7-%E5%BC%82%E6%AD%A5%E7%A1%AE%E4%BF%9D%E5%9E%8B%E4%BA%8B%E5%8A%A1"><span class="nav-number">4.1.</span> <span class="nav-text">可靠消息最终一致性(异步确保型事务)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E6%B6%88%E6%81%AF%E8%A1%A8%E6%96%B9%E6%A1%88"><span class="nav-number">4.1.1.</span> <span class="nav-text">本地消息表方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E6%80%A7%E6%B6%88%E6%81%AF"><span class="nav-number">4.1.2.</span> <span class="nav-text">事务性消息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E8%80%85%E5%8C%BA%E5%88%AB"><span class="nav-number">4.1.3.</span> <span class="nav-text">二者区别</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%A4%A7%E5%8A%AA%E5%8A%9B%E9%80%9A%E7%9F%A5"><span class="nav-number">4.2.</span> <span class="nav-text">最大努力通知</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCC"><span class="nav-number">4.3.</span> <span class="nav-text">TCC</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A9%BA%E5%9B%9E%E6%BB%9A-%E5%B9%82%E7%AD%89-%E6%82%AC%E6%8C%82%E9%97%AE%E9%A2%98"><span class="nav-number">4.3.1.</span> <span class="nav-text">空回滚,幂等,悬挂问题</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="分布式事务解决方案详解 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          分布式事务解决方案详解
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-05-03 08:02:00" itemprop="dateCreated datePublished" datetime="2022-05-03T08:02:00+08:00">2022-05-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>Java实现</p>
+<p><a target="_blank" rel="noopener" href="https://www.baeldung.com/java-atomikos">https://www.baeldung.com/java-atomikos</a></p>
+<p>视频</p>
+<p><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=fBGmuUdNejM">https://www.youtube.com/watch?v=fBGmuUdNejM</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=0DC4BAkIozM">https://www.youtube.com/watch?v=0DC4BAkIozM</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=Au_T1yk_AWU">https://www.youtube.com/watch?v=Au_T1yk_AWU</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=zURKF_suxOg">https://www.youtube.com/watch?v=zURKF_suxOg</a></p>
+<p>参考资料</p>
+<p><a target="_blank" rel="noopener" href="https://seata.apache.org/zh-cn/blog/tcc-mode-design-principle/">https://seata.apache.org/zh-cn/blog/tcc-mode-design-principle/</a></p>
+<p><a target="_blank" rel="noopener" href="https://seata.apache.org/zh-cn/docs/dev/mode/at-mode/">https://seata.apache.org/zh-cn/docs/dev/mode/at-mode/</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.tianshouzhi.com/api/tutorials/distributed_transaction">http://www.tianshouzhi.com/api/tutorials/distributed_transaction</a></p>
+<p><a target="_blank" rel="noopener" href="https://rocketmq.apache.org/zh/docs/featureBehavior/04transactionmessage">https://rocketmq.apache.org/zh/docs/featureBehavior/04transactionmessage</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/crazymakercircle/p/13917517.html#autoid-h3-26-0-0">https://www.cnblogs.com/crazymakercircle/p/13917517.html#autoid-h3-26-0-0</a></p>
+<span id="more"></span>
+
+<h1 id="分布式事务简介"><a href="#分布式事务简介" class="headerlink" title="分布式事务简介"></a>分布式事务简介</h1><p>大多数场景下，我们的应用都只需要操作单一的数据库，这种情况下的事务称之为本地事务(LocalTransaction)。本地事务的ACID特性是数据库直接提供支持。本地事务应用架构如下所示：</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223527536-316703542.png" alt="image-20240303224003601"></p>
+<p>但是在微服务架构中，完成某一个业务功能可能需要横跨多个服务，操作多个数据库。这就涉及到到了分布式事务，需要操作的资源位于多个资源服务器上，而应用需要保证对于多个资源服务器的数据操作，要么全部成功，要么全部失败。本质上来说，分布式事务就是为了保证不同资源服务器的数据一致性。</p>
+<h2 id="跨库事务"><a href="#跨库事务" class="headerlink" title="跨库事务"></a>跨库事务</h2><p>跨库事务指的是，一个应用某个功能需要操作多个库，不同的库中存储不同的业务数据。下图演示了一个服务同时操作2个库的情况：</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223527159-1771197355.png" alt="image-20240303224103249"></p>
+<h2 id="分库分表"><a href="#分库分表" class="headerlink" title="分库分表"></a>分库分表</h2><p>通常一个库数据量比较大或者预期未来的数据量比较大，都会进行分库分表。如下图，将数据库B拆分成了2个库：</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223526822-920676932.png" alt="image-20240303224123336"></p>
+<p>对于分库分表的情况，一般开发人员都会使用一些数据库中间件来降低sql操作的复杂性。如，对于sql：<code>insert into user (id,name) values (1,&quot;张三&quot;),(2,&quot;李四&quot;)</code>。这条sql是操作单库的语法，单库情况下，可以保证事务的一致性。但是由于现在进行了分库分表，开发人员希望将1号记录插入分库1，2号记录插入分库2。所以数据库中间件要将其改写为2条sql，分别插入两个不同的分库，此时要保证两个库要不都成功，要不都失败，因此基本上所有的数据库中间件都面临着分布式事务的问题。</p>
+<h2 id="微服务架构"><a href="#微服务架构" class="headerlink" title="微服务架构"></a>微服务架构</h2><p>下图演示了一个3个服务之间彼此调用的微服务架构：</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223526373-1324414868.png" alt="image-20240303224239729"></p>
+<p>ServiceA完成某个功能需要直接操作数据库，同时需要调用ServiceB和ServiceC，而ServiceB又同时操作了2个数据库，ServiceC也操作了一个库。需要保证这些跨服务调用对多个数据库的操作要么都成功，要么都失败，实际上这可能是最典型的分布式事务场景。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>上述讨论的分布式事务场景中，无一例外的都直接或者间接的操作了多个数据库。如何保证事务的ACID特性，对于分布式事务实现方案而言，是非常大的挑战。同时，分布式事务实现方案还必须要考虑性能的问题，如果为了严格保证ACID特性，导致性能严重下降，那么对于一些要求快速响应的业务，是无法接受的。</p>
+<h1 id="分布式事务解决方案种类"><a href="#分布式事务解决方案种类" class="headerlink" title="分布式事务解决方案种类"></a>分布式事务解决方案种类</h1><p>解决分布式问题是一个很复杂的问题,对于不同的业务场景,对业务的一致性要求和高并发要求的权衡, 都需要精心选用不同模式的实现方案.</p>
+<p>分布式事务实现方案从类型上去分刚性事务、柔型事务：</p>
+<ul>
+<li>刚性事务满足CAP的CP理论</li>
+<li>柔性事务满足BASE理论（基本可用，最终一致,即AP）</li>
+</ul>
+<p>其中刚性事务实现主要有 2PC模式,XA协议, 3PC, Seata AT 模式</p>
+<p>柔性事务主要有, TCC ,Saga, 可靠消息最终一致, 最大努力通知等,</p>
+<p>放一张网络上的图</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223525751-783739931.png" alt="image-20240303230502050"></p>
+<h1 id="刚性事务"><a href="#刚性事务" class="headerlink" title="刚性事务"></a>刚性事务</h1><h2 id="2PC"><a href="#2PC" class="headerlink" title="2PC"></a>2PC</h2><p>两阶段提交（TwoPhaseCommit），就是将提交(commit)过程划分为2个阶段(Phase),但是在介绍两个阶段之前,首先要知道,在2PC事务中的两个角色</p>
+<p>分别为：</p>
+<ul>
+<li>协调者角色(事务管理器TM)</li>
+<li>参与者角色（资源管理器RM）</li>
+</ul>
+<p>TM 负责收集各个参与者反馈的状态, 并统筹整体事务,向各个参与者发送指令，做出提交或者回滚决策<br>RM 接收协调者的指令执行事务操作，向协调者反馈操作结果，并继续执行协调者发送的最终指令</p>
+<p>举例 ：在学校中, 同学A和同学B一起到校门口集合,由于两同学间没有联系, 所以只能靠老师依次联系,要求其到校门口集合, 在这件事中需要两同学要不都来, 要不都不来<br>准备阶段 ：同学A先到,在这里等待,其次同学B后带,人到齐<br>提交阶段 ：老师宣布到齐,集体出发<br>例子中形成两一个事务，若同学A或同学B有一个因为有事没来, 这件事就办不成,只能让已经来的同学先回班级 。<br>整个事务过程由事务管理器和参与者组成，老师就是事务管理器，两同学就是事务参与者，事务管理器负责决策整个分布式事务的提交和回滚，事务参与者负责自己本地事务的提交和回滚。</p>
+<p>下面再看一下两个阶段:</p>
+<p><strong>阶段1(准备阶段)：</strong></p>
+<p>TM通知各个RM准备提交它们的事务分支。如果RM判断自己进行的工作可以被提交，那就对工作内容进行持久化，再给TM肯定答复；要是发生了其他情况，那给TM的都是否定答复。</p>
+<p>以mysql数据库为例，在第一阶段，事务管理器向所有涉及到的数据库服务器发出prepare”准备提交”请求，数据库收到请求后执行数据修改和日志记录等处理，处理完成后只是把事务的状态改成”可以提交”,然后把结果返回给事务管理器。</p>
+<p><strong>阶段2(提交阶段)</strong></p>
+<p>TM根据阶段1各个RM prepare的结果，决定是提交还是回滚事务。如果所有的RM都prepare成功，那么TM通知所有的RM进行提交；如果有RM prepare失败的话，则TM通知所有RM回滚自己的事务分支。</p>
+<p>以mysql数据库为例，如果第一阶段中所有数据库都prepare成功，那么事务管理器向数据库服务器发出”确认提交”请求，数据库服务器把事务的”可以提交”状态改为”提交完成”状态，然后返回应答。如果在第一阶段内有任何一个数据库的操作发生了错误，或者事务管理器收不到某个数据库的回应，则认为事务失败，回撤所有数据库的事务。数据库服务器收不到第二阶段的确认提交请求，也会把”可以提交”的事务回撤。</p>
+<p>两阶段提交方案下全局事务的ACID特性，是依赖于RM的。一个全局事务内部包含了多个独立的事务分支，这一组事务分支要么都成功，要么都失败。各个事务分支的ACID特性共同构成了全局事务的ACID特性。也就是将单个事务分支支持的ACID特性提升一个层次到分布式事务的范畴。</p>
+<p>都成功的示意图:</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223525304-1032615173.png" alt="image-20240304214038875"></p>
+<p>有失败时的示意图:</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223524738-1458164709.png" alt="image-20240304214057257"></p>
+<p>两阶段提交存在的问题:</p>
+<ul>
+<li><strong>同步阻塞问题</strong> 2PC中的参与者是阻塞的。在第一阶段收到请求后就会预先锁定资源，一直到commit后才会释放。(如例子中,两同学在收到是集合出发,还是全部回家之前,都需要为去门口集合做准备,不能随便乱跑,别人也让他两干不了其他事)</li>
+<li><strong>单点故障</strong> 由于协调者的重要性，一旦协调者TM发生故障，参与者RM会一直阻塞下去。尤其在第二阶段，协调者发生故障，那么所有的参与者还都处于锁定事务资源的状态中，而无法继续完成事务操作。(例子中,如果老师没来,先来的同学会一直在门口等着, 或者某一个同学迟迟没有消息,既没有跟老师说不来,也没有跟老师说来, 将也会导致先来的同学一致等待)</li>
+<li><strong>数据不一致</strong>, 若协调者第二阶段发送提交请求时崩溃，可能部分参与者收到commit请求提交了事务，而另一部分参与者未收到commit请求而放弃事务，从而造成数据不一致的问题。(如果老师宣布出发时,有一个同学没听见, 或者分神了,都将会导致没有集体出发)</li>
+</ul>
+<h2 id="XA-协议"><a href="#XA-协议" class="headerlink" title="XA 协议"></a>XA 协议</h2><p>2PC的传统方案是在数据库层面实现的，如Oracle、MySQL都支持2PC协议，为了<strong>统一标准减少行业内不必要的对接成本</strong>，需要制定标准化的处理模型及接口标准，国际开放标准组织Open Group定义分布式事务处理模型<strong>DTP</strong>（Distributed Transaction Processing Reference Model）。即 TM和RM之间通信的协议定义,即接口的定义, 若各开发商需要实现XA协议的2PC模式, 需要对XA接口进行实现</p>
+<p>一般我们常用的 数据库默认都 实现了 XA接口, 例如Mysql等等 . 例如Seata 分布式框架的XA模式,即是将默认支持XA规范的数据源做一层封装而已,使用起来更简单</p>
+<h2 id="3PC"><a href="#3PC" class="headerlink" title="3PC"></a>3PC</h2><p>三阶段提交协议（3PC）主要是为了解决两阶段提交协议的阻塞问题，2pc存在的问题是当协作者崩溃时，参与者不能做出最后的选择。因此参与者可能在协作者恢复之前保持阻塞。三阶段提交（Three-phase commit），是二阶段提交（2PC）的改进版本。目的就是解决一阶段中的阻塞问题,或者说是部分阻塞</p>
+<p>所谓的三个阶段分别是：<strong>询问，然后再锁资源，最后真正提交</strong>。</p>
+<p>可以理解为 在二阶段之前 添加了 询问操作,</p>
+<ul>
+<li>第一阶段：CanCommit</li>
+<li>第二阶段：PreCommit</li>
+<li>第三阶段：Do Commit</li>
+</ul>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223524287-1230580948.png" alt="image-20240304232122476"></p>
+<p><strong>阶段一：CanCommit</strong></p>
+<ol>
+<li>事务询问。协调者向所有参与者发送包含事务内容的canCommit的请求，询问是否可以执行事务提交，并等待应答；</li>
+<li>各参与者反馈事务询问。正常情况下，如果参与者认为可以顺利执行事务，则返回Yes，否则返回No。</li>
+</ol>
+<p>经过这一轮询问下来,保证了所有节点此时都是畅通的, 并且资源充足等等,并为后面做好了准备, 至少避免了99% 的事务异常的情况导致的阻塞,使异常提前发生,避免了在有些事务已经预提交后再发生问题, 也使得后面的行为更加的<strong>大胆</strong></p>
+<p><strong>阶段二：PreCommit</strong></p>
+<p>在本阶段，协调者会根据上一阶段的反馈情况来决定是否可以执行事务的PreCommit操作。有以下两种可能</p>
+<ul>
+<li>执行事务预提交(CanCommit全部返回YES)</li>
+<li>中断事务 (任意一个NO)</li>
+</ul>
+<p><strong>执行事务预提交</strong></p>
+<ol>
+<li>发送预提交请求。协调者向所有节点发出PreCommit请求，并进入prepared阶段；</li>
+<li>事务预提交。参与者收到PreCommit请求后，会<strong>开始事务操作</strong>，并将Undo和Redo日志写入本机事务日志；</li>
+<li>各参与者成功执行事务操作，同时将反馈以Ack响应形式发送给协调者，同事等待三阶段的最终的Commit或Abort指令。</li>
+</ol>
+<p><strong>中断事务</strong></p>
+<p>如果任意一个参与者向协调者发送<strong>No</strong>响应，或者<strong>等待超时</strong>，协调者在没有得到所有参与者响应时，即可以中断事务。</p>
+<p>中断事务的操作为：</p>
+<ol>
+<li>发送中断请求。 协调者向所有参与者发送Abort请求；</li>
+<li>中断事务。无论是participant 收到协调者的Abort请求，还是participant 等待协调者请求过程中出现超时，参与者都会中断事务；</li>
+</ol>
+<p><strong>阶段三：doCommit</strong></p>
+<p>在这个阶段，会真正的进行事务提交，同样存在两种可能。</p>
+<ul>
+<li>执行提交</li>
+<li>回滚事务</li>
+</ul>
+<p><strong>执行提交</strong></p>
+<ol>
+<li>coordinator发送提交请求。假如coordinator协调者收到了所有参与者的Ack响应，那么将从预提交转换到提交状态，并向所有参与者，发送doCommit请求；</li>
+<li>事务提交。参与者收到doCommit请求后，会正式执行事务提交操作，并在完成提交操作后释放占用资源；</li>
+<li>反馈事务提交结果。参与者将在完成事务提交后，向协调者发送Ack消息；</li>
+<li>完成事务。协调者接收到所有参与者的Ack消息后，完成事务。</li>
+</ol>
+<p><strong>回滚事务</strong></p>
+<p>在该阶段，假设正常状态的协调者接收到任一个参与者发送的No响应，或在超时时间内，仍旧没收到反馈消息，就会回滚事务：</p>
+<ol>
+<li>发送中断请求。协调者向所有的参与者发送rollback请求；</li>
+<li>事务回滚。参与者收到rollback请求后，会利用阶段二中的Undo消息执行事务回滚，并在完成回滚后释放占用资源；</li>
+<li>反馈事务回滚结果。参与者在完成回滚后向协调者发送Ack消息；</li>
+<li>回滚事务。协调者接收到所有参与者反馈的Ack消息后，完成事务回滚。</li>
+</ol>
+<p><strong>如何解决阻塞</strong></p>
+<p>在doCommit阶段，如果参与者无法及时接收到来自协调者的doCommit或者rollback请求时，会在等待超时之后，<strong>继续进行事务的提交</strong>。因为如果能进入第三阶段,那么第一个阶段所有节点都返回了YES,换句话说就是 :</p>
+<p><strong>当进入第三阶段时，由于网络超时&#x2F;网络分区等原因，虽然参与者没有收到commit或者abort响应，但是他有理由相信：成功提交的几率很大</strong>。</p>
+<p>所以理论上就是解决了2PC中, 因为超时或者协调者宕机,导致所以资源一直等待, 3PC则更加大胆, 超时直接提交</p>
+<p>这个<strong>阻塞还是存在的</strong>，毕竟各个参与者还是会<strong>开启事务</strong>。那就存在一段时间，所有参与者都在事务中，还是会停止相应其他操作。</p>
+<p>但是<strong>阻塞不会一直持续下去</strong>。在两阶段提交中，如果阻塞发生后协调者宕机，则阻塞会一直存在，无法解开；而三阶段提交中，即使协调者宕机，参与者也会自动提交事务进而解开阻塞。</p>
+<h2 id="Seata-AT-模式"><a href="#Seata-AT-模式" class="headerlink" title="Seata AT 模式"></a>Seata AT 模式</h2><h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>AT 模式是 Seata 创新的一种非侵入式的分布式事务解决方案，Seata 在内部做了对数据库操作的代理层，我们使用 Seata AT 模式时，实际上用的是 Seata 自带的数据源代理 DataSourceProxy，Seata 在这层代理中加入了很多逻辑，比如插入回滚 undo_log 日志，检查全局锁等。Seata AT 模式是标准2PC的演变,在此基础上进行优化</p>
+<p>使用前提:</p>
+<ul>
+<li>基于支持本地 ACID 事务的关系型数据库。</li>
+<li>Java 应用，通过 JDBC 访问数据库。</li>
+</ul>
+<p>两阶段提交协议的演变:</p>
+<ul>
+<li>一阶段：业务数据和回滚日志记录在同一个本地事务中提交，释放本地锁和连接资源。</li>
+<li>二阶段：<ul>
+<li>提交异步化，非常快速地完成。</li>
+<li>回滚通过一阶段的回滚日志进行反向补偿。</li>
+</ul>
+</li>
+</ul>
+<h3 id="三个角色"><a href="#三个角色" class="headerlink" title="三个角色"></a>三个角色</h3><p>在Seata AT的架构中，一共有三个角色：</p>
+<ul>
+<li><p>TC(TransactionCoordinator)-事务协调者</p>
+<p>维护全局和分支事务的状态，驱动全局事务提交或回滚。</p>
+</li>
+<li><p>TM(TransactionManager)-事务管理器</p>
+<p>定义全局事务的范围：开始全局事务、提交或回滚全局事务。</p>
+</li>
+<li><p>RM(ResourceManager)-资源管理器</p>
+<p>管理分支事务处理的资源，与TC交谈以注册分支事务和报告分支事务的状态，并驱动分支事务提交或回滚。</p>
+</li>
+</ul>
+<p>其中，TC为单独部署的Server服务端，TM和RM为嵌入到应用中的Client客户端。</p>
+<p>在Seata中，一个分布式事务的生命周期如下：</p>
+<p>1.客户端A作为入口, 远程调用了客户端B和C的资源, 此时就在客户端A创建了一个TM, TM请求TC开启一个全局事务。TC会生成一个XID作为该全局事务的编号。XID会在微服务的调用链路中传播(例如使用OpenFeign调用时,会拦截进行添加header)，保证将多个微服务的子事务关联在一起。</p>
+<p>2.被调用的链路中的RM会请求TC将本地事务注册为全局事务的分支事务，通过全局事务的XID进行关联。</p>
+<p>3.当客户端A调用完毕,并且B,C都没有报错,执行到客户端A方法的尾部, 那么处于客户端A中的TM会请求TC告诉XID对应的全局事务是进行提交, 如果有报错则全部通知回滚。</p>
+<p>4.TC驱动RM们将XID对应的自己的本地事务进行提交还是回滚。</p>
+<p>如下图:</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223523861-1607218317.png" alt="image-20240304220828326"></p>
+<h3 id="两个阶段"><a href="#两个阶段" class="headerlink" title="两个阶段"></a>两个阶段</h3><p>以一个示例来说明整个 AT 分支的工作过程。</p>
+<p>如下product表</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Key</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>id</td>
+<td>bigint(20)</td>
+<td>PRI</td>
+</tr>
+<tr>
+<td>name</td>
+<td>varchar(100)</td>
+<td></td>
+</tr>
+<tr>
+<td>since</td>
+<td>varchar(100)</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>某分支执行如下sql:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">update</span> product <span class="keyword">set</span> name <span class="operator">=</span> <span class="string">&#x27;GTS&#x27;</span> <span class="keyword">where</span> name <span class="operator">=</span> <span class="string">&#x27;TXC&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p><strong>一阶段</strong></p>
+<ol>
+<li>解析 SQL：得到 SQL 的类型（UPDATE），表（product），条件（where name &#x3D; ‘TXC’）等相关的信息。</li>
+<li>查询前镜像：根据解析得到的条件信息，生成查询语句，定位数据。(修改前的数据 )</li>
+<li>执行业务 SQL：更新这条记录的 name 为 ‘GTS’。</li>
+<li>查询后镜像：根据前镜像的结果，通过 <strong>主键</strong> 定位数据</li>
+<li>插入回滚日志：把前后镜像数据以及业务 SQL 相关的信息组成一条回滚日志记录，插入到 <code>UNDO_LOG</code> 表中。用作后续二阶段做准备</li>
+<li>提交前，向 TC 注册分支：申请 <code>product</code> 表中，主键值等于 1 的记录的 <strong>全局锁</strong> 。</li>
+<li>本地事务提交：业务数据的更新和前面步骤中生成的 UNDO LOG 一并提交。</li>
+<li>将本地事务提交的结果上报给 TC。</li>
+</ol>
+<p>如下示意图:</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223523395-1090494584.png" alt="image-20240304221618074"></p>
+<p>由此可以看出,Seata AT 模式和 传统2PC的根本区别在于, <strong>一阶段中AT模式是将数据真正提交, 此时将会释放掉资源, 数据的回滚是靠记录的表数据进行, 而传统2PC 此处将一直保持连接, 直到全局事务的结束</strong></p>
+<p><strong>二阶段-回滚:</strong></p>
+<ol>
+<li>收到 TC 的分支回滚请求，开启一个本地事务，执行如下操作。</li>
+<li>通过 XID 和 Branch ID 查找到相应的 UNDO LOG 记录。</li>
+<li>数据校验：拿 UNDO LOG 中的后镜与当前数据进行比较，如果有不同，说明数据被当前全局事务之外的动作做了修改。这种情况，需要根据配置策略来做处理，详细的说明请自行查阅 Seata 官网。</li>
+<li>根据 UNDO LOG 中的前镜像和业务 SQL 的相关信息生成并执行回滚的语句</li>
+<li>提交本地事务。并把本地事务的执行结果（即分支事务回滚的结果）上报给 TC。</li>
+</ol>
+<p><strong>二阶段-提交:</strong></p>
+<ol>
+<li>收到 TC 的分支提交请求，把请求放入一个异步任务的队列中，马上返回提交成功的结果给 TC。</li>
+<li>异步任务阶段的分支提交请求将异步和批量地删除相应 UNDO LOG 记录。</li>
+</ol>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223522858-881002826.png" alt="image-20240304222523297"></p>
+<h3 id="Seata-AT模式存在的问题-以及解决方案"><a href="#Seata-AT模式存在的问题-以及解决方案" class="headerlink" title="Seata AT模式存在的问题,以及解决方案"></a>Seata AT模式存在的问题,以及解决方案</h3><p>问题一:</p>
+<p>通过上面的学习,我们知道Seata AT的一阶段是真实将数据库提交的, 那么对于这条记录,其他业务此时是可以对这条记录进行修改的, 但是我们知道,在二阶段中, 我们有可能将此记录回滚, 这时就出现了脏写的问题</p>
+<p><strong>写隔离</strong>: Seata 使用了两把锁解决此问题</p>
+<ul>
+<li>一阶段本地事务提交前，需要确保先拿到 <strong>全局锁</strong> 。</li>
+<li>拿不到 <strong>全局锁</strong> ，不能提交本地事务。</li>
+<li>拿 <strong>全局锁</strong> 的尝试被限制在一定范围内，超出范围将放弃，并回滚本地事务，释放本地锁。</li>
+</ul>
+<p>以一个示例来说明：</p>
+<p>两个全局事务 tx1 和 tx2，分别对 a 表的 m 字段进行更新操作，m 的初始值 1000。</p>
+<p>tx1 先开始，开启本地事务，拿到本地锁，更新操作 m &#x3D; 1000 - 100 &#x3D; 900。本地事务提交前，先拿到该记录的 <strong>全局锁</strong> ，本地提交释放本地锁。 tx2 后开始，开启本地事务，拿到本地锁，更新操作 m &#x3D; 900 - 100 &#x3D; 800。本地事务提交前，尝试拿该记录的 <strong>全局锁</strong> ，tx1 全局提交前，该记录的全局锁被 tx1 持有，tx2 需要重试等待 <strong>全局锁</strong> 。</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223522289-1676461838.png" alt="image-20240304223321778"></p>
+<p>tx1 二阶段全局提交，释放 <strong>全局锁</strong> 。tx2 拿到 <strong>全局锁</strong> 提交本地事务。</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223521873-558611025.png" alt="image-20240304223340759"></p>
+<p>如果 tx1 的二阶段全局回滚，则 tx1 需要重新获取该数据的本地锁，进行反向补偿的更新操作，实现分支的回滚。</p>
+<p>此时，如果 tx2 仍在等待该数据的 <strong>全局锁</strong>，同时持有本地锁，则 tx1 的分支回滚会失败。分支的回滚会一直重试，直到 tx2 的 <strong>全局锁</strong> 等锁超时，放弃 <strong>全局锁</strong> 并回滚本地事务释放本地锁，tx1 的分支回滚最终成功。(相当于人为的制造两锁之间的死锁, 然后是其中一方超时释放资源回滚, 另外一方一直重试,即可拿到锁)</p>
+<p>因为整个过程 <strong>全局锁</strong> 在 tx1 结束前一直是被 tx1 持有的，所以不会发生 <strong>脏写</strong> 的问题。</p>
+<p><strong>本地锁的目的</strong>是为了在后面的事务读到的是前事务提交后的数据, 例如在本例中, tx1在修改1000- 100 &#x3D; 900 并且没有提交时, tx2开始执行,如果没有本地锁, 将读到 1000 ,并且也进行 1000 -100 &#x3D; 900 ,那么当tx1顺利全局提交后,tx2也提交后,最终数据是 900, 与实际相悖, 而存在本地锁时, tx1,在读取开始到提交结束时, 一直都是持锁状态, tx2 需要等到 数据变成900 后才能进行操作, 那么将进行 900 -100的操作, 那么最终当 tx1 和 tx2提交后, 数据为800</p>
+<p>全局锁的目的是为了在全局提交和全局回滚时防止数据出现异常, 例如上述tx1,tx2,是tx1先持有到全局锁,那么将先执行1000-100 &#x3D; 900, tx2执行 900 -100 &#x3D; 800, 如果没有全局锁, 可能会产生,tx2反而先提交, 先为800,后为900的情况, 同时全局锁和本地锁配合也能解决脏写问题</p>
+<p>问题二:</p>
+<p>在数据库本地事务隔离级别 <strong>读已提交（Read Committed）</strong> 或以上的基础上，Seata（AT 模式）的默认全局隔离级别是 <strong>读未提交（Read Uncommitted）</strong> 。因为一阶段的提交,是将事务彻底提交,并记录undo_log日志表的方式, 所以在全局事务彻底提交之前, 后续事务会读取到该数据, 例如上面的问题一中, tx2 就可以读到 tx1修改后的 1000-100, 所以在全局事务的视角上, 该事务为<strong>读未提交</strong></p>
+<p><strong>读隔离:</strong></p>
+<p>如果应用在特定场景下，必需要求全局的 <strong>读已提交</strong> ，目前 Seata 的方式是通过 <code>SELECT FOR UPDATE</code> 语句的代理。比如上述的例子中,就强制要求tx2, 必须等到 tx1 真正全局提交后,再读取数据</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223521465-1323643365.png" alt="image-20240304230345199"></p>
+<p><code>SELECT FOR UPDATE</code> 语句的执行会申请 <strong>全局锁</strong> (此时全局锁在tx1手上,只有全局提交,或回滚后才释放)，如果 <strong>全局锁</strong> 被其他事务持有，则释放本地锁（回滚 SELECT FOR UPDATE 语句的本地执行）并重试。这个过程中，查询是被 block 住的，直到 <strong>全局锁</strong> 拿到，即读取的相关数据是 <strong>已提交</strong> 的，才返回。</p>
+<p>出于总体性能上的考虑，Seata 目前的方案并没有对所有 SELECT 语句都进行代理，仅针对 FOR UPDATE 的 SELECT 语句。</p>
+<h1 id="柔性事务"><a href="#柔性事务" class="headerlink" title="柔性事务"></a>柔性事务</h1><p>柔性事务主要分为<strong>补偿型</strong>和<strong>通知型</strong></p>
+<p>通知型: 可靠消息最终一致、最大努力通知型</p>
+<p>补偿型: TCC、Saga；</p>
+<h2 id="可靠消息最终一致性-异步确保型事务"><a href="#可靠消息最终一致性-异步确保型事务" class="headerlink" title="可靠消息最终一致性(异步确保型事务)"></a>可靠消息最终一致性(异步确保型事务)</h2><p>需要解决下面两个问题:</p>
+<p>发送方: 事务事务参与方接收消息的可靠性,即本地事务和消息发送成功的一致性</p>
+<p>接收方: 消息重复消费的问题,要解决消息重复消费的问题就要实现事务参与方的方法幂等性</p>
+<h3 id="本地消息表方案"><a href="#本地消息表方案" class="headerlink" title="本地消息表方案"></a>本地消息表方案</h3><p>本地消息表这个方案最初是 eBay 提出的，此方案的核心是通过本地事务保证数据业务操作和消息的一致性，然后通过定时任务将消息发送至消息中间件，待确认消息发送给消费方成功再将消息删除。</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223521087-1963379793.png" alt="image-20240302223306098"></p>
+<p> 如上图所示: 用户系统新增用户后,需要对此用户赠送积分,调用积分服务增加积分,此处要保证用户新增和新增</p>
+<p> 积分<strong>最终</strong>都要成功</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">1.</span>  用户系统接受注册请求, 开启本地事务,并新增一条用户信息</span><br><span class="line"><span class="bullet">1.</span>  在本地事务中, 继续新增 积分新增 消息日志表记录, 由于是在同一个本地事务中,步骤一二保证一致性</span><br><span class="line"><span class="bullet">1.</span>  定时任务程序定期扫描积分消息表, 读取未发送状态的消息记录,进行发送消息,发送成功后(ACK机制)更新消息记录状态为已发送(这里可以主动扫描记录表,也可监听记录表的插入事件,例如使用canal监听binlog)</span><br><span class="line"><span class="bullet">1.</span>  MQ服务接受到消息,并将消息发送给积分服务</span><br><span class="line"><span class="bullet">1.</span>  积分服务消费消息,进行增加用户积分操作,这里需要保证消费接口的幂等性,保证消息重复消费不会重复增加积分,并且这里需要保证消息的</span><br></pre></td></tr></table></figure>
+
+<h3 id="事务性消息"><a href="#事务性消息" class="headerlink" title="事务性消息"></a>事务性消息</h3><p>上面的本地消息方案中,确保事务成功发送,是由一个服务进行扫描消息表, 也就是MQ的客户端保证</p>
+<p>事务性消息,即是通过消息发送方通知,或者靠自身定时回查发送方状态来决定是否将消息进行投递</p>
+<p>例如自带事务性消息的<strong>Rocketmq</strong></p>
+<p>如下图所示:</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223520683-2070254747.png" alt="image-20240302233441922"></p>
+<p>以Rocketmq为例:</p>
+<ol>
+<li>生产者将消息发送至RocketMQ服务端</li>
+<li>RocketMQ服务端将消息持久化成功之后，向生产者返回Ack确认消息已经发送成功，此时消息被标记为”暂不能投递”，这种状态下的消息即为半事务消息(预通知MQ,将需要发送的消息预先保存在MQ服务端)</li>
+<li>生产者开始执行本地事务逻辑</li>
+<li>生产者根据本地事务执行结果向服务端提交二次确认结果（Commit或是Rollback），服务端收到确认结果后处理逻辑如下：<ul>
+<li>二次确认结果为Commit：服务端将半事务消息标记为可投递，并投递给消费者。</li>
+<li>二次确认结果为Rollback：服务端将回滚事务，不会将半事务消息投递给消费者。</li>
+</ul>
+</li>
+<li>在断网或者是生产者应用重启的特殊情况下，若服务端未收到发送者提交的二次确认结果，或服务端收到的二次确认结果为Unknown未知状态，经过固定时间后，服务端将对消息生产者即生产者集群中任一生产者实例发起消息回查。</li>
+<li>生产者收到消息回查后，需要检查对应消息的本地事务执行的最终结果。</li>
+<li>生产者根据检查到的本地事务的最终状态再次提交二次确认，服务端仍按照步骤4对半事务消息进行处理。</li>
+</ol>
+<p>RocketMQ提供RocketMQLocalTransactionListener接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">RocketMQLocalTransactionListener</span> &#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 发送 prepare 消息成功此方法被回调，该方法用于执行本地事务</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> msg 回传的消息，利用 transactionId 即可获取到该消息的唯一Id</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> arg 调用 send方法时传递的参数，当send时候若有额外的参数可以传递到send方法中，这里能获取到</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 返回事务状态，COMMIT：提交ROLLBACK：回滚UNKNOW：回调</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    RocketMQLocalTransactionState <span class="title function_">executeLocalTransaction</span><span class="params">(<span class="keyword">final</span> Message msg, <span class="keyword">final</span> Object arg)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> msg 通过获取 transactionId 来判断这条消息的本地事务执行状态</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 返回事务状态， COMMIT：提交ROLLBACK：回滚UNKNOW：回调</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    RocketMQLocalTransactionState <span class="title function_">checkLocalTransaction</span><span class="params">(<span class="keyword">final</span> Message msg)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="二者区别"><a href="#二者区别" class="headerlink" title="二者区别"></a>二者区别</h3><p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223520117-1837358977.png" alt="image-20240303004812160"></p>
+<h2 id="最大努力通知"><a href="#最大努力通知" class="headerlink" title="最大努力通知"></a>最大努力通知</h2><p>和可靠消息投递不同的是, 可靠消息投递,是事务发起方尽可能的保证消息的投递,保证最终一致性, 其内部使用消息中间件作为通讯中介, 一般用在内部系统使用</p>
+<p>最大努力通知事务,主要靠事务的被调用方发起通知, 主要用于<strong>外部系统</strong>，因为外部的网络环境更加复杂和不可信,所以通知的手段也可依不同的场景进行选择，不能只依靠MQ, 要尽最大努力去通知实现数据最终一致性,，<strong>比如充值平台与运营商、支付对接、商户通知等等跨平台、跨企业的系统间业务交互场景</strong>；</p>
+<p>如下图, 账户系统接受到充值请求,调用充值系统进行支付(例如外部支付宝)</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223519666-51242653.png" alt="image-20240302223749715"></p>
+<p>其中需要主要的是两个点</p>
+<ol>
+<li>结果通知, 发起通知方需要尽可能的将处理结果通知到接受通知方, 通知手段可以使用MQ,如果使用MQ,也需要保证消息的可靠投递,也可以使用HTTP调用, 如果通知失败,需要在间隔时间内进行重试</li>
+<li>消息校对, 接收通知方也可主动请求查询结果, 可以作为通知不成功的兜底补偿方案</li>
+</ol>
+<h2 id="TCC"><a href="#TCC" class="headerlink" title="TCC"></a>TCC</h2><p>关于TCC（Try-Confirm-Cancel）的概念，最早是由Pat Helland于2007年发表的一篇名为《Life beyond Distributed Transactions:an Apostate’s Opinion》的论文提出。在该论文中，TCC还是以Tentative-Confirmation-Cancellation作为名称；正式以Try-Confirm-Cancel作为名称的，可能是Atomikos（Gregor Hohpe所著书籍《Enterprise Integration Patterns》中收录了关于TCC的介绍，提到了Atomikos的Try-Confirm-Cancel，并认为二者是相似的概念）。</p>
+<p>TCC事务机制相对于传统事务机制（X&#x2F;Open XA Two-Phase-Commit），其特征在于它不依赖资源管理器(RM)对XA的支持，而是通过对（由业务系统提供的）业务逻辑的调度来实现分布式事务。</p>
+<p>TCC 分为三个阶段,分别为 “准备”、“提交”和“回滚” ,三个阶段都需要自己业务逻辑实现, 所以理论上, TCC模式并不依赖于任何对于资源的限制, 并且,由于是 自己实现,如果考虑周全, 提交或者回滚完全可以间隔很长时间后执行, 保证最终一致就可</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223519276-1817580096.png" alt="image-20240305220223367"></p>
+<p>总体来说, TCC仍然是两阶段提交的模型, 如一个扣款例子</p>
+<ul>
+<li>一阶段(Try): 预留业务资源, 例如将张三的账户的余额扣除,并保留在冻结字段</li>
+<li>二阶段(Confirm&#x2F;Cancel): 由全局事务通知提交或回滚, 执行自定义的 提交或者回滚方法,将张三的冻结金清除,或者加回余额</li>
+</ul>
+<p><strong>优点:</strong></p>
+<ol>
+<li>相比较传统2PC的强一致性方案, TCC实现了最终一致性,在try阶段就将资源提交, 不会长时间的占用资源</li>
+<li>对比 Seata AT 模式, TCC和 他有些相似,都是先将资源提交,再用事先准备好的提交,回滚方案进行保证事务一致性, 只不过Seata AT方案是框架做好的,自动生成前置,后置镜像, 所以Seata AT依赖资源自身需要满足ACID的要求, 即是传统数据库, 而 TCC的预留资源, 提交资源, 回滚资源都是由业务<strong>自己实现</strong>, 所以可以是任何类型的资源, 并且提交回滚的异步操作, 也使得其性能更高,对系统进行削峰填谷</li>
+</ol>
+<p><strong>缺点:</strong></p>
+<ol>
+<li>TCC 是一种侵入式的分布式事务解决方案，以上三个操作都需要业务系统自行实现，对业务系统有着非常大的入侵性</li>
+<li>设计相对复杂, 尤其是自己实现三个方法事, 需要考虑方方面面, 其中最为常见的有空回滚、幂等、悬挂(Seata TCC的实现,在新版本中已经自动给我们解决)等。</li>
+</ol>
+<p>其中Seata 中 对TCC模式进行了实现, 可以参考如下文档:</p>
+<p><a target="_blank" rel="noopener" href="https://seata.apache.org/zh-cn/docs/user/mode/tcc">https://seata.apache.org/zh-cn/docs/user/mode/tcc</a></p>
+<h3 id="空回滚-幂等-悬挂问题"><a href="#空回滚-幂等-悬挂问题" class="headerlink" title="空回滚,幂等,悬挂问题"></a>空回滚,幂等,悬挂问题</h3><p><strong>如何处理空回滚:</strong></p>
+<p>空回滚指的是在一个分布式事务中，在没有调用参与方的 Try 方法的情况下，TM 驱动二阶段回滚调用了参与方的 Cancel 方法。</p>
+<p>例如在上面的转账案例中, 要扣款100 元, 那么在try方法中, 将对余额执行 <code>余额-100</code> 的操作, cancel方法将执行 <code>余额+100</code>的操作, 若此时,因为节点异常, 调用try失败,那么当全局任务回滚时,执行了该分支事务的 cancel方法, 如果没有控制, 那么将导致余额变动</p>
+<p>要想防止空回滚，那么必须在 Cancel 方法中识别这是一个空回滚，</p>
+<p>可以添加一张事务控制表,表中记录了每个分支事务当前执行的状态, 例如在执行try方法后, 将表中标识置为1, 那么当因为错误问题空回滚执行 cancel时,只需判断当前节点是否为1即可</p>
+<p><strong>如何处理幂等</strong></p>
+<p>幂等问题指的是 TC 重复进行二阶段提交，因此 Confirm&#x2F;Cancel 接口需要支持幂等处理，即不会产生资源重复提交或者重复释放。</p>
+<p>如何产生幂等问题:</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223518815-608152946.png" alt="image-20240305222657914"></p>
+<p>如上图所示，参与者 A 执行完二阶段之后，由于网络抖动或者宕机问题，会造成 TC 收不到参与者 A执行二阶段的返回结果，TC 会重复发起调用，直到二阶段执行结果成功。</p>
+<p>同样,解决方法同样可以依赖控制表, 如果执行过 confirm方法, 则将标识置为 2, 如果发现标识已经是2,并且又调到 confirm方法,则直接跳过</p>
+<p><strong>如何处理悬挂</strong></p>
+<p>悬挂指的是二阶段 Cancel 方法比 一阶段 Try 方法优先执行，由于允许空回滚的原因，在执行完二阶段 Cancel 方法之后直接空回滚返回成功，此时全局事务已结束，但是由于 Try 方法随后执行，这就会造成一阶段 Try 方法预留的资源永远无法提交和释放了。</p>
+<p>如何产生:</p>
+<p><img src="/article/2022/05/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%AF%A6%E8%A7%A3/1540879-20240305223518154-881670379.png" alt="image-20240305222857373"></p>
+<p>如上图所示，在执行参与者 A 的一阶段 Try 方法时，出现网路拥堵，由于 Seata 全局事务有超时限制，执行 Try 方法超时后，TM 决议全局回滚，回滚完成后如果此时 RPC 请求才到达参与者 A，执行Try 方法进行资源预留，从而造成悬挂。</p>
+<p>同样的控制表解决, 执行try方法时表中的字段应该为0, 如果事先先执行了confirm, 那么此时表中的字段为 2了, 那么直接报错即可</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2022/05/%E6%B3%A8%E8%A7%A3@Transactional%E5%9C%A8%E7%B1%BB%E4%B8%8A%E8%BF%98%E6%98%AF%E6%8E%A5%E5%8F%A3%E4%B8%8A%E4%BD%BF%E7%94%A8%EF%BC%8C%E5%93%AA%E7%A7%8D%E6%96%B9%E5%BC%8F%E6%9B%B4%E5%A5%BD%EF%BC%9F/" rel="prev" title="注解@Transactional在类上还是接口上使用，哪种方式更好？">
+                  <i class="fa fa-angle-left"></i> 注解@Transactional在类上还是接口上使用，哪种方式更好？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2022/05/%E8%88%B1%E5%A3%81%E6%A8%A1%E5%BC%8F%E3%80%81%E7%86%94%E6%96%AD%E5%99%A8%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%AE%9A%E4%B9%89/" rel="next" title="舱壁模式、熔断器的基本定义">
+                  舱壁模式、熔断器的基本定义 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

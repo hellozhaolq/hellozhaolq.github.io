@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="上一节，我讲了哈希算法的四个应用，它们分别是：安全加密、数据校验、唯一标识、散列函数。今天，我们再来看剩余三种应用：负载均衡、数据分片、分布式存储。 你可能已经发现，这三个应用都跟分布式系统有关。没错，今天我就带你看下，哈希算法是如何解决这些分布式问题的。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="22基础篇-哈希算法（下）：哈希算法在分布式系统中有哪些应用？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/02/22%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%E5%9C%A8%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E5%BA%94%E7%94%A8%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="上一节，我讲了哈希算法的四个应用，它们分别是：安全加密、数据校验、唯一标识、散列函数。今天，我们再来看剩余三种应用：负载均衡、数据分片、分布式存储。 你可能已经发现，这三个应用都跟分布式系统有关。没错，今天我就带你看下，哈希算法是如何解决这些分布式问题的。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/02/22%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%E5%9C%A8%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E5%BA%94%E7%94%A8%EF%BC%9F/20201019235027487.png">
+<meta property="article:published_time" content="2023-02-22T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-02-22T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="数据结构与算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/02/22%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%E5%9C%A8%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E5%BA%94%E7%94%A8%EF%BC%9F/20201019235027487.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/02/22%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%E5%9C%A8%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E5%BA%94%E7%94%A8%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/02/22%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%E5%9C%A8%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E5%BA%94%E7%94%A8%EF%BC%9F/","path":"article/2023/02/22基础篇-哈希算法（下）：哈希算法在分布式系统中有哪些应用？/","title":"22基础篇-哈希算法（下）：哈希算法在分布式系统中有哪些应用？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>22基础篇-哈希算法（下）：哈希算法在分布式系统中有哪些应用？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E4%BA%94%EF%BC%9A%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1"><span class="nav-number">1.</span> <span class="nav-text">应用五：负载均衡</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E5%85%AD%EF%BC%9A%E6%95%B0%E6%8D%AE%E5%88%86%E7%89%87"><span class="nav-number">2.</span> <span class="nav-text">应用六：数据分片</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%A6%82%E4%BD%95%E7%BB%9F%E8%AE%A1%E2%80%9C%E6%90%9C%E7%B4%A2%E5%85%B3%E9%94%AE%E8%AF%8D%E2%80%9D%E5%87%BA%E7%8E%B0%E7%9A%84%E6%AC%A1%E6%95%B0%EF%BC%9F"><span class="nav-number">2.1.</span> <span class="nav-text">1.如何统计“搜索关键词”出现的次数？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%A6%82%E4%BD%95%E5%BF%AB%E9%80%9F%E5%88%A4%E6%96%AD%E5%9B%BE%E7%89%87%E6%98%AF%E5%90%A6%E5%9C%A8%E5%9B%BE%E5%BA%93%E4%B8%AD%EF%BC%9F"><span class="nav-number">2.2.</span> <span class="nav-text">2.如何快速判断图片是否在图库中？</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E4%B8%83%EF%BC%9A%E5%88%86%E5%B8%83%E5%BC%8F%E5%AD%98%E5%82%A8"><span class="nav-number">3.</span> <span class="nav-text">应用七：分布式存储</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E7%AD%94%E5%BC%80%E7%AF%87-%E5%86%85%E5%AE%B9%E5%B0%8F%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">解答开篇&amp;内容小结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BE%E5%90%8E%E6%80%9D%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">课后思考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/02/22%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%E5%9C%A8%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E5%BA%94%E7%94%A8%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="22基础篇-哈希算法（下）：哈希算法在分布式系统中有哪些应用？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          22基础篇-哈希算法（下）：哈希算法在分布式系统中有哪些应用？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-02-22 08:00:00" itemprop="dateCreated datePublished" datetime="2023-02-22T08:00:00+08:00">2023-02-22</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">数据结构与算法</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>上一节，我讲了哈希算法的四个应用，它们分别是：安全加密、数据校验、唯一标识、散列函数。今天，我们再来看剩余三种应用：<strong>负载均衡、数据分片、分布式存储</strong>。</p>
+<p>你可能已经发现，这三个应用都跟分布式系统有关。没错，今天我就带你看下，<strong>哈希算法是如何解决这些分布式问题的</strong>。</p>
+<span id="more"></span>
+
+<h1 id="应用五：负载均衡"><a href="#应用五：负载均衡" class="headerlink" title="应用五：负载均衡"></a>应用五：负载均衡</h1><p>我们知道，负载均衡算法有很多，比如轮询、随机、加权轮询等。那如何才能实现一个会话粘滞（session sticky）的负载均衡算法呢？也就是说，我们需要在同一个客户端上，在一次会话中的所有请求都路由到同一个服务器上。</p>
+<p>最直接的方法就是，维护一张映射关系表，这张表的内容是客户端IP地址或者会话ID与服务器编号的映射关系。客户端发出的每次请求，都要先在映射表中查找应该路由到的服务器编号，然后再请求编号对应的服务器。这种方法简单直观，但也有几个弊端：</p>
+<ul>
+<li>如果客户端很多，映射表可能会很大，比较浪费内存空间；</li>
+<li>客户端下线、上线，服务器扩容、缩容都会导致映射失效，这样维护映射表的成本就会很大；</li>
+</ul>
+<p>如果借助哈希算法，这些问题都可以非常完美地解决。<strong>我们可以通过哈希算法，对客户端IP地址或者会话ID计算哈希值，将取得的哈希值与服务器列表的大小进行取模运算，最终得到的值就是应该被路由到的服务器编号。</strong> 这样，我们就可以把同一个IP过来的所有请求，都路由到同一个后端服务器上。</p>
+<h1 id="应用六：数据分片"><a href="#应用六：数据分片" class="headerlink" title="应用六：数据分片"></a>应用六：数据分片</h1><p>哈希算法还可以用于数据的分片。我这里有两个例子。</p>
+<h2 id="1-如何统计“搜索关键词”出现的次数？"><a href="#1-如何统计“搜索关键词”出现的次数？" class="headerlink" title="1.如何统计“搜索关键词”出现的次数？"></a>1.如何统计“搜索关键词”出现的次数？</h2><p>假如我们有1T的日志文件，这里面记录了用户的搜索关键词，我们想要快速统计出每个关键词被搜索的次数，该怎么做呢？</p>
+<p>我们来分析一下。这个问题有两个难点，第一个是搜索日志很大，没办法放到一台机器的内存中。第二个难点是，如果只用一台机器来处理这么巨大的数据，处理时间会很长。</p>
+<p>针对这两个难点，<strong>我们可以先对数据进行分片，然后采用多台机器处理的方法，来提高处理速度</strong>。具体的思路是这样的：为了提高处理的速度，我们用n台机器并行处理。我们从搜索记录的日志文件中，依次读出每个搜索关键词，并且通过哈希函数计算哈希值，然后再跟n取模，最终得到的值，就是应该被分配到的机器编号。</p>
+<p>这样，哈希值相同的搜索关键词就被分配到了同一个机器上。也就是说，同一个搜索关键词会被分配到同一个机器上。每个机器会分别计算关键词出现的次数，最后合并起来就是最终的结果。</p>
+<p>实际上，这里的处理过程也是MapReduce的基本设计思想。</p>
+<h2 id="2-如何快速判断图片是否在图库中？"><a href="#2-如何快速判断图片是否在图库中？" class="headerlink" title="2.如何快速判断图片是否在图库中？"></a>2.如何快速判断图片是否在图库中？</h2><p>如何快速判断图片是否在图库中？上一节我们讲过这个例子，不知道你还记得吗？当时我介绍了一种方法，即给每个图片取唯一标识（或者信息摘要），然后构建散列表。</p>
+<p>假设现在我们的图库中有1亿张图片，很显然，在单台机器上构建散列表是行不通的。因为单台机器的内存有限，而1亿张图片构建散列表显然远远超过了单台机器的内存上限。</p>
+<p>我们同样可以对数据进行分片，然后采用多机处理。我们准备n台机器，让每台机器只维护某一部分图片对应的散列表。我们每次从图库中读取一个图片，计算唯一标识，然后与机器个数n求余取模，得到的值就对应要分配的机器编号，然后将这个图片的唯一标识和图片路径发往对应的机器构建散列表。</p>
+<p>当我们要判断一个图片是否在图库中的时候，我们通过同样的哈希算法，计算这个图片的唯一标识，然后与机器个数n求余取模。假设得到的值是k，那就去编号k的机器构建的散列表中查找。</p>
+<p>现在，我们来估算一下，给这1亿张图片构建散列表大约需要多少台机器。</p>
+<p>散列表中每个数据单元包含两个信息，哈希值和图片文件的路径。假设我们通过MD5来计算哈希值，那长度就是128比特，也就是16字节。文件路径长度的上限是256字节，我们可以假设平均长度是128字节。如果我们用链表法来解决冲突，那还需要存储指针，指针只占用8字节。所以，散列表中每个数据单元就占用152字节（这里只是估算，并不准确）。</p>
+<p>假设一台机器的内存大小为2GB，散列表的装载因子为0.75，那一台机器可以给大约1000万（2GB*0.75&#x2F;152）张图片构建散列表。所以，如果要对1亿张图片构建索引，需要大约十几台机器。在工程中，这种估算还是很重要的，能让我们事先对需要投入的资源、资金有个大概的了解，能更好地评估解决方案的可行性。</p>
+<p>实际上，针对这种海量数据的处理问题，我们都可以采用多机分布式处理。借助这种分片的思路，可以突破单机内存、CPU等资源的限制。</p>
+<h1 id="应用七：分布式存储"><a href="#应用七：分布式存储" class="headerlink" title="应用七：分布式存储"></a>应用七：分布式存储</h1><p>现在互联网面对的都是海量的数据、海量的用户。我们为了提高数据的读取、写入能力，一般都采用分布式的方式来存储数据，比如分布式缓存。我们有海量的数据需要缓存，所以一个缓存机器肯定是不够的。于是，我们就需要将数据分布在多台机器上。</p>
+<p>该如何决定将哪个数据放到哪个机器上呢？我们可以借用前面数据分片的思想，即通过哈希算法对数据取哈希值，然后对机器个数取模，这个最终值就是应该存储的缓存机器编号。</p>
+<p>但是，如果数据增多，原来的10个机器已经无法承受了，我们就需要扩容了，比如扩到11个机器，这时候麻烦就来了。因为，这里并不是简单地加个机器就可以了。</p>
+<p>原来的数据是通过与10来取模的。比如13这个数据，存储在编号为3这台机器上。但是新加了一台机器中，我们对数据按照11取模，原来13这个数据就被分配到2号这台机器上了。</p>
+<p><img src="/article/2023/02/22%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%8B%EF%BC%89%EF%BC%9A%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%E5%9C%A8%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B8%AD%E6%9C%89%E5%93%AA%E4%BA%9B%E5%BA%94%E7%94%A8%EF%BC%9F/20201019235027487.png" alt="img"></p>
+<p>因此，所有的数据都要重新计算哈希值，然后重新搬移到正确的机器上。这样就相当于，缓存中的数据一下子就都失效了。所有的数据请求都会穿透缓存，直接去请求数据库。这样就可能发生<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E9%9B%AA%E5%B4%A9%E6%95%88%E5%BA%94">雪崩效应</a>，压垮数据库。</p>
+<p>所以，我们需要一种方法，使得在新加入一个机器后，并不需要做大量的数据搬移。这时候，<strong>一致性哈希算法</strong>就要登场了。</p>
+<p>假设我们有k个机器，数据的哈希值的范围是[0, MAX]。我们将整个范围划分成m个小区间（m远大于k），每个机器负责m&#x2F;k个小区间。当有新机器加入的时候，我们就将某几个小区间的数据，从原来的机器中搬移到新的机器中。这样，既不用全部重新哈希、搬移数据，也保持了各个机器上数据数量的均衡。</p>
+<p>一致性哈希算法的基本思想就是这么简单。除此之外，它还会借助一个虚拟的环和虚拟结点，更加优美地实现出来。这里我就不展开讲了，如果感兴趣，你可以看下这个<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Consistent_hashing">介绍</a>。</p>
+<p>除了我们上面讲到的分布式缓存，实际上，一致性哈希算法的应用非常广泛，在很多分布式存储系统中，都可以见到一致性哈希算法的影子。</p>
+<h1 id="解答开篇-内容小结"><a href="#解答开篇-内容小结" class="headerlink" title="解答开篇&amp;内容小结"></a>解答开篇&amp;内容小结</h1><p>这两节的内容理论不多，比较贴近具体的开发。今天我讲了三种哈希算法在分布式系统中的应用，它们分别是：负载均衡、数据分片、分布式存储。</p>
+<p>在负载均衡应用中，利用哈希算法替代映射表，可以实现一个会话粘滞的负载均衡策略。在数据分片应用中，通过哈希算法对处理的海量数据进行分片，多机分布式处理，可以突破单机资源的限制。在分布式存储应用中，利用一致性哈希算法，可以解决缓存等分布式系统的扩容、缩容导致数据大量搬移的难题。</p>
+<h1 id="课后思考"><a href="#课后思考" class="headerlink" title="课后思考"></a>课后思考</h1><p>这两节我总共讲了七个哈希算法的应用。实际上，我讲的也只是冰山一角，哈希算法还有很多其他的应用，比如网络协议中的CRC校验、Git commit id等等。除了这些，你还能想到其他用到哈希算法的地方吗？</p>
+<p>欢迎留言和我分享，我会第一时间给你反馈。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/" rel="tag"># 数据结构与算法</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/02/21%E5%9F%BA%E7%A1%80%E7%AF%87-%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E9%98%B2%E6%AD%A2%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E7%9A%84%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF%E8%A2%AB%E8%84%B1%E5%BA%93%EF%BC%9F/" rel="prev" title="21基础篇-哈希算法（上）：如何防止数据库中的用户信息被脱库？">
+                  <i class="fa fa-angle-left"></i> 21基础篇-哈希算法（上）：如何防止数据库中的用户信息被脱库？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/02/23%E5%9F%BA%E7%A1%80%E7%AF%87-%E4%BA%8C%E5%8F%89%E6%A0%91%E5%9F%BA%E7%A1%80%EF%BC%88%E4%B8%8A%EF%BC%89%EF%BC%9A%E4%BB%80%E4%B9%88%E6%A0%B7%E7%9A%84%E4%BA%8C%E5%8F%89%E6%A0%91%E9%80%82%E5%90%88%E7%94%A8%E6%95%B0%E7%BB%84%E6%9D%A5%E5%AD%98%E5%82%A8%EF%BC%9F/" rel="next" title="23基础篇-二叉树基础（上）：什么样的二叉树适合用数组来存储？">
+                  23基础篇-二叉树基础（上）：什么样的二叉树适合用数组来存储？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

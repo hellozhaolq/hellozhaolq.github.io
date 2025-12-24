@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.25.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Ubuntu 16.04 发布时，一个引人注目的新特性便是 apt 命令的引入。其实早在 2014 年，apt 命令就已经发布了第一个稳定版，只是直到 2016 年的 Ubuntu 16.04 系统发布时才开始引人关注。 随着 apt install package 命令的使用频率和普遍性逐步超过 apt-get install package，越来越多的其它 Linux 发行版也开始遵循 Ubu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux中apt与apt-get命令的区别与解释">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2019/07/Linux%E4%B8%ADapt%E4%B8%8Eapt-get%E5%91%BD%E4%BB%A4%E7%9A%84%E5%8C%BA%E5%88%AB%E4%B8%8E%E8%A7%A3%E9%87%8A/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="Ubuntu 16.04 发布时，一个引人注目的新特性便是 apt 命令的引入。其实早在 2014 年，apt 命令就已经发布了第一个稳定版，只是直到 2016 年的 Ubuntu 16.04 系统发布时才开始引人关注。 随着 apt install package 命令的使用频率和普遍性逐步超过 apt-get install package，越来越多的其它 Linux 发行版也开始遵循 Ubu">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/07/Linux%E4%B8%ADapt%E4%B8%8Eapt-get%E5%91%BD%E4%BB%A4%E7%9A%84%E5%8C%BA%E5%88%AB%E4%B8%8E%E8%A7%A3%E9%87%8A/2.jpg">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2019/07/Linux%E4%B8%ADapt%E4%B8%8Eapt-get%E5%91%BD%E4%BB%A4%E7%9A%84%E5%8C%BA%E5%88%AB%E4%B8%8E%E8%A7%A3%E9%87%8A/3.jpg">
+<meta property="article:published_time" content="2019-07-20T01:09:10.000Z">
+<meta property="article:modified_time" content="2019-07-20T01:09:10.000Z">
+<meta property="article:author" content="zhaolq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2019/07/Linux%E4%B8%ADapt%E4%B8%8Eapt-get%E5%91%BD%E4%BB%A4%E7%9A%84%E5%8C%BA%E5%88%AB%E4%B8%8E%E8%A7%A3%E9%87%8A/2.jpg">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2019/07/Linux%E4%B8%ADapt%E4%B8%8Eapt-get%E5%91%BD%E4%BB%A4%E7%9A%84%E5%8C%BA%E5%88%AB%E4%B8%8E%E8%A7%A3%E9%87%8A/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2019/07/Linux%E4%B8%ADapt%E4%B8%8Eapt-get%E5%91%BD%E4%BB%A4%E7%9A%84%E5%8C%BA%E5%88%AB%E4%B8%8E%E8%A7%A3%E9%87%8A/","path":"article/2019/07/Linux中apt与apt-get命令的区别与解释/","title":"Linux中apt与apt-get命令的区别与解释"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Linux中apt与apt-get命令的区别与解释 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#apt%E4%B8%8Eapt-get"><span class="nav-number">1.</span> <span class="nav-text">apt与apt-get</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#apt%E4%B8%8Eapt-get%E4%B9%8B%E9%97%B4%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.1.</span> <span class="nav-text">apt与apt-get之间的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#apt%E5%92%8Capt-get%E5%91%BD%E4%BB%A4%E4%B9%8B%E9%97%B4%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.2.</span> <span class="nav-text">apt和apt-get命令之间的区别</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#apt-get%E5%B7%B2%E5%BC%83%E7%94%A8%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">apt-get已弃用？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E5%BA%94%E8%AF%A5%E4%BD%BF%E7%94%A8apt%E8%BF%98%E6%98%AFapt-get%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">我应该使用apt还是apt-get？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">小结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">555</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2019/07/Linux%E4%B8%ADapt%E4%B8%8Eapt-get%E5%91%BD%E4%BB%A4%E7%9A%84%E5%8C%BA%E5%88%AB%E4%B8%8E%E8%A7%A3%E9%87%8A/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Linux中apt与apt-get命令的区别与解释 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux中apt与apt-get命令的区别与解释
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-07-20 09:09:10" itemprop="dateCreated datePublished" datetime="2019-07-20T09:09:10+08:00">2019-07-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>Ubuntu 16.04 发布时，一个引人注目的新特性便是 apt 命令的引入。其实早在 2014 年，apt 命令就已经发布了第一个稳定版，只是直到 2016 年的 Ubuntu 16.04 系统发布时才开始引人关注。</p>
+<p>随着 apt install package 命令的使用频率和普遍性逐步超过 apt-get install package，越来越多的其它 Linux 发行版也开始遵循 Ubuntu 的脚步，开始鼓励用户使用 apt 而不是 apt-get。</p>
+<span id="more"></span>
+
+<p>那么，apt-get 与 apt 命令之间到底有什么区别呢？如果它们有类似的命令结构，为什么还需要新的 apt 命令呢？是否 apt 真的比 apt-get 更好？普通用户应该使用新的 apt 命令还是坚持旧有习惯继续使用 apt-get 呢？本文会解释所有这些问题。</p>
+<h2 id="apt与apt-get"><a href="#apt与apt-get" class="headerlink" title="apt与apt-get"></a>apt与apt-get</h2><p>在开始对比 <code>apt</code> 与 <code>apt-get</code> 命令的区别之前，我们先来看看这两个命令的背景，以及它们要试图达到的目的。</p>
+<p>Debian 作为 Ubuntu、Linux Mint 和 elementary OS 等 Linux 操作系统的母板，其具有强健的「包管理」系统，它的每个组件和应用程序都内置在系统中安装的软件包中。Debian 使用一套名为 <a target="_blank" rel="noopener" href="https://wiki.debian.org/Apt">Advanced Packaging Tool</a>（APT）的工具来管理这种包系统，不过请不要把它与 <code>apt</code> 命令混淆，它们之间是其实不是同一个东西。</p>
+<p>在基于 Debian 的 Linux 发行版中，有各种工具可以与 APT 进行交互，以方便用户安装、删除和管理的软件包。<code>apt-get</code> 便是其中一款广受欢迎的命令行工具，另外一款较为流行的是 <a target="_blank" rel="noopener" href="https://wiki.debian.org/Aptitude?action=show&redirect=aptitude">Aptitude</a> 这一命令行与 GUI 兼顾的小工具。</p>
+<p>你可能已经遇到过许多类似的命令，如 <code>apt-cache</code>、<code>apt-config</code> 等。这些命令都比较低级又包含众多功能，普通的 Linux 用户也许永远都不会用到。而最常用的 Linux 包管理命令都被分散在了 <code>apt-get</code>、<code>apt-cache</code> 和 <code>apt-config</code> 这三条命令当中。</p>
+<p><code>apt</code> 命令的引入就是为了<font color="red"><strong>解决命令过于分散</strong></font>的问题，它包括了 <code>apt-get</code> 命令出现以来使用最广泛的功能选项，以及 <code>apt-cache</code> 和 <code>apt-config</code> 命令中很少用到的功能。</p>
+<p>在使用 apt 命令时，用户不必再由 <code>apt-get</code> 转到 <code>apt-cache</code> 或 <code>apt-config</code>，而且 <code>apt</code> 更加结构化，并为用户提供了管理软件包所需的必要选项。</p>
+<blockquote>
+<p><font color="red"><strong>简单来说就是：</strong></font>apt &#x3D; apt-get、apt-cache 和 apt-config 中最常用命令选项的集合。</p>
+</blockquote>
+<h3 id="apt与apt-get之间的区别"><a href="#apt与apt-get之间的区别" class="headerlink" title="apt与apt-get之间的区别"></a>apt与apt-get之间的区别</h3><p>通过 apt 命令，用户可以在同一地方集中得到所有必要的工具，apt 的主要目的是提供一种以「让终端用户满意」的方式来处理 Linux 软件包的有效方式。</p>
+<p>apt 具有更精减但足够的命令选项，而且参数选项的组织方式更为有效。除此之外，它默认启用的几个特性对最终用户也非常有帮助。例如，可以在使用 apt 命令安装或删除程序时看到进度条。</p>
+<p><img src="/article/2019/07/Linux%E4%B8%ADapt%E4%B8%8Eapt-get%E5%91%BD%E4%BB%A4%E7%9A%84%E5%8C%BA%E5%88%AB%E4%B8%8E%E8%A7%A3%E9%87%8A/2.jpg" alt="img"></p>
+<p>apt 还会在更新存储库数据库时提示用户可升级的软件包个数。</p>
+<p><img src="/article/2019/07/Linux%E4%B8%ADapt%E4%B8%8Eapt-get%E5%91%BD%E4%BB%A4%E7%9A%84%E5%8C%BA%E5%88%AB%E4%B8%8E%E8%A7%A3%E9%87%8A/3.jpg" alt="img"></p>
+<p>如果你使用 apt 的其它命令选项，也可以实现与使用 apt-get 时相同的操作。</p>
+<h3 id="apt和apt-get命令之间的区别"><a href="#apt和apt-get命令之间的区别" class="headerlink" title="apt和apt-get命令之间的区别"></a>apt和apt-get命令之间的区别</h3><p><font color="red">虽然 apt 与 apt-get 有一些类似的命令选项，但它并不能完全向下兼容 apt-get 命令。也就是说，可以用 apt 替换部分 apt-get 系列命令，但不是全部。</font></p>
+<table>
+<thead>
+<tr>
+<th align="center">apt 命令</th>
+<th align="center">被取代的命令</th>
+<th align="center">命令的功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">apt install</td>
+<td align="center">apt-get install</td>
+<td align="center">安装软件包</td>
+</tr>
+<tr>
+<td align="center">apt remove</td>
+<td align="center">apt-get remove</td>
+<td align="center">移除软件包（保留配置文件）</td>
+</tr>
+<tr>
+<td align="center">apt purge</td>
+<td align="center">apt-get purge</td>
+<td align="center">移除软件包（删除配置文件）</td>
+</tr>
+<tr>
+<td align="center">apt update</td>
+<td align="center">apt-get update</td>
+<td align="center">刷新存储库索引&#x2F;更新软件包列表</td>
+</tr>
+<tr>
+<td align="center">apt upgrade</td>
+<td align="center">apt-get upgrade</td>
+<td align="center">更新所有已安装的包</td>
+</tr>
+<tr>
+<td align="center">apt autoremove</td>
+<td align="center">apt-get autoremove</td>
+<td align="center">自动移除不需要的包依赖</td>
+</tr>
+<tr>
+<td align="center">apt full-upgrade</td>
+<td align="center">apt-get dist-upgrade</td>
+<td align="center">在升级软件包时，自动处理依赖包升级</td>
+</tr>
+<tr>
+<td align="center">apt search</td>
+<td align="center">apt-cache search</td>
+<td align="center">搜索应用程序&#x2F;查找软件包</td>
+</tr>
+<tr>
+<td align="center">apt show</td>
+<td align="center">apt-cache show</td>
+<td align="center">显示指定软件包的详情</td>
+</tr>
+</tbody></table>
+<p>当然，apt 还有一些自己的命令：</p>
+<table>
+<thead>
+<tr>
+<th align="center">新的apt命令</th>
+<th align="center">命令的功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">apt list</td>
+<td align="center">列出包含条件的包（已安装，可升级等）</td>
+</tr>
+<tr>
+<td align="center">apt edit-sources</td>
+<td align="center">编辑源列表</td>
+</tr>
+</tbody></table>
+<p>需要大家注意的是：apt 命令也还在不断发展， 因此，你可能会在将来的版本中看到新的选项。</p>
+<h2 id="apt-get已弃用？"><a href="#apt-get已弃用？" class="headerlink" title="apt-get已弃用？"></a>apt-get已弃用？</h2><p>目前还没有任何 Linux 发行版官方放出 apt-get 将被停用的消息，至少它还有比 apt 更多、更细化的操作功能。对于某些操作（如脚本操作），仍然需要 apt-get。</p>
+<h2 id="我应该使用apt还是apt-get？"><a href="#我应该使用apt还是apt-get？" class="headerlink" title="我应该使用apt还是apt-get？"></a>我应该使用apt还是apt-get？</h2><p>既然两个命令都有用，那么我该使用 apt 还是 apt-get 呢？</p>
+<p>建议大家尽快适应并开始使用 apt。理由：</p>
+<p>1、广大 Linux 发行商都在推荐 apt。</p>
+<p>2、精简，它提供了 Linux 包管理的必要选项。</p>
+<p>3、apt 命令选项更少更易记。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a><font color="red">小结</font></h2><p>最后结大家提供两点使用上的建议：</p>
+<ul>
+<li>apt 可以看作 apt-get 和 apt-cache 命令的子集, 可以为包管理提供必要的命令选项。</li>
+<li>apt-get 虽然没被弃用，但作为普通用户，推荐频繁的使用 apt。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>请我一杯咖啡吧！</div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="zhaolq 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="zhaolq 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2019/07/ChildShell%E3%80%81SubShell%E3%80%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F/" rel="prev" title="ChildShell、SubShell、环境变量">
+                  <i class="fa fa-angle-left"></i> ChildShell、SubShell、环境变量
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2019/07/Linux%E8%BD%AF%E4%BB%B6%E5%8C%85%E7%AE%A1%E7%90%86%E5%9F%BA%E6%9C%AC%E6%93%8D%E4%BD%9C%E5%85%A5%E9%97%A8/" rel="next" title="Linux软件包管理基本操作入门">
+                  Linux软件包管理基本操作入门 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2019 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
