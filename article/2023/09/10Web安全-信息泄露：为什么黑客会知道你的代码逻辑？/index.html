@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="你平时在Debug的时候，一定首先会去查看错误信息。根据错误信息，你能够了解究竟是什么情况引发了什么样的错误。同样地，黑客也能够通过错误信息，推断出你的后台代码逻辑。那么，黑客究竟是怎么做的呢？接下来，我们就一起看一下这个过程。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="10Web安全-信息泄露：为什么黑客会知道你的代码逻辑？">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/09/10Web%E5%AE%89%E5%85%A8-%E4%BF%A1%E6%81%AF%E6%B3%84%E9%9C%B2%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%BB%91%E5%AE%A2%E4%BC%9A%E7%9F%A5%E9%81%93%E4%BD%A0%E7%9A%84%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91%EF%BC%9F/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="你平时在Debug的时候，一定首先会去查看错误信息。根据错误信息，你能够了解究竟是什么情况引发了什么样的错误。同样地，黑客也能够通过错误信息，推断出你的后台代码逻辑。那么，黑客究竟是怎么做的呢？接下来，我们就一起看一下这个过程。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.zhaolq.com/article/2023/09/10Web%E5%AE%89%E5%85%A8-%E4%BF%A1%E6%81%AF%E6%B3%84%E9%9C%B2%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%BB%91%E5%AE%A2%E4%BC%9A%E7%9F%A5%E9%81%93%E4%BD%A0%E7%9A%84%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91%EF%BC%9F/20200818101944106.png">
+<meta property="article:published_time" content="2023-09-10T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-09-10T00:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta property="article:tag" content="安全攻防技能30讲">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.zhaolq.com/article/2023/09/10Web%E5%AE%89%E5%85%A8-%E4%BF%A1%E6%81%AF%E6%B3%84%E9%9C%B2%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%BB%91%E5%AE%A2%E4%BC%9A%E7%9F%A5%E9%81%93%E4%BD%A0%E7%9A%84%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91%EF%BC%9F/20200818101944106.png">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/09/10Web%E5%AE%89%E5%85%A8-%E4%BF%A1%E6%81%AF%E6%B3%84%E9%9C%B2%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%BB%91%E5%AE%A2%E4%BC%9A%E7%9F%A5%E9%81%93%E4%BD%A0%E7%9A%84%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91%EF%BC%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/09/10Web%E5%AE%89%E5%85%A8-%E4%BF%A1%E6%81%AF%E6%B3%84%E9%9C%B2%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%BB%91%E5%AE%A2%E4%BC%9A%E7%9F%A5%E9%81%93%E4%BD%A0%E7%9A%84%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91%EF%BC%9F/","path":"article/2023/09/10Web安全-信息泄露：为什么黑客会知道你的代码逻辑？/","title":"10Web安全-信息泄露：为什么黑客会知道你的代码逻辑？"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>10Web安全-信息泄露：为什么黑客会知道你的代码逻辑？ | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%94%99%E8%AF%AF%E4%BF%A1%E6%81%AF%E4%BC%9A%E6%B3%84%E9%9C%B2%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">为什么错误信息会泄露代码逻辑？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%99%A4%E4%BA%86%E9%94%99%E8%AF%AF%E4%BF%A1%E6%81%AF%EF%BC%8C%E8%BF%98%E6%9C%89%E4%BB%80%E4%B9%88%E5%9C%B0%E6%96%B9%E4%BC%9A%E6%B3%84%E9%9C%B2%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">除了错误信息，还有什么地方会泄露代码逻辑？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%89%E5%93%AA%E4%BA%9B%E5%B8%B8%E8%A7%81%E7%9A%84%E7%9B%B4%E6%8E%A5%E6%B3%84%E9%9C%B2%E6%96%B9%E5%BC%8F%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">有哪些常见的直接泄露方式？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%9D%E8%80%83%E9%A2%98"><span class="nav-number">5.</span> <span class="nav-text">思考题</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">551</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/09/10Web%E5%AE%89%E5%85%A8-%E4%BF%A1%E6%81%AF%E6%B3%84%E9%9C%B2%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%BB%91%E5%AE%A2%E4%BC%9A%E7%9F%A5%E9%81%93%E4%BD%A0%E7%9A%84%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="10Web安全-信息泄露：为什么黑客会知道你的代码逻辑？ | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          10Web安全-信息泄露：为什么黑客会知道你的代码逻辑？
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-09-10 08:00:00" itemprop="dateCreated datePublished" datetime="2023-09-10T08:00:00+08:00">2023-09-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" itemprop="url" rel="index"><span itemprop="name">安全攻防技能30讲</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>你平时在Debug的时候，一定首先会去查看错误信息。根据错误信息，你能够了解究竟是什么情况引发了什么样的错误。同样地，黑客也能够通过错误信息，推断出你的后台代码逻辑。那么，黑客究竟是怎么做的呢？接下来，我们就一起看一下这个过程。</p>
+<span id="more"></span>
+
+<h1 id="为什么错误信息会泄露代码逻辑？"><a href="#为什么错误信息会泄露代码逻辑？" class="headerlink" title="为什么错误信息会泄露代码逻辑？"></a>为什么错误信息会泄露代码逻辑？</h1><p>当黑客在登录某个页面时，在用户名位置输入一个单引号，在密码位置输入一个“g”之后，就会出现如下的错误信息。</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">An Error Has Occurred.</span><br><span class="line">    Error Message:</span><br><span class="line">   System.Data.OleDb.OleDbException: Syntax error (missing operator) in query expression &#x27;<span class="attr">username</span> = <span class="string">&#x27;&#x27;&#x27; and password = &#x27;g&#x27;&#x27;. at</span></span><br><span class="line"><span class="string">  System.Data.OleDb.OleDbCommand.ExecuteCommandTextErrorHandling ( Int32 hr) at</span></span><br><span class="line"><span class="string">  System.Data.OleDb.OleDbCommand.ExecuteCommandTextForSingleResult ( tagDBPARAMS dbParams,  Object&amp; executeResult) at </span></span><br></pre></td></tr></table></figure>
+
+<p>从这个错误信息中，我们可以看到，网页最终执行了一个SQL语句，这个SQL语句的部分内容为<code>username = &#39;&#39;&#39; and password = &#39;g&#39;</code>。因此，后台的大致逻辑应该是下面这样的。</p>
+<p>第一，错误信息反馈的是Syntax error，即语法错误。在密码位置输入单个字母“g”肯定不会引起错误，所以，这个SQL语句是因为多了一个单引号导致的报错。而如果使用了PreparedStatement等方法，是不会产生这个错误的。因此，后台的SQL查询应该是直接采用的字符串拼接，且没有过滤单引号。</p>
+<p>第二，错误信息中显示了部分的WHERE条件是<code>username = &#39;&#39; and password = &#39;&#39;</code>。这又是一个登录的逻辑，所以，只要用户名和密码正确，这个SQL语句会返回黑客需要的用户信息。因此，后台的SQL语句应该是形如select from where的格式。</p>
+<p>根据这些信息，黑客很容易就可以发起SQL注入攻击了。</p>
+<p>那错误信息中包含的敏感信息这么多，怎么避免被直接展示到前端呢？我们可以通过正确地配置文件，来进行合适的错误处理。比如，在PHP中，我们可以进行如下配置：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">error_reporting</span>  =  E_ALL                   <span class="comment">;向PHP报告发生的每个错误   </span></span><br><span class="line"><span class="attr">display_errors</span> = <span class="literal">Off</span>                        <span class="comment">;不显示满足上条指令所定义规则的所有错误报告   </span></span><br><span class="line"><span class="attr">log_errors</span> = <span class="literal">On</span>                             <span class="comment">;决定日志语句记录的位置   </span></span><br><span class="line"><span class="attr">log_errors_max_len</span> = <span class="number">1024</span>                   <span class="comment">;设置每个日志项的最大长度   </span></span><br><span class="line"><span class="attr">error_log</span> = /var/log/php_error.log          <span class="comment">;指定产生的错误报告写入的日志文件位置  </span></span><br></pre></td></tr></table></figure>
+
+<p>在Java Spring中，我们也可以通过配置<a target="_blank" rel="noopener" href="https://www.baeldung.com/exception-handling-for-rest-with-spring">ExceptionHandler</a>等来进行处理。</p>
+<p>避免错误信息泄露代码逻辑，一方面是要通过正确地配置文件，避免错误信息被展示到前端；另一方面是要对错误信息进行检测，这里就需要用到“黑盒”检测了。</p>
+<p>所谓“黑盒（Black Box Testing，功能测试）”，就是在不获取代码的情况下，直接运行应用，然后对应用的请求和响应进行扫描。比如，在错误信息泄露的场景中，“黑盒”检测可以向应用发起一些必然会导致错误的请求（比如上述例子中的单引号），然后观察应用是返回完整的错误日志，还是返回某些经过处理的页面。</p>
+<p>好了，现在你应该明白了，为啥错误信息会泄露代码逻辑。实际上，错误信息泄露属于一种间接的信息泄露方式。间接的信息泄露方式主要是通过拼凑各种零散信息，还原出代码整体的面貌，然后有针对性地发起攻击。所以我们常说，黑客的攻击本身就是一个“聚沙成塔”的过程。</p>
+<h1 id="除了错误信息，还有什么地方会泄露代码逻辑？"><a href="#除了错误信息，还有什么地方会泄露代码逻辑？" class="headerlink" title="除了错误信息，还有什么地方会泄露代码逻辑？"></a>除了错误信息，还有什么地方会泄露代码逻辑？</h1><p>除了错误信息之外，间接的信息泄露方式还有两种：返回信息泄露和注释信息泄露。</p>
+<p>注释信息你应该很熟悉。因为所有的前端代码基本都不需要编译就可以展示在浏览器中，所以黑客很容易就可以看到前端代码中的注释信息。但是，如果这些注释信息中出现服务器IP、数据库地址和认证密码这样的关键信息。一旦这些关键信息被泄露，将会造成十分严重的后果。</p>
+<p>那该如何避免关键的注释信息出现在线上的代码中呢？我们经常会使用一种叫作“白盒”的代码检测方法。</p>
+<p>所谓“白盒（White Box Testing，结构测试）”，即直接获取到线上的源代码，然后对它进行扫描。“白盒”扫描注释信息的原理比较简单，因为每一种语言的注释都会带有特殊的标记（比如Java和PHP中的&#x2F;*等），可以比较准确地被识别出来。除此之外，“白盒”检测通常还会被用来做一些检测代码漏洞或者逻辑漏洞的工作，这一块比较复杂，现在你只需要有一个大概印象即可，我们会在后续的课程中专门来讲。</p>
+<p>简单了解了注释信息泄露，我们下面重点来看返回信息泄露。</p>
+<p>你可以回忆一下，在前面讲<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/182074">SSRF</a>攻击的时候，我们模拟过这样一个场景：服务端在请求一个图片地址的时候，会根据地址的“存活”情况和返回数据的类型，分别返回三种结果：“图片不存在”“格式错误”以及图片正常显示。而黑客正是通过服务端返回信息的逻辑，利用一个请求图片的SSRF，摸清整个后端服务的“存活情况”。</p>
+<p>类似的多种返回状态的场景还有很多，你可以想想自己平时工作中有没有遇到过。这里我再说一个常见的。当你在登录应用的时候，应用的返回逻辑可能是这样的：如果输入的用户名和密码正确，则登录成功；如果应用没有这个用户，则返回“用户名不存在”；如果输入的用户名和密码不匹配，则返回“密码错误”。</p>
+<p>尽管这样清晰的登录提示对于用户体验来说，确实是一个较优解，但这个逻辑同样也暴露了过多的信息给黑客。黑客只需要不断地发起登录请求，就能够知道应用中存在的用户名，然后通过遍历常见的弱密码进行尝试，很容易就能够猜对密码。这样一来，猜对密码的成功率就比尝试同时猜测用户名和密码要高很多。</p>
+<p>实际上，返回信息过于明确不算是代码层面的漏洞，更多的是产品层面的漏洞。因此，理论上没有任何技术手段能够对这种漏洞进行检测，只能依靠人为的分析审计来避免。解决方案也比较简单，直接将返回信息模糊化、统一化即可。比如，在上述登录的场景中，我们可以将两种登录失败的返回信息，统一修改为“用户名不存在或密码错误”。这样一来，既避免了用户体验受到太大影响，又消除了关键信息被黑客获取的隐患。</p>
+<h1 id="有哪些常见的直接泄露方式？"><a href="#有哪些常见的直接泄露方式？" class="headerlink" title="有哪些常见的直接泄露方式？"></a>有哪些常见的直接泄露方式？</h1><p>在间接的泄露方式中，黑客可以通过“蛛丝马迹”，推断出服务代码的逻辑。但是信息泄露最普遍的方式还是直接泄露 。这里我会讲两种常见的直接泄露方式。</p>
+<p>第一种泄露方式与版本管理工具中的隐藏文件有关。</p>
+<p>在开发应用的过程中，你一定使用过版本管理工具（比如SVN和Git），通过这些工具，你能够很方便地进行代码回滚、备份等操作。那你有没有想过，版本管理工具为什么这么方便呢？它的工作原理又是怎么样的呢？我们以SVN为例来说一说。</p>
+<p>SVN会在项目目录中创建一个.svn文件夹，里面保存了应用每一个版本的源文件信息，这也是SVN实现代码回滚的数据基础。如果SVN可以通过.svn中的数据提取应用任意版本的代码，那黑客也可以。只要你没有在上线代码的时候删除其中的.svn目录，那就代表黑客可以通过.svn中的URL访问里面的所有文件。接下来，只需要通过执行简单的<a target="_blank" rel="noopener" href="https://github.com/admintony/svnExploit">脚本</a>，黑客就可以回溯出一个完整版本的代码了。</p>
+<p>对于这种因为目录中额外内容（.svn&#x2F;.git）导致的源码泄露，我们一方面需要对线上代码进行人工的代码审查，确保无关的文件和文件夹被正确地清除；另一方面，我们也可以在HTTP服务中对部分敏感的路径进行限制。比如，在Apache httpd中配置下面的内容，来禁止黑客对.svn和.git目录的访问。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">DirectoryMatch</span> \<span class="attr">.</span>(<span class="attr">svn</span>|<span class="attr">git</span>)&gt;</span></span><br><span class="line">  Order allow,deny</span><br><span class="line">  Deny from all</span><br><span class="line"><span class="tag">&lt;/<span class="name">DirectoryMatch</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>除此之外，还有一种最常见、也最不容易注意的泄露方式，那就是上传代码到GitHub上。</p>
+<p>我们知道，Git除了是一个版本管理工具之外，还是一个很流行的代码管理工具。除了前面讲过的隐藏文件漏洞之外（Git会生成.git，同样包含应用各种版本的文件信息），Git还存在将代码上传到公开平台的问题。但是，使用GitHub上传代码通常属于个人行为，所以，我们很难从技术层面上进行预防。</p>
+<p>那我们有没有一些有效的防护措施，可以尽可能地提高安全性呢？</p>
+<p>我个人认为，公司应该从加强员工安全意识的培训、强化公司管理制度入手，避免员工私自上传代码。除此之外，公司还可以对GitHub发起巡检（比较知名的工具有<a target="_blank" rel="noopener" href="https://github.com/0xbug/Hawkeye">Hawkeye</a>），通过定期检索公司代码的关键字（比如常用的包名、域名等）来进行检测。通过这些方式匹配到的结果，很可能就是员工私自公开的代码。确认之后，我们就可以联系上传的人员进行删除了。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>好了，今天的内容讲完了。我们来一起总结回顾一下，你需要掌握的重点内容。</p>
+<p>信息泄露这类漏洞很容易理解，但它能够造成的危害却不容小觑。<strong>基本上，所有攻击的第一步都是从信息泄露开始的</strong>。而且黑客没有办法攻击一个未知的系统，所以黑客会通过这些泄露的信息，去推断出应用的整体架构和逻辑。</p>
+<p>信息泄露的方式和原因有很多，这其中，除了黑客主动发起攻击导致的信息泄露之外，有很多非技术原因导致的信息泄露。所以，相应的防护手段也比较零散。不过总体来说，我们可以从以下几个方面进行防护：</p>
+<ul>
+<li>屏蔽信息：通过技术手段，将不该被访问的资源进行屏蔽，从而避免信息泄露的产生；</li>
+<li>代码检测：从“白盒”和“黑盒”两个方向，对代码、应用等进行检测，对可能的泄露进行预警；</li>
+<li>人工审计：对于非技术原因造成的泄露，加强人工审计的工作。同时从公司制度上，去提高员工的安全意识。</li>
+</ul>
+<p>今天的内容虽然比较简单，但是为了方便你记忆，我还是总结了一张知识脑图，你可以利用它来查缺补漏，加深记忆。</p>
+<p><img src="/article/2023/09/10Web%E5%AE%89%E5%85%A8-%E4%BF%A1%E6%81%AF%E6%B3%84%E9%9C%B2%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%BB%91%E5%AE%A2%E4%BC%9A%E7%9F%A5%E9%81%93%E4%BD%A0%E7%9A%84%E4%BB%A3%E7%A0%81%E9%80%BB%E8%BE%91%EF%BC%9F/20200818101944106.png" alt="img"></p>
+<h1 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h1><p>最后给你留一个思考题。</p>
+<p>通过今天的讲解，你可以回忆一下，你的公司或者你负责的应用当中，是否发生过类似的信息泄露事件呢？如果发生过，对你的公司或者应用都造成了什么影响呢？最后又是如何解决的呢？</p>
+<p>欢迎留言和我分享你的思考和疑惑，也欢迎你把文章分享给你的朋友。我们下一讲再见！</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E6%8A%80%E8%83%BD30%E8%AE%B2/" rel="tag"># 安全攻防技能30讲</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/09/09Web%E5%AE%89%E5%85%A8-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%EF%BC%9A%E4%BD%BF%E7%94%A8%E4%BA%86%E7%BC%96%E8%AF%91%E5%9E%8B%E8%AF%AD%E8%A8%80%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E6%98%AF%E4%BC%9A%E8%A2%AB%E6%B3%A8%E5%85%A5%EF%BC%9F/" rel="prev" title="09Web安全-反序列化漏洞：使用了编译型语言，为什么还是会被注入？">
+                  <i class="fa fa-angle-left"></i> 09Web安全-反序列化漏洞：使用了编译型语言，为什么还是会被注入？
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/09/11Web%E5%AE%89%E5%85%A8-%E6%8F%92%E4%BB%B6%E6%BC%8F%E6%B4%9E%EF%BC%9A%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E7%9C%8B%E8%B5%B7%E6%9D%A5%E5%BE%88%E5%AE%89%E5%85%A8%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E4%BC%9A%E5%87%BA%E7%8E%B0%E6%BC%8F%E6%B4%9E%EF%BC%9F/" rel="next" title="11Web安全-插件漏洞：我的代码看起来很安全，为什么还会出现漏洞？">
+                  11Web安全-插件漏洞：我的代码看起来很安全，为什么还会出现漏洞？ <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
