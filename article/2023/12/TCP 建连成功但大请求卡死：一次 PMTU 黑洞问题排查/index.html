@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="推荐链接：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP 建连成功但大请求卡死：一次 PMTU 黑洞问题排查">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/12/TCP%20%E5%BB%BA%E8%BF%9E%E6%88%90%E5%8A%9F%E4%BD%86%E5%A4%A7%E8%AF%B7%E6%B1%82%E5%8D%A1%E6%AD%BB%EF%BC%9A%E4%B8%80%E6%AC%A1%20PMTU%20%E9%BB%91%E6%B4%9E%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="推荐链接：">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-12-09T01:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-09T01:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/12/TCP%20%E5%BB%BA%E8%BF%9E%E6%88%90%E5%8A%9F%E4%BD%86%E5%A4%A7%E8%AF%B7%E6%B1%82%E5%8D%A1%E6%AD%BB%EF%BC%9A%E4%B8%80%E6%AC%A1%20PMTU%20%E9%BB%91%E6%B4%9E%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/12/TCP%20%E5%BB%BA%E8%BF%9E%E6%88%90%E5%8A%9F%E4%BD%86%E5%A4%A7%E8%AF%B7%E6%B1%82%E5%8D%A1%E6%AD%BB%EF%BC%9A%E4%B8%80%E6%AC%A1%20PMTU%20%E9%BB%91%E6%B4%9E%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5/","path":"article/2023/12/TCP 建连成功但大请求卡死：一次 PMTU 黑洞问题排查/","title":"TCP 建连成功但大请求卡死：一次 PMTU 黑洞问题排查"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>TCP 建连成功但大请求卡死：一次 PMTU 黑洞问题排查 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%85%E9%9A%9C%E7%8E%B0%E8%B1%A1"><span class="nav-number">1.</span> <span class="nav-text">故障现象</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PMTU-%E9%BB%91%E6%B4%9E"><span class="nav-number">2.</span> <span class="nav-text">PMTU 黑洞</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%85%E9%9A%9C%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text">故障排查过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E5%B1%82%E7%A1%AE%E8%AE%A4-TCP-%E6%98%AF%E5%90%A6%E5%BB%BA%E7%AB%8B%E6%88%90%E5%8A%9F%EF%BC%88curl-v%EF%BC%89"><span class="nav-number">3.1.</span> <span class="nav-text">应用层确认 TCP 是否建立成功（curl -v）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%93%E5%8C%85-tcpdump"><span class="nav-number">3.2.</span> <span class="nav-text">抓包 (tcpdump)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A3%80%E6%9F%A5%E7%BD%91%E7%BB%9C%E5%87%BA%E5%8F%A3%E5%92%8C-MTU-%E9%85%8D%E7%BD%AE"><span class="nav-number">3.3.</span> <span class="nav-text">检查网络出口和 MTU 配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A2%E6%B5%8B%E9%93%BE%E8%B7%AF%E7%9C%9F%E5%AE%9E-MTU"><span class="nav-number">3.4.</span> <span class="nav-text">探测链路真实 MTU</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%80%E7%BB%88%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E6%B1%87%E6%80%BB"><span class="nav-number">4.</span> <span class="nav-text">最终解决方案汇总</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9-Docker-%E9%BB%98%E8%AE%A4-MTU"><span class="nav-number">4.1.</span> <span class="nav-text">修改 Docker 默认 MTU</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9-Docker-Compose-%E7%BD%91%E7%BB%9C-MTU"><span class="nav-number">4.2.</span> <span class="nav-text">修改 Docker Compose 网络 MTU</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E5%AE%BF%E4%B8%BB%E6%9C%BA%E7%BD%91%E5%8D%A1-MTU"><span class="nav-number">4.3.</span> <span class="nav-text">修改宿主机网卡 MTU</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">554</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/12/TCP%20%E5%BB%BA%E8%BF%9E%E6%88%90%E5%8A%9F%E4%BD%86%E5%A4%A7%E8%AF%B7%E6%B1%82%E5%8D%A1%E6%AD%BB%EF%BC%9A%E4%B8%80%E6%AC%A1%20PMTU%20%E9%BB%91%E6%B4%9E%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="TCP 建连成功但大请求卡死：一次 PMTU 黑洞问题排查 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          TCP 建连成功但大请求卡死：一次 PMTU 黑洞问题排查
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-12-09 09:00:00" itemprop="dateCreated datePublished" datetime="2023-12-09T09:00:00+08:00">2023-12-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">其他</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p><strong>推荐链接：</strong></p>
+<span id="more"></span>
+
+<h1 id="故障现象"><a href="#故障现象" class="headerlink" title="故障现象"></a>故障现象</h1><p>在调用接口或访问网页时，出现以下异常：</p>
+<ul>
+<li>TCP 三次握手可以快速完成；</li>
+<li>小数据交互正常；</li>
+<li>当发送较大的 HTTP 请求，或接收较大的响应数据时，连接出现卡死；</li>
+<li>长时间无响应，最终 Connection timeout 。</li>
+</ul>
+<p>典型表现：TCP 连接建立成功，但数据传输阶段异常。</p>
+<p>这类问题容易被误判为服务端故障、网络不通或应用超时，但实际上可能是网络路径中的 <strong>MTU 不匹配导致的 PMTU 黑洞问题</strong>。</p>
+<h1 id="PMTU-黑洞"><a href="#PMTU-黑洞" class="headerlink" title="PMTU 黑洞"></a>PMTU 黑洞</h1><p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Path_MTU_Discovery">https://en.wikipedia.org/wiki/Path_MTU_Discovery</a></p>
+<table>
+<thead>
+<tr>
+<th><strong>概念</strong></th>
+<th><strong>全称</strong></th>
+<th><strong>解释与说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>MTU</strong></td>
+<td>Maximum Transmission Unit（最大传输单元）</td>
+<td>网络层（IP层）一次允许通过的<strong>最大数据包大小</strong>（含IP头、TCP&#x2F;UDP头、数据）。 TCP 协议下：<code>MTU = 20字节(IP头) + 20字节(TCP头) + MSS</code>。 ICMP 协议下：<code>MTU = 20字节(IP头) + 8字节(ICMP头) + ICMP数据区(Payload，即 ping -s 值)</code> 标准以太网默认为 <strong>1500 字节</strong>。</td>
+</tr>
+<tr>
+<td><strong>MSS</strong></td>
+<td>Maximum Segment Size（最大报文段长度）</td>
+<td>传输层（TCP层）数据包能携带的<strong>纯数据净容量</strong>。 标准以太网 MSS 默认为 <strong>1460 字节</strong>。</td>
+</tr>
+</tbody></table>
+<p><strong>PMTU（Path Maximum Transmission Unit，路径最大传输单元）</strong>：指数据包从源端到目标端经过的完整网络路径中，能够传输的最大 IP 数据包长度。它由整个链路中 MTU 最小的网络节点决定，而不是由通信双方主机自身的网络接口决定。</p>
+<p>在 TCP 连接建立阶段，通信双方会通过 SYN 和 SYN-ACK 报文中的 Options 字段交换各自基于本地 MTU 计算得到的 <strong>MSS（Maximum Segment Size，最大报文段长度）</strong>。需要注意的是，<strong>TCP MSS 是双向独立协商的</strong>：客户端和服务端分别声明自己能够接收的最大 TCP Payload 大小，发送方后续发送数据时会依据对端声明的 MSS 进行限制。</p>
+<p>然而，在实际网络环境中，例如 VPN 隧道、Docker 虚拟网络、云厂商 Overlay 网络、网关设备或防火墙设备等场景，由于额外封装或链路限制，中间网络的实际 MTU 可能小于标准以太网的 1500 字节。当 TCP 按照握手阶段协商出的默认 MSS（例如基于 1500 MTU 计算出的 1460 字节）发送数据时，IP 层通常会携带 <strong>DF（Don’t Fragment，禁止分片）</strong> 标志，避免数据包被分片。</p>
+<p>如果中间链路无法承载该数据包，网络设备会直接丢弃报文，并尝试返回 ICMP <code>Fragmentation Needed</code> 消息，通知发送端降低报文大小，从而触发 <strong>路径 MTU 发现机制（PMTUD）</strong> 进行调整。</p>
+<p>但如果该 ICMP 报文被防火墙、安全策略或中间网络设备过滤丢弃，发送端将无法感知实际路径 MTU 已降低，仍会持续发送超过链路承载能力的大数据包。由于这些数据包不断被中间设备丢弃，TCP 无法收到 ACK，只能重复发送相同报文，最终导致连接超时。</p>
+<p>这种现象称为 <strong>PMTU 黑洞（PMTU Black Hole）</strong>。</p>
+<p>PMTU 黑洞通常表现为：<strong>TCP 三次握手、小数据请求、心跳等小报文均正常，但在传输大文件、大响应或大数据载荷时出现卡顿、持续重传，最终连接超时断开。</strong> 其本质原因是路径 MTU 小于通信双方根据 MSS 推断出的发送大小，而 PMTUD 又因 ICMP 不可达而无法完成动态调整。</p>
+<h1 id="故障排查过程"><a href="#故障排查过程" class="headerlink" title="故障排查过程"></a>故障排查过程</h1><h2 id="应用层确认-TCP-是否建立成功（curl-v）"><a href="#应用层确认-TCP-是否建立成功（curl-v）" class="headerlink" title="应用层确认 TCP 是否建立成功（curl -v）"></a>应用层确认 TCP 是否建立成功（curl -v）</h2><p>确认是否存在 DNS、端口或 TCP 建连问题。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">root@localhost:/# curl -v baidu.com</span><br><span class="line">* Host baidu.com:80 was resolved.</span><br><span class="line">* IPv6: (none)</span><br><span class="line">* IPv4: 111.63.65.247, 124.237.177.164, 110.242.74.102</span><br><span class="line">*   Trying 111.63.65.247:80...</span><br><span class="line">* Connected to baidu.com (111.63.65.247) port 80</span><br><span class="line"><span class="meta prompt_">&gt; </span><span class="language-bash">GET / HTTP/1.1</span></span><br><span class="line"><span class="meta prompt_">&gt; </span><span class="language-bash">Host: baidu.com</span></span><br><span class="line"><span class="meta prompt_">&gt; </span><span class="language-bash">User-Agent: curl/8.5.0</span></span><br><span class="line"><span class="meta prompt_">&gt; </span><span class="language-bash">Accept: */*</span></span><br><span class="line"><span class="meta prompt_">&gt;</span><span class="language-bash"></span></span><br><span class="line"><span class="language-bash">&lt; HTTP/1.1 301 Moved Permanently</span></span><br><span class="line">&lt; Location: https://www.baidu.com/</span><br><span class="line">&lt; Date: Sat, 01 Aug 2026 09:00:53 GMT</span><br><span class="line">&lt; Content-Length: 57</span><br><span class="line">&lt; Content-Type: text/html; charset=utf-8</span><br><span class="line">&lt;</span><br><span class="line">&lt;a href=&quot;https://www.baidu.com/&quot;&gt;Moved Permanently&lt;/a&gt;.</span><br><span class="line"></span><br><span class="line">* Connection #0 to host baidu.com left intact</span><br></pre></td></tr></table></figure>
+
+<p>看到 <code>Connected to baidu.com</code> 说明：</p>
+<ul>
+<li>DNS 解析正常；</li>
+<li>TCP 三次握手成功；</li>
+<li>网络端口可达。</li>
+</ul>
+<p>如果随后 HTTP 请求发送后一直等待，说明问题不在连接建立阶段，而是在数据传输阶段。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">&gt; </span><span class="language-bash">GET / HTTP/1.1</span></span><br><span class="line">...</span><br><span class="line">(无 Response)</span><br></pre></td></tr></table></figure>
+
+<h2 id="抓包-tcpdump"><a href="#抓包-tcpdump" class="headerlink" title="抓包 (tcpdump)"></a>抓包 (tcpdump)</h2><p>在宿主机或容器内抓取发往目标 IP 的流量包，通过抓包观察实际 TCP 数据传输情况。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">抓取指定网卡发往目标 IP 的 TCP 数据包</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-i eth0：抓包指定网卡。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-i any：抓包所有网卡，适用于不确定流量出口的情况。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-n：不要将地址（即主机地址、端口号等）转换为名称。目的：1、防止因“反向 DNS 解析”导致的终端输出卡顿和延迟；2、防止非必要的网络流量叠加。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">    1、不把 IP 地址解析为主机名（如不把 8.8.8.8 转换为 dns.google）。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">    2、不把端口号解析为服务名称（如端口 80 直接显示 80，而不是显示为 http；端口 22 直接显示 22，而不是 ssh）。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-v：详细模式（Verbose）。输出更丰富的数据包头部信息，例如生存时间（TTL）、数据包标识符、校验和以及 TCP 选项等。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">host &lt;目标IP&gt;：过滤条件。不要将地址（即主机地址、端口号等）转换为名称。</span></span><br><span class="line">tcpdump -i any -n -v host &lt;目标IP&gt;</span><br><span class="line">tcpdump -i any -n -v host baidu.com</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">重新打开一个终端执行</span></span><br><span class="line">curl -v baidu.com</span><br></pre></td></tr></table></figure>
+
+<p>典型异常现象：</p>
+<ul>
+<li>SYN &#x2F; ACK 握手正常；</li>
+<li>小数据包正常（如握手包 SYN、ACK）；</li>
+<li>大数据包发送后，出现大量：TCP Retransmission（TCP 重传），且收不到对端的 ACK；</li>
+</ul>
+<p>说明：TCP 数据包可能在链路中被丢弃。</p>
+<p>结合“大请求卡死”的现象，高度怀疑 <strong>MTU 限制 &#x2F; PMTU 黑洞</strong> 问题。</p>
+<h2 id="检查网络出口和-MTU-配置"><a href="#检查网络出口和-MTU-配置" class="headerlink" title="检查网络出口和 MTU 配置"></a>检查网络出口和 MTU 配置</h2><p>确认数据实际经过哪些网络接口。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看系统路由表，确认流量是从哪个物理网卡、虚拟网卡（`docker0`）或 VPN 网卡（如 `tun0`）出去的。</span></span><br><span class="line">route -n</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">或使用 ip 工具</span></span><br><span class="line">ip route show</span><br></pre></td></tr></table></figure>
+
+<p>重点关注：</p>
+<ul>
+<li>默认网关；</li>
+<li>出口网卡；</li>
+<li>Docker bridge；</li>
+<li>VPN 虚拟网卡。</li>
+</ul>
+<p>查看网卡 MTU 配置</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Linux 查看网卡信息（寻找 mtu 字段）</span></span><br><span class="line">ip link show</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">或</span></span><br><span class="line">ifconfig</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看 Docker 默认虚拟网卡的 MTU</span></span><br><span class="line">ip link show docker0</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看指定 Docker 容器内部网卡 MTU</span></span><br><span class="line">docker exec -it &lt;容器ID/名称&gt; ip link show eth0</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Windows 查看各网卡 MTU</span></span><br><span class="line">netsh interface ipv4 show subinterfaces</span><br></pre></td></tr></table></figure>
+
+<h2 id="探测链路真实-MTU"><a href="#探测链路真实-MTU" class="headerlink" title="探测链路真实 MTU"></a>探测链路真实 MTU</h2><p>使用 <code>ping</code> 命令加上禁止分片标记（DF），不断调整包大小，测试出链路能通过的最大数据包，从而计算出全链路的真实 MTU 瓶颈值（<strong><code>ping</code> 使用的是 ICMP 协议，请利用上文 ICMP 协议下的 MTU 计算公式</strong>）。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">【Linux】 -s 指定包体大小，-M <span class="keyword">do</span> 表示设置 DF 禁止分片标志</span></span><br><span class="line">ping -s 1464 -M do baidu.com</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">【macOS】 -s 指定包大小，-D 表示设置 DF 禁止分片标志</span></span><br><span class="line">ping -s 1464 -D baidu.com</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">【Windows CMD】 -l 指定包大小，-f 表示设置 DF 禁止分片标志</span></span><br><span class="line">ping -l 1464 -f baidu.com</span><br></pre></td></tr></table></figure>
+
+<h1 id="最终解决方案汇总"><a href="#最终解决方案汇总" class="headerlink" title="最终解决方案汇总"></a>最终解决方案汇总</h1><h2 id="修改-Docker-默认-MTU"><a href="#修改-Docker-默认-MTU" class="headerlink" title="修改 Docker 默认 MTU"></a>修改 Docker 默认 MTU</h2><p>适用于 Docker 容器网络环境。</p>
+<p>修改 <code>/etc/docker/daemon.json</code>，增加或修改 <code>mtu</code> 字段：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;mtu&quot;</span><span class="punctuation">:</span> <span class="number">1492</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>重启 Docker 服务：<code>sudo systemctl restart docker</code>。此后，新创建的所有容器的网卡均会使用新 MTU。</p>
+<h2 id="修改-Docker-Compose-网络-MTU"><a href="#修改-Docker-Compose-网络-MTU" class="headerlink" title="修改 Docker Compose 网络 MTU"></a>修改 Docker Compose 网络 MTU</h2><p>在 docker-compose.yml 中单独指定，不影响宿主机其他网络，适合精细调整：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">networks:</span></span><br><span class="line">  <span class="attr">default:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">bridge</span></span><br><span class="line">    <span class="attr">driver_opts:</span></span><br><span class="line">      <span class="attr">com.docker.network.driver.mtu:</span> <span class="string">&quot;1492&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="修改宿主机网卡-MTU"><a href="#修改宿主机网卡-MTU" class="headerlink" title="修改宿主机网卡 MTU"></a>修改宿主机网卡 MTU</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">临时调整。适用于快速验证问题。</span></span><br><span class="line">sudo ip link set dev eth0 mtu 1492</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/12/DNS%E5%8F%8D%E5%90%91%E8%A7%A3%E6%9E%90%E5%BC%95%E5%8F%91%E7%9A%84%E5%8D%A1%E9%A1%BF/" rel="prev" title="DNS反向解析引发的卡顿">
+                  <i class="fa fa-angle-left"></i> DNS反向解析引发的卡顿
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2024/01/%E5%BC%80%E6%BA%90Web%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86%E5%99%A8filebrowser/" rel="next" title="开源Web文件管理器filebrowser">
+                  开源Web文件管理器filebrowser <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
