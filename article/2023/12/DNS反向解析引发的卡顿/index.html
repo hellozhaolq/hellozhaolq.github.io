@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.zhaolq.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"androidstudio","dark":"androidstudio"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="推荐链接：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DNS反向解析引发的卡顿">
+<meta property="og:url" content="https://blog.zhaolq.com/article/2023/12/DNS%E5%8F%8D%E5%90%91%E8%A7%A3%E6%9E%90%E5%BC%95%E5%8F%91%E7%9A%84%E5%8D%A1%E9%A1%BF/index.html">
+<meta property="og:site_name" content="洋蔥">
+<meta property="og:description" content="推荐链接：">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-12-07T01:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T01:00:00.000Z">
+<meta property="article:author" content="zhaolq">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.zhaolq.com/article/2023/12/DNS%E5%8F%8D%E5%90%91%E8%A7%A3%E6%9E%90%E5%BC%95%E5%8F%91%E7%9A%84%E5%8D%A1%E9%A1%BF/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.zhaolq.com/article/2023/12/DNS%E5%8F%8D%E5%90%91%E8%A7%A3%E6%9E%90%E5%BC%95%E5%8F%91%E7%9A%84%E5%8D%A1%E9%A1%BF/","path":"article/2023/12/DNS反向解析引发的卡顿/","title":"DNS反向解析引发的卡顿"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>DNS反向解析引发的卡顿 | 洋蔥</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">洋蔥</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">耳不闻人是非，目不视人之短，口不言人之过。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BE%88%E5%A4%9A%E6%9C%8D%E5%8A%A1%E9%BB%98%E8%AE%A4%E8%A6%81%E8%BF%9B%E8%A1%8C%E5%8F%8D%E5%90%91%E8%A7%A3%E6%9E%90%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">为什么很多服务默认要进行反向解析？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%8D%E5%90%91%E8%A7%A3%E6%9E%90%E5%AF%BC%E8%87%B4%E5%8D%A1%E9%A1%BF%E7%9A%84%E9%80%9A%E7%94%A8%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">反向解析导致卡顿的通用流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%B5%8B%E8%AF%95%E6%98%AF%E5%90%A6%E5%AD%98%E5%9C%A8%E5%8F%8D%E5%90%91%E8%A7%A3%E6%9E%90%E9%97%AE%E9%A2%98%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">如何测试是否存在反向解析问题？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%8D%E5%90%91%E8%A7%A3%E6%9E%90%E9%97%AE%E9%A2%98%E5%92%8C%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">4.</span> <span class="nav-text">反向解析问题和解决方案</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhaolq"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">zhaolq</p>
+  <div class="site-description" itemprop="description">有用、有趣、有情义！</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">554</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">39</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hellozhaolq" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hellozhaolq" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hello.zhaolq@qq.com" title="E-Mail → mailto:hello.zhaolq@qq.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.zhaolq.com/article/2023/12/DNS%E5%8F%8D%E5%90%91%E8%A7%A3%E6%9E%90%E5%BC%95%E5%8F%91%E7%9A%84%E5%8D%A1%E9%A1%BF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="zhaolq">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="洋蔥">
+      <meta itemprop="description" content="有用、有趣、有情义！">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="DNS反向解析引发的卡顿 | 洋蔥">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          DNS反向解析引发的卡顿
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-12-07 09:00:00" itemprop="dateCreated datePublished" datetime="2023-12-07T09:00:00+08:00">2023-12-07</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">其他</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p><strong>推荐链接：</strong></p>
+<span id="more"></span>
+
+<p><strong>反向 DNS 解析（<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Reverse_DNS_lookup">Reverse DNS lookup</a>）</strong>：从 IP 地址查询域名&#x2F;主机名 的网络行为（与传统的 从域名查 IP 相反）。</p>
+<p><strong>PTR（Pointer Record，指针记录）</strong>：DNS 系统中<strong>专门用来实现反向解析的一种数据记录类型</strong>。就像正向解析用 <code>A</code> 记录（域名 → IPv4）或 <code>AAAA</code> 记录（域名 → IPv6）一样，反向解析在 DNS 数据库里用的就是 <code>PTR</code> 记录（IP → 域名）。</p>
+<p><font color="red"><strong>DNS 反向解析是一个动作，而 PTR 记录是完成这个动作所依赖的数据文件。</strong></font></p>
+<h1 id="为什么很多服务默认要进行反向解析？"><a href="#为什么很多服务默认要进行反向解析？" class="headerlink" title="为什么很多服务默认要进行反向解析？"></a>为什么很多服务默认要进行反向解析？</h1><p>明明已经拿到了客户端 IP，为什么还要查域名？原因是部分服务并不仅仅关心 IP，而希望知道：“这个连接来自哪台机器？”。常见原因如下：</p>
+<ul>
+<li><strong>安全与权限控制</strong>：MySQL 支持基于主机名授权 <code>GRANT SELECT ON db.* TO &#39;root&#39;@&#39;host-a.local&#39;;</code>，所以它需要把客户端 IP 解析成主机名。</li>
+<li><strong>安全审计和日志记录</strong>：在日志中记录 <code>hostname</code> 比记录一串无意义的 IP 更直观。</li>
+<li><strong>SASL &#x2F; Kerberos 身份认证</strong>：一些安全认证体系会依赖 hostname，用于确认客户端的真实身份，防止中间人攻击。</li>
+<li>IP 经常变化，基于主机名的授权更便于管理。</li>
+</ul>
+<h1 id="反向解析导致卡顿的通用流程"><a href="#反向解析导致卡顿的通用流程" class="headerlink" title="反向解析导致卡顿的通用流程"></a>反向解析导致卡顿的通用流程</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">客户端发起连接 → 服务端获取客户端 IP → 服务端执行 PTR 反向查询 → DNS 服务器查询不到 PTR → 等待 DNS 超时，降级使用IP → 继续后续连接流程</span></span><br></pre></td></tr></table></figure>
+
+<p><font size="4"><strong>为什么 DNS 反向解析 失败&#x2F;超时 后还能继续后续流程？</strong></font></p>
+<p><strong>DNS 反向解析失败 ≠ 客户端连接失败。</strong></p>
+<p>以 MySQL 为例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">客户端发起连接</span><br><span class="line">        ↓</span><br><span class="line">TCP三次握手完成</span><br><span class="line">        ↓</span><br><span class="line">服务端获取客户端IP</span><br><span class="line">        ↓</span><br><span class="line">尝试PTR反向解析</span><br><span class="line">        |</span><br><span class="line">        +----------------+</span><br><span class="line">        ↓                ↓</span><br><span class="line">解析成功             解析失败/超时</span><br><span class="line">        ↓                ↓</span><br><span class="line">使用hostname和IP        使用IP</span><br><span class="line">        |                |</span><br><span class="line">        +----------------+</span><br><span class="line">                ↓</span><br><span class="line">          权限/认证检查</span><br><span class="line">                ↓</span><br><span class="line">          接受或拒绝连接</span><br></pre></td></tr></table></figure>
+
+<p>DNS 反向解析超时不会直接拒绝连接，因为它通常只是为了获取 hostname 的辅助步骤；超时后服务会降级使用 IP。只有当 <strong>权限控制</strong> 或 <strong>认证协议</strong> 强依赖 hostname 时，才会导致连接失败。</p>
+<h1 id="如何测试是否存在反向解析问题？"><a href="#如何测试是否存在反向解析问题？" class="headerlink" title="如何测试是否存在反向解析问题？"></a>如何测试是否存在反向解析问题？</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">time host 192.168.0.7</span><br><span class="line">time nslookup 192.168.0.7</span><br><span class="line">dig -x 192.168.0.7          # -x 表示输入一个 IP 地址，让系统返回绑定该 IP 的主机名或域名</span><br><span class="line">dig www.baidu.com           # 通过主机名（域名）解析 IP 地址</span><br></pre></td></tr></table></figure>
+
+<h1 id="反向解析问题和解决方案"><a href="#反向解析问题和解决方案" class="headerlink" title="反向解析问题和解决方案"></a>反向解析问题和解决方案</h1><p>对于由“反向解析超时”引发的卡顿，解决思路非常一致：<strong>要么补齐 PTR 映射（改 hosts），要么直接关闭服务的反向解析功能。</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>应用场景</strong></th>
+<th><strong>现象</strong></th>
+<th><strong>根因</strong></th>
+<th><strong>最佳解决方案</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>MySQL + Navicat</strong></td>
+<td>Navicat 点击连接后，要停顿 3~5 秒甚至更久才能连上，但连上后操作又很顺畅。</td>
+<td>MySQL 默认开启主机名解析（<code>skip_name_resolve=OFF</code>），根据客户端 IP 查询 PTR 记录超时。</td>
+<td><strong>关闭反向解析（推荐）</strong>：<code>skip_name_resolve=ON</code></td>
+</tr>
+<tr>
+<td><strong>Kafka &#x2F; SASL</strong></td>
+<td>Java 客户端 或 Kafka命令行工具 连接慢</td>
+<td>SASL 安全库（如 GSSAPI&#x2F;JAAS）在握手阶段对 Broker IP 进行 PTR 反向域名查询。</td>
+<td><strong>修改本地 <code>/etc/hosts</code>（推荐）</strong>： 添加 <code>192.168.0.7 hostname-01</code> 映射，让系统直接本地返回，跳过外网 DNS 超时。</td>
+</tr>
+<tr>
+<td><strong>Linux SSH</strong></td>
+<td><code>ssh user@ip</code> 执行后，输入密码前，卡顿几秒。</td>
+<td>SSH 服务端（<code>sshd</code>）开启了 <code>UseDNS yes</code>。<br />查询默认值：&#96;sshd -T</td>
+<td>grep -i UseDNS&#96;。</td>
+</tr>
+</tbody></table>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/article/2023/12/RabbitMQ%E6%95%99%E7%A8%8B/" rel="prev" title="RabbitMQ教程">
+                  <i class="fa fa-angle-left"></i> RabbitMQ教程
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/article/2023/12/TCP%20%E5%BB%BA%E8%BF%9E%E6%88%90%E5%8A%9F%E4%BD%86%E5%A4%A7%E8%AF%B7%E6%B1%82%E5%8D%A1%E6%AD%BB%EF%BC%9A%E4%B8%80%E6%AC%A1%20PMTU%20%E9%BB%91%E6%B4%9E%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5/" rel="next" title="TCP 建连成功但大请求卡死：一次 PMTU 黑洞问题排查">
+                  TCP 建连成功但大请求卡死：一次 PMTU 黑洞问题排查 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">zhaolq</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
